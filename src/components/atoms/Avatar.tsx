@@ -3,37 +3,47 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Image, Text, View } from "react-native";
 
+type AvatarSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+
 type AvatarProps = {
   uri?: string;
   name?: string;
-  size?: "sm" | "md" | "lg";
+  size?: AvatarSize;
+  shape?: "circle" | "square";
   className?: string;
 };
 
-const containerSizeClasses = {
+const containerSizeClasses: Record<AvatarSize, string> = {
   sm: "w-8 h-8",
   md: "w-10 h-10",
   lg: "w-14 h-14",
+  xl: "w-20 h-20",
+  "2xl": "w-24 h-24",
+  "3xl": "w-28 h-28",
 };
 
-const textSizeClasses = {
+const textSizeClasses: Record<AvatarSize, string> = {
   sm: "text-xs",
   md: "text-sm",
   lg: "text-base",
+  xl: "text-lg",
+  "2xl": "text-xl",
+  "3xl": "text-2xl",
 };
 
 export default function Avatar({
   uri,
   name,
   size = "md",
+  shape = "circle",
   className,
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
 
-  // Initials fallback
   const initials =
     name
-      ?.split(" ")
+      ?.trim()
+      .split(/\s+/)
       .map((n) => n[0])
       .join("")
       .slice(0, 2)
@@ -45,14 +55,15 @@ export default function Avatar({
     <View
       className={clsx(
         containerSizeClasses[size],
-        "rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden",
+        shape === "circle" ? "rounded-full" : "rounded-lg",
+        "bg-neutral-surface border border-neutral-border flex items-center justify-center overflow-hidden",
         className,
       )}
     >
       {showInitials ? (
         <Text
           className={clsx(
-            "text-black font-semibold text-center",
+            "font-semibold text-neutral-textDark",
             textSizeClasses[size],
           )}
         >
@@ -61,7 +72,7 @@ export default function Avatar({
       ) : (
         <Image
           source={{ uri }}
-          className="w-full h-full rounded-full"
+          className="w-full h-full"
           resizeMode="cover"
           onError={() => setImageError(true)}
         />

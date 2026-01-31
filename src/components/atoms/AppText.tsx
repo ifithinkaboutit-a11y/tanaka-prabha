@@ -11,19 +11,19 @@ type Variant =
   | "bodySm"
   | "caption";
 
-type AppTextProps = TextProps & {
+type AppTextProps = Omit<TextProps, "className"> & {
   variant?: Variant;
   className?: string;
 };
 
 const variantClasses: Record<Variant, string> = {
-  h1: "text-h1 font-bold text-neutral-textDark",
-  h2: "text-h2 font-semibold text-neutral-textDark",
-  h3: "text-h3 font-semibold text-neutral-textDark",
-  bodyLg: "text-bodyLg text-neutral-textDark",
-  bodyMd: "text-bodyMd text-neutral-textDark",
-  bodySm: "text-bodySm text-neutral-textMedium",
-  caption: "text-caption text-neutral-textLight",
+  h1: "text-4xl font-bold text-neutral-textDark",
+  h2: "text-3xl font-semibold text-neutral-textDark",
+  h3: "text-2xl font-semibold text-neutral-textDark",
+  bodyLg: "text-xl text-neutral-textDark",
+  bodyMd: "text-lg text-neutral-textDark",
+  bodySm: "text-md text-neutral-textMedium",
+  caption: "text-sm text-neutral-textLight",
 };
 
 export default function AppText({

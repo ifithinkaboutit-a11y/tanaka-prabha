@@ -38,7 +38,7 @@ const TabNavigation = () => {
         }}
       />
       <Tabs.Screen
-        name="Program"
+        name="program"
         options={{
           title: "Programs",
           tabBarIcon: ({ focused, size }) => (
@@ -52,7 +52,7 @@ const TabNavigation = () => {
         }}
       />
       <Tabs.Screen
-        name="Schemes"
+        name="schemes"
         options={{
           title: "Schemes",
           tabBarIcon: ({ focused, size }) => (
@@ -66,7 +66,7 @@ const TabNavigation = () => {
         }}
       />
       <Tabs.Screen
-        name="Connect"
+        name="connect"
         options={{
           title: "Connect",
           tabBarIcon: ({ focused, size }) => (
@@ -80,7 +80,7 @@ const TabNavigation = () => {
         }}
       />
       <Tabs.Screen
-        name="Profile"
+        name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ focused, size }) => (
@@ -90,7 +90,10 @@ const TabNavigation = () => {
               color={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
             />
           ),
-          headerShown: false,
+          headerShown: true,
+          headerRight: () => (
+            <Ionicons name="settings-outline" size={24} color={ACTIVE_COLOR} style={{ marginRight: 20 }} />
+          ),
         }}
       />
     </Tabs>

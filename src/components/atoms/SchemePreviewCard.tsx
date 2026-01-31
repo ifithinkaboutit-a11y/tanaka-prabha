@@ -1,6 +1,7 @@
 // src/components/molecules/SchemePreviewCard.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, View } from "react-native";
+import { useState } from "react";
 import { colors } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import Card from "../atoms/Card";
@@ -20,52 +21,71 @@ export default function SchemePreviewCard({
   imageUrl,
   onPress,
 }: SchemePreviewCardProps) {
+  const [isTruncated, setIsTruncated] = useState(false);
+
   return (
     <Pressable onPress={onPress}>
       <Card className="mb-3 p-4">
-        <View className="flex-row items-start">
-          {/* Image Section */}
+        <View className="flex-row">
+          {/* Image */}
           {imageUrl && (
-            <View className="mr-7">
-              <Image
-                source={{ uri: imageUrl }}
-                className="w-16 h-16 rounded-lg"
-                resizeMode="cover"
-              />
-            </View>
+            <Image
+              source={{ uri: imageUrl }}
+              className="w-16 h-16 rounded-lg mr-4"
+              resizeMode="cover"
+            />
           )}
 
-          {/* Content Section */}
+          {/* Content */}
           <View className="flex-1">
-            <AppText
-              variant="h1"
-              className="text-xl font-bold text-neutral-textDark mb-1"
-            >
+            <AppText variant="h3" className="mb-1 text-[#386641]">
               {title}
             </AppText>
+
+            {/* Description */}
             <AppText
-              variant="bodySm"
-              className="pl-1 text-sm text-neutral-textMedium mb-2"
+              variant="bodyMd"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              onTextLayout={(e) => {
+                if (e.nativeEvent.lines.length > 2) {
+                  setIsTruncated(true);
+                }
+              }}
+              className="text-neutral-textMedium"
             >
               {description}
             </AppText>
-            <View className="flex-row items-center justify-between pl-4">
+
+            {/* Read more */}
+            {isTruncated && (
+              <AppText
+                variant="caption"
+                className="text-primary mt-1"
+              >
+                Read more
+              </AppText>
+            )}
+
+            {/* Footer */}
+            <View className="flex-row items-center justify-between mt-2">
               <View className="flex-row items-center">
                 <Ionicons
                   name="pricetag-outline"
-                  size={10}
+                  size={12}
                   color={colors.primary.green}
                 />
                 <AppText
                   variant="caption"
-                  className="text-neutral-textMedium ml-1 text-sm"
+                  className="ml-1 text-neutral-textMedium"
                 >
                   {category}
                 </AppText>
               </View>
+
               <Ionicons
                 name="chevron-forward"
-                size={20}
+                size={18}
                 color={colors.neutral.textLight}
               />
             </View>

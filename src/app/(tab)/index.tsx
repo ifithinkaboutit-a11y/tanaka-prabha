@@ -3,10 +3,12 @@ import GreetingHeader from "@/components/molecules/GreetingHeader";
 import QuickActionGrid from "@/components/molecules/QuickActionGrid";
 import SchemePreviewList from "@/components/molecules/SchemePreviewList";
 import SearchBar from "@/components/molecules/SearchBar";
+import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 
 const Home = () => {
+  const router = useRouter();
   const banners = [
     {
       title: "Welcome to Tanak Prabha",
@@ -34,7 +36,7 @@ const Home = () => {
     {
       title: "Update your profile",
       icon: "person-outline" as const,
-      onPress: () => console.log("Navigate to profile update"),
+      onPress: () => router.push("/profile"),
     },
     {
       title: "Ongoing Events",
@@ -94,7 +96,11 @@ const Home = () => {
       className="flex-1 bg-[#F6F6F6]"
       showsVerticalScrollIndicator={false}
     >
-      <GreetingHeader name="John Doe" />
+      <GreetingHeader
+        name="John Doe"
+        onNotificationPress={() => console.log("Notifications pressed")}
+        onAvatarPress={() => router.push("/profile")}
+      />
       <SearchBar />
       <View className="px-4 py-2">
         <BannerSlideshow banners={banners} />

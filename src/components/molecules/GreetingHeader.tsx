@@ -1,13 +1,14 @@
 // src/components/molecules/GreetingHeader.tsx
-import { View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, View } from "react-native";
 import AppText from "../atoms/AppText";
 import Avatar from "../atoms/Avatar";
 import IconButton from "../atoms/IconButton";
-import { Ionicons } from "@expo/vector-icons";
 
 type GreetingHeaderProps = {
   name: string;
   onNotificationPress?: () => void;
+  onAvatarPress?: () => void;
 };
 
 const getGreeting = (): string => {
@@ -17,25 +18,37 @@ const getGreeting = (): string => {
   return "Good Evening";
 };
 
-export default function GreetingHeader({ name, onNotificationPress }: GreetingHeaderProps) {
+export default function GreetingHeader({
+  name,
+  onNotificationPress,
+  onAvatarPress,
+}: GreetingHeaderProps) {
   const greeting = getGreeting();
 
   return (
     <View className="p-4 mt-4">
       <View className="flex-row items-center justify-between p-4 rounded-lg">
         <View className="flex-row items-center gap-3">
-          <Avatar size="lg" name={name} />
+          <Pressable onPress={onAvatarPress}>
+            <Avatar size="lg" name={name} />
+          </Pressable>
           <View>
-            <AppText variant="h2" className="text-md text-neutral-500 leading-tight">
+            <AppText
+              variant="h2"
+              className="text-md text-neutral-500 leading-tight"
+            >
               {greeting}
             </AppText>
-            <AppText variant="h1" className="text-xl font-semibold text-neutral-900 leading-tight">
+            <AppText
+              variant="h1"
+              className="text-xl font-semibold text-neutral-900 leading-tight"
+            >
               {name} Ji
             </AppText>
           </View>
         </View>
         <IconButton onPress={onNotificationPress}>
-          <Ionicons name="notifications-outline" size={24} /> 
+          <Ionicons name="notifications-outline" size={24} />
         </IconButton>
       </View>
     </View>
