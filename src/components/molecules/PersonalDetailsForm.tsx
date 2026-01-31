@@ -1,35 +1,14 @@
 // src/components/molecules/PersonalDetailsForm.tsx
 import { useState } from "react";
 import { Alert, ScrollView, TextInput, View } from "react-native";
+import {
+    PersonalDetails,
+    PersonalDetailsFormProps,
+} from "../../data/interfaces";
+import T from "../../i18n";
 import AppText from "../atoms/AppText";
 import Button from "../atoms/Button";
 import Card from "../atoms/Card";
-
-interface PersonalDetails {
-  fathersName: string;
-  mothersName: string;
-  educationalQualification: string;
-  sonsMarried: number;
-  sonsUnmarried: number;
-  daughtersMarried: number;
-  daughtersUnmarried: number;
-  otherFamilyMembers: number;
-  village: string;
-  gramPanchayat: string;
-  nyayPanchayat: string;
-  postOffice: string;
-  tehsil: string;
-  block: string;
-  district: string;
-  pinCode: string;
-  state: string;
-}
-
-type PersonalDetailsFormProps = {
-  initialData: PersonalDetails;
-  onSave: (data: PersonalDetails) => void;
-  onCancel: () => void;
-};
 
 const educationOptions = [
   "Illiterate",
@@ -69,17 +48,17 @@ export default function PersonalDetailsForm({
     <ScrollView className="flex-1 bg-neutral-surface">
       <View className="p-4">
         <AppText variant="h2" className="text-xl font-bold mb-6">
-          Edit Personal Details
+          {T.translate("personalDetails.editTitle")}
         </AppText>
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Family Information
+            {T.translate("personalDetails.familyInformation")}
           </AppText>
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Father's Name *
+              {T.translate("personalDetails.fathersName")}
             </AppText>
             <TextInput
               value={formData.fathersName}
@@ -91,7 +70,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Mother's Name *
+              {T.translate("personalDetails.mothersName")}
             </AppText>
             <TextInput
               value={formData.mothersName}
@@ -103,7 +82,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Educational Qualification
+              {T.translate("personalDetails.educationalQualification")}
             </AppText>
             <TextInput
               value={formData.educationalQualification}
@@ -118,7 +97,7 @@ export default function PersonalDetailsForm({
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Family Members
+            {T.translate("personalDetails.familyMembers")}
           </AppText>
 
           <View className="flex-row justify-between mb-4">
@@ -127,7 +106,7 @@ export default function PersonalDetailsForm({
                 variant="bodySm"
                 className="text-neutral-textMedium mb-1"
               >
-                Sons (Married)
+                {T.translate("personalDetails.sonsMarried")}
               </AppText>
               <TextInput
                 value={formData.sonsMarried.toString()}
@@ -144,7 +123,7 @@ export default function PersonalDetailsForm({
                 variant="bodySm"
                 className="text-neutral-textMedium mb-1"
               >
-                Sons (Unmarried)
+                {T.translate("personalDetails.sonsUnmarried")}
               </AppText>
               <TextInput
                 value={formData.sonsUnmarried.toString()}
@@ -164,7 +143,7 @@ export default function PersonalDetailsForm({
                 variant="bodySm"
                 className="text-neutral-textMedium mb-1"
               >
-                Daughters (Married)
+                {T.translate("personalDetails.daughtersMarried")}
               </AppText>
               <TextInput
                 value={formData.daughtersMarried.toString()}
@@ -181,7 +160,7 @@ export default function PersonalDetailsForm({
                 variant="bodySm"
                 className="text-neutral-textMedium mb-1"
               >
-                Daughters (Unmarried)
+                {T.translate("personalDetails.daughtersUnmarried")}
               </AppText>
               <TextInput
                 value={formData.daughtersUnmarried.toString()}
@@ -197,7 +176,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Other Family Members
+              {T.translate("personalDetails.otherFamilyMembers")}
             </AppText>
             <TextInput
               value={formData.otherFamilyMembers.toString()}
@@ -213,12 +192,12 @@ export default function PersonalDetailsForm({
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Address Information
+            {T.translate("personalDetails.addressInformation")}
           </AppText>
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Village
+              {T.translate("personalDetails.village")}
             </AppText>
             <TextInput
               value={formData.village}
@@ -230,7 +209,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Gram Panchayat
+              {T.translate("personalDetails.gramPanchayat")}
             </AppText>
             <TextInput
               value={formData.gramPanchayat}
@@ -242,7 +221,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Nyay Panchayat
+              {T.translate("personalDetails.nyayPanchayat")}
             </AppText>
             <TextInput
               value={formData.nyayPanchayat}
@@ -254,7 +233,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Post Office
+              {T.translate("personalDetails.postOffice")}
             </AppText>
             <TextInput
               value={formData.postOffice}
@@ -266,7 +245,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Tehsil
+              {T.translate("personalDetails.tehsil")}
             </AppText>
             <TextInput
               value={formData.tehsil}
@@ -278,7 +257,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Block
+              {T.translate("personalDetails.block")}
             </AppText>
             <TextInput
               value={formData.block}
@@ -290,7 +269,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              District
+              {T.translate("personalDetails.district")}
             </AppText>
             <TextInput
               value={formData.district}
@@ -302,7 +281,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              State
+              {T.translate("personalDetails.state")}
             </AppText>
             <TextInput
               value={formData.state}
@@ -314,7 +293,7 @@ export default function PersonalDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              PIN Code
+              {T.translate("personalDetails.pinCode")}
             </AppText>
             <TextInput
               value={formData.pinCode}
@@ -329,13 +308,13 @@ export default function PersonalDetailsForm({
 
         <View className="flex-row justify-between gap-4">
           <Button
-            label="Cancel"
+            label={String(T.translate("personalDetails.cancel"))}
             variant="outline"
             onPress={onCancel}
             className="flex-1"
           />
           <Button
-            label="Save Changes"
+            label={String(T.translate("personalDetails.save"))}
             variant="primary"
             onPress={handleSave}
             className="flex-1"

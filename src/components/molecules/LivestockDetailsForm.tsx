@@ -1,25 +1,14 @@
 // src/components/molecules/LivestockDetailsForm.tsx
 import { useState } from "react";
-import { Alert, TextInput, View } from "react-native";
+import { Alert, ScrollView, TextInput, View } from "react-native";
+import {
+    LivestockDetails,
+    LivestockDetailsFormProps,
+} from "../../data/interfaces";
+import T from "../../i18n";
 import AppText from "../atoms/AppText";
 import Button from "../atoms/Button";
 import Card from "../atoms/Card";
-import { ScrollView } from "react-native";
-
-interface LivestockDetails {
-  cow: number;
-  buffalo: number;
-  sheep: number;
-  goat: number;
-  hen: number;
-  others: number;
-}
-
-type LivestockDetailsFormProps = {
-  initialData: LivestockDetails;
-  onSave: (data: LivestockDetails) => void;
-  onCancel: () => void;
-};
 
 export default function LivestockDetailsForm({
   initialData,
@@ -46,17 +35,17 @@ export default function LivestockDetailsForm({
     <ScrollView className="flex-1 bg-neutral-surface">
       <View className="p-4">
         <AppText variant="h2" className="text-xl font-bold mb-6">
-          Edit Livestock Details
+          {T.translate("livestockDetails.editTitle")}
         </AppText>
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Livestock Count
+            {T.translate("livestockDetails.livestockCount")}
           </AppText>
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Cow
+              {T.translate("livestockDetails.cow")}
             </AppText>
             <TextInput
               value={formData.cow.toString()}
@@ -69,7 +58,7 @@ export default function LivestockDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Buffalo
+              {T.translate("livestockDetails.buffalo")}
             </AppText>
             <TextInput
               value={formData.buffalo.toString()}
@@ -84,7 +73,7 @@ export default function LivestockDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Sheep
+              {T.translate("livestockDetails.sheep")}
             </AppText>
             <TextInput
               value={formData.sheep.toString()}
@@ -99,7 +88,7 @@ export default function LivestockDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Goat
+              {T.translate("livestockDetails.goat")}
             </AppText>
             <TextInput
               value={formData.goat.toString()}
@@ -114,7 +103,7 @@ export default function LivestockDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Hen / Poultry
+              {T.translate("livestockDetails.hen")}
             </AppText>
             <TextInput
               value={formData.hen.toString()}
@@ -127,7 +116,7 @@ export default function LivestockDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Others
+              {T.translate("livestockDetails.others")}
             </AppText>
             <TextInput
               value={formData.others.toString()}
@@ -143,13 +132,13 @@ export default function LivestockDetailsForm({
 
         <View className="flex-row justify-between gap-4">
           <Button
-            label="Cancel"
+            label={String(T.translate("livestockDetails.cancel"))}
             variant="outline"
             onPress={onCancel}
             className="flex-1"
           />
           <Button
-            label="Save Changes"
+            label={String(T.translate("livestockDetails.save"))}
             variant="primary"
             onPress={handleSave}
             className="flex-1"

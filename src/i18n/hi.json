@@ -1,0 +1,149 @@
+{
+  "programs": {
+    "title": "कार्यक्रम",
+    "searchPlaceholder": "पीएम किसान योजना",
+    "governmentSchemes": "सरकारी योजनाएं और सब्सिडी",
+    "trainingPrograms": "प्रशिक्षण और जागरूकता कार्यक्रम",
+    "viewAll": "सभी देखें"
+  },
+
+  "programReader": {
+    "keyObjectives": "मुख्य उद्देश्य",
+    "tabs": {
+      "overview": "अवलोकन",
+      "process": "प्रक्रिया",
+      "support": "सहायता"
+    },
+    "applyNow": "आवेदन करें"
+  },
+
+  "home": {
+    "updateProfile": "अपना प्रोफ़ाइल अपडेट करें",
+    "ongoingEvents": "चल रहे कार्यक्रम",
+    "governmentSchemes": "सरकारी योजनाएं",
+    "bookAppointment": "अपॉइंटमेंट बुक करें",
+    "greeting": {
+      "morning": "सुप्रभात",
+      "afternoon": "नमस्ते",
+      "evening": "शुभ संध्या"
+    },
+    "welcomeBack": "वापसी पर स्वागत है",
+    "quickAccess": "त्वरित पहुंच",
+    "popularSchemes": "लोकप्रिय योजनाएं",
+    "searchPlaceholder": "कार्यक्रम, योजनाएं खोजें..."
+  },
+
+  "schemes": {
+    "pmjdy": {
+      "title": "प्रधान मंत्री जन धन योजना",
+      "description": "अबैंकित नागरिकों को बैंकिंग सेवाएं प्रदान करने वाला वित्तीय समावेशन कार्यक्रम",
+      "category": "वित्तीय समावेशन"
+    },
+    "aby": {
+      "title": "आयुष्मान भारत योजना",
+      "description": "प्रति परिवार ₹5 लाख तक कवरेज प्रदान करने वाली स्वास्थ्य बीमा योजना",
+      "category": "स्वास्थ्य सेवा"
+    },
+    "pmay": {
+      "title": "प्रधान मंत्री आवास योजना",
+      "description": "2022 तक सभी के लिए किफायती घरों की योजना",
+      "category": "आवास"
+    },
+    "sbm": {
+      "title": "स्वच्छ भारत मिशन",
+      "description": "स्वच्छता और अपशिष्ट प्रबंधन के लिए स्वच्छ भारत अभियान",
+      "category": "स्वच्छता"
+    }
+  },
+
+  "personalDetails": {
+    "title": "व्यक्तिगत विवरण",
+    "editTitle": "व्यक्तिगत विवरण संपादित करें",
+    "familyInformation": "परिवार की जानकारी",
+    "fathersName": "पिता का नाम *",
+    "mothersName": "माता का नाम *",
+    "educationalQualification": "शैक्षिक योग्यता",
+    "familyMembers": "परिवार के सदस्य",
+    "sonsMarried": "विवाहित पुत्र",
+    "sonsUnmarried": "अविवाहित पुत्र",
+    "daughtersMarried": "विवाहित पुत्री",
+    "daughtersUnmarried": "अविवाहित पुत्री",
+    "otherFamilyMembers": "अन्य परिवार के सदस्य",
+    "addressInformation": "पते की जानकारी",
+    "village": "गाँव",
+    "gramPanchayat": "ग्राम पंचायत",
+    "nyayPanchayat": "न्याय पंचायत",
+    "postOffice": "डाकघर",
+    "tehsil": "तहसील",
+    "block": "ब्लॉक",
+    "district": "जिला",
+    "pinCode": "पिन कोड",
+    "state": "राज्य",
+    "save": "परिवर्तन सहेजें",
+    "cancel": "रद्द करें"
+  },
+
+  "profile": {
+    "name": "नाम",
+    "age": "आयु",
+    "gender": "लिंग",
+    "aadhaar": "आधार",
+    "location": "स्थान",
+    "editPersonalDetails": "व्यक्तिगत विवरण संपादित करें",
+    "editLandDetails": "जमीन का विवरण संपादित करें",
+    "editLivestockDetails": "पशुधन का विवरण संपादित करें",
+    "language": "भाषा",
+    "settings": "सेटिंग्स",
+    "switchToHindi": "हिंदी में स्विच करें",
+    "switchToEnglish": "Switch to English"
+  },
+
+  "banners": {
+    "welcome": {
+      "title": "तनक प्रभा में आपका स्वागत है",
+      "subtitle": "अद्भुत सुविधाओं की खोज करें"
+    },
+    "programs": {
+      "title": "नए कार्यक्रम उपलब्ध",
+      "subtitle": "हमारे नवीनतम ऑफरिंग्स का अन्वेषण करें"
+    },
+    "connect": {
+      "title": "विशेषज्ञों से जुड़ें",
+      "subtitle": "व्यक्तिगत सहायता प्राप्त करें"
+    }
+  },
+
+  "landDetails": {
+    "title": "जमीन और फसल सारांश",
+    "editTitle": "जमीन का विवरण संपादित करें",
+    "landInformation": "जमीन की जानकारी",
+    "totalLandArea": "कुल भूमि क्षेत्र (बिघा) *",
+    "totalLand": "कुल भूमि क्षेत्र",
+    "cropInformation": "मौसमी फसलें",
+    "rabiCrop": "रबी फसल",
+    "kharifCrop": "खरीफ फसल",
+    "zaidCrop": "जायद फसल (गर्मी का मौसम)",
+    "addLand": "जमीन जोड़ें",
+    "fieldsAdded": "{{count}} खेत जोड़ा गया",
+    "save": "सहेजें",
+    "cancel": "रद्द करें"
+  },
+
+  "livestockDetails": {
+    "title": "पशुधन सारांश",
+    "editTitle": "पशुधन का विवरण संपादित करें",
+    "livestockCount": "पशुधन की संख्या",
+    "cows": "गाएँ",
+    "buffaloes": "भैंसें",
+    "goats": "बकरियाँ",
+    "addLivestock": "पशुधन जोड़ें",
+    "cow": "गाय",
+    "buffalo": "भैंस",
+    "sheep": "भेड़",
+    "goat": "बकरी",
+    "hen": "मुर्गी / पोल्ट्री",
+    "others": "अन्य",
+    "save": "सहेजें",
+    "cancel": "रद्द करें"
+  }
+}

@@ -1,8 +1,11 @@
+import "@/styles/global.css";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as NavigationBar from "expo-navigation-bar";
 import React, { useEffect } from "react";
-import "@/styles/global.css";
+import { LanguageProvider } from "../contexts/LanguageContext";
+import { UserProfileProvider } from "../contexts/UserProfileContext";
+import "../i18n"; // Initialize i18n
 
 export default function RootLayout() {
   useEffect(() => {
@@ -11,11 +14,13 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
-      <StatusBar hidden />
-      <Stack>
-        <Stack.Screen name="(tab)" options={{ headerShown: false }} />
-      </Stack>
-    </>
+    <LanguageProvider>
+      <UserProfileProvider>
+        <StatusBar hidden />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tab)" options={{ headerShown: false }} />
+        </Stack>
+      </UserProfileProvider>
+    </LanguageProvider>
   );
 }

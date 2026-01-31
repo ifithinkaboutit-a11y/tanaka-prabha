@@ -1,23 +1,11 @@
 // src/components/molecules/LandDetailsForm.tsx
 import { useState } from "react";
-import { Alert, TextInput, View } from "react-native";
+import { Alert, ScrollView, TextInput, View } from "react-native";
+import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
+import T from "../../i18n";
 import AppText from "../atoms/AppText";
 import Button from "../atoms/Button";
 import Card from "../atoms/Card";
-import { ScrollView } from "react-native";
-
-interface LandDetails {
-  totalLandArea: number;
-  rabiCrop: string;
-  kharifCrop: string;
-  zaidCrop: string;
-}
-
-type LandDetailsFormProps = {
-  initialData: LandDetails;
-  onSave: (data: LandDetails) => void;
-  onCancel: () => void;
-};
 
 const cropOptions = [
   "Wheat",
@@ -60,17 +48,17 @@ export default function LandDetailsForm({
     <ScrollView className="flex-1 bg-neutral-surface">
       <View className="p-4">
         <AppText variant="h2" className="text-xl font-bold mb-6">
-          Edit Land Details
+          {T.translate("landDetails.editTitle")}
         </AppText>
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Land Information
+            {T.translate("landDetails.landInformation")}
           </AppText>
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Total Land Area (Bighas) *
+              {T.translate("landDetails.totalLandArea")}
             </AppText>
             <TextInput
               value={formData.totalLandArea.toString()}
@@ -86,12 +74,12 @@ export default function LandDetailsForm({
 
         <Card className="p-4 mb-6">
           <AppText variant="h3" className="font-semibold mb-4">
-            Seasonal Crops
+            {T.translate("landDetails.cropInformation")}
           </AppText>
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Rabi Crop (Winter Season)
+              {T.translate("landDetails.rabiCrop")}
             </AppText>
             <TextInput
               value={formData.rabiCrop}
@@ -103,7 +91,7 @@ export default function LandDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Kharif Crop (Monsoon Season)
+              {T.translate("landDetails.kharifCrop")}
             </AppText>
             <TextInput
               value={formData.kharifCrop}
@@ -115,7 +103,7 @@ export default function LandDetailsForm({
 
           <View className="mb-4">
             <AppText variant="bodySm" className="text-neutral-textMedium mb-1">
-              Zaid Crop (Summer Season)
+              {T.translate("landDetails.zaidCrop")}
             </AppText>
             <TextInput
               value={formData.zaidCrop}
@@ -128,13 +116,13 @@ export default function LandDetailsForm({
 
         <View className="flex-row justify-between gap-4">
           <Button
-            label="Cancel"
+            label={String(T.translate("landDetails.cancel"))}
             variant="outline"
             onPress={onCancel}
             className="flex-1"
           />
           <Button
-            label="Save Changes"
+            label={T.translate("landDetails.save")}
             variant="primary"
             onPress={handleSave}
             className="flex-1"

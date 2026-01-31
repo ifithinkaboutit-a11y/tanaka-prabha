@@ -6,54 +6,25 @@ import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Button from "../../components/atoms/Button";
 import Card from "../../components/atoms/Card";
-
-interface UserProfile {
-  name: string;
-  age: number;
-  gender: string;
-  photo: string;
-  mobileNumber: string;
-  aadhaarNumber: string;
-
-  village: string;
-  district: string;
-  state: string;
-
-  totalLandArea: number;
-  rabiCrop: string;
-  kharifCrop: string;
-
-  cows: number;
-  buffaloes: number;
-  goats: number;
-}
+import { defaultProfile } from "../../data/content/profile";
+import { UserProfile } from "../../data/interfaces";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { useTranslation } from "../../i18n";
 
 const Profile = () => {
   const router = useRouter();
+  const { currentLanguage, setLanguage } = useLanguage();
+  const { t } = useTranslation();
 
-  const [profile] = useState<UserProfile>({
-    name: "John Doe",
-    age: 35,
-    gender: "Male",
-    photo: "",
-    mobileNumber: "9876543210",
-    aadhaarNumber: "123456789012",
-
-    village: "Rampur",
-    district: "Lucknow",
-    state: "Uttar Pradesh",
-
-    totalLandArea: 5.5,
-    rabiCrop: "Wheat",
-    kharifCrop: "Rice",
-
-    cows: 2,
-    buffaloes: 1,
-    goats: 3,
-  });
+  const [profile] = useState<UserProfile>(defaultProfile);
 
   const maskAadhaar = (aadhaar: string) =>
     aadhaar.replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3");
+
+  const toggleLanguage = () => {
+    const newLanguage = currentLanguage === "en" ? "hi" : "en";
+    setLanguage(newLanguage);
+  };
 
   return (
     <ScrollView className="flex-1 bg-neutral-surface">
@@ -68,21 +39,27 @@ const Profile = () => {
           />
 
           <View className="flex-1">
-            <AppText variant="bodyMd">Name: {profile.name}</AppText>
-            <AppText variant="bodyMd">Age: {profile.age}</AppText>
-            <AppText variant="bodyMd">Gender: {profile.gender}</AppText>
             <AppText variant="bodyMd">
-              Aadhaar: {maskAadhaar(profile.aadhaarNumber)}
+              {t("profile.name")}: {profile.name}
             </AppText>
             <AppText variant="bodyMd">
-              Location: {profile.village}, {profile.district}
+              {t("profile.age")}: {profile.age}
+            </AppText>
+            <AppText variant="bodyMd">
+              {t("profile.gender")}: {profile.gender}
+            </AppText>
+            <AppText variant="bodyMd">
+              {t("profile.aadhaar")}: {maskAadhaar(profile.aadhaarNumber)}
+            </AppText>
+            <AppText variant="bodyMd">
+              {t("profile.location")}: {profile.village}, {profile.district}
             </AppText>
           </View>
         </View>
 
         <View className="mt-4">
           <Button
-            label="Edit Details"
+            label={t("profile.editPersonalDetails")}
             variant="secondary"
             onPress={() => router.push("/personal-details")}
             className="w-full bg-secondary-soil"
@@ -94,9 +71,9 @@ const Profile = () => {
       <View className="px-4 mb-4">
         <Card>
           <View className="flex-row justify-between items-center mb-2">
-            <AppText variant="h3">Personal Details</AppText>
+            <AppText variant="h3">{t("personalDetails.title")}</AppText>
             <Button
-              label="View all"
+              label={t("programs.viewAll")}
               variant="outline"
               onPress={() => router.push("/personal-details")}
             />
@@ -104,7 +81,9 @@ const Profile = () => {
 
           <View>
             <AppText>Mobile: {profile.mobileNumber}</AppText>
-            <AppText>Aadhaar: {maskAadhaar(profile.aadhaarNumber)}</AppText>
+            <AppText>
+              {t("profile.aadhaar")}: {maskAadhaar(profile.aadhaarNumber)}
+            </AppText>
             <AppText>
               Address: {profile.village}, {profile.district}, {profile.state}
             </AppText>
@@ -116,23 +95,25 @@ const Profile = () => {
       <View className="px-4 mb-4">
         <Card>
           <View className="flex-row justify-between items-center mb-2">
-            <AppText variant="h3">Land & Crop Summary</AppText>
+            <AppText variant="h3">{t("landDetails.title")}</AppText>
             <Button
-              label="Add land"
+              label={t("landDetails.addLand")}
               variant="outline"
               onPress={() => router.push("/land-details")}
             />
           </View>
 
           <View>
-            <AppText>Total Land Area: {profile.totalLandArea} Bigha</AppText>
-            <AppText>Rabi Crop: {profile.rabiCrop}</AppText>
-            <AppText>Kharif Crop: {profile.kharifCrop}</AppText>
+            <AppText>
+              {t("landDetails.totalLand")}: {profile.totalLandArea} Bigha
+            </AppText>
+            <AppText>
+              {t("landDetails.rabiCrop")}: {profile.rabiCrop}
+            </AppText>
+            <AppText>
+              {t("landDetails.kharifCrop")}: {profile.kharifCrop}
+            </AppText>
           </View>
-
-          <AppText variant="bodySm" className="mt-2 text-neutral-textMedium">
-            1 field added
-          </AppText>
         </Card>
       </View>
 
@@ -140,18 +121,42 @@ const Profile = () => {
       <View className="px-4 mb-4">
         <Card>
           <View className="flex-row justify-between items-center mb-2">
-            <AppText variant="h3">Livestock Summary</AppText>
+            <AppText variant="h3">{t("livestockDetails.title")}</AppText>
             <Button
-              label="Add livestock"
+              label={t("livestockDetails.addLivestock")}
               variant="outline"
               onPress={() => router.push("/livestock-details")}
             />
           </View>
 
           <View>
-            <AppText>Cows: {profile.cows}</AppText>
-            <AppText>Buffaloes: {profile.buffaloes}</AppText>
-            <AppText>Goats: {profile.goats}</AppText>
+            <AppText>
+              {t("livestockDetails.cows")}: {profile.cows}
+            </AppText>
+            <AppText>
+              {t("livestockDetails.buffaloes")}: {profile.buffaloes}
+            </AppText>
+            <AppText>
+              {t("livestockDetails.goats")}: {profile.goats}
+            </AppText>
+          </View>
+        </Card>
+      </View>
+
+      {/* SETTINGS */}
+      <View className="px-4 mb-4">
+        <Card>
+          <View className="flex-row justify-between items-center mb-2">
+            <AppText variant="h3">{t("profile.settings")}</AppText>
+          </View>
+
+          <View className="flex-row justify-between items-center">
+            <AppText>{t("profile.language")}</AppText>
+            <Button
+              label={currentLanguage === "en" ? "English" : "हिंदी"}
+              variant="outline"
+              onPress={toggleLanguage}
+            />
           </View>
         </Card>
       </View>

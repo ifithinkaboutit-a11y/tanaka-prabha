@@ -16,19 +16,19 @@ type QuickActionGridProps = {
 
 const defaultActions: QuickActionItem[] = [
   {
-    title: "Update your profile",
+    title: "Update your profile", // Will be translated by parent
     icon: "person-outline",
   },
   {
-    title: "Ongoing Events",
+    title: "Ongoing Events", // Will be translated by parent
     icon: "calendar-outline",
   },
   {
-    title: "Government Schemes",
+    title: "Government Schemes", // Will be translated by parent
     icon: "document-text-outline",
   },
   {
-    title: "Book an Appointment",
+    title: "Book an Appointment", // Will be translated by parent
     icon: "call-outline",
   },
 ];

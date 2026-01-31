@@ -1,6 +1,7 @@
 // src/components/molecules/GreetingHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
+import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import Avatar from "../atoms/Avatar";
 import IconButton from "../atoms/IconButton";
@@ -11,18 +12,20 @@ type GreetingHeaderProps = {
   onAvatarPress?: () => void;
 };
 
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
-};
-
 export default function GreetingHeader({
   name,
   onNotificationPress,
   onAvatarPress,
 }: GreetingHeaderProps) {
+  const { t } = useTranslation();
+
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t("home.greeting.morning");
+    if (hour < 17) return t("home.greeting.afternoon");
+    return t("home.greeting.evening");
+  };
+
   const greeting = getGreeting();
 
   return (

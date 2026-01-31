@@ -1,0 +1,149 @@
+{
+  "programs": {
+    "title": "Programs",
+    "searchPlaceholder": "PM Kisan Yojna",
+    "governmentSchemes": "Government Schemes & Subsidies",
+    "trainingPrograms": "Training & Awareness Programs",
+    "viewAll": "View all"
+  },
+
+  "programReader": {
+    "keyObjectives": "Key Objectives",
+    "tabs": {
+      "overview": "Overview",
+      "process": "Process",
+      "support": "Support"
+    },
+    "applyNow": "Apply Now"
+  },
+
+  "home": {
+    "updateProfile": "Update your profile",
+    "ongoingEvents": "Ongoing Events",
+    "governmentSchemes": "Government Schemes",
+    "bookAppointment": "Book an Appointment",
+    "greeting": {
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening"
+    },
+    "welcomeBack": "Welcome back",
+    "quickAccess": "Quick Access",
+    "popularSchemes": "Popular Schemes",
+    "searchPlaceholder": "Search programs, schemes..."
+  },
+
+  "schemes": {
+    "pmjdy": {
+      "title": "Pradhan Mantri Jan Dhan Yojana",
+      "description": "Financial inclusion program providing banking services to unbanked citizens",
+      "category": "Financial Inclusion"
+    },
+    "aby": {
+      "title": "Ayushman Bharat Yojana",
+      "description": "Health insurance scheme providing coverage up to ₹5 lakhs per family",
+      "category": "Healthcare"
+    },
+    "pmay": {
+      "title": "Pradhan Mantri Awas Yojana",
+      "description": "Housing scheme for affordable homes for all by 2022",
+      "category": "Housing"
+    },
+    "sbm": {
+      "title": "Swachh Bharat Mission",
+      "description": "Clean India campaign for sanitation and waste management",
+      "category": "Sanitation"
+    }
+  },
+
+  "personalDetails": {
+    "title": "Personal Details",
+    "editTitle": "Edit Personal Details",
+    "familyInformation": "Family Information",
+    "fathersName": "Father's Name *",
+    "mothersName": "Mother's Name *",
+    "educationalQualification": "Educational Qualification",
+    "familyMembers": "Family Members",
+    "sonsMarried": "Married Sons",
+    "sonsUnmarried": "Unmarried Sons",
+    "daughtersMarried": "Married Daughters",
+    "daughtersUnmarried": "Unmarried Daughters",
+    "otherFamilyMembers": "Other Family Members",
+    "addressInformation": "Address Information",
+    "village": "Village",
+    "gramPanchayat": "Gram Panchayat",
+    "nyayPanchayat": "Nyay Panchayat",
+    "postOffice": "Post Office",
+    "tehsil": "Tehsil",
+    "block": "Block",
+    "district": "District",
+    "pinCode": "PIN Code",
+    "state": "State",
+    "save": "Save Changes",
+    "cancel": "Cancel"
+  },
+
+  "profile": {
+    "name": "Name",
+    "age": "Age",
+    "gender": "Gender",
+    "aadhaar": "Aadhaar",
+    "location": "Location",
+    "editPersonalDetails": "Edit Personal Details",
+    "editLandDetails": "Edit Land Details",
+    "editLivestockDetails": "Edit Livestock Details",
+    "language": "Language",
+    "settings": "Settings",
+    "switchToHindi": "हिंदी में स्विच करें",
+    "switchToEnglish": "Switch to English"
+  },
+
+  "banners": {
+    "welcome": {
+      "title": "Welcome to Tanak Prabha",
+      "subtitle": "Discover amazing features"
+    },
+    "programs": {
+      "title": "New Programs Available",
+      "subtitle": "Explore our latest offerings"
+    },
+    "connect": {
+      "title": "Connect with Experts",
+      "subtitle": "Get personalized assistance"
+    }
+  },
+
+  "landDetails": {
+    "title": "Land & Crop Summary",
+    "editTitle": "Edit Land Details",
+    "landInformation": "Land Information",
+    "totalLandArea": "Total Land Area (Bighas) *",
+    "totalLand": "Total Land Area",
+    "cropInformation": "Seasonal Crops",
+    "rabiCrop": "Rabi Crop",
+    "kharifCrop": "Kharif Crop",
+    "zaidCrop": "Zaid Crop (Summer Season)",
+    "addLand": "Add land",
+    "fieldsAdded": "{{count}} field added",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+
+  "livestockDetails": {
+    "title": "Livestock Summary",
+    "editTitle": "Edit Livestock Details",
+    "livestockCount": "Livestock Count",
+    "cows": "Cows",
+    "buffaloes": "Buffaloes",
+    "goats": "Goats",
+    "addLivestock": "Add livestock",
+    "cow": "Cow",
+    "buffalo": "Buffalo",
+    "sheep": "Sheep",
+    "goat": "Goat",
+    "hen": "Hen / Poultry",
+    "others": "Others",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}
