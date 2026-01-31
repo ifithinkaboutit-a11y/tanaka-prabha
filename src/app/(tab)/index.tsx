@@ -67,7 +67,12 @@ const Home = () => {
         onNotificationPress={() => console.log("Notifications pressed")}
         onAvatarPress={() => router.push("/profile")}
       />
-      <SearchBar placeholder={t("home.searchPlaceholder")} />
+      <SearchBar
+        placeholder={t("home.searchPlaceholder")}
+        onSearch={(query) => {
+          router.push(`/search?q=${encodeURIComponent(query)}`);
+        }}
+      />
       <View className="px-4 py-2">
         <BannerSlideshow banners={translatedBanners} />
       </View>

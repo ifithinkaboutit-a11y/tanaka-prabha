@@ -1,4 +1,28 @@
 {
+  "schemes": {
+    "title": "योजनाएं",
+    "searchPlaceholder": "पीएम किसान योजना",
+    "featuredScheme": "विशेष योजना",
+    "recommendedSchemes": "अनुशंसित योजनाएं",
+    "categories": "श्रेणियां",
+    "viewAll": "सभी देखें",
+    "applyNow": "अभी आवेदन करें",
+    "readMore": "और पढ़ें",
+    "schemeDetails": "योजना विवरण",
+    "eligibility": "पात्रता",
+    "sortBy": "क्रमबद्ध करें",
+    "sortByName": "नाम",
+    "sortByDate": "तारीख",
+    "filters": "फिल्टर",
+    "noSchemesFound": "आपकी खोज से मेल खाने वाली कोई योजना नहीं मिली",
+    "categoriesList": {
+      "financialSupport": "वित्तीय और क्रेडिट सहायता",
+      "agriculturalDevelopment": "कृषि विकास",
+      "soilManagement": "मिट्टी प्रबंधन",
+      "cropInsurance": "फसल बीमा"
+    }
+  },
+
   "programs": {
     "title": "कार्यक्रम",
     "searchPlaceholder": "पीएम किसान योजना",
@@ -145,5 +169,24 @@
     "others": "अन्य",
     "save": "सहेजें",
     "cancel": "रद्द करें"
+  },
+
+  "search": {
+    "title": "खोज",
+    "placeholder": "योजनाएं, कार्यक्रम और अधिक खोजें...",
+    "noResults": "कोई परिणाम नहीं मिला। अलग-अलग कीवर्ड आजमाएं।",
+    "resultsCount": "{{count}} परिणाम मिला(ए)",
+    "scheme": "योजना",
+    "trainingProgram": "प्रशिक्षण कार्यक्रम",
+    "quickAction": "त्वरित कार्य"
+  },
+
+  "connect": {
+    "title": "कनेक्ट",
+    "subtitle": "आवश्यक सेवाओं और सहायता तक पहुंचें",
+    "training": "प्रशिक्षण",
+    "marketBuyers": "बाजार और खरीदार",
+    "livestockVet": "पशुधन और पशु चिकित्सक",
+    "governmentHelpline": "सरकारी योजना हेल्पलाइन"
   }
 }

@@ -1,4 +1,28 @@
 {
+  "schemes": {
+    "title": "Schemes",
+    "searchPlaceholder": "PM Kisan Yojna",
+    "featuredScheme": "Featured Scheme",
+    "recommendedSchemes": "Recommended Schemes",
+    "categories": "Categories",
+    "viewAll": "View all",
+    "applyNow": "Apply Now",
+    "readMore": "Read more",
+    "schemeDetails": "Scheme Details",
+    "eligibility": "Eligibility",
+    "sortBy": "Sort By",
+    "sortByName": "Name",
+    "sortByDate": "Date",
+    "filters": "Filters",
+    "noSchemesFound": "No schemes found matching your search",
+    "categoriesList": {
+      "financialSupport": "Financial & Credit Support",
+      "agriculturalDevelopment": "Agricultural Development",
+      "soilManagement": "Soil Management",
+      "cropInsurance": "Crop Insurance"
+    }
+  },
+
   "programs": {
     "title": "Programs",
     "searchPlaceholder": "PM Kisan Yojna",
@@ -145,5 +169,24 @@
     "others": "Others",
     "save": "Save",
     "cancel": "Cancel"
+  },
+
+  "search": {
+    "title": "Search",
+    "placeholder": "Search schemes, programs, and more...",
+    "noResults": "No results found. Try different keywords.",
+    "resultsCount": "{{count}} result(s) found",
+    "scheme": "Scheme",
+    "trainingProgram": "Training Program",
+    "quickAction": "Quick Action"
+  },
+
+  "connect": {
+    "title": "Connect",
+    "subtitle": "Access essential services and support",
+    "training": "Training",
+    "marketBuyers": "Market & Buyers",
+    "livestockVet": "Livestock & Vet",
+    "governmentHelpline": "Government Scheme Helpline"
   }
 }

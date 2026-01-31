@@ -1,6 +1,7 @@
 // src/stores/languageStore.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import en from "../i18n/en.json";
 import hi from "../i18n/hi.json";
 
@@ -21,8 +22,19 @@ export const useLanguageStore = create<LanguageState>()(
     (set, get) => ({
       currentLanguage: "en",
       translations,
-      setLanguage: (language: string) => {
+      setLanguage: async (language: string) => {
         set({ currentLanguage: language });
+
+        // Reload the app to apply language changes gracefully
+        try {
+          await Updates.reloadAsync();
+        } catch (error) {
+          console.warn("Failed to reload app after language change:", error);
+          // Fallback: show message to user
+          console.log(
+            `Language changed to ${language}. Please restart the app to see changes.`,
+          );
+        }
       },
       translate: (key: string) => {
         const { currentLanguage, translations } = get();
@@ -38,6 +50,7 @@ export const useLanguageStore = create<LanguageState>()(
     }),
     {
       name: "language-storage",
+      storage: createJSONStorage(() => AsyncStorage),
     },
   ),
 );

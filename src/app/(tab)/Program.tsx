@@ -42,12 +42,10 @@ const Program = () => {
   };
 
   const handleViewAllSchemes = () => {
-    // Navigate to full schemes list - placeholder for future implementation
     alert("Full schemes list coming soon!");
   };
 
   const handleViewAllTraining = () => {
-    // Navigate to full training programs list - placeholder for future implementation
     alert("Full training programs list coming soon!");
   };
 

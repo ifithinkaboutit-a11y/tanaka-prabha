@@ -2,6 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Alert, TextInput, View } from "react-native";
+import { useVoiceInput } from "../../hooks/useVoiceInput";
 import { colors } from "../../styles/colors";
 
 type SearchBarProps = {
@@ -16,16 +17,36 @@ export default function SearchBar({
   onVoiceInput,
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isListening, startListening, stopListening, isAvailable } =
+    useVoiceInput({
+      onResult: (text) => {
+        setSearchQuery(text);
+        if (onSearch) {
+          onSearch(text);
+        }
+      },
+      onError: (error) => {
+        Alert.alert("Voice Input Error", error);
+      },
+    });
 
   const handleVoicePress = () => {
+    if (!isAvailable) {
+      Alert.alert(
+        "Voice Input",
+        "Voice recognition is not available on this device.",
+      );
+      return;
+    }
+
     if (onVoiceInput) {
       onVoiceInput();
     } else {
-      // Placeholder for voice input functionality
-      Alert.alert(
-        "Voice Input",
-        "Voice input feature would be implemented here using a speech recognition library like @react-native-voice/voice",
-      );
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
     }
   };
 
@@ -54,9 +75,15 @@ export default function SearchBar({
       />
 
       <Ionicons
-        name="mic-outline"
+        name={isListening ? "mic" : "mic-outline"}
         size={20}
-        color={colors.neutral.textLight}
+        color={
+          !isAvailable
+            ? "#ccc" // Disabled color
+            : isListening
+              ? colors.primary.main
+              : colors.neutral.textLight
+        }
         onPress={handleVoicePress}
         style={{ marginLeft: 8 }}
       />
