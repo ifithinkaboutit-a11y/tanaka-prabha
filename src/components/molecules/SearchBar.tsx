@@ -34,7 +34,7 @@ export default function SearchBar({
     if (!isAvailable) {
       Alert.alert(
         "Voice Input",
-        "Voice recognition is not available on this device.",
+        "Voice recognition is currently not available. This feature requires additional setup for your device. Please use text search for now.",
       );
       return;
     }

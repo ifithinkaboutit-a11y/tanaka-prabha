@@ -1,5 +1,6 @@
 // src/stores/languageStore.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Updates from "expo-updates";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import en from "../i18n/en.json";
@@ -27,12 +28,14 @@ export const useLanguageStore = create<LanguageState>()(
 
         // Reload the app to apply language changes gracefully
         try {
+          console.log("Attempting to reload app for language change...");
           await Updates.reloadAsync();
+          console.log("App reloaded successfully");
         } catch (error) {
           console.warn("Failed to reload app after language change:", error);
           // Fallback: show message to user
           console.log(
-            `Language changed to ${language}. Please restart the app to see changes.`,
+            `Language changed to ${language}. Please restart the app manually to see changes.`,
           );
         }
       },
