@@ -1,9 +1,8 @@
 // src/components/molecules/ProgramSection.tsx
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Scheme } from "../../data/interfaces";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
-import Button from "../atoms/Button";
 import ProgramCard from "../atoms/ProgramCard";
 
 type ProgramSectionProps = {
@@ -22,24 +21,22 @@ export default function ProgramSection({
   const { t } = useTranslation();
 
   return (
-    <View className="mb-6 px-4">
+    <View className="mb-6 px-4 bg-white">
       {/* Section Header */}
-      <View className="flex-row items-center justify-center m-4 p-4">
-        <AppText variant="h2" className="text-neutral-textDark">
+      <View className="flex-row items-center justify-between mb-4">
+        <AppText variant="h3" className="font-bold text-neutral-textDark">
           {title}
         </AppText>
-        <Button
-          label={t("programs.viewAll")}
-          variant="outline"
-          size="sm"
-          onPress={onViewAll}
-          className="text-primary"
-        />
+        <TouchableOpacity onPress={onViewAll}>
+          <AppText variant="bodySm" className="text-primary-forest font-medium">
+            {t("programs.viewAll")}
+          </AppText>
+        </TouchableOpacity>
       </View>
 
       {/* Program Cards */}
-      <View className="px-4">
-        {programs.map((program) => (
+      <View>
+        {programs.slice(0, 1).map((program) => (
           <ProgramCard
             key={program.id}
             program={program}

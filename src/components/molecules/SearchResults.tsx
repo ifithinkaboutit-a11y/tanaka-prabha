@@ -36,13 +36,16 @@ export default function SearchResults({
     // Default navigation based on type
     switch (result.type) {
       case "scheme":
-        router.push(`/scheme-details?id=${result.id}`);
+        router.push(`/scheme-details?schemeId=${result.id}` as any);
         break;
       case "training":
-        router.push(`/program-details?id=${result.id}`);
+        router.push(`/program-details?programId=${result.id}` as any);
         break;
       case "quickAction":
-        // Handle quick action navigation
+        // Handle quick action navigation based on the result item
+        if (result.item?.route) {
+          router.push(result.item.route as any);
+        }
         break;
       default:
         break;

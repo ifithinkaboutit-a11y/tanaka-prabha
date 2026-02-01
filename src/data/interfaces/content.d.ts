@@ -10,6 +10,7 @@ export interface Banner {
 export interface QuickAction {
   title: string;
   icon: keyof typeof import("@expo/vector-icons").Ionicons.glyphMap;
+  imageUrl?: string;
 }
 
 export interface Scheme {

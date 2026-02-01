@@ -32,13 +32,13 @@ export default function LivestockDetailsForm({
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
+    <ScrollView className="flex-1" style={{ backgroundColor: "#F6F6F6" }}>
       <View className="p-4">
         <AppText variant="h2" className="text-xl font-bold mb-6">
           {T.translate("livestockDetails.editTitle")}
         </AppText>
 
-        <Card className="p-4 mb-6">
+        <Card className="p-4 mb-6" style={{ backgroundColor: "#FFFFFF" }}>
           <AppText variant="h3" className="font-semibold mb-4">
             {T.translate("livestockDetails.livestockCount")}
           </AppText>

@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, View } from "react-native";
+import { Image, Linking, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
@@ -39,10 +39,7 @@ const ProgramDetails = () => {
 
   const handleApplyNow = () => {
     if (program.applyUrl) {
-      // In a real app, this would open the URL or navigate to application flow
-      console.log(`Navigate to application: ${program.applyUrl}`);
-      // For now, just show an alert
-      alert(`Application URL: ${program.applyUrl}`);
+      Linking.openURL(program.applyUrl);
     }
   };
 

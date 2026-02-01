@@ -8,12 +8,17 @@ import { quickActions as quickActionsData } from "@/data/content/quickActions";
 import { schemes } from "@/data/content/schemes";
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import AppText from "../../components/atoms/AppText";
 import { useTranslation } from "../../i18n";
 
 const Home = () => {
   const router = useRouter();
   const { t } = useTranslation();
+
+  const handleNotificationPress = () => {
+    router.push("/notifications" as any);
+  };
 
   const quickActions = quickActionsData.map((action) => ({
     ...action,
@@ -23,16 +28,16 @@ const Home = () => {
         action.title // Use original key for comparison
       ) {
         case "home.updateProfile":
-          router.push("/profile");
+          router.push("/(tab)/profile");
           break;
         case "home.ongoingEvents":
-          console.log("Navigate to events");
+          router.push("/(tab)/program");
           break;
         case "home.governmentSchemes":
-          console.log("Navigate to schemes");
+          router.push("/(tab)/schemes");
           break;
         case "home.bookAppointment":
-          console.log("Navigate to connect/appointments");
+          router.push("/(tab)/connect");
           break;
         default:
           break;
@@ -59,37 +64,64 @@ const Home = () => {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#F6F6F6]"
+      style={{ flex: 1, backgroundColor: "#F9FAFB" }}
       showsVerticalScrollIndicator={false}
     >
-      <GreetingHeader
-        name="John Doe"
-        onNotificationPress={() => console.log("Notifications pressed")}
-        onAvatarPress={() => router.push("/profile")}
-      />
-      <SearchBar
-        placeholder={t("home.searchPlaceholder")}
-        onSearch={(query) => {
-          router.push(`/search?q=${encodeURIComponent(query)}`);
-        }}
-      />
-      <View className="px-4 py-2">
+      {/* Header with greeting and notification */}
+      <View style={{ backgroundColor: "#FFFFFF" }}>
+        <GreetingHeader
+          name="Shivansh Ji"
+          onNotificationPress={handleNotificationPress}
+          onAvatarPress={() => router.push("/(tab)/profile")}
+        />
+      </View>
+      {/* Search Bar */}
+      <View style={{ backgroundColor: "#FFFFFF", paddingBottom: 16 }}>
+        <SearchBar
+          placeholder={t("home.searchPlaceholder")}
+          onSearch={(query) => {
+            router.push(`/search?q=${encodeURIComponent(query)}`);
+          }}
+        />
+      </View>
+      {/* Banner Slideshow */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
         <BannerSlideshow banners={translatedBanners} />
       </View>
-      <View className="px-8 pb-8">
-        <Text className="text-left text-black text-3xl font-bold">
-          {t("home.quickAccess")}
-        </Text>
+      {/* Quick Actions Section */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+        <AppText
+          variant="h2"
+          style={{
+            fontSize: 22,
+            fontWeight: "700",
+            color: "#1F2937",
+            marginBottom: 12,
+          }}
+        >
+          Quick Actions
+        </AppText>
         <QuickActionGrid actions={quickActions} />
       </View>
-      <View className="px-8 pb-8">
-        <Text className="text-left text-black text-3xl font-bold mb-4">
+      {/* Popular Schemes Section - Hidden for cleaner look matching Figma */}
+      {/* Uncomment if needed: */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+        <AppText
+          variant="h2"
+          style={{
+            fontSize: 22,
+            fontWeight: "700",
+            color: "#1F2937",
+            marginBottom: 12,
+          }}
+        >
           {t("home.popularSchemes")}
-        </Text>
+        </AppText>
         <SchemePreviewList
           schemes={schemes.map((scheme) => ({
             ...scheme,
-            onPress: () => console.log(`Navigate to ${scheme.title} details`),
+            onPress: () =>
+              router.push(`/scheme-details?schemeId=${scheme.id}` as any),
           }))}
         />
       </View>

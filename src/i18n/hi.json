@@ -1,5 +1,69 @@
 {
-  "schemes": {
+  "language": {
+    "selectLanguage": "अपनी भाषा चुनें",
+    "selectSubtitle": "ऐप का उपयोग करने के लिए अपनी पसंदीदा भाषा चुनें",
+    "hindi": "हिंदी",
+    "english": "अंग्रेज़ी",
+    "continue": "जारी रखें"
+  },
+  "auth": {
+    "welcomeTitle": "तनक प्रभा में आपका स्वागत है",
+    "welcomeDescription": "सरकारी और निजी कृषि योजनाएं देखें, आसानी से आवेदन करें और अपने खेत, परिवार और पशुधन का विवरण आसानी से प्रबंधित करें",
+    "skipForNow": "अभी के लिए छोड़ें",
+    "continue": "जारी रखें",
+    "enterPhone": "अपना मोबाइल नंबर दर्ज करें",
+    "phoneSubtitle": "हम सत्यापन के लिए एक OTP भेजेंगे",
+    "mobileNumber": "मोबाइल नंबर",
+    "getOtp": "OTP प्राप्त करें",
+    "alreadyRegistered": "पहले से पंजीकृत हैं?",
+    "login": "लॉगिन करें",
+    "enterOTP": "OTP दर्ज करें",
+    "otpSentTo": "हमने 6 अंकों का OTP भेजा है",
+    "verifyOTP": "सत्यापित करें",
+    "didntReceiveOtp": "OTP नहीं मिला?",
+    "resendOTP": "OTP पुनः भेजें",
+    "resendOtpIn": "OTP पुनः भेजें",
+    "changeNumber": "मोबाइल नंबर बदलें"
+  },
+  "onboarding": {
+    "personal": {
+      "title": "व्यक्तिगत जानकारी",
+      "subtitle": "आपके लिए योजनाओं को व्यक्तिगत बनाने के लिए कुछ विवरण बताएं",
+      "fullName": "पूरा नाम",
+      "fullNamePlaceholder": "नाम दर्ज करें",
+      "state": "राज्य",
+      "selectState": "राज्य चुनें",
+      "district": "जिला",
+      "selectDistrict": "जिला चुनें",
+      "village": "गाँव",
+      "selectVillage": "गाँव चुनें"
+    },
+    "land": {
+      "title": "भूमि और फसल विवरण",
+      "subtitle": "आपकी फसलों के लिए कृषि योजनाएं दिखाने में मदद करता है",
+      "doYouHaveLand": "क्या आपके पास भूमि है?",
+      "totalArea": "कुल क्षेत्रफल",
+      "unit": "इकाई",
+      "mainCrop": "मुख्य फसल",
+      "selectCrop": "फसल चुनें",
+      "addLand": "भूमि जोड़ें",
+      "landAdded": "भूमि जोड़ी गई"
+    },
+    "livestock": {
+      "title": "पशुधन विवरण",
+      "subtitle": "यह हमें पशुपालन योजनाएं दिखाने में मदद करता है",
+      "doYouHaveLivestock": "क्या आपके पास पशुधन है?",
+      "animal": "जानवर",
+      "selectAnimal": "जानवर चुनें",
+      "numberOfAnimals": "संख्या",
+      "addAnimal": "जानवर जोड़ें",
+      "animalsAdded": "जानवर जोड़े गए"
+    },
+    "next": "आगे",
+    "finish": "समाप्त",
+    "skip": "अभी के लिए छोड़ें"
+  },
+  "schemesPage": {
     "title": "योजनाएं",
     "searchPlaceholder": "पीएम किसान योजना",
     "featuredScheme": "विशेष योजना",
@@ -9,12 +73,15 @@
     "applyNow": "अभी आवेदन करें",
     "readMore": "और पढ़ें",
     "schemeDetails": "योजना विवरण",
+    "schemeNotFound": "योजना नहीं मिली",
     "eligibility": "पात्रता",
     "sortBy": "क्रमबद्ध करें",
     "sortByName": "नाम",
     "sortByDate": "तारीख",
     "filters": "फिल्टर",
     "noSchemesFound": "आपकी खोज से मेल खाने वाली कोई योजना नहीं मिली",
+    "schemesAvailable": "योजनाएं उपलब्ध",
+    "allSchemes": "सभी योजनाएं",
     "categoriesList": {
       "financialSupport": "वित्तीय और क्रेडिट सहायता",
       "agriculturalDevelopment": "कृषि विकास",
@@ -108,18 +175,37 @@
   },
 
   "profile": {
+    "title": "प्रोफ़ाइल",
     "name": "नाम",
     "age": "आयु",
     "gender": "लिंग",
     "aadhaar": "आधार",
     "location": "स्थान",
+    "editDetails": "विवरण संपादित करें",
     "editPersonalDetails": "व्यक्तिगत विवरण संपादित करें",
     "editLandDetails": "जमीन का विवरण संपादित करें",
     "editLivestockDetails": "पशुधन का विवरण संपादित करें",
+    "personalDetails": "व्यक्तिगत विवरण",
+    "mobileNumber": "मोबाइल नंबर",
+    "address": "पता",
+    "viewAll": "सभी देखें",
+    "landOwned": "स्वामित्व वाली भूमि",
+    "primaryCrop": "प्रमुख फसल",
+    "fieldsAdded": "जोड़े गए खेत",
+    "bigha": "बिघा",
     "language": "भाषा",
     "settings": "सेटिंग्स",
     "switchToHindi": "हिंदी में स्विच करें",
-    "switchToEnglish": "Switch to English"
+    "switchToEnglish": "Switch to English",
+    "selectLanguage": "भाषा चुनें"
+  },
+
+  "common": {
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "ok": "ठीक है"
   },
 
   "banners": {
@@ -184,9 +270,90 @@
   "connect": {
     "title": "कनेक्ट",
     "subtitle": "आवश्यक सेवाओं और सहायता तक पहुंचें",
+    "whatHelpWith": "आपको किस मदद की जरूरत है?",
+    "recentConnections": "हाल के कनेक्शन",
+    "viewAll": "सभी देखें",
+    "connectedOn": "कनेक्ट किया",
+    "method": "तरीका",
+    "emergencyTitle": "आपातकालीन सहायता चाहिए?",
+    "emergencySubtitle": "हेल्पलाइन पर कॉल करने के लिए बटन दबाएं",
+    "showingResults": "{{count}} परिणाम दिखा रहे हैं",
+    "noProfessionalsFound": "इस श्रेणी में कोई पेशेवर नहीं मिला",
+    "professionalNotFound": "पेशेवर नहीं मिला",
+    "roleLabel": "भूमिका",
+    "departmentLabel": "विभाग",
+    "serviceArea": "सेवा क्षेत्र",
+    "district": "जिला",
+    "blocks": "कवर किए गए ब्लॉक",
+    "state": "राज्य",
+    "availableForOnCall": "जिला सीमा के भीतर ऑन-कॉल सहायता के लिए उपलब्ध",
+    "specialization": "विशेषज्ञता",
+    "callThem": "उन्हें कॉल करें",
+    "chatWithThem": "उनसे चैट करें",
+    "bookAppointment": "अपॉइंटमेंट बुक करें",
+    "howToConnect": "आप कैसे जुड़ना चाहेंगे?",
     "training": "प्रशिक्षण",
     "marketBuyers": "बाजार और खरीदार",
     "livestockVet": "पशुधन और पशु चिकित्सक",
-    "governmentHelpline": "सरकारी योजना हेल्पलाइन"
+    "governmentHelpline": "सरकारी योजना हेल्पलाइन",
+    "services": {
+      "governmentSchemes": "सरकारी योजनाएं",
+      "trainingGuidance": "प्रशिक्षण और मार्गदर्शन",
+      "marketBuyers": "बाजार और खरीदार",
+      "livestockVeterinary": "पशुधन और पशु चिकित्सा"
+    },
+    "methods": {
+      "call": "कॉल",
+      "chat": "चैट",
+      "appointment": "अपॉइंटमेंट"
+    },
+    "roles": {
+      "animalDoctor": "पशु चिकित्सक",
+      "agricultureOfficer": "कृषि विस्तार अधिकारी",
+      "schemeCoordinator": "योजना समन्वयक",
+      "marketOfficer": "बाजार संपर्क अधिकारी",
+      "vetOfficer": "पशु चिकित्सा अधिकारी"
+    },
+    "departments": {
+      "animalHusbandry": "पशुपालन विभाग",
+      "agriculture": "कृषि विभाग",
+      "krishiBhawan": "कृषि भवन",
+      "marketing": "कृषि विपणन"
+    },
+    "specializations": {
+      "cattleHealth": "मवेशी स्वास्थ्य (गाय, भैंस)",
+      "goatSheep": "बकरी और भेड़ उपचार",
+      "poultry": "मुर्गी पालन रोग प्रबंधन",
+      "cropManagement": "फसल प्रबंधन",
+      "soilHealth": "मिट्टी स्वास्थ्य",
+      "organicFarming": "जैविक खेती तकनीक",
+      "pmKisan": "पीएम-किसान नामांकन",
+      "cropInsurance": "फसल बीमा दावे",
+      "subsidyApps": "सब्सिडी आवेदन",
+      "mandiPrice": "मंडी मूल्य अपडेट",
+      "buyerConnections": "खरीदार कनेक्शन",
+      "coldStorage": "कोल्ड स्टोरेज सुविधाएं",
+      "vaccination": "मवेशी टीकाकरण",
+      "breeding": "प्रजनन कार्यक्रम",
+      "diseasePrevention": "रोग निवारण"
+    }
+  },
+
+  "notifications": {
+    "title": "सूचनाएं",
+    "today": "आज",
+    "yesterday": "कल",
+    "others": "अन्य",
+    "kisanCardApproved": "किसान क्रेडिट कार्ड स्वीकृत",
+    "kisanCardApprovedDesc": "आपका किसान क्रेडिट कार्ड स्वीकृत हो गया है...",
+    "loanReminder": "ऋण भुगतान अनुस्मारक",
+    "loanReminderDesc": "आपके केसीसी ऋण का भुगतान 15 दिन में...",
+    "weatherAlert": "मौसम चेतावनी",
+    "weatherAlertDesc": "भारी वर्षा की संभावना। फसल बीमा...",
+    "pushEnabled": "पुश नोटिफिकेशन सक्षम",
+    "testSent": "टेस्ट नोटिफिकेशन भेजा गया",
+    "testSentDesc": "आपको जल्द ही एक नोटिफिकेशन मिलेगा।",
+    "testError": "त्रुटि",
+    "testErrorDesc": "टेस्ट नोटिफिकेशन नहीं भेज सका। सुनिश्चित करें कि आप फिजिकल डिवाइस पर हैं।"
   }
 }

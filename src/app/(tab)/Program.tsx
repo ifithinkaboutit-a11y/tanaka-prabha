@@ -42,45 +42,45 @@ const Program = () => {
   };
 
   const handleViewAllSchemes = () => {
-    alert("Full schemes list coming soon!");
+    router.push("/(tab)/schemes" as any);
   };
 
   const handleViewAllTraining = () => {
-    alert("Full training programs list coming soon!");
+    console.log("View all training programs");
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
+    <ScrollView className="flex-1 bg-white">
       {/* Header */}
-      <View className="pt-12 pb-4 px-8 bg-white">
-        <AppText variant="h1" className="text-neutral-textDark">
+      <View className="pt-12 pb-4 px-4 bg-white">
+        <AppText variant="h2" className="font-bold text-neutral-textDark">
           {t("programs.title")}
         </AppText>
       </View>
+
       {/* Search Bar */}
-      <View className="py-4">
+      <View className="pb-4 bg-white">
         <SearchBar
           placeholder={t("programs.searchPlaceholder")}
           onSearch={setSearchQuery}
         />
       </View>
-      <View className="px-4">
-        {/* Government Schemes Section */}
-        <ProgramSection
-          title={t("programs.governmentSchemes")}
-          programs={filteredSchemes}
-          onViewAll={handleViewAllSchemes}
-          onProgramPress={handleProgramPress}
-        />
 
-        {/* Training Programs Section */}
-        <ProgramSection
-          title={t("programs.trainingPrograms")}
-          programs={filteredTrainingPrograms}
-          onViewAll={handleViewAllTraining}
-          onProgramPress={handleProgramPress}
-        />
-      </View>
+      {/* Government Schemes Section */}
+      <ProgramSection
+        title={t("programs.governmentSchemes")}
+        programs={filteredSchemes}
+        onViewAll={handleViewAllSchemes}
+        onProgramPress={handleProgramPress}
+      />
+
+      {/* Training Programs Section */}
+      <ProgramSection
+        title={t("programs.trainingPrograms")}
+        programs={filteredTrainingPrograms}
+        onViewAll={handleViewAllTraining}
+        onProgramPress={handleProgramPress}
+      />
     </ScrollView>
   );
 };

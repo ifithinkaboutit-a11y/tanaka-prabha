@@ -35,20 +35,20 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}) => {
         // Try different methods to check availability
         let available = false;
 
-        if (typeof Voice.isAvailable === "function") {
-          console.log("Using Voice.isAvailable()");
-          available = await Voice.isAvailable();
-        } else if (typeof Voice.isSpeechAvailable === "function") {
-          console.log("Using Voice.isSpeechAvailable()");
-          available = await Voice.isSpeechAvailable();
-        } else if (typeof Voice.getSpeechRecognitionServices === "function") {
-          console.log("Using Voice.getSpeechRecognitionServices()");
-          const services = await Voice.getSpeechRecognitionServices();
-          available = services && services.length > 0;
-        } else {
-          console.log("No availability check method found, assuming available");
-          // Fallback: assume available if Voice exists
-          available = true;
+        try {
+          if (Voice && typeof Voice.isAvailable === "function") {
+            console.log("Using Voice.isAvailable()");
+            available = await Voice.isAvailable();
+          } else if (Voice && Voice.isRecognizing !== undefined) {
+            console.log("Voice module exists, assuming available");
+            available = true;
+          } else {
+            console.log("No availability check method found");
+            available = false;
+          }
+        } catch (err) {
+          console.warn("Error checking voice availability:", err);
+          available = false;
         }
 
         console.log("Voice recognition available:", available);

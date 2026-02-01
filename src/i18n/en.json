@@ -1,5 +1,69 @@
 {
-  "schemes": {
+  "language": {
+    "selectLanguage": "Choose Your Language",
+    "selectSubtitle": "Select the language you prefer for using the app",
+    "hindi": "Hindi",
+    "english": "English",
+    "continue": "Continue"
+  },
+  "auth": {
+    "welcomeTitle": "Welcome to TanakPrabha",
+    "welcomeDescription": "View government & private farming schemes, apply easily and manage your farm, family & livestock details easily",
+    "skipForNow": "Skip for now",
+    "continue": "Continue",
+    "enterPhone": "Enter Your Mobile Number",
+    "phoneSubtitle": "We will send an OTP for verification",
+    "mobileNumber": "Mobile Number",
+    "getOtp": "Get OTP",
+    "alreadyRegistered": "Already registered?",
+    "login": "Login",
+    "enterOTP": "Enter OTP",
+    "otpSentTo": "We have sent a 6-digit OTP to",
+    "verifyOTP": "Verify",
+    "didntReceiveOtp": "Didn't receive OTP?",
+    "resendOTP": "Resend OTP",
+    "resendOtpIn": "Resend OTP in",
+    "changeNumber": "Change mobile number"
+  },
+  "onboarding": {
+    "personal": {
+      "title": "Personal Information",
+      "subtitle": "Tell us a few details to personalize schemes for you",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Enter Name",
+      "state": "State",
+      "selectState": "Select State",
+      "district": "District",
+      "selectDistrict": "Select District",
+      "village": "Village",
+      "selectVillage": "Select Village"
+    },
+    "land": {
+      "title": "Land & Crop Details",
+      "subtitle": "Helps us show farming schemes for your crops",
+      "doYouHaveLand": "Do you have land?",
+      "totalArea": "Total Area",
+      "unit": "Unit",
+      "mainCrop": "Main Crop",
+      "selectCrop": "Select Crop",
+      "addLand": "Add land",
+      "landAdded": "land added"
+    },
+    "livestock": {
+      "title": "Livestock Details",
+      "subtitle": "This helps us show schemes for animal husbandry",
+      "doYouHaveLivestock": "Do you have Livestock?",
+      "animal": "Animal",
+      "selectAnimal": "Select Animal",
+      "numberOfAnimals": "Number",
+      "addAnimal": "Add animal",
+      "animalsAdded": "animals added"
+    },
+    "next": "Next",
+    "finish": "Finish",
+    "skip": "Skip for now"
+  },
+  "schemesPage": {
     "title": "Schemes",
     "searchPlaceholder": "PM Kisan Yojna",
     "featuredScheme": "Featured Scheme",
@@ -9,12 +73,15 @@
     "applyNow": "Apply Now",
     "readMore": "Read more",
     "schemeDetails": "Scheme Details",
+    "schemeNotFound": "Scheme not found",
     "eligibility": "Eligibility",
     "sortBy": "Sort By",
     "sortByName": "Name",
     "sortByDate": "Date",
     "filters": "Filters",
     "noSchemesFound": "No schemes found matching your search",
+    "schemesAvailable": "schemes available",
+    "allSchemes": "All Schemes",
     "categoriesList": {
       "financialSupport": "Financial & Credit Support",
       "agriculturalDevelopment": "Agricultural Development",
@@ -108,18 +175,37 @@
   },
 
   "profile": {
+    "title": "Profile",
     "name": "Name",
     "age": "Age",
     "gender": "Gender",
     "aadhaar": "Aadhaar",
     "location": "Location",
+    "editDetails": "Edit Details",
     "editPersonalDetails": "Edit Personal Details",
     "editLandDetails": "Edit Land Details",
     "editLivestockDetails": "Edit Livestock Details",
+    "personalDetails": "Personal Details",
+    "mobileNumber": "Mobile Number",
+    "address": "Address",
+    "viewAll": "View all",
+    "landOwned": "Land Owned",
+    "primaryCrop": "Primary Crop",
+    "fieldsAdded": "Fields Added",
+    "bigha": "Bigha",
     "language": "Language",
     "settings": "Settings",
     "switchToHindi": "हिंदी में स्विच करें",
-    "switchToEnglish": "Switch to English"
+    "switchToEnglish": "Switch to English",
+    "selectLanguage": "Select Language"
+  },
+
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
   },
 
   "banners": {
@@ -184,9 +270,90 @@
   "connect": {
     "title": "Connect",
     "subtitle": "Access essential services and support",
+    "whatHelpWith": "What do you need help with?",
+    "recentConnections": "Recent Connections",
+    "viewAll": "View all",
+    "connectedOn": "Connected on",
+    "method": "Method",
+    "emergencyTitle": "Emergency help needed?",
+    "emergencySubtitle": "Press the button to call helpline",
+    "showingResults": "Showing {{count}} results",
+    "noProfessionalsFound": "No professionals found in this category",
+    "professionalNotFound": "Professional not found",
+    "roleLabel": "Role",
+    "departmentLabel": "Department",
+    "serviceArea": "Service Area",
+    "district": "District",
+    "blocks": "Blocks Covered",
+    "state": "State",
+    "availableForOnCall": "Available for on-call support within district limits",
+    "specialization": "Specialization",
+    "callThem": "Call them",
+    "chatWithThem": "Chat with them",
+    "bookAppointment": "Book Appointment",
+    "howToConnect": "How would you like to connect?",
     "training": "Training",
     "marketBuyers": "Market & Buyers",
     "livestockVet": "Livestock & Vet",
-    "governmentHelpline": "Government Scheme Helpline"
+    "governmentHelpline": "Government Scheme Helpline",
+    "services": {
+      "governmentSchemes": "Government Schemes",
+      "trainingGuidance": "Training & Guidance",
+      "marketBuyers": "Market & Buyers",
+      "livestockVeterinary": "Livestock & Veterinary"
+    },
+    "methods": {
+      "call": "Call",
+      "chat": "Chat",
+      "appointment": "Appointment"
+    },
+    "roles": {
+      "animalDoctor": "Animal Doctor",
+      "agricultureOfficer": "Agriculture Extension Officer",
+      "schemeCoordinator": "Scheme Coordinator",
+      "marketOfficer": "Market Liaison Officer",
+      "vetOfficer": "Veterinary Officer"
+    },
+    "departments": {
+      "animalHusbandry": "Animal Husbandry Department",
+      "agriculture": "Agriculture Department",
+      "krishiBhawan": "Krishi Bhawan",
+      "marketing": "Agricultural Marketing"
+    },
+    "specializations": {
+      "cattleHealth": "Cattle health (Cow, Buffalo)",
+      "goatSheep": "Goat & Sheep treatment",
+      "poultry": "Poultry disease management",
+      "cropManagement": "Crop management",
+      "soilHealth": "Soil health",
+      "organicFarming": "Organic farming techniques",
+      "pmKisan": "PM-KISAN enrollment",
+      "cropInsurance": "Crop insurance claims",
+      "subsidyApps": "Subsidy applications",
+      "mandiPrice": "Mandi price updates",
+      "buyerConnections": "Buyer connections",
+      "coldStorage": "Cold storage facilities",
+      "vaccination": "Cattle vaccination",
+      "breeding": "Breeding programs",
+      "diseasePrevention": "Disease prevention"
+    }
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "others": "Others",
+    "kisanCardApproved": "Kisan Credit Card Approved",
+    "kisanCardApprovedDesc": "Your Kisan Credit Card has been approved...",
+    "loanReminder": "Loan Repayment Reminder",
+    "loanReminderDesc": "Your KCC loan repayment is due in 15 da...",
+    "weatherAlert": "Weather Alert",
+    "weatherAlertDesc": "Heavy rainfall expected. Crop insurance...",
+    "pushEnabled": "Push notifications enabled",
+    "testSent": "Test Notification Sent",
+    "testSentDesc": "You should receive a notification shortly.",
+    "testError": "Error",
+    "testErrorDesc": "Could not send test notification. Make sure you're on a physical device."
   }
 }

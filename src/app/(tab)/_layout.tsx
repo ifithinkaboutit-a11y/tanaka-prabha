@@ -90,7 +90,7 @@ const TabNavigation = () => {
               color={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
             />
           ),
-          headerShown: true,
+          headerShown: false,
           headerRight: () => (
             <Ionicons name="settings-outline" size={24} color={ACTIVE_COLOR} style={{ marginRight: 20 }} />
           ),

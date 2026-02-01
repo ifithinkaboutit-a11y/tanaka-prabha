@@ -57,7 +57,19 @@ export default function SearchBar({
   };
 
   return (
-    <View className="flex-row items-center bg-white border border-gray-300 rounded-lg px-3 py-2 mx-8">
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F9FAFB",
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        marginHorizontal: 16,
+      }}
+    >
       <Ionicons
         name="search-outline"
         size={20}
@@ -68,7 +80,12 @@ export default function SearchBar({
         value={searchQuery}
         onChangeText={setSearchQuery}
         placeholder={placeholder}
-        className="flex-1 ml-2 text-bodyMd text-neutral-textDark"
+        style={{
+          flex: 1,
+          marginLeft: 12,
+          fontSize: 15,
+          color: "#1F2937",
+        }}
         placeholderTextColor={colors.neutral.textLight}
         onSubmitEditing={handleSubmit}
         returnKeyType="search"

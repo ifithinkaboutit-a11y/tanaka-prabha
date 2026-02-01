@@ -29,29 +29,43 @@ export default function GreetingHeader({
   const greeting = getGreeting();
 
   return (
-    <View className="p-4 mt-4">
-      <View className="flex-row items-center justify-between p-4 rounded-lg">
-        <View className="flex-row items-center gap-3">
+    <View style={{ paddingTop: 48, paddingBottom: 12, paddingHorizontal: 16 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Pressable onPress={onAvatarPress}>
             <Avatar size="lg" name={name} />
           </Pressable>
           <View>
             <AppText
-              variant="h2"
-              className="text-md text-neutral-500 leading-tight"
+              variant="bodySm"
+              style={{
+                fontSize: 13,
+                color: "#6B7280",
+                marginBottom: 2,
+              }}
             >
               {greeting}
             </AppText>
             <AppText
-              variant="h1"
-              className="text-xl font-semibold text-neutral-900 leading-tight"
+              variant="h2"
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: "#1F2937",
+              }}
             >
-              {name} Ji
+              {name}
             </AppText>
           </View>
         </View>
         <IconButton onPress={onNotificationPress}>
-          <Ionicons name="notifications-outline" size={24} />
+          <Ionicons name="notifications-outline" size={24} color="#1F2937" />
         </IconButton>
       </View>
     </View>
