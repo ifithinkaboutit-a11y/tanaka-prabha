@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { supabase } from "@/lib/supabase"
+import { analyticsApi } from "@/lib/api"
 
 export function RecentActivity() {
   const [activities, setActivities] = useState([])
@@ -21,44 +21,15 @@ export function RecentActivity() {
   useEffect(() => {
     async function fetchRecentActivities() {
       try {
-        // Fetch recent user registrations
-        const { data: recentUsers, error: usersError } = await supabase
-          .from("users")
-          .select("id, name, village, district, created_at")
-          .order("created_at", { ascending: false })
-          .limit(5)
-
-        // Fetch recent scheme activities
-        const { data: recentSchemes, error: schemesError } = await supabase
-          .from("schemes")
-          .select("id, title, created_at")
-          .order("created_at", { ascending: false })
-          .limit(3)
-
-        const userActivities = (recentUsers || []).map(user => ({
-          id: `user-${user.id}`,
-          type: "registration",
-          title: user.name || "New Farmer",
-          description: `Joined from ${user.village || user.district || "Unknown"}`,
-          time: user.created_at,
-          icon: IconUserPlus,
-        }))
-
-        const schemeActivities = (recentSchemes || []).map(scheme => ({
-          id: `scheme-${scheme.id}`,
-          type: "scheme",
-          title: scheme.title || "New Scheme",
-          description: "Scheme published",
-          time: scheme.created_at,
-          icon: IconFileCheck,
-        }))
-
-        // Combine and sort by time
-        const allActivities = [...userActivities, ...schemeActivities]
-          .sort((a, b) => new Date(b.time) - new Date(a.time))
-          .slice(0, 6)
-
-        setActivities(allActivities)
+        const response = await analyticsApi.getRecentActivity({ limit: 6 })
+        
+        if (response.status === 'success') {
+          const formattedActivities = response.data.activities.map(activity => ({
+            ...activity,
+            icon: activity.type === 'registration' ? IconUserPlus : IconFileCheck,
+          }))
+          setActivities(formattedActivities)
+        }
         setLoading(false)
       } catch (error) {
         console.error("Error fetching activities:", error)

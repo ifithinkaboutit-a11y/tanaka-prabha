@@ -1,72 +1,61 @@
 {
-  "name": "tanak-prabha",
-  "main": "expo-router/entry",
+  "name": "tanak-prabha-monorepo",
   "version": "1.0.0",
+  "description": "Tanak Prabha - Centralized monorepo for Client (Expo), Backend (Express), and Dashboard (Next.js)",
+  "private": true,
+  "author": "Pratyush Tiwari",
+  "license": "ISC",
   "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
-  },
-  "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
-    "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native-masked-view/masked-view": "0.2.9",
-    "@react-native-voice/voice": "^3.2.4",
-    "@react-navigation/bottom-tabs": "^7.4.0",
-    "@react-navigation/elements": "^2.6.3",
-    "@react-navigation/native": "^7.1.8",
-    "@react-navigation/stack": "^7.6.16",
-    "@supabase/supabase-js": "^2.93.3",
-    "clsx": "^2.1.1",
-    "expo": "~54.0.32",
-    "expo-constants": "~18.0.13",
-    "expo-dev-client": "~6.0.20",
-    "expo-device": "~8.0.10",
-    "expo-font": "~14.0.11",
-    "expo-haptics": "~15.0.8",
-    "expo-image": "~3.0.11",
-    "expo-linking": "~8.0.11",
-    "expo-navigation-bar": "^5.0.10",
-    "expo-notifications": "~0.32.16",
-    "expo-router": "~6.0.22",
-    "expo-speech": "^14.0.8",
-    "expo-splash-screen": "~31.0.13",
-    "expo-status-bar": "~3.0.9",
-    "expo-symbols": "~1.0.8",
-    "expo-system-ui": "~6.0.9",
-    "expo-updates": "^29.0.16",
-    "expo-video": "~3.0.15",
-    "expo-web-browser": "~15.0.10",
-    "i18n-react": "^0.7.0",
-    "nativewind": "^5.0.0-preview.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-css": "^3.0.1",
-    "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~4.1.1",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
-    "react-native-web": "~0.21.0",
-    "react-native-webview": "^13.16.0",
-    "react-native-worklets": "0.5.1",
-    "zustand": "^5.0.10"
+    "========== INDIVIDUAL SERVICES ==========": "",
+    "client": "cd Client && npm start",
+    "client:android": "cd Client && npm run android",
+    "client:ios": "cd Client && npm run ios",
+    "client:web": "cd Client && npm run web",
+    "backend": "cd Server/backend && npm run dev",
+    "backend:start": "cd Server/backend && npm start",
+    "dashboard": "cd Server/dashboard && npm run dev",
+    "dashboard:build": "cd Server/dashboard && npm run build",
+    "dashboard:start": "cd Server/dashboard && npm start",
+    
+    "========== COMBINED SERVICES ==========": "",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD,CLIENT\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run backend\" \"npm run dashboard\" \"npm run client\"",
+    "dev:server": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD\" -c \"bgBlue.bold,bgMagenta.bold\" \"npm run backend\" \"npm run dashboard\"",
+    "dev:full-stack": "concurrently -k -p \"[{name}]\" -n \"BACKEND,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run backend\" \"npm run client\"",
+    "dev:web": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD\" -c \"bgBlue.bold,bgMagenta.bold\" \"npm run backend\" \"npm run dashboard\"",
+    
+    "========== TESTING ==========": "",
+    "test:backend": "cd Server/backend && npm test",
+    "test:backend:watch": "cd Server/backend && npm run test:watch",
+    "test:backend:coverage": "cd Server/backend && npm run test:coverage",
+    
+    "========== LINTING ==========": "",
+    "lint:client": "cd Client && npm run lint",
+    "lint:dashboard": "cd Server/dashboard && npm run lint",
+    "lint:all": "concurrently \"npm run lint:client\" \"npm run lint:dashboard\"",
+    
+    "========== INSTALLATION ==========": "",
+    "install:all": "npm install && cd Client && npm install && cd ../Server/backend && npm install && cd ../dashboard && npm install",
+    "install:client": "cd Client && npm install",
+    "install:backend": "cd Server/backend && npm install",
+    "install:dashboard": "cd Server/dashboard && npm install",
+    
+    "========== BUILD ==========": "",
+    "build:dashboard": "cd Server/dashboard && npm run build",
+    "build:client:android": "cd Client && expo build:android",
+    "build:client:ios": "cd Client && expo build:ios"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/react": "~19.1.0",
-    "eslint": "^9.25.0",
-    "eslint-config-expo": "~10.0.0",
-    "postcss": "^8.5.6",
-    "prettier": "3.8.1",
-    "tailwindcss": "^4.0.0",
-    "typescript": "~5.9.2"
+    "concurrently": "^9.1.2"
   },
-  "overrides": {
-    "lightningcss": "1.30.1"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
-  "private": true
+  "workspaces": {
+    "packages": [
+      "Client",
+      "Server/backend",
+      "Server/dashboard"
+    ]
+  }
 }

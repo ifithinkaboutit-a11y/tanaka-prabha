@@ -1,10 +1,11 @@
 "use client"
 
+import { signOut, useSession } from "next-auth/react"
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconLogout,
   IconNotification,
+  IconSettings,
   IconUserCircle,
 } from "@tabler/icons-react"
 
@@ -29,10 +30,24 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user
-}) {
+function getInitials(name) {
+  if (!name) return "AD"
+  return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+}
+
+export function NavUser() {
   const { isMobile } = useSidebar()
+  const { data: session } = useSession()
+
+  const user = session?.user || {
+    name: "Admin",
+    email: "admin@tanakprabha.gov.in",
+    avatar: "/avatars/admin.jpg"
+  }
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" })
+  }
 
   return (
     <SidebarMenu>
@@ -42,9 +57,11 @@ export function NavUser({
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                  {getInitials(user.name)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -64,7 +81,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -78,11 +97,11 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <IconUserCircle />
-                Account
+                Profile
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
+                <IconSettings />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconNotification />
@@ -90,7 +109,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
               <IconLogout />
               Log out
             </DropdownMenuItem>

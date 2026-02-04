@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { supabase } from "@/lib/supabase"
+import { analyticsApi } from "@/lib/api"
 
 export function SectionCards() {
   const [stats, setStats] = useState({
@@ -27,39 +27,20 @@ export function SectionCards() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        // Fetch total farmers count
-        const { count: farmersCount } = await supabase
-          .from("users")
-          .select("*", { count: "exact", head: true })
-
-        // Fetch total land coverage
-        const { data: landData } = await supabase
-          .from("land_details")
-          .select("total_land_area")
+        const response = await analyticsApi.getDashboardStats()
         
-        const totalLand = landData?.reduce((sum, item) => sum + (item.total_land_area || 0), 0) || 0
-
-        // Fetch livestock count
-        const { data: livestockData } = await supabase
-          .from("livestock")
-          .select("cows, buffaloes, goats")
-        
-        const totalLivestock = livestockData?.reduce((sum, item) => 
-          sum + (item.cows || 0) + (item.buffaloes || 0) + (item.goats || 0), 0) || 0
-
-        // Fetch active schemes count
-        const { count: schemesCount } = await supabase
-          .from("schemes")
-          .select("*", { count: "exact", head: true })
-          .eq("is_active", true)
-
-        setStats({
-          totalFarmers: farmersCount || 0,
-          totalLandCoverage: totalLand,
-          livestockCount: totalLivestock,
-          activeSchemes: schemesCount || 0,
-          loading: false,
-        })
+        if (response.status === 'success') {
+          setStats({
+            totalFarmers: response.data.totalFarmers || 0,
+            totalLandCoverage: response.data.totalLandCoverage || 0,
+            livestockCount: response.data.livestockCount || 0,
+            activeSchemes: response.data.activeSchemes || 0,
+            loading: false,
+          })
+        } else {
+          console.error("Error fetching stats:", response.message)
+          setStats(prev => ({ ...prev, loading: false }))
+        }
       } catch (error) {
         console.error("Error fetching stats:", error)
         setStats(prev => ({ ...prev, loading: false }))

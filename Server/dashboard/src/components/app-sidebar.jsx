@@ -1,24 +1,17 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   IconDashboard,
   IconUsers,
   IconFileDescription,
   IconStethoscope,
-  IconSettings,
-  IconHelp,
-  IconSearch,
-  IconDatabase,
-  IconReport,
-  IconFileWord,
-  IconInnerShadowTop,
   IconPlant,
+  IconSettings,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -31,65 +24,31 @@ import {
 } from "@/components/ui/sidebar"
 
 const data = {
-  user: {
-    name: "Admin",
-    email: "admin@tanakprabha.org",
-    avatar: "/avatars/admin.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/",
       icon: IconDashboard,
     },
     {
       title: "Beneficiaries",
-      url: "/dashboard/beneficiaries",
+      url: "/beneficiaries",
       icon: IconUsers,
     },
     {
       title: "Content (CMS)",
-      url: "/dashboard/content",
+      url: "/content",
       icon: IconFileDescription,
     },
     {
       title: "Professionals",
-      url: "/dashboard/professionals",
+      url: "/professionals",
       icon: IconStethoscope,
     },
-  ],
-  navSecondary: [
     {
       title: "Settings",
-      url: "/dashboard/settings",
+      url: "/settings",
       icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Documentation",
-      url: "#",
-      icon: IconFileWord,
     },
   ],
 }
@@ -103,21 +62,19 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="/dashboard">
+              <Link href="/">
                 <IconPlant className="!size-5 text-green-600" />
                 <span className="text-base font-semibold">Tanak Prabha</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

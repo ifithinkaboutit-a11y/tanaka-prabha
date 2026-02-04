@@ -7,7 +7,10 @@ import {
   IconEdit,
   IconTrash,
   IconEye,
+  IconEyeOff,
   IconPhoto,
+  IconLoader2,
+  IconUpload,
 } from "@tabler/icons-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -45,15 +48,28 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Textarea } from "@/components/ui/input"
-import { supabase } from "@/lib/supabase"
+import { Textarea } from "@/components/ui/textarea"
+import { schemesApi, uploadApi } from "@/lib/api"
 import { toast } from "sonner"
 
 export function SchemesGrid() {
   const [schemes, setSchemes] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const [isAddOpen, setIsAddOpen] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [uploading, setUploading] = React.useState(false)
+  const [deleteId, setDeleteId] = React.useState(null)
   const [formData, setFormData] = React.useState({
     title: "",
     description: "",
@@ -61,6 +77,9 @@ export function SchemesGrid() {
     image_url: "",
     is_active: true,
   })
+  const [selectedFile, setSelectedFile] = React.useState(null)
+  const [previewUrl, setPreviewUrl] = React.useState(null)
+  const fileInputRef = React.useRef(null)
 
   React.useEffect(() => {
     fetchSchemes()
@@ -68,17 +87,52 @@ export function SchemesGrid() {
 
   async function fetchSchemes() {
     try {
-      const { data, error } = await supabase
-        .from("schemes")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      setSchemes(data || [])
-      setLoading(false)
+      const response = await schemesApi.getAll()
+      setSchemes(response.data?.schemes || response.data || [])
     } catch (error) {
       console.error("Error fetching schemes:", error)
+      toast.error("Failed to load schemes")
+    } finally {
       setLoading(false)
+    }
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.")
+        return
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File is too large. Maximum size is 5MB.")
+        return
+      }
+
+      setSelectedFile(file)
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+      setFormData(prev => ({ ...prev, image_url: "" }))
+    }
+  }
+
+  async function uploadImage() {
+    if (!selectedFile) return null
+
+    setUploading(true)
+    try {
+      const response = await uploadApi.uploadSchemeImage(selectedFile)
+      return response.data.url
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast.error("Failed to upload image")
+      throw error
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -88,63 +142,73 @@ export function SchemesGrid() {
       return
     }
 
+    setSaving(true)
     try {
-      const { data, error } = await supabase
-        .from("schemes")
-        .insert([formData])
-        .select()
+      let imageUrl = formData.image_url
 
-      if (error) throw error
+      // Upload image if a file was selected
+      if (selectedFile) {
+        imageUrl = await uploadImage()
+      }
 
-      setSchemes(prev => [data[0], ...prev])
+      const schemeData = {
+        ...formData,
+        image_url: imageUrl,
+      }
+
+      const response = await schemesApi.create(schemeData)
+      setSchemes(prev => [response.data?.scheme || response.data, ...prev])
       setIsAddOpen(false)
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        image_url: "",
-        is_active: true,
-      })
+      resetForm()
       toast.success("Scheme added successfully")
     } catch (error) {
       console.error("Error adding scheme:", error)
       toast.error("Failed to add scheme")
+    } finally {
+      setSaving(false)
     }
   }
 
-  async function handleDeleteScheme(id) {
+  async function handleDeleteScheme() {
+    if (!deleteId) return
+
     try {
-      const { error } = await supabase
-        .from("schemes")
-        .delete()
-        .eq("id", id)
-
-      if (error) throw error
-
-      setSchemes(prev => prev.filter(s => s.id !== id))
+      await schemesApi.delete(deleteId)
+      setSchemes(prev => prev.filter(s => s.id !== deleteId))
       toast.success("Scheme deleted successfully")
     } catch (error) {
       console.error("Error deleting scheme:", error)
       toast.error("Failed to delete scheme")
+    } finally {
+      setDeleteId(null)
     }
   }
 
-  async function toggleSchemeStatus(id, currentStatus) {
+  async function toggleSchemeStatus(id) {
     try {
-      const { error } = await supabase
-        .from("schemes")
-        .update({ is_active: !currentStatus })
-        .eq("id", id)
-
-      if (error) throw error
-
+      const response = await schemesApi.toggleStatus(id)
       setSchemes(prev => prev.map(s => 
-        s.id === id ? { ...s, is_active: !currentStatus } : s
+        s.id === id ? { ...s, is_active: response.data?.scheme?.is_active ?? response.data.is_active } : s
       ))
-      toast.success(`Scheme ${!currentStatus ? "activated" : "deactivated"}`)
+      toast.success(`Scheme ${response.data?.scheme?.is_active ?? response.data.is_active ? "activated" : "deactivated"}`)
     } catch (error) {
       console.error("Error updating scheme:", error)
       toast.error("Failed to update scheme")
+    }
+  }
+
+  function resetForm() {
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      image_url: "",
+      is_active: true,
+    })
+    setSelectedFile(null)
+    setPreviewUrl(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -168,7 +232,6 @@ export function SchemesGrid() {
 
   return (
     <div className="space-y-4">
-      {/* Header with Add Button */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Government Schemes</h2>
@@ -178,12 +241,12 @@ export function SchemesGrid() {
         </div>
         <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
           <SheetTrigger asChild>
-            <Button>
+            <Button onClick={resetForm}>
               <IconPlus className="size-4 mr-2" />
               Add Scheme
             </Button>
           </SheetTrigger>
-          <SheetContent className="sm:max-w-md">
+          <SheetContent className="sm:max-w-md overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Add New Scheme</SheetTitle>
               <SheetDescription>
@@ -201,9 +264,19 @@ export function SchemesGrid() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="scheme-description">Description</Label>
+                <Textarea
+                  id="scheme-description"
+                  placeholder="Describe the scheme benefits..."
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="scheme-category">Category</Label>
-                <Select 
-                  value={formData.category} 
+                <Select
+                  value={formData.category}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                 >
                   <SelectTrigger id="scheme-category">
@@ -212,139 +285,231 @@ export function SchemesGrid() {
                   <SelectContent>
                     <SelectItem value="agriculture">Agriculture</SelectItem>
                     <SelectItem value="livestock">Livestock</SelectItem>
-                    <SelectItem value="subsidy">Subsidy</SelectItem>
+                    <SelectItem value="financial">Financial Aid</SelectItem>
                     <SelectItem value="insurance">Insurance</SelectItem>
-                    <SelectItem value="loan">Loan</SelectItem>
                     <SelectItem value="training">Training</SelectItem>
+                    <SelectItem value="subsidy">Subsidy</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Image Upload Section */}
               <div className="space-y-2">
-                <Label htmlFor="scheme-description">Description</Label>
-                <Input
-                  id="scheme-description"
-                  placeholder="Brief description of the scheme"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="min-h-[100px]"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="scheme-image">Image URL</Label>
-                <Input
-                  id="scheme-image"
-                  placeholder="https://example.com/image.jpg"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                />
+                <Label>Scheme Image</Label>
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {previewUrl ? (
+                    <div className="space-y-3">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="w-full h-32 object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.src = "https://placehold.co/800x400/e2e8f0/64748b?text=Image+Error"
+                        }}
+                      />
+                      <div className="flex gap-2 justify-center">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <IconUpload className="size-4 mr-2" />
+                          Change
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedFile(null)
+                            setPreviewUrl(null)
+                            setFormData(prev => ({ ...prev, image_url: "" }))
+                            if (fileInputRef.current) fileInputRef.current.value = ""
+                          }}
+                        >
+                          <IconTrash className="size-4 mr-2" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className="py-6 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <IconUpload className="size-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium">Click to upload</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        JPEG, PNG, WebP, GIF (max 5MB)
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Alternative: URL input */}
+                {!selectedFile && (
+                  <div className="space-y-2 pt-2">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or enter URL
+                        </span>
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="https://example.com/scheme-image.jpg"
+                      value={formData.image_url}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, image_url: e.target.value }))
+                        setPreviewUrl(e.target.value || null)
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <SheetFooter className="mt-6">
-              <Button variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddScheme}>
-                Save Scheme
+              <Button onClick={handleAddScheme} className="w-full" disabled={saving || uploading}>
+                {(saving || uploading) && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+                {uploading ? "Uploading..." : saving ? "Creating..." : "Add Scheme"}
               </Button>
             </SheetFooter>
           </SheetContent>
         </Sheet>
       </div>
 
-      {/* Schemes Grid */}
       {schemes.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-12">
-          <IconPhoto className="size-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">No Schemes Yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Get started by adding your first government scheme.
-          </p>
-          <Button onClick={() => setIsAddOpen(true)}>
-            <IconPlus className="size-4 mr-2" />
-            Add Scheme
-          </Button>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <IconPhoto className="size-12 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium">No schemes yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create your first government scheme
+            </p>
+            <Button onClick={() => setIsAddOpen(true)}>
+              <IconPlus className="size-4 mr-2" />
+              Add Scheme
+            </Button>
+          </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {schemes.map((scheme) => (
-            <Card key={scheme.id} className="overflow-hidden">
-              <div className="relative aspect-video bg-muted">
+            <Card key={scheme.id} className={!scheme.is_active ? "opacity-60" : ""}>
+              <CardHeader className="p-0 relative">
                 {scheme.image_url ? (
-                  <img
-                    src={scheme.image_url}
+                  <img 
+                    src={scheme.image_url} 
                     alt={scheme.title}
-                    className="object-cover w-full h-full"
+                    className="w-full h-40 object-cover rounded-t-lg"
+                    onError={(e) => {
+                      e.target.src = "https://placehold.co/600x200/e2e8f0/64748b?text=Scheme"
+                    }}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <IconPhoto className="size-12 text-muted-foreground" />
+                  <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
+                    <IconPhoto className="size-10 text-primary/40" />
                   </div>
                 )}
-                <div className="absolute top-2 right-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="secondary" size="icon" className="size-8">
-                        <IconDotsVertical className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <IconEye className="size-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <IconEdit className="size-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => toggleSchemeStatus(scheme.id, scheme.is_active)}
-                      >
-                        {scheme.is_active ? "Deactivate" : "Activate"}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={() => handleDeleteScheme(scheme.id)}
-                      >
-                        <IconTrash className="size-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base line-clamp-1">
-                    {scheme.title}
-                  </CardTitle>
-                </div>
-                {scheme.category && (
-                  <Badge variant="outline" className="w-fit text-xs capitalize">
-                    {scheme.category}
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {scheme.category && (
+                    <Badge variant="secondary" className="capitalize">
+                      {scheme.category}
+                    </Badge>
+                  )}
+                  <Badge 
+                    variant="outline" 
+                    className={scheme.is_active 
+                      ? "bg-green-500/90 text-white border-green-600" 
+                      : "bg-gray-500/90 text-white border-gray-600"
+                    }
+                  >
+                    {scheme.is_active ? "Active" : "Inactive"}
                   </Badge>
-                )}
+                </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="line-clamp-2">
+              <CardContent className="p-4">
+                <h3 className="font-semibold line-clamp-1">{scheme.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                   {scheme.description || "No description available"}
-                </CardDescription>
+                </p>
               </CardContent>
-              <CardFooter className="pt-0">
-                <Badge 
-                  variant="outline"
-                  className={scheme.is_active 
-                    ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400"
-                    : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400"
-                  }
-                >
-                  {scheme.is_active ? "Active" : "Inactive"}
-                </Badge>
+              <CardFooter className="p-4 pt-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <IconDotsVertical className="size-4 mr-2" />
+                      Actions
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem>
+                      <IconEye className="size-4 mr-2" />
+                      View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <IconEdit className="size-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toggleSchemeStatus(scheme.id)}>
+                      {scheme.is_active ? (
+                        <>
+                          <IconEyeOff className="size-4 mr-2" />
+                          Deactivate
+                        </>
+                      ) : (
+                        <>
+                          <IconEye className="size-4 mr-2" />
+                          Activate
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => setDeleteId(scheme.id)}
+                    >
+                      <IconTrash className="size-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardFooter>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Scheme</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this scheme? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteScheme}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

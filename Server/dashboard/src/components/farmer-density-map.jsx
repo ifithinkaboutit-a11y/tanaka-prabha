@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { supabase } from "@/lib/supabase"
+import { analyticsApi } from "@/lib/api"
 
 // Dynamically import the map to avoid SSR issues
 const MapComponent = dynamic(() => import("./map-component"), {
@@ -34,32 +34,27 @@ export function FarmerDensityMap() {
   useEffect(() => {
     async function fetchFarmerLocations() {
       try {
-        const { data, error } = await supabase
-          .from("users")
-          .select("latitude, longitude, district")
-          .not("latitude", "is", null)
-          .not("longitude", "is", null)
-
-        if (error) throw error
+        const response = await analyticsApi.getFarmerLocations()
+        const data = response.data || []
 
         // Transform data for heatmap - [lat, lng, intensity]
-        const heatmapData = data?.map(user => [
+        const heatmapData = data.map(user => [
           parseFloat(user.latitude),
           parseFloat(user.longitude),
           1 // intensity
-        ]).filter(coords => !isNaN(coords[0]) && !isNaN(coords[1])) || []
+        ]).filter(coords => !isNaN(coords[0]) && !isNaN(coords[1]))
 
         // Count unique districts
-        const uniqueDistricts = new Set(data?.map(u => u.district).filter(Boolean))
+        const uniqueDistricts = new Set(data.map(u => u.district).filter(Boolean))
 
         setLocations(heatmapData)
         setStats({
           totalLocations: heatmapData.length,
           districts: uniqueDistricts.size
         })
-        setLoading(false)
       } catch (error) {
         console.error("Error fetching farmer locations:", error)
+      } finally {
         setLoading(false)
       }
     }
