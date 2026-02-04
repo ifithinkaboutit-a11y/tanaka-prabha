@@ -68,7 +68,7 @@ const PhoneInput = () => {
       <View className="flex justify-end">
         {/* Phone Input Card */}
         <View className="h-[75vh]">    
-          <AuthVideoBackground > </AuthVideoBackground>
+          <AuthVideoBackground />
         </View>
         <View className="bg-white rounded-3xl p-6 shadow-lg h-[34vh]">
           {/* Title */}
