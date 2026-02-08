@@ -13,6 +13,12 @@
   - [Verify OTP](#2-verify-otp)
   - [Resend OTP](#3-resend-otp)
   - [Verify Token](#4-verify-token)
+- [Appointments APIs](#appointments-apis)
+  - [Get My Appointments](#1-get-my-appointments)
+  - [Get Professional Appointments](#2-get-professional-appointments)
+  - [Create Appointment](#3-create-appointment)
+  - [Cancel Appointment](#4-cancel-appointment)
+  - [Get Available Slots](#5-get-available-slots)
 - [Upload APIs (Cloudinary)](#upload-apis-cloudinary)
   - [Upload Banner Image](#1-upload-banner-image)
   - [Upload Scheme Image](#2-upload-scheme-image)
@@ -434,6 +440,275 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```bash
 curl -X GET http://localhost:5000/api/auth/verify-token \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+## Appointments APIs
+
+### 1. Get My Appointments
+
+Get all appointments for the currently authenticated user.
+
+**Endpoint:** `GET /api/appointments/my`  
+**Authentication:** Required (Bearer Token)
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | Integer | No | Maximum results (default: 50) |
+| `offset` | Integer | No | Pagination offset (default: 0) |
+| `status` | String | No | Filter by status (pending/confirmed/cancelled/completed) |
+| `upcoming_only` | Boolean | No | Only show upcoming appointments |
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Appointments retrieved successfully",
+  "data": {
+    "appointments": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "user_id": "user-uuid",
+        "professional_id": "professional-uuid",
+        "appointment_date": "2026-02-15",
+        "appointment_time": "10:00 AM",
+        "status": "pending",
+        "created_at": "2026-02-08T10:30:00Z",
+        "professional_name": "Dr. Sharma",
+        "professional_role": "Animal Doctor",
+        "professional_image": "https://..."
+      }
+    ],
+    "pagination": {
+      "limit": 50,
+      "offset": 0,
+      "count": 1
+    }
+  }
+}
+```
+
+---
+
+### 2. Get Professional Appointments
+
+Get all appointments for a specific professional.
+
+**Endpoint:** `GET /api/appointments/professional/:professional_id`  
+**Authentication:** Required (Bearer Token)
+
+#### URL Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `professional_id` | UUID | Yes | Professional's ID |
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | Integer | No | Maximum results (default: 50) |
+| `offset` | Integer | No | Pagination offset (default: 0) |
+| `date` | Date | No | Filter by specific date (YYYY-MM-DD) |
+| `status` | String | No | Filter by status |
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Appointments retrieved successfully",
+  "data": {
+    "appointments": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "user_id": "user-uuid",
+        "professional_id": "professional-uuid",
+        "appointment_date": "2026-02-15",
+        "appointment_time": "10:00 AM",
+        "status": "pending",
+        "user_name": "Farmer Name",
+        "user_mobile": "919876543210"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 3. Create Appointment
+
+Book a new appointment with a professional.
+
+**Endpoint:** `POST /api/appointments`  
+**Authentication:** Required (Bearer Token)
+
+#### Request Body
+
+```json
+{
+  "professionalId": "professional-uuid",
+  "date": "2026-02-15",
+  "time": "10:00 AM",
+  "notes": "Optional notes about the appointment"
+}
+```
+
+#### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `professionalId` | UUID | Yes | Professional's ID |
+| `date` | String | Yes | Appointment date (YYYY-MM-DD) |
+| `time` | String | Yes | Time slot (e.g., "10:00 AM") |
+| `notes` | String | No | Optional notes |
+
+#### Available Time Slots
+
+- "09:00 AM"
+- "10:00 AM"
+- "11:00 AM"
+- "02:00 PM"
+- "03:00 PM"
+- "04:00 PM"
+
+#### Success Response (201 Created)
+
+```json
+{
+  "status": "success",
+  "message": "Appointment created successfully",
+  "data": {
+    "appointment": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "user-uuid",
+      "professional_id": "professional-uuid",
+      "appointment_date": "2026-02-15",
+      "appointment_time": "10:00 AM",
+      "status": "pending",
+      "created_at": "2026-02-08T10:30:00Z"
+    }
+  }
+}
+```
+
+#### Error Responses
+
+**400 Bad Request** - Date fully booked
+
+```json
+{
+  "status": "error",
+  "message": "This professional has reached the maximum appointments for 2026-02-15 (3 per day)"
+}
+```
+
+**400 Bad Request** - Time slot taken
+
+```json
+{
+  "status": "error",
+  "message": "The time slot 10:00 AM on 2026-02-15 is already booked"
+}
+```
+
+**404 Not Found** - Professional not found
+
+```json
+{
+  "status": "error",
+  "message": "Professional not found"
+}
+```
+
+---
+
+### 4. Cancel Appointment
+
+Cancel an existing appointment.
+
+**Endpoint:** `PATCH /api/appointments/:id/cancel`  
+**Authentication:** Required (Bearer Token)
+
+#### URL Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | UUID | Yes | Appointment ID |
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Appointment cancelled successfully",
+  "data": {
+    "appointment": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "status": "cancelled"
+    }
+  }
+}
+```
+
+#### Error Responses
+
+**403 Forbidden** - Not owner
+
+```json
+{
+  "status": "error",
+  "message": "You can only cancel your own appointments"
+}
+```
+
+**400 Bad Request** - Already cancelled
+
+```json
+{
+  "status": "error",
+  "message": "Appointment is already cancelled"
+}
+```
+
+---
+
+### 5. Get Available Slots
+
+Get available time slots for a professional on a specific date.
+
+**Endpoint:** `GET /api/appointments/professional/:professional_id/slots/:date`  
+**Authentication:** Required (Bearer Token)
+
+#### URL Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `professional_id` | UUID | Yes | Professional's ID |
+| `date` | Date | Yes | Date to check (YYYY-MM-DD) |
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Available slots retrieved successfully",
+  "data": {
+    "date": "2026-02-15",
+    "professional_id": "professional-uuid",
+    "professional_name": "Dr. Sharma",
+    "available_slots": ["09:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"],
+    "total_slots": ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"],
+    "booked_count": 1,
+    "max_per_day": 3,
+    "is_fully_booked": false
+  }
+}
 ```
 
 ---

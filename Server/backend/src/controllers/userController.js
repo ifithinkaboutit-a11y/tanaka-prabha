@@ -364,10 +364,22 @@ export const updateCurrentUserProfile = async (req, res) => {
             }
         }
 
+        // Fetch the updated land and livestock details for the response
+        const [landDetails, livestockDetails] = await Promise.all([
+            LandDetails.findByUserId(userId),
+            LivestockDetails.findByUserId(userId)
+        ]);
+
         res.status(200).json({
             status: 'success',
             message: 'Profile updated successfully',
-            data: { user }
+            data: {
+                user: {
+                    ...user,
+                    land_details: landDetails || null,
+                    livestock_details: livestockDetails || null
+                }
+            }
         });
     } catch (error) {
         console.error('Error updating profile:', error);
