@@ -62,18 +62,16 @@ const PersonalDetailsScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       {/* Custom Header */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           paddingTop: 48,
-          paddingBottom: 16,
-          paddingHorizontal: 16,
-          backgroundColor: "#FFFFFF",
-          borderBottomWidth: 1,
-          borderBottomColor: "#E5E7EB",
+          paddingBottom: 20,
+          paddingHorizontal: 20,
+          backgroundColor: "#386641",
         }}
       >
         <Pressable
@@ -82,29 +80,32 @@ const PersonalDetailsScreen = () => {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: "#F3F4F6",
+            backgroundColor: "rgba(255,255,255,0.2)",
             alignItems: "center",
             justifyContent: "center",
             marginRight: 12,
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Ionicons name="arrow-back" size={22} color="#386641" />
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </Pressable>
-        <AppText variant="h2" style={{ color: "#1F2937", fontWeight: "700", fontSize: 22, flex: 1 }}>
-          {T.translate("personalDetails.title")}
-        </AppText>
+        <View style={{ flex: 1 }}>
+          <AppText variant="h2" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 22 }}>
+            {T.translate("personalDetails.title")}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
+            {T.translate("personalDetails.editSubtitle")}
+          </AppText>
+        </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        <View style={{ padding: 16 }}>
-          <PersonalDetailsForm
-            initialData={initialData}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
-        </View>
-      </ScrollView>
+      <View style={{ flex: 1, padding: 16 }}>
+        <PersonalDetailsForm
+          initialData={initialData}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      </View>
     </View>
   );
 };

@@ -320,7 +320,6 @@ export default function Schemes() {
               borderRadius: 24,
               overflow: "hidden",
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.15,
               shadowRadius: 12,
               elevation: 5,
@@ -338,8 +337,8 @@ export default function Schemes() {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: "70%",
-                backgroundColor: "rgba(0,0,0,0.5)",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.2)",
               }}
             />
             {/* Featured Badge */}
