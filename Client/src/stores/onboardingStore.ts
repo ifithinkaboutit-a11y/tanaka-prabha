@@ -11,6 +11,7 @@ export interface LandEntry {
   area: number;
   unit: "bigha" | "acre" | "hectare";
   mainCrop: string;
+  crops: string[]; // Support multiple crop selection
 }
 
 export interface LivestockEntry {

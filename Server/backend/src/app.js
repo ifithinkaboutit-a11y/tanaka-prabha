@@ -61,19 +61,6 @@ app.get('/api', (req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Tanak Prabha API v1.0',
-        endpoints: {
-            auth: '/api/auth',
-            users: '/api/users',
-            land: '/api/land',
-            livestock: '/api/livestock',
-            schemes: '/api/schemes',
-            banners: '/api/banners',
-            notifications: '/api/notifications',
-            professionals: '/api/professionals',
-            connections: '/api/connections',
-            analytics: '/api/analytics',
-            upload: '/api/upload'
-        }
     });
 });
 

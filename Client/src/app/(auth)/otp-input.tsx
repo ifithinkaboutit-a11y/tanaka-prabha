@@ -146,104 +146,104 @@ const OTPInput = () => {
     : "";
 
   return (
-      <View className="flex-1 justify-end">
-        {/* OTP Input Card */}
-      <View className="h-[75vh]">    
-        <AuthVideoBackground > </AuthVideoBackground>
+    <View className="flex-1 justify-end">
+      {/* Video Background */}
+      <View className="flex h-[55vh]">
+        <AuthVideoBackground />
       </View>
-        <View className="bg-white rounded-3xl p-6 shadow-lg">
-          {/* Title */}
-          <AppText
-            variant="h2"
-            className="text-center text-neutral-textDark font-bold mb-2"
-          >
-            {t("auth.enterOTP")}
-          </AppText>
 
-          {/* Subtitle with masked phone */}
-          <Text className="text-center text-neutral-textMedium text-sm mb-2">
-            {t("auth.otpSentTo")} {maskedPhone}
-          </Text>
+      {/* OTP Input Card */}
+      <View className="bg-white rounded-t-3xl p-6 shadow-lg">
+        {/* Title */}
+        <AppText
+          variant="h2"
+          className="text-center text-neutral-textDark font-bold mb-2"
+        >
+          {t("auth.enterOTP")}
+        </AppText>
 
-          {/* Demo hint */}
-          <Text className="text-center text-primary text-sm mb-4 font-medium">
-            Test Mode: Check backend console for OTP
-          </Text>
+        {/* Subtitle with masked phone */}
+        <Text className="text-center text-neutral-textMedium text-sm mb-2">
+          {t("auth.otpSentTo")} {maskedPhone}
+        </Text>
 
-          {/* OTP Input Fields */}
-          <View className="flex-row justify-center gap-3 mb-6">
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => {
-                  inputRefs.current[index] = ref;
-                }}
-                style={{
-                  width: 48,
-                  height: 56,
-                  borderWidth: 2,
-                  borderRadius: 12,
-                  textAlign: "center",
-                  fontSize: 24,
-                  fontWeight: "bold",
-                  borderColor: digit ? "#386641" : "#E5E7EB",
-                  backgroundColor: digit
-                    ? "rgba(56, 102, 65, 0.05)"
-                    : "#F9FAFB",
-                }}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(value, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-                editable={!loading}
-              />
-            ))}
-          </View>
+        {/* Demo hint */}
+        <Text className="text-center text-primary text-xs mb-4 font-medium">
+          Test Mode: Check backend console for OTP
+        </Text>
 
-          {/* Resend OTP */}
-          <View className="items-center mb-6">
-            {canResend ? (
-              <TouchableOpacity onPress={handleResendOTP}>
-                <Text className="text-primary font-medium">
-                  {t("auth.resendOTP")}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <Text className="text-neutral-textMedium">
-                {t("auth.didntReceiveOtp")}{" "}
-                <Text className="text-primary font-medium">
-                  {t("auth.resendOtpIn")} {countdown}s
-                </Text>
-              </Text>
-            )}
-          </View>
-
-          {/* Verify Button */}
-          <Button
-            variant="primary"
-            onPress={handleVerifyOTP}
-            disabled={loading || otp.join("").length !== OTP_LENGTH}
-            className="w-full py-4 mb-4"
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white text-center font-semibold text-base">
-                {t("auth.verifyOTP")}
-              </Text>
-            )}
-          </Button>
-
-          {/* Change Number Link */}
-          <TouchableOpacity onPress={handleChangeNumber}>
-            <Text className="text-center text-neutral-textMedium">
-              {t("auth.changeNumber")}
-            </Text>
-          </TouchableOpacity>
+        {/* OTP Input Fields */}
+        <View className="flex-row justify-center gap-2 mb-6">
+          {otp.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={(ref) => {
+                inputRefs.current[index] = ref;
+              }}
+              style={{
+                width: 44,
+                height: 52,
+                borderWidth: 2,
+                borderRadius: 12,
+                textAlign: "center",
+                fontSize: 22,
+                fontWeight: "bold",
+                borderColor: digit ? "#386641" : "#E5E7EB",
+                backgroundColor: digit ? "rgba(56, 102, 65, 0.05)" : "#F9FAFB",
+              }}
+              value={digit}
+              onChangeText={(value) => handleOtpChange(value, index)}
+              onKeyPress={(e) => handleKeyPress(e, index)}
+              keyboardType="number-pad"
+              maxLength={1}
+              selectTextOnFocus
+              editable={!loading}
+            />
+          ))}
         </View>
+
+        {/* Resend OTP */}
+        <View className="items-center mb-6">
+          {canResend ? (
+            <TouchableOpacity onPress={handleResendOTP}>
+              <Text className="text-primary font-medium">
+                {t("auth.resendOTP")}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <Text className="text-neutral-textMedium text-sm">
+              {t("auth.didntReceiveOtp")}{" "}
+              <Text className="text-primary font-medium">
+                {t("auth.resendOtpIn")} {countdown}s
+              </Text>
+            </Text>
+          )}
+        </View>
+
+        {/* Verify Button */}
+        <Button
+          variant="primary"
+          onPress={handleVerifyOTP}
+          disabled={loading || otp.join("").length !== OTP_LENGTH}
+          className="w-full py-4 mb-4"
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center font-semibold text-base">
+              {t("auth.verifyOTP")}
+            </Text>
+          )}
+        </Button>
+
+        {/* Change Number Link */}
+        <TouchableOpacity onPress={handleChangeNumber}>
+          <Text className="text-center text-neutral-textMedium">
+            {t("auth.changeNumber")}
+          </Text>
+        </TouchableOpacity>
       </View>
+    </View>
   );
 };
 

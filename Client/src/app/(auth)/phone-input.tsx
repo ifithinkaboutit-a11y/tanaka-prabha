@@ -41,15 +41,19 @@ const PhoneInput = () => {
     setLoading(true);
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
+      console.log("📞 handleSendOTP - Calling sendOTP with:", fullPhoneNumber);
+      
       // Call the backend API to send OTP
       await sendOTP(fullPhoneNumber);
       
+      console.log("📞 handleSendOTP - OTP sent successfully, navigating...");
       // Navigate to OTP input screen with phone number
       router.push({
         pathname: "/(auth)/otp-input",
         params: { phoneNumber: fullPhoneNumber },
       });
     } catch (error) {
+      console.error("📞 handleSendOTP - Error:", error);
       Alert.alert(
         "Error",
         error instanceof Error ? error.message : "Failed to send OTP",
@@ -65,77 +69,77 @@ const PhoneInput = () => {
   };
 
   return (
-      <View className="flex justify-end">
-        {/* Phone Input Card */}
-        <View className="h-[75vh]">    
-          <AuthVideoBackground />
-        </View>
-        <View className="bg-white rounded-3xl p-6 shadow-lg h-[34vh]">
-          {/* Title */}
-          <AppText
-            variant="h2"
-            className="text-center text-neutral-textDark font-bold mb-2"
-          >
-            {t("auth.enterPhone")}
-          </AppText>
+    <View className="flex-1 justify-end">
+      {/* Video Background */}
+      <View className="flex h-[60vh]">
+        <AuthVideoBackground />
+      </View>
 
-          {/* Subtitle */}
-          <Text className="text-center text-neutral-textMedium text-sm mb-6">
-            {t("auth.phoneSubtitle")}
-          </Text>
+      {/* Phone Input Card */}
+      <View className="bg-white rounded-t-3xl p-6 shadow-lg">
+        {/* Title */}
+        <AppText
+          variant="h2"
+          className="text-center text-neutral-textDark font-bold mb-2"
+        >
+          {t("auth.enterPhone")}
+        </AppText>
 
-          {/* Phone Input Label */}
-          <Text className="text-neutral-textMedium text-sm mb-2">
-            {t("auth.mobileNumber")}
-          </Text>
+        {/* Subtitle */}
+        <Text className="text-center text-neutral-textMedium text-sm mb-6">
+          {t("auth.phoneSubtitle")}
+        </Text>
 
-          {/* Phone Input Field */}
-          <View className="flex-row items-center border border-neutral-border rounded-xl bg-neutral-surface mb-6">
-            {/* Country Code */}
-            <View className="px-4 py-4 border-r border-neutral-border">
-              <Text className="text-neutral-textDark font-medium">+91</Text>
-            </View>
+        {/* Phone Input Label */}
+        <Text className="text-neutral-textMedium text-sm mb-2">
+          {t("auth.mobileNumber")}
+        </Text>
 
-            {/* Phone Number Input */}
-            <TextInput
-              className="flex-1 px-4 py-4 text-lg text-neutral-textDark"
-              placeholder="9555402857"
-              placeholderTextColor="#9E9E9E"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              onChangeText={handlePhoneChange}
-              maxLength={10}
-              editable={!loading}
-            />
+        {/* Phone Input Field */}
+        <View className="flex-row items-center border border-neutral-border rounded-xl bg-neutral-surface mb-6">
+          {/* Country Code */}
+          <View className="px-4 py-4 border-r border-neutral-border">
+            <Text className="text-neutral-textDark font-medium">+91</Text>
           </View>
 
-          {/* Get OTP Button */}
-          <Button
-            variant="primary"
-            onPress={handleSendOTP}
-            disabled={loading || phoneNumber.length < 10}
-            className="w-full py-4 mb-4"
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white text-center font-semibold text-base">
-                {t("auth.getOtp")}
-              </Text>
-            )}
-          </Button>
+          {/* Phone Number Input */}
+          <TextInput
+            className="flex-1 px-4 py-4 text-base text-neutral-textDark"
+            placeholder="9555402857"
+            placeholderTextColor="#9E9E9E"
+            keyboardType="phone-pad"
+            value={phoneNumber}
+            onChangeText={handlePhoneChange}
+            maxLength={10}
+            editable={!loading}
+          />
+        </View>
 
-          {/* Already Registered Link */}
-          <TouchableOpacity onPress={handleAlreadyRegistered}>
-            <Text className="text-center text-neutral-textMedium">
-              {t("auth.alreadyRegistered")}{" "}
-              <Text className="text-primary font-medium">
-                {t("auth.login")}
-              </Text>
+        {/* Get OTP Button */}
+        <Button
+          variant="primary"
+          onPress={handleSendOTP}
+          disabled={loading || phoneNumber.length < 10}
+          className="w-full py-4 mb-4"
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center font-semibold text-base">
+              {t("auth.getOtp")}
             </Text>
-          </TouchableOpacity>
-        </View>
-        </View>
+          )}
+        </Button>
+
+        {/* Already Registered Link */}
+        <TouchableOpacity onPress={handleAlreadyRegistered}>
+          <Text className="text-center text-neutral-textMedium">
+            {t("auth.alreadyRegistered")}{" "}
+            <Text className="text-primary font-medium">{t("auth.login")}</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 

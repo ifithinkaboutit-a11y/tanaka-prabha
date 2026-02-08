@@ -5,6 +5,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000/api";
 
+// Log API URL on startup for debugging
+console.log("🔗 API Base URL:", API_BASE_URL);
+
 // Storage keys
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "auth_token",
@@ -140,6 +143,11 @@ async function fetchWithAuth<T>(
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  console.log(`📤 API Request: ${options.method || "GET"} ${url}`);
+  if (options.body) {
+    console.log("📦 Request Body:", options.body);
+  }
+
   // Get auth token
   const token = await tokenManager.getToken();
 
@@ -160,6 +168,7 @@ async function fetchWithAuth<T>(
     });
 
     const data = await response.json();
+    console.log(`📥 API Response (${response.status}):`, JSON.stringify(data).slice(0, 200));
 
     if (!response.ok) {
       throw new ApiError(
@@ -172,11 +181,12 @@ async function fetchWithAuth<T>(
     return data;
   } catch (error) {
     if (error instanceof ApiError) {
+      console.error(`❌ API Error: ${error.message}`);
       throw error;
     }
 
     // Network or other error
-    console.error("API Request Error:", error);
+    console.error("❌ API Request Error:", error);
     throw new ApiError(
       error instanceof Error ? error.message : "Network error",
       0

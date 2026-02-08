@@ -25,7 +25,7 @@ export default function Welcome() {
   return (
     <View className="flex-1 justify-end">
       <View className="flex h-[85vh]">
-        <AuthVideoBackground></AuthVideoBackground>
+        <AuthVideoBackground />
       </View>
       <View className="bg-white rounded-3xl p-6 shadow-lg">
         {/* Title */}

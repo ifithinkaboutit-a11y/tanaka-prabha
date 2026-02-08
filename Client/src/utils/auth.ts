@@ -12,8 +12,11 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
   // Clean the phone number - remove +91 prefix if present
   const cleanedNumber = phoneNumber.replace(/^\+91/, "").replace(/\D/g, "");
 
+  console.log("📱 sendOTP called with:", phoneNumber, "-> cleaned:", cleanedNumber);
+
   try {
     const response = await authApi.sendOTP(cleanedNumber);
+    console.log("📱 sendOTP response:", response);
 
     if (response.status === "success" && response.data) {
       // In development mode, log the OTP for testing
@@ -26,6 +29,7 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
 
     throw new Error(response.message || "Failed to send OTP");
   } catch (error) {
+    console.error("📱 sendOTP error:", error);
     if (error instanceof ApiError) {
       throw new Error(error.message);
     }
@@ -46,19 +50,24 @@ export const verifyOTP = async (
   // Clean the phone number
   const cleanedNumber = phoneNumber.replace(/^\+91/, "").replace(/\D/g, "");
 
+  console.log("🔐 verifyOTP called with:", cleanedNumber, "OTP:", otpCode);
+
   try {
     const response = await authApi.verifyOTP(cleanedNumber, otpCode);
+    console.log("🔐 verifyOTP response:", response);
 
     if (response.status === "success" && response.data) {
       // Store the token and user data
       await tokenManager.setToken(response.data.token);
       await tokenManager.setUser(response.data.user);
 
+      console.log("🔐 User authenticated:", response.data.user);
       return response.data.user;
     }
 
     throw new Error(response.message || "Invalid OTP");
   } catch (error) {
+    console.error("🔐 verifyOTP error:", error);
     if (error instanceof ApiError) {
       throw new Error(error.message);
     }

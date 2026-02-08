@@ -3,6 +3,7 @@ import Button from "@/components/atoms/Button";
 import FormInput from "@/components/atoms/FormInput";
 import Select from "@/components/atoms/Select";
 import Toggle from "@/components/atoms/Toggle";
+import MultiSelect from "@/components/atoms/MultiSelect";
 import OnboardingHeader from "@/components/molecules/OnboardingHeader";
 import {
   animalTypes,
@@ -24,18 +25,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "../../contexts/AuthContext";
 import { colors } from "../../styles/colors";
+
+const TOTAL_STEPS = 3;
 
 const Onboarding = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
-  const { isAuthenticated } = useAuth();
 
   const {
     currentStep,
     nextStep,
-    prevStep,
     personalDetails,
     updatePersonalDetails,
     hasLand,
@@ -52,17 +52,42 @@ const Onboarding = () => {
     updateLivestockEntry,
   } = useOnboardingStore();
 
+  // Check if current step has valid data for enabling Next button
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 0:
+        // Personal step - require name and state at minimum
+        return (
+          personalDetails.fathersName.trim() !== "" &&
+          personalDetails.state !== ""
+        );
+      case 1:
+        // Land step - if they have land, require at least one entry with data
+        if (!hasLand) return true;
+        return landEntries.some(
+          (entry) => entry.area > 0 && entry.crops && entry.crops.length > 0
+        );
+      case 2:
+        // Livestock step - if they have livestock, require at least one entry
+        if (!hasLivestock) return true;
+        return livestockEntries.some(
+          (entry) => entry.type !== "" && entry.count > 0
+        );
+      default:
+        return true;
+    }
+  };
+
   const handleNext = () => {
-    if (currentStep < 2) {
+    if (currentStep < TOTAL_STEPS - 1) {
       nextStep();
     } else {
-      // User is already authenticated after OTP, just navigate to home
+      // Final step - navigate to home
       router.replace("/(tab)/" as any);
     }
   };
 
   const handleSkip = () => {
-    // User is already authenticated after OTP, just navigate to home
     router.replace("/(tab)/" as any);
   };
 
@@ -72,13 +97,15 @@ const Onboarding = () => {
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
 
   const renderPersonalStep = () => (
-    <View className="flex-1 px-4">
+    <View className="flex-1">
       <OnboardingHeader
         title={t("onboarding.personal.title")}
         subtitle={t("onboarding.personal.subtitle")}
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
       />
 
-      <ScrollView className="flex-1 pt-6 p-4">
+      <ScrollView className="flex-1 px-6 pt-6">
         <FormInput
           label={t("onboarding.personal.fullName")}
           placeholder={t("onboarding.personal.fullNamePlaceholder")}
@@ -102,15 +129,22 @@ const Onboarding = () => {
             { label: "Lucknow", value: "lucknow" },
             { label: "Kanpur", value: "kanpur" },
             { label: "Varanasi", value: "varanasi" },
+            { label: "Agra", value: "agra" },
+            { label: "Prayagraj", value: "prayagraj" },
           ]}
           onChange={(value) => updatePersonalDetails({ district: value })}
         />
 
-        <FormInput
+        <Select
           label={t("onboarding.personal.village")}
           placeholder={t("onboarding.personal.selectVillage")}
           value={personalDetails.village}
-          onChangeText={(text) => updatePersonalDetails({ village: text })}
+          options={[
+            { label: "BKT", value: "bkt" },
+            { label: "Gomti Nagar", value: "gomti_nagar" },
+            { label: "Aliganj", value: "aliganj" },
+          ]}
+          onChange={(value) => updatePersonalDetails({ village: value })}
         />
       </ScrollView>
     </View>
@@ -121,13 +155,21 @@ const Onboarding = () => {
       <OnboardingHeader
         title={t("onboarding.land.title")}
         subtitle={t("onboarding.land.subtitle")}
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
       />
 
       <ScrollView className="flex-1 px-6 pt-6">
         <Toggle
           label={t("onboarding.land.doYouHaveLand")}
           value={hasLand}
-          onChange={setHasLand}
+          onChange={(value) => {
+            setHasLand(value);
+            // Add initial entry if toggled on and no entries exist
+            if (value && landEntries.length === 0) {
+              addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
+            }
+          }}
         />
 
         {hasLand && (
@@ -135,26 +177,28 @@ const Onboarding = () => {
             {landEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                className="bg-neutral-surface rounded-xl p-4 mb-4 border border-neutral-border"
+                className="bg-white rounded-xl p-4 mb-4 border border-neutral-border"
               >
-                <View className="flex-row justify-between items-center mb-3">
-                  <Text className="font-semibold text-neutral-textDark">
-                    {t("onboarding.land.title")} #{index + 1}
-                  </Text>
-                  <TouchableOpacity onPress={() => removeLandEntry(entry.id)}>
-                    <Ionicons
-                      name="trash-outline"
-                      size={20}
-                      color={colors.semantic.error}
-                    />
-                  </TouchableOpacity>
-                </View>
+                {landEntries.length > 1 && (
+                  <View className="flex-row justify-between items-center mb-3">
+                    <Text className="font-semibold text-neutral-textDark">
+                      {t("onboarding.land.title")} #{index + 1}
+                    </Text>
+                    <TouchableOpacity onPress={() => removeLandEntry(entry.id)}>
+                      <Ionicons
+                        name="trash-outline"
+                        size={20}
+                        color={colors.semantic.error}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
 
                 <View className="flex-row gap-3">
                   <View className="flex-1">
                     <FormInput
                       label={t("onboarding.land.totalArea")}
-                      placeholder="0"
+                      placeholder="Eg. 47"
                       keyboardType="numeric"
                       value={entry.area ? entry.area.toString() : ""}
                       onChangeText={(text) =>
@@ -167,6 +211,7 @@ const Onboarding = () => {
                   <View className="flex-1">
                     <Select
                       label={t("onboarding.land.unit")}
+                      placeholder="Select"
                       value={entry.unit}
                       options={unitOptions}
                       onChange={(value) =>
@@ -178,13 +223,13 @@ const Onboarding = () => {
                   </View>
                 </View>
 
-                <Select
+                <MultiSelect
                   label={t("onboarding.land.mainCrop")}
-                  placeholder={t("onboarding.land.selectCrop")}
-                  value={entry.mainCrop}
+                  placeholder="Select Multiple"
+                  values={entry.crops || []}
                   options={cropOptions}
-                  onChange={(value) =>
-                    updateLandEntry(entry.id, { mainCrop: value })
+                  onChange={(values) =>
+                    updateLandEntry(entry.id, { crops: values })
                   }
                 />
               </View>
@@ -192,25 +237,15 @@ const Onboarding = () => {
 
             <TouchableOpacity
               onPress={() =>
-                addLandEntry({ area: 0, unit: "bigha", mainCrop: "" })
+                addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })
               }
-              className="flex-row items-center justify-center py-3 border border-dashed border-primary rounded-xl"
+              className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-secondary-soil self-start"
             >
-              <Ionicons
-                name="add-circle"
-                size={20}
-                color={colors.primary.green}
-              />
-              <Text className="text-primary font-medium ml-2">
-                {t("onboarding.land.addLand")} +
+              <Text className="text-white font-medium mr-2">
+                {t("onboarding.land.addLand")}
               </Text>
+              <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
-
-            {landEntries.length > 0 && (
-              <Text className="text-neutral-textMedium text-center mt-3">
-                {landEntries.length} {t("onboarding.land.landAdded")}
-              </Text>
-            )}
           </View>
         )}
       </ScrollView>
@@ -222,13 +257,21 @@ const Onboarding = () => {
       <OnboardingHeader
         title={t("onboarding.livestock.title")}
         subtitle={t("onboarding.livestock.subtitle")}
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
       />
 
       <ScrollView className="flex-1 px-6 pt-6">
         <Toggle
           label={t("onboarding.livestock.doYouHaveLivestock")}
           value={hasLivestock}
-          onChange={setHasLivestock}
+          onChange={(value) => {
+            setHasLivestock(value);
+            // Add initial entry if toggled on and no entries exist
+            if (value && livestockEntries.length === 0) {
+              addLivestockEntry({ type: "", count: 0 });
+            }
+          }}
         />
 
         {hasLivestock && (
@@ -236,28 +279,30 @@ const Onboarding = () => {
             {livestockEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                className="bg-neutral-surface rounded-xl p-4 mb-4 border border-neutral-border"
+                className="bg-white rounded-xl p-4 mb-4 border border-neutral-border"
               >
-                <View className="flex-row justify-between items-center mb-3">
-                  <Text className="font-semibold text-neutral-textDark">
-                    {t("onboarding.livestock.animal")} #{index + 1}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => removeLivestockEntry(entry.id)}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={20}
-                      color={colors.semantic.error}
-                    />
-                  </TouchableOpacity>
-                </View>
+                {livestockEntries.length > 1 && (
+                  <View className="flex-row justify-between items-center mb-3">
+                    <Text className="font-semibold text-neutral-textDark">
+                      {t("onboarding.livestock.animal")} #{index + 1}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => removeLivestockEntry(entry.id)}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={20}
+                        color={colors.semantic.error}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
 
                 <View className="flex-row gap-3">
-                  <View className="flex-2">
+                  <View className="flex-[1.5]">
                     <Select
                       label={t("onboarding.livestock.animal")}
-                      placeholder={t("onboarding.livestock.selectAnimal")}
+                      placeholder="Select"
                       value={entry.type}
                       options={animalOptions}
                       onChange={(value) =>
@@ -268,7 +313,7 @@ const Onboarding = () => {
                   <View className="flex-1">
                     <FormInput
                       label={t("onboarding.livestock.numberOfAnimals")}
-                      placeholder="0"
+                      placeholder="Eg. 5"
                       keyboardType="numeric"
                       value={entry.count ? entry.count.toString() : ""}
                       onChangeText={(text) =>
@@ -284,24 +329,13 @@ const Onboarding = () => {
 
             <TouchableOpacity
               onPress={() => addLivestockEntry({ type: "", count: 0 })}
-              className="flex-row items-center justify-center py-3 border border-dashed border-primary rounded-xl"
+              className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-secondary-soil self-start"
             >
-              <Ionicons
-                name="add-circle"
-                size={20}
-                color={colors.primary.green}
-              />
-              <Text className="text-primary font-medium ml-2">
-                {t("onboarding.livestock.addAnimal")} +
+              <Text className="text-white font-medium mr-2">
+                {t("onboarding.livestock.addAnimal")}
               </Text>
+              <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
-
-            {livestockEntries.length > 0 && (
-              <Text className="text-neutral-textMedium text-center mt-3">
-                {livestockEntries.length}{" "}
-                {t("onboarding.livestock.animalsAdded")}
-              </Text>
-            )}
           </View>
         )}
       </ScrollView>
@@ -323,48 +357,33 @@ const Onboarding = () => {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-neutral-surface"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {renderStep()}
 
       {/* Bottom Navigation */}
-      <View className="px-6 py-4 border-t border-neutral-border bg-white">
-        <View className="flex-row gap-4">
-          {currentStep > 0 && (
-            <TouchableOpacity
-              onPress={prevStep}
-              className="flex-1 py-4 rounded-xl border border-neutral-border items-center"
-            >
-              <Text className="text-neutral-textMedium font-medium">
-                {t("onboarding.skip")}
-              </Text>
-            </TouchableOpacity>
-          )}
+      <View className="px-6 py-4 bg-neutral-surface">
+        {/* Skip for now link */}
+        <TouchableOpacity onPress={handleSkip} className="items-center mb-4">
+          <Text className="text-neutral-textMedium text-sm">
+            {t("onboarding.skip")}
+          </Text>
+        </TouchableOpacity>
 
-          {currentStep === 0 && (
-            <TouchableOpacity
-              onPress={handleSkip}
-              className="flex-1 py-4 rounded-xl border border-neutral-border items-center"
-            >
-              <Text className="text-neutral-textMedium font-medium">
-                {t("onboarding.skip")}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <Button
-            variant="primary"
-            onPress={handleNext}
-            className="flex-1 py-4"
-          >
-            <Text className="text-white font-semibold text-base">
-              {currentStep === 2
-                ? t("onboarding.finish")
-                : t("onboarding.next")}
-            </Text>
-          </Button>
-        </View>
+        {/* Next/Finish Button */}
+        <Button
+          variant="primary"
+          onPress={handleNext}
+          disabled={!isStepValid()}
+          className="w-full py-4"
+        >
+          <Text className="text-white font-semibold text-base">
+            {currentStep === TOTAL_STEPS - 1
+              ? t("onboarding.finish")
+              : t("onboarding.next")}
+          </Text>
+        </Button>
       </View>
     </KeyboardAvoidingView>
   );

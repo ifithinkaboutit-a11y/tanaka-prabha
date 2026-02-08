@@ -2,18 +2,28 @@
 import React from "react";
 import { View } from "react-native";
 import AppText from "../atoms/AppText";
+import ProgressBar from "../atoms/ProgressBar";
 
 interface OnboardingHeaderProps {
   title: string;
   subtitle: string;
+  currentStep?: number;
+  totalSteps?: number;
 }
 
 export default function OnboardingHeader({
   title,
   subtitle,
+  currentStep = 0,
+  totalSteps = 3,
 }: OnboardingHeaderProps) {
   return (
-    <View className="bg-primary pt-16 pb-8 px-6 rounded-b-[40px]">
+    <View className="bg-primary pt-12 pb-8 px-6 rounded-b-[40px]">
+      {/* Progress Bar */}
+      <View className="mb-6">
+        <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
+      </View>
+
       {/* Sun icon */}
       <View className="items-center mb-4">
         <View className="w-20 h-20 items-center justify-center">
