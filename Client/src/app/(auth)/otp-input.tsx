@@ -102,7 +102,7 @@ const OTPInput = () => {
       const { isNewUser } = await signIn(phoneNumber, otpString);
       // Navigate based on user status
       if (isNewUser) {
-        router.replace("/(auth)/onboarding");
+        router.replace("/(auth)/personal-details");
       } else {
         router.replace("/(tab)");
       }

@@ -1,43 +1,65 @@
 // src/app/(tab)/connect.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Image,
     Linking,
     ScrollView,
-    TouchableOpacity,
+    Pressable,
     View,
-    ActivityIndicator,
+    RefreshControl,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import { connectServices } from "../../data/content/connectServices";
 import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 
+const SERVICE_COLORS: Record<string, string> = {
+  "crop": "#DCFCE7",
+  "livestock": "#FEF3C7",
+  "soil": "#DBEAFE",
+  "market": "#FCE7F3",
+};
+
+const SERVICE_ICON_COLORS: Record<string, string> = {
+  "crop": "#16A34A",
+  "livestock": "#D97706",
+  "soil": "#2563EB",
+  "market": "#DB2777",
+};
+
 export default function Connect() {
   const router = useRouter();
   const { t } = useTranslation();
   const [recentProfessionals, setRecentProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch recent professionals (showing recently available ones as a proxy for recent connections)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Get a few professionals to show as recent connections
-        const professionals = await professionalsApi.getAll({ limit: 2, available_only: true });
-        setRecentProfessionals(professionals);
-      } catch (error) {
-        console.error("Error fetching professionals:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      // Get a few professionals to show as recent connections
+      const professionals = await professionalsApi.getAll({ limit: 3, available_only: true });
+      setRecentProfessionals(professionals);
+    } catch (error) {
+      console.error("Error fetching professionals:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await fetchData();
+      setLoading(false);
+    };
+    loadData();
+  }, [fetchData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, [fetchData]);
 
   const handleServicePress = (serviceId: string) => {
     router.push({
@@ -47,144 +69,370 @@ export default function Connect() {
   };
 
   const handleEmergencyPress = () => {
-    // Emergency helpline number (example: 1800-XXX-XXXX)
     const emergencyNumber = "tel:1800180111";
     Linking.openURL(emergencyNumber);
   };
 
   const handleViewAllConnections = () => {
-    console.log("View all connections");
+    router.push({
+      pathname: "/connect-listing",
+      params: { category: "all" },
+    } as any);
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
-      {/* Header */}
-      <View className="pt-12 pb-6 px-4 bg-white">
-        <AppText variant="h2" className="font-bold text-neutral-textDark">
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#386641"]}
+          tintColor="#386641"
+        />
+      }
+    >
+      {/* Header with Gradient */}
+      <View
+        style={{
+          paddingTop: 48,
+          paddingBottom: 24,
+          paddingHorizontal: 20,
+          backgroundColor: "#386641",
+          borderBottomLeftRadius: 28,
+          borderBottomRightRadius: 28,
+        }}
+      >
+        <AppText
+          variant="h2"
+          style={{ fontWeight: "800", color: "#FFFFFF", fontSize: 28 }}
+        >
           {t("connect.title")}
+        </AppText>
+        <AppText
+          variant="bodySm"
+          style={{ color: "rgba(255,255,255,0.85)", marginTop: 4, fontSize: 14 }}
+        >
+          {t("connect.subtitle")}
         </AppText>
       </View>
 
       {/* What do you need help with? */}
-      <View className="px-4 py-6 bg-white">
-        <AppText variant="h3" className="font-bold text-neutral-textDark mb-4">
+      <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+        <AppText
+          variant="h3"
+          style={{ fontWeight: "700", color: "#1F2937", marginBottom: 16, fontSize: 18 }}
+        >
           {t("connect.whatHelpWith")}
         </AppText>
 
         {/* Services Grid - 2x2 */}
-        <View className="flex-row flex-wrap gap-3">
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           {connectServices.map((service) => (
-            <TouchableOpacity
+            <Pressable
               key={service.id}
-              className="flex-1 min-w-[45%]"
               onPress={() => handleServicePress(service.id)}
+              style={({ pressed }) => ({
+                flex: 1,
+                minWidth: "45%",
+                opacity: pressed ? 0.9 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
             >
-              <View className="bg-white border border-neutral-border rounded-2xl items-center justify-center py-6 px-4 shadow-sm">
+              <View
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 24,
+                  paddingHorizontal: 16,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.06,
+                  shadowRadius: 8,
+                  elevation: 3,
+                }}
+              >
                 <View
-                  className="w-20 h-20 rounded-full items-center justify-center mb-3"
-                  style={{ backgroundColor: service.iconBgColor }}
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 36,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
+                    backgroundColor: SERVICE_COLORS[service.id] || service.iconBgColor,
+                  }}
                 >
-                  <Ionicons name={service.icon} size={40} color="#386641" />
+                  <Ionicons
+                    name={service.icon}
+                    size={36}
+                    color={SERVICE_ICON_COLORS[service.id] || "#386641"}
+                  />
                 </View>
                 <AppText
                   variant="bodySm"
-                  className="text-center font-medium text-neutral-textDark"
+                  style={{
+                    textAlign: "center",
+                    fontWeight: "600",
+                    color: "#374151",
+                    fontSize: 14,
+                  }}
                 >
                   {t(service.titleKey)}
                 </AppText>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       </View>
 
       {/* Recent Connections */}
-      <View className="px-4 py-6 mt-2 bg-white">
-        <View className="flex-row justify-between items-center mb-4">
-          <AppText variant="h3" className="font-bold text-neutral-textDark">
-            {t("connect.recentConnections")}
-          </AppText>
-          <TouchableOpacity onPress={handleViewAllConnections}>
+      <View
+        style={{
+          marginHorizontal: 20,
+          marginTop: 24,
+          backgroundColor: "#FFFFFF",
+          borderRadius: 20,
+          padding: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 3,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="time-outline" size={20} color="#386641" />
+            <AppText
+              variant="h3"
+              style={{ fontWeight: "700", color: "#1F2937", marginLeft: 8, fontSize: 16 }}
+            >
+              {t("connect.recentConnections")}
+            </AppText>
+          </View>
+          <Pressable
+            onPress={handleViewAllConnections}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+              flexDirection: "row",
+              alignItems: "center",
+            })}
+          >
             <AppText
               variant="bodySm"
-              className="text-primary-forest font-medium"
+              style={{ color: "#386641", fontWeight: "600" }}
             >
               {t("connect.viewAll")}
             </AppText>
-          </TouchableOpacity>
+            <Ionicons name="chevron-forward" size={16} color="#386641" />
+          </Pressable>
         </View>
 
-        {recentProfessionals.map((professional) => (
-            <TouchableOpacity
-              key={professional.id}
-              className="bg-neutral-surface rounded-2xl p-4 mb-3 shadow-sm"
-              onPress={() =>
-                router.push({
-                  pathname: "/connect-detail",
-                  params: { professionalId: professional.id },
-                } as any)
-              }
-            >
-              <View className="flex-row items-center">
-                <Image
-                  source={{ uri: professional.imageUrl || 'https://via.placeholder.com/64' }}
-                  className="w-16 h-16 rounded-full mr-4"
-                />
-                <View className="flex-1">
+        {recentProfessionals.map((professional, index) => (
+          <Pressable
+            key={professional.id}
+            onPress={() =>
+              router.push({
+                pathname: "/connect-detail",
+                params: { professionalId: professional.id },
+              } as any)
+            }
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#F8FAFC" : "#F3F4F6",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: index < recentProfessionals.length - 1 ? 12 : 0,
+            })}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={{ uri: professional.imageUrl || 'https://via.placeholder.com/64' }}
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  marginRight: 14,
+                  borderWidth: 2,
+                  borderColor: professional.isAvailable ? "#16A34A" : "#D1D5DB",
+                }}
+              />
+              <View style={{ flex: 1 }}>
+                <AppText
+                  variant="bodyMd"
+                  style={{ fontWeight: "700", color: "#1F2937", fontSize: 15, marginBottom: 2 }}
+                >
+                  {professional.name}
+                </AppText>
+                <AppText
+                  variant="bodySm"
+                  style={{ color: "#6B7280", fontSize: 13 }}
+                >
+                  {professional.role}
+                </AppText>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                  <Ionicons name="location-outline" size={12} color="#9CA3AF" />
                   <AppText
-                    variant="bodyMd"
-                    className="font-semibold text-neutral-textDark mb-1"
+                    variant="bodySm"
+                    style={{ color: "#9CA3AF", fontSize: 12, marginLeft: 4 }}
                   >
-                    {professional.name}
-                  </AppText>
-                  <AppText variant="bodySm" className="text-neutral-textMedium">
-                    {professional.role}
-                  </AppText>
-                  <AppText variant="bodySm" className="text-neutral-textMedium">
                     {professional.district}
                   </AppText>
                 </View>
-                <View className={`w-3 h-3 rounded-full ${professional.isAvailable ? 'bg-green-500' : 'bg-gray-400'}`} />
               </View>
-            </TouchableOpacity>
-          ))}
+              <View style={{ alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: professional.isAvailable ? "#16A34A" : "#D1D5DB",
+                    marginBottom: 4,
+                  }}
+                />
+                <AppText
+                  variant="bodySm"
+                  style={{
+                    color: professional.isAvailable ? "#16A34A" : "#9CA3AF",
+                    fontSize: 10,
+                    fontWeight: "600",
+                  }}
+                >
+                  {professional.isAvailable ? t("connect.available") : t("connect.busy")}
+                </AppText>
+              </View>
+            </View>
+          </Pressable>
+        ))}
 
         {recentProfessionals.length === 0 && !loading && (
-          <AppText variant="bodySm" className="text-neutral-textMedium text-center py-4">
-            No recent connections
-          </AppText>
+          <View style={{ alignItems: "center", paddingVertical: 24 }}>
+            <Ionicons name="people-outline" size={48} color="#D1D5DB" />
+            <AppText
+              variant="bodySm"
+              style={{ color: "#9CA3AF", textAlign: "center", marginTop: 12 }}
+            >
+              {t("connect.noRecentConnections")}
+            </AppText>
+          </View>
         )}
       </View>
 
       {/* Emergency Help */}
-      <View className="px-4 py-8 mt-2 bg-white items-center">
-        <AppText
-          variant="h3"
-          className="font-bold text-neutral-textDark mb-2 text-center"
+      <View
+        style={{
+          marginHorizontal: 20,
+          marginTop: 24,
+          backgroundColor: "#FEF2F2",
+          borderRadius: 20,
+          padding: 24,
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#FECACA",
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
         >
-          {t("connect.emergencyTitle")}
-        </AppText>
+          <Ionicons name="alert-circle" size={24} color="#DC2626" />
+          <AppText
+            variant="h3"
+            style={{ fontWeight: "700", color: "#DC2626", marginLeft: 8, fontSize: 18 }}
+          >
+            {t("connect.emergencyTitle")}
+          </AppText>
+        </View>
         <AppText
           variant="bodySm"
-          className="text-neutral-textMedium mb-8 text-center"
+          style={{
+            color: "#7F1D1D",
+            marginBottom: 20,
+            textAlign: "center",
+            fontSize: 13,
+          }}
         >
           {t("connect.emergencySubtitle")}
         </AppText>
 
-        {/* Emergency Button - Large Red Circle */}
-        <TouchableOpacity
+        {/* Emergency Button - Animated Pulse Effect */}
+        <Pressable
           onPress={handleEmergencyPress}
-          className="items-center justify-center"
-          activeOpacity={0.8}
+          style={({ pressed }) => ({
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
         >
-          <View className="w-40 h-40 rounded-full bg-red-500 items-center justify-center shadow-lg">
-            <Ionicons name="call" size={56} color="white" />
+          {/* Outer Ring */}
+          <View
+            style={{
+              position: "absolute",
+              width: 144,
+              height: 144,
+              borderRadius: 72,
+              backgroundColor: "rgba(220, 38, 38, 0.15)",
+            }}
+          />
+          {/* Inner Ring */}
+          <View
+            style={{
+              position: "absolute",
+              width: 128,
+              height: 128,
+              borderRadius: 64,
+              backgroundColor: "rgba(220, 38, 38, 0.25)",
+            }}
+          />
+          {/* Main Button */}
+          <View
+            style={{
+              width: 112,
+              height: 112,
+              borderRadius: 56,
+              backgroundColor: "#DC2626",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#DC2626",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.4,
+              shadowRadius: 16,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="call" size={48} color="white" />
           </View>
-        </TouchableOpacity>
+        </Pressable>
+
+        <AppText
+          variant="bodySm"
+          style={{
+            color: "#991B1B",
+            marginTop: 16,
+            fontWeight: "600",
+            fontSize: 13,
+          }}
+        >
+          {t("connect.tapToCall")}
+        </AppText>
       </View>
 
       {/* Bottom padding for tab bar */}
-      <View className="h-4" />
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
-};
+}

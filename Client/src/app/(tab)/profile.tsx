@@ -2,12 +2,115 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Button from "../../components/atoms/Button";
 import { useTranslation } from "../../i18n";
 import { userApi, UserProfile } from "../../services/apiService";
+
+// Profile Info Row Component
+const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  <View
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#F3F4F6",
+    }}
+  >
+    <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 14 }}>
+      {label}
+    </AppText>
+    <AppText variant="bodySm" style={{ color: "#1F2937", fontWeight: "600", fontSize: 14 }}>
+      {value || "-"}
+    </AppText>
+  </View>
+);
+
+// Section Card Component
+const SectionCard = ({
+  title,
+  icon,
+  iconBgColor,
+  actionLabel,
+  onAction,
+  children,
+}: {
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBgColor: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+}) => (
+  <View
+    style={{
+      marginHorizontal: 16,
+      marginBottom: 16,
+      padding: 20,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
+    }}
+  >
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: iconBgColor,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+          }}
+        >
+          <Ionicons name={icon} size={20} color="#FFFFFF" />
+        </View>
+        <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
+          {title}
+        </AppText>
+      </View>
+      {actionLabel && (
+        <Pressable
+          onPress={onAction}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            opacity: pressed ? 0.7 : 1,
+            backgroundColor: "#FEF3E2",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 20,
+          })}
+        >
+          <Ionicons name="add" size={16} color="#8B5A3C" />
+          <AppText variant="bodySm" style={{ color: "#8B5A3C", fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+            {actionLabel}
+          </AppText>
+        </Pressable>
+      )}
+    </View>
+    {children}
+  </View>
+);
 
 const Profile = () => {
   const router = useRouter();
@@ -15,255 +118,342 @@ const Profile = () => {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await userApi.getProfile();
+      if (response.data?.user) {
+        setProfile(response.data.user);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await userApi.getProfile();
-        if (response.data?.user) {
-          setProfile(response.data.user);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
+    const loadProfile = async () => {
+      setLoading(true);
+      await fetchProfile();
+      setLoading(false);
     };
-    fetchProfile();
+    loadProfile();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchProfile();
+    setRefreshing(false);
+  };
 
   const maskAadhaar = (aadhaar: string) =>
     aadhaar.replace(/(\d{4})(\d{4})(\d{4})/, "XXXX XXXX $3");
 
   if (loading) {
     return (
-      <View className="flex-1 bg-neutral-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#4CAF50" />
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB", alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color="#386641" />
+        <AppText variant="bodyMd" style={{ color: "#6B7280", marginTop: 12 }}>
+          {t("common.loading")}
+        </AppText>
       </View>
     );
   }
 
   if (!profile) {
     return (
-      <View className="flex-1 bg-neutral-surface items-center justify-center">
-        <AppText variant="bodySm" className="text-neutral-textMedium">
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB", alignItems: "center", justifyContent: "center" }}>
+        <Ionicons name="person-circle-outline" size={64} color="#9CA3AF" />
+        <AppText variant="bodyMd" style={{ color: "#6B7280", marginTop: 12 }}>
           {t("profile.error")}
         </AppText>
+        <Pressable
+          onPress={onRefresh}
+          style={{
+            marginTop: 16,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            backgroundColor: "#386641",
+            borderRadius: 20,
+          }}
+        >
+          <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+            {t("common.retry")}
+          </AppText>
+        </Pressable>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#F9FAFB" }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#386641"]}
+          tintColor="#386641"
+        />
+      }
+    >
       {/* HEADER */}
-      <View className="flex-row justify-between items-center px-8 pt-10 pb-4 bg-neutral-surface">
-        <AppText variant="h2" className="font-bold text-neutral-textDark">
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingTop: 48,
+          paddingBottom: 16,
+          backgroundColor: "#F9FAFB",
+        }}
+      >
+        <AppText variant="h2" style={{ fontWeight: "700", color: "#1F2937", fontSize: 28 }}>
           {t("profile.title")}
         </AppText>
-        <TouchableOpacity
-          onPress={() => {
-            console.log("Settings icon pressed");
-            router.replace("/(auth)/language-selection");
-          }}
+        <Pressable
+          onPress={() => router.replace("/(auth)/language-selection")}
+          style={({ pressed }) => ({
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: "#FFFFFF",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
-          <Ionicons name="settings-outline" size={24} color="#1F2937" />
-        </TouchableOpacity>
+          <Ionicons name="settings-outline" size={22} color="#1F2937" />
+        </Pressable>
       </View>
 
       {/* PROFILE CARD */}
-      <View className="mx-4 mb-4 p-6 bg-white rounded-2xl shadow-sm">
-        {/* Avatar and Details */}
-        <View className="flex-row mb-6">
-          <View className="mr-4">
-            <Avatar
-              name={profile.name}
-              size="3xl"
-              className=""
-              shape="square"
-            />
-          </View>
-
-          <View className="flex-1 justify-center">
-            <View className="flex-row justify-between mb-2">
-              <AppText variant="bodySm" className="text-neutral-textMedium">
-                {t("profile.name")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark font-medium"
-              >
-                {profile.name}
-              </AppText>
-            </View>
-            <View className="flex-row justify-between mb-2">
-              <AppText variant="bodySm" className="text-neutral-textMedium">
-                {t("profile.age")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark font-medium"
-              >
-                {profile.age}
-              </AppText>
-            </View>
-            <View className="flex-row justify-between">
-              <AppText variant="bodySm" className="text-neutral-textMedium">
-                {t("profile.gender")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark font-medium"
-              >
-                {profile.gender}
-              </AppText>
-            </View>
-          </View>
-        </View>
-
-        {/* Edit Details Button */}
-        <Button
-          label={t("profile.editDetails")}
-          variant="primary"
-          onPress={() => router.push("/personal-details" as any)}
-          className="w-full py-4 bg-[#8B5A3C] rounded-full"
-        />
-      </View>
-
-      {/* PERSONAL DETAILS */}
-      <View className="mx-4 mb-4 p-6 bg-white rounded-2xl shadow-sm">
-        <AppText variant="h3" className="font-bold text-neutral-textDark mb-4">
-          {t("profile.personalDetails")}
-        </AppText>
-
-        <View className="mb-4">
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.mobileNumber")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 16,
+          padding: 24,
+          backgroundColor: "#386641",
+          borderRadius: 24,
+          shadowColor: "#386641",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          elevation: 6,
+        }}
+      >
+        {/* Avatar and Name */}
+        <View style={{ alignItems: "center", marginBottom: 20 }}>
+          <Avatar name={profile.name} size="3xl" shape="circle" bgColor="#FFFFFF" />
+          <AppText
+            variant="h2"
+            style={{
+              color: "#FFFFFF",
+              fontWeight: "700",
+              fontSize: 24,
+              marginTop: 16,
+              textAlign: "center",
+            }}
+          >
+            {profile.name}
+          </AppText>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 8,
+              backgroundColor: "rgba(255,255,255,0.2)",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 20,
+            }}
+          >
+            <Ionicons name="call-outline" size={14} color="#FFFFFF" />
+            <AppText variant="bodySm" style={{ color: "#FFFFFF", marginLeft: 6, fontWeight: "500" }}>
               {profile.mobileNumber}
             </AppText>
           </View>
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.aadhaar")}
+        </View>
+
+        {/* Quick Stats */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            backgroundColor: "rgba(255,255,255,0.15)",
+            borderRadius: 16,
+            padding: 16,
+          }}
+        >
+          <View style={{ alignItems: "center" }}>
+            <AppText variant="h3" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 20 }}>
+              {profile.age || "-"}
             </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.aadhaarNumber ? maskAadhaar(profile.aadhaarNumber) : '-'}
+            <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 }}>
+              {t("profile.age")}
             </AppText>
           </View>
-          <View className="flex-row justify-between">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.address")}
+          <View style={{ width: 1, backgroundColor: "rgba(255,255,255,0.3)" }} />
+          <View style={{ alignItems: "center" }}>
+            <AppText variant="h3" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 20 }}>
+              {profile.gender || "-"}
             </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.village || '-'}, {profile.district || '-'}
+            <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 }}>
+              {t("profile.gender")}
+            </AppText>
+          </View>
+          <View style={{ width: 1, backgroundColor: "rgba(255,255,255,0.3)" }} />
+          <View style={{ alignItems: "center" }}>
+            <AppText variant="h3" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 20 }}>
+              {profile.landDetails?.totalLandArea || 0}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 }}>
+              {t("profile.bigha")}
             </AppText>
           </View>
         </View>
 
-        <TouchableOpacity
+        {/* Edit Button */}
+        <Pressable
           onPress={() => router.push("/personal-details" as any)}
+          style={({ pressed }) => ({
+            marginTop: 20,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 25,
+            paddingVertical: 14,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+            opacity: pressed ? 0.9 : 1,
+          })}
         >
-          <AppText variant="bodySm" className="text-primary-forest font-medium">
+          <Ionicons name="create-outline" size={18} color="#386641" />
+          <AppText variant="bodyMd" style={{ color: "#386641", fontWeight: "700", marginLeft: 8, fontSize: 15 }}>
+            {t("profile.editDetails")}
+          </AppText>
+        </Pressable>
+      </View>
+
+      {/* PERSONAL DETAILS */}
+      <SectionCard
+        title={t("profile.personalDetails")}
+        icon="person-outline"
+        iconBgColor="#2563EB"
+      >
+        <InfoRow label={t("profile.mobileNumber")} value={profile.mobileNumber} />
+        <InfoRow
+          label={t("profile.aadhaar")}
+          value={profile.aadhaarNumber ? maskAadhaar(profile.aadhaarNumber) : "-"}
+        />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 }}>
+          <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 14 }}>
+            {t("profile.address")}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: "#1F2937", fontWeight: "600", fontSize: 14, maxWidth: "60%", textAlign: "right" }}>
+            {profile.village || "-"}, {profile.district || "-"}
+          </AppText>
+        </View>
+        <Pressable
+          onPress={() => router.push("/personal-details" as any)}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 8,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}>
             {t("profile.viewAll")}
           </AppText>
-        </TouchableOpacity>
-      </View>
+          <Ionicons name="chevron-forward" size={16} color="#386641" style={{ marginLeft: 4 }} />
+        </Pressable>
+      </SectionCard>
 
       {/* LAND & CROP SUMMARY */}
-      <View className="mx-4 mb-4 p-6 bg-white rounded-2xl shadow-sm">
-        <View className="flex-row justify-between items-center mb-4">
-          <AppText variant="h3" className="font-bold text-neutral-textDark">
-            {t("landDetails.title")}
+      <SectionCard
+        title={t("landDetails.title")}
+        icon="leaf-outline"
+        iconBgColor="#16A34A"
+        actionLabel={t("landDetails.addLand")}
+        onAction={() => router.push("/land-details")}
+      >
+        <InfoRow label={t("profile.landOwned")} value={`${profile.landDetails?.totalLandArea || 0} ${t("profile.bigha")}`} />
+        <InfoRow label={t("profile.primaryCrop")} value={profile.landDetails?.rabiCrop || "-"} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 }}>
+          <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 14 }}>
+            {t("profile.fieldsAdded")}
           </AppText>
-          <TouchableOpacity onPress={() => router.push("/land-details")}>
-            <AppText variant="bodySm" className="text-[#8B5A3C] font-medium">
-              {t("landDetails.addLand")}
-            </AppText>
-          </TouchableOpacity>
-        </View>
-
-        <View className="mb-4">
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.landOwned")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.landDetails?.totalLandArea || 0} {t("profile.bigha")}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.primaryCrop")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.landDetails?.rabiCrop || '-'}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("profile.fieldsAdded")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              2
-            </AppText>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View
+              style={{
+                backgroundColor: "#DCFCE7",
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "700", fontSize: 14 }}>
+                2
+              </AppText>
+            </View>
           </View>
         </View>
-
-        <TouchableOpacity onPress={() => router.push("/land-details")}>
-          <AppText variant="bodySm" className="text-primary-forest font-medium">
+        <Pressable
+          onPress={() => router.push("/land-details")}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 8,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}>
             {t("profile.viewAll")}
           </AppText>
-        </TouchableOpacity>
-      </View>
+          <Ionicons name="chevron-forward" size={16} color="#386641" style={{ marginLeft: 4 }} />
+        </Pressable>
+      </SectionCard>
 
       {/* LIVESTOCK */}
-      <View className="mx-4 mb-6 p-6 bg-white rounded-2xl shadow-sm">
-        <View className="flex-row justify-between items-center mb-4">
-          <AppText variant="h3" className="font-bold text-neutral-textDark">
-            {t("livestockDetails.title")}
+      <SectionCard
+        title={t("livestockDetails.title")}
+        icon="paw-outline"
+        iconBgColor="#EA580C"
+        actionLabel={t("livestockDetails.addLivestock")}
+        onAction={() => router.push("/livestock-details")}
+      >
+        <InfoRow label={t("livestockDetails.cows")} value={String(profile.livestockDetails?.cow || 0)} />
+        <InfoRow label={t("livestockDetails.buffaloes")} value={String(profile.livestockDetails?.buffalo || 0)} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 }}>
+          <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 14 }}>
+            {t("livestockDetails.goats")}
           </AppText>
-          <TouchableOpacity onPress={() => router.push("/livestock-details")}>
-            <AppText variant="bodySm" className="text-[#8B5A3C] font-medium">
-              {t("livestockDetails.addLivestock")}
-            </AppText>
-          </TouchableOpacity>
+          <AppText variant="bodySm" style={{ color: "#1F2937", fontWeight: "600", fontSize: 14 }}>
+            {String(profile.livestockDetails?.goat || 0)}
+          </AppText>
         </View>
-
-        <View className="mb-4">
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("livestockDetails.cows")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.livestockDetails?.cow || 0}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between mb-3">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("livestockDetails.buffaloes")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.livestockDetails?.buffalo || 0}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between">
-            <AppText variant="bodySm" className="text-neutral-textMedium">
-              {t("livestockDetails.goats")}
-            </AppText>
-            <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.livestockDetails?.goat || 0}
-            </AppText>
-          </View>
-        </View>
-
-        <TouchableOpacity onPress={() => router.push("/livestock-details")}>
-          <AppText variant="bodySm" className="text-primary-forest font-medium">
+        <Pressable
+          onPress={() => router.push("/livestock-details")}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 8,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}>
             {t("profile.viewAll")}
           </AppText>
-        </TouchableOpacity>
-      </View>
+          <Ionicons name="chevron-forward" size={16} color="#386641" style={{ marginLeft: 4 }} />
+        </Pressable>
+      </SectionCard>
+
+      {/* Bottom Spacing */}
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 };

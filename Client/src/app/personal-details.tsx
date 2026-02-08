@@ -19,8 +19,11 @@ const PersonalDetailsScreen = () => {
 
   if (loading || !profile) {
     return (
-      <View className="flex-1 bg-neutral-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#4CAF50" />
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB", alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color="#386641" />
+        <AppText variant="bodyMd" style={{ color: "#6B7280", marginTop: 12 }}>
+          Loading...
+        </AppText>
       </View>
     );
   }
@@ -59,19 +62,42 @@ const PersonalDetailsScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-neutral-surface">
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       {/* Custom Header */}
-      <View className="flex-row items-center pt-12 pb-4 px-4 bg-white">
-        <Pressable onPress={() => router.back()} className="mr-4 p-2">
-          <Ionicons name="arrow-back" size={24} color="#386641" />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingTop: 48,
+          paddingBottom: 16,
+          paddingHorizontal: 16,
+          backgroundColor: "#FFFFFF",
+          borderBottomWidth: 1,
+          borderBottomColor: "#E5E7EB",
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => ({
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "#F3F4F6",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Ionicons name="arrow-back" size={22} color="#386641" />
         </Pressable>
-        <AppText variant="h2" className="text-neutral-textDark flex-1">
+        <AppText variant="h2" style={{ color: "#1F2937", fontWeight: "700", fontSize: 22, flex: 1 }}>
           {T.translate("personalDetails.title")}
         </AppText>
       </View>
 
-      <ScrollView className="flex-1">
-        <View className="p-4">
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        <View style={{ padding: 16 }}>
           <PersonalDetailsForm
             initialData={initialData}
             onSave={handleSave}

@@ -1,5 +1,4 @@
 // src/components/atoms/Avatar.tsx
-import clsx from "clsx";
 import { useState } from "react";
 import { Image, Text, View } from "react-native";
 
@@ -11,24 +10,42 @@ type AvatarProps = {
   size?: AvatarSize;
   shape?: "circle" | "square";
   className?: string;
+  bgColor?: string;
 };
 
-const containerSizeClasses: Record<AvatarSize, string> = {
-  sm: "w-8 h-8",
-  md: "w-10 h-10",
-  lg: "w-14 h-14",
-  xl: "w-20 h-20",
-  "2xl": "w-24 h-24",
-  "3xl": "w-28 h-28",
+const containerSizeStyles: Record<AvatarSize, { width: number; height: number }> = {
+  sm: { width: 32, height: 32 },
+  md: { width: 40, height: 40 },
+  lg: { width: 56, height: 56 },
+  xl: { width: 80, height: 80 },
+  "2xl": { width: 96, height: 96 },
+  "3xl": { width: 112, height: 112 },
 };
 
-const textSizeClasses: Record<AvatarSize, string> = {
-  sm: "text-xs",
-  md: "text-sm",
-  lg: "text-base",
-  xl: "text-lg",
-  "2xl": "text-xl",
-  "3xl": "text-2xl",
+const textSizeStyles: Record<AvatarSize, number> = {
+  sm: 12,
+  md: 14,
+  lg: 18,
+  xl: 24,
+  "2xl": 28,
+  "3xl": 36,
+};
+
+// Generate consistent color from name
+const getColorFromName = (name?: string): string => {
+  const colors = [
+    "#386641", // Forest green
+    "#6A994E", // Light green
+    "#2563EB", // Blue
+    "#7F5539", // Brown
+    "#DC2626", // Red
+    "#9333EA", // Purple
+    "#EA580C", // Orange
+    "#0891B2", // Cyan
+  ];
+  if (!name) return colors[0];
+  const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
 };
 
 export default function Avatar({
@@ -37,6 +54,7 @@ export default function Avatar({
   size = "md",
   shape = "circle",
   className,
+  bgColor,
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -50,29 +68,41 @@ export default function Avatar({
       .toUpperCase() || "?";
 
   const showInitials = !uri || imageError;
+  const backgroundColor = bgColor || getColorFromName(name);
+  const sizeStyle = containerSizeStyles[size];
 
   return (
     <View
-      className={clsx(
-        containerSizeClasses[size],
-        shape === "circle" ? "rounded-full" : "rounded-lg",
-        "bg-neutral-surface border border-neutral-border flex items-center justify-center overflow-hidden",
-        className,
-      )}
+      style={{
+        ...sizeStyle,
+        borderRadius: shape === "circle" ? sizeStyle.width / 2 : 16,
+        backgroundColor: showInitials ? backgroundColor : "#F3F4F6",
+        borderWidth: showInitials ? 0 : 2,
+        borderColor: "#E5E7EB",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
     >
       {showInitials ? (
         <Text
-          className={clsx(
-            "font-semibold text-neutral-textDark",
-            textSizeClasses[size],
-          )}
+          style={{
+            fontWeight: "700",
+            color: "#FFFFFF",
+            fontSize: textSizeStyles[size],
+          }}
         >
           {initials}
         </Text>
       ) : (
         <Image
           source={{ uri }}
-          className="w-full h-full"
+          style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
           onError={() => setImageError(true)}
         />

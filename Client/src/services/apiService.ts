@@ -845,6 +845,204 @@ function getDefaultBgColor(type: "approval" | "reminder" | "alert"): string {
   return colors[type] || "#E0E0E0";
 }
 
+// ============================================================================
+// Appointments API
+// ============================================================================
+
+export interface Appointment {
+  id: string;
+  professionalId: string;
+  userId: string;
+  date: string; // ISO date string (YYYY-MM-DD)
+  time: string; // Time string (e.g., "09:00 AM")
+  status: "pending" | "confirmed" | "cancelled" | "completed";
+  createdAt: string;
+}
+
+export interface CreateAppointmentPayload {
+  professionalId: string;
+  date: string;
+  time: string;
+}
+
+// Local storage key for appointments (used when backend is not available)
+const APPOINTMENTS_STORAGE_KEY = "appointments";
+
+// Maximum appointments per day per consultant
+const MAX_APPOINTMENTS_PER_DAY = 3;
+
+export const appointmentsApi = {
+  /**
+   * Get all appointments for a professional
+   */
+  async getByProfessional(professionalId: string): Promise<Appointment[]> {
+    try {
+      // Try to get from backend first
+      const response = await fetchWithAuth<{ appointments: Appointment[] }>(
+        `/appointments/professional/${professionalId}`
+      );
+      return response.appointments || [];
+    } catch (error) {
+      // Fallback to local storage if backend is not available
+      const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+      if (stored) {
+        const allAppointments: Appointment[] = JSON.parse(stored);
+        return allAppointments.filter(
+          (a) => a.professionalId === professionalId && a.status !== "cancelled"
+        );
+      }
+      return [];
+    }
+  },
+
+  /**
+   * Get all appointments for the current user
+   */
+  async getMyAppointments(): Promise<Appointment[]> {
+    try {
+      const response = await fetchWithAuth<{ appointments: Appointment[] }>(
+        "/appointments/my"
+      );
+      return response.appointments || [];
+    } catch (error) {
+      // Fallback to local storage
+      const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+      if (stored) {
+        const user = await tokenManager.getUser();
+        const allAppointments: Appointment[] = JSON.parse(stored);
+        return allAppointments.filter(
+          (a) => a.userId === user?.id && a.status !== "cancelled"
+        );
+      }
+      return [];
+    }
+  },
+
+  /**
+   * Get appointment count for a professional on a specific date
+   */
+  async getCountForDate(
+    professionalId: string,
+    date: string
+  ): Promise<number> {
+    const appointments = await this.getByProfessional(professionalId);
+    return appointments.filter(
+      (a) => a.date === date && a.status !== "cancelled"
+    ).length;
+  },
+
+  /**
+   * Check if a professional has reached max appointments for a date
+   */
+  async isDateFullyBooked(
+    professionalId: string,
+    date: string
+  ): Promise<boolean> {
+    const count = await this.getCountForDate(professionalId, date);
+    return count >= MAX_APPOINTMENTS_PER_DAY;
+  },
+
+  /**
+   * Create a new appointment
+   */
+  async create(payload: CreateAppointmentPayload): Promise<Appointment> {
+    // Check if the date is fully booked
+    const isFullyBooked = await this.isDateFullyBooked(
+      payload.professionalId,
+      payload.date
+    );
+    if (isFullyBooked) {
+      throw new ApiError(
+        "This consultant has reached the maximum appointments for this date (3 per day)",
+        400
+      );
+    }
+
+    try {
+      // Try to create on backend first
+      const response = await fetchWithAuth<{ appointment: Appointment }>(
+        "/appointments",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+      return response.appointment;
+    } catch (error) {
+      // Fallback to local storage
+      const user = await tokenManager.getUser();
+      const newAppointment: Appointment = {
+        id: `apt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        professionalId: payload.professionalId,
+        userId: user?.id || "guest",
+        date: payload.date,
+        time: payload.time,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      // Save to local storage
+      const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+      const appointments: Appointment[] = stored ? JSON.parse(stored) : [];
+      appointments.push(newAppointment);
+      await AsyncStorage.setItem(
+        APPOINTMENTS_STORAGE_KEY,
+        JSON.stringify(appointments)
+      );
+
+      return newAppointment;
+    }
+  },
+
+  /**
+   * Cancel an appointment
+   */
+  async cancel(appointmentId: string): Promise<void> {
+    try {
+      await fetchWithAuth(`/appointments/${appointmentId}/cancel`, {
+        method: "PATCH",
+      });
+    } catch (error) {
+      // Fallback to local storage
+      const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+      if (stored) {
+        const appointments: Appointment[] = JSON.parse(stored);
+        const updatedAppointments = appointments.map((a) =>
+          a.id === appointmentId ? { ...a, status: "cancelled" as const } : a
+        );
+        await AsyncStorage.setItem(
+          APPOINTMENTS_STORAGE_KEY,
+          JSON.stringify(updatedAppointments)
+        );
+      }
+    }
+  },
+
+  /**
+   * Get available time slots for a professional on a specific date
+   */
+  async getAvailableSlots(
+    professionalId: string,
+    date: string
+  ): Promise<string[]> {
+    const allSlots = [
+      "09:00 AM",
+      "10:00 AM",
+      "11:00 AM",
+      "02:00 PM",
+      "03:00 PM",
+      "04:00 PM",
+    ];
+
+    const appointments = await this.getByProfessional(professionalId);
+    const bookedSlots = appointments
+      .filter((a) => a.date === date && a.status !== "cancelled")
+      .map((a) => a.time);
+
+    return allSlots.filter((slot) => !bookedSlots.includes(slot));
+  },
+};
+
 export default {
   auth: authApi,
   user: userApi,
@@ -852,5 +1050,6 @@ export default {
   schemes: schemesApi,
   professionals: professionalsApi,
   notifications: notificationsApi,
+  appointments: appointmentsApi,
   tokenManager,
 };

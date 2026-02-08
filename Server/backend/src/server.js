@@ -13,14 +13,14 @@ const startServer = async () => {
         await pool.query('SELECT NOW()');
         console.log('✅ Database connection established');
 
-        // Start server
-        const server = app.listen(PORT, () => {
+        // Start server - bind to 0.0.0.0 to accept connections from other devices
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('='.repeat(50));
             console.log(`🚀 Tanak Prabha Server is running`);
             console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`🌐 Server URL: http//localhost:${PORT}`);
-            console.log(`💚 Health Check: http//localhost:${PORT}/health`);
-            console.log(`📚 API Docs: http//localhost:${PORT}/api`);
+            console.log(`🌐 Server URL: http://0.0.0.0:${PORT}`);
+            console.log(`💚 Health Check: http://localhost:${PORT}/health`);
+            console.log(`📚 API Docs: http://localhost:${PORT}/api`);
             console.log('='.repeat(50));
         });
 
