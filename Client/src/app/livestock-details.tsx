@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import LivestockDetailsForm from "../components/molecules/LivestockDetailsForm";
 
@@ -15,20 +15,32 @@ export const unstable_settings = {
 
 const LivestockDetailsScreen = () => {
   const router = useRouter();
-  const { profile, updateLivestockDetails } = useUserProfile();
+  const { profile, loading, updateLivestockDetails } = useUserProfile();
+
+  if (loading || !profile) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   const initialData = {
-    cow: profile.cows,
-    buffalo: profile.buffaloes,
-    sheep: profile.sheep,
-    goat: profile.goats,
-    hen: profile.poultry,
-    others: profile.pigs, // or other
+    cow: profile.livestockDetails?.cow || 0,
+    buffalo: profile.livestockDetails?.buffalo || 0,
+    sheep: profile.livestockDetails?.sheep || 0,
+    goat: profile.livestockDetails?.goat || 0,
+    hen: profile.livestockDetails?.poultry || 0,
+    others: profile.livestockDetails?.others || 0,
   };
 
-  const handleSave = (data: typeof initialData) => {
-    updateLivestockDetails(data);
-    router.back();
+  const handleSave = async (data: typeof initialData) => {
+    try {
+      await updateLivestockDetails(data);
+      router.back();
+    } catch (error) {
+      console.error("Error saving livestock details:", error);
+    }
   };
 
   const handleCancel = () => {

@@ -1,8 +1,6 @@
 // src/hooks/useSearch.ts
-import { useMemo, useState } from "react";
-import { quickActions } from "../data/content/quickActions";
-import { schemes } from "../data/content/schemes";
-import { trainingPrograms } from "../data/content/trainingPrograms";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { schemesApi, Scheme } from "../services/apiService";
 
 interface SearchResult {
   id: string;
@@ -15,48 +13,56 @@ interface SearchResult {
 
 export const useSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        const data = await schemesApi.getAll();
+        setSchemes(data);
+      } catch (error) {
+        console.error("Error fetching schemes for search:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchemes();
+  }, []);
 
   const allContent = useMemo(() => {
     const content: SearchResult[] = [];
 
-    // Add schemes
-    schemes.forEach((scheme) => {
-      content.push({
-        id: scheme.id,
-        title: scheme.title,
-        description: scheme.description,
-        category: scheme.category,
-        type: "scheme",
-        item: scheme,
+    // Add schemes (non-training)
+    schemes
+      .filter((scheme) => scheme.category !== "Training")
+      .forEach((scheme) => {
+        content.push({
+          id: scheme.id,
+          title: scheme.title,
+          description: scheme.description,
+          category: scheme.category,
+          type: "scheme",
+          item: scheme,
+        });
       });
-    });
 
     // Add training programs
-    trainingPrograms.forEach((program) => {
-      content.push({
-        id: program.id,
-        title: program.title,
-        description: program.description,
-        category: program.category,
-        type: "training",
-        item: program,
+    schemes
+      .filter((scheme) => scheme.category === "Training")
+      .forEach((program) => {
+        content.push({
+          id: program.id,
+          title: program.title,
+          description: program.description,
+          category: program.category,
+          type: "training",
+          item: program,
+        });
       });
-    });
-
-    // Add quick actions
-    quickActions.forEach((action) => {
-      content.push({
-        id: action.id,
-        title: action.title,
-        description: action.description,
-        category: action.category || "Quick Action",
-        type: "quickAction",
-        item: action,
-      });
-    });
 
     return content;
-  }, []);
+  }, [schemes]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -73,13 +79,13 @@ export const useSearch = () => {
     );
   }, [searchQuery, allContent]);
 
-  const performSearch = (query: string) => {
+  const performSearch = useCallback((query: string) => {
     setSearchQuery(query);
-  };
+  }, []);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchQuery("");
-  };
+  }, []);
 
   return {
     searchQuery,
@@ -87,5 +93,6 @@ export const useSearch = () => {
     performSearch,
     clearSearch,
     totalResults: searchResults.length,
+    loading,
   };
 };

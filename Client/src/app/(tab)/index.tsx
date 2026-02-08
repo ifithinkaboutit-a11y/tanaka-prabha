@@ -3,18 +3,45 @@ import GreetingHeader from "@/components/molecules/GreetingHeader";
 import QuickActionGrid from "@/components/molecules/QuickActionGrid";
 import SchemePreviewList from "@/components/molecules/SchemePreviewList";
 import SearchBar from "@/components/molecules/SearchBar";
-import { banners } from "@/data/content/banners";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
-import { schemes } from "@/data/content/schemes";
+import { bannersApi, schemesApi, Banner, Scheme } from "@/services/apiService";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
-import React from "react";
-import { ScrollView, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import { useTranslation } from "../../i18n";
 
-const Home = () => {
+export default function Home() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // State for API data
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [bannersData, schemesData] = await Promise.all([
+          bannersApi.getAll(),
+          schemesApi.getAll({ limit: 5 }),
+        ]);
+        setBanners(bannersData);
+        setSchemes(schemesData);
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleNotificationPress = () => {
     router.push("/notifications" as any);
@@ -45,22 +72,25 @@ const Home = () => {
     },
   }));
 
-  // Translate banners
+  // Translate banners - use API data with fallback translations
   const translatedBanners = banners.map((banner, index) => ({
-    ...banner,
-    title:
-      index === 0
-        ? t("banners.welcome.title")
-        : index === 1
-          ? t("banners.programs.title")
-          : t("banners.connect.title"),
-    subtitle:
-      index === 0
-        ? t("banners.welcome.subtitle")
-        : index === 1
-          ? t("banners.programs.subtitle")
-          : t("banners.connect.subtitle"),
+    id: banner.id,
+    title: banner.title || (index === 0
+      ? t("banners.welcome.title")
+      : index === 1
+        ? t("banners.programs.title")
+        : t("banners.connect.title")),
+    subtitle: banner.subtitle || (index === 0
+      ? t("banners.welcome.subtitle")
+      : index === 1
+        ? t("banners.programs.subtitle")
+        : t("banners.connect.subtitle")),
+    imageUrl: banner.imageUrl,
+    url: banner.redirectUrl,
   }));
+
+  // Get user's display name
+  const userName = user?.name || t("common.farmer");
 
   return (
     <ScrollView
@@ -70,7 +100,7 @@ const Home = () => {
       {/* Header with greeting and notification */}
       <View style={{ backgroundColor: "#FFFFFF" }}>
         <GreetingHeader
-          name="Shivansh Ji"
+          name={userName}
           onNotificationPress={handleNotificationPress}
           onAvatarPress={() => router.push("/(tab)/profile")}
         />
@@ -96,10 +126,10 @@ const Home = () => {
             fontSize: 22,
             fontWeight: "700",
             color: "#1F2937",
-            marginBottom: 12,
+            marginBottom: 14,
           }}
         >
-          Quick Actions
+          {t("home.quickActions")}
         </AppText>
         <QuickActionGrid actions={quickActions} />
       </View>
@@ -128,5 +158,3 @@ const Home = () => {
     </ScrollView>
   );
 };
-
-export default Home;

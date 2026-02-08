@@ -14,6 +14,7 @@ import {
 } from "@/data/content/onboardingOptions";
 import { useTranslation } from "@/i18n";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -32,6 +33,7 @@ const TOTAL_STEPS = 3;
 const Onboarding = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
+  const { completeOnboarding } = useAuth();
 
   const {
     currentStep,
@@ -82,12 +84,15 @@ const Onboarding = () => {
     if (currentStep < TOTAL_STEPS - 1) {
       nextStep();
     } else {
-      // Final step - navigate to home
+      // Final step - mark onboarding complete and navigate to home
+      completeOnboarding();
       router.replace("/(tab)/" as any);
     }
   };
 
   const handleSkip = () => {
+    // Skip also marks onboarding as complete
+    completeOnboarding();
     router.replace("/(tab)/" as any);
   };
 

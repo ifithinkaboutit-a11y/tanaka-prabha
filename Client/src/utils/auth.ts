@@ -41,7 +41,7 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
  * Verify OTP and authenticate user
  * @param phoneNumber - Phone number that received OTP
  * @param otpCode - 6-digit OTP code
- * @returns Authenticated user data
+ * @returns Authenticated user data with is_new_user flag
  */
 export const verifyOTP = async (
   phoneNumber: string,
@@ -59,10 +59,17 @@ export const verifyOTP = async (
     if (response.status === "success" && response.data) {
       // Store the token and user data
       await tokenManager.setToken(response.data.token);
-      await tokenManager.setUser(response.data.user);
+      
+      // Add is_new_user flag to user object
+      const userWithFlag: User = {
+        ...response.data.user,
+        is_new_user: response.data.is_new_user
+      };
+      
+      await tokenManager.setUser(userWithFlag);
 
-      console.log("🔐 User authenticated:", response.data.user);
-      return response.data.user;
+      console.log("🔐 User authenticated:", userWithFlag, "isNewUser:", response.data.is_new_user);
+      return userWithFlag;
     }
 
     throw new Error(response.message || "Invalid OTP");
@@ -118,9 +125,15 @@ export const verifyToken = async (): Promise<User | null> => {
     const response = await authApi.verifyToken();
 
     if (response.status === "success" && response.data) {
+      // Add is_new_user flag to user object
+      const userWithFlag: User = {
+        ...response.data.user,
+        is_new_user: (response.data as any).is_new_user
+      };
+      
       // Update stored user data
-      await tokenManager.setUser(response.data.user);
-      return response.data.user;
+      await tokenManager.setUser(userWithFlag);
+      return userWithFlag;
     }
 
     // Token invalid, clear storage

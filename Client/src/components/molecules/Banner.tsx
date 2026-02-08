@@ -35,6 +35,8 @@ export default function BannerSlideshow({
   ).current;
 
   useEffect(() => {
+    if (banners.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, autoSlideInterval);
@@ -46,7 +48,7 @@ export default function BannerSlideshow({
     // Animate dots
     animatedWidths.forEach((anim, index) => {
       Animated.timing(anim, {
-        toValue: index === currentIndex ? 24 : 8,
+        toValue: index === currentIndex ? 28 : 10,
         duration: 300,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: false,
@@ -54,10 +56,15 @@ export default function BannerSlideshow({
     });
   }, [currentIndex, animatedWidths]);
 
+  // Return null if no banners to display
+  if (banners.length === 0) {
+    return null;
+  }
+
   const currentBanner = banners[currentIndex];
 
   const handleBannerPress = () => {
-    if (currentBanner.url) {
+    if (currentBanner?.url) {
       Linking.openURL(currentBanner.url);
     }
   };
@@ -71,15 +78,15 @@ export default function BannerSlideshow({
       <Pressable onPress={handleBannerPress}>
         <View
           style={{
-            height: 180,
-            borderRadius: 16,
+            height: 200,
+            borderRadius: 20,
             overflow: "hidden",
-            backgroundColor: "#E5E7EB",
+            backgroundColor: "#386641",
             position: "relative",
           }}
         >
           {/* Background Image */}
-          {currentBanner.imageUrl && (
+          {currentBanner?.imageUrl && (
             <Image
               source={{ uri: currentBanner.imageUrl }}
               style={{
@@ -91,34 +98,51 @@ export default function BannerSlideshow({
             />
           )}
 
+          {/* Dark Overlay for better text readability */}
           <View
             style={{
               position: "absolute",
-              bottom: 16,
-              left: 16,
-              right: 16,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "100%",
+              backgroundColor: "rgba(0,0,0,0.2)",
+            }}
+          />
+
+          {/* Content */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: 20,
+              left: 20,
+              right: 20,
             }}
           >
             <AppText
               variant="h2"
               style={{
                 color: "#FFFFFF",
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: "700",
-                marginBottom: 4,
+                marginBottom: 6,
+                textShadowColor: "rgba(0,0,0,0.3)",
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 3,
               }}
             >
-              {currentBanner.title}
+              {currentBanner?.title}
             </AppText>
             <AppText
               variant="bodySm"
               style={{
                 color: "#FFFFFF",
-                fontSize: 12,
-                opacity: 0.9,
+                fontSize: 14,
+                opacity: 0.95,
+                fontWeight: "500",
               }}
             >
-              {currentBanner.subtitle}
+              {currentBanner?.subtitle}
             </AppText>
           </View>
         </View>
@@ -130,7 +154,7 @@ export default function BannerSlideshow({
           flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
-          marginTop: 12,
+          marginTop: 14,
           gap: 8,
         }}
       >
@@ -139,9 +163,9 @@ export default function BannerSlideshow({
             <Animated.View
               style={{
                 width: animatedWidths[index],
-                height: 8,
+                height: 10,
                 backgroundColor: index === currentIndex ? "#386641" : "#D1D5DB",
-                borderRadius: 4,
+                borderRadius: 5,
               }}
             />
           </Pressable>

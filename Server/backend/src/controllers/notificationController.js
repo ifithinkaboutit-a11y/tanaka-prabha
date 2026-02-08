@@ -193,3 +193,62 @@ export const deleteNotification = async (req, res) => {
         });
     }
 };
+
+/**
+ * Get current user's notifications (from JWT token)
+ */
+export const getMyNotifications = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { limit = 50, offset = 0, unread_only } = req.query;
+
+        let notifications;
+        if (unread_only === 'true') {
+            notifications = await Notification.findUnreadByUserId(userId);
+        } else {
+            notifications = await Notification.findByUserId(userId, parseInt(limit), parseInt(offset));
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Notifications retrieved successfully',
+            data: {
+                notifications,
+                pagination: {
+                    limit: parseInt(limit),
+                    offset: parseInt(offset),
+                    count: notifications.length
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching my notifications:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch notifications',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Mark all current user's notifications as read
+ */
+export const markMyNotificationsAsRead = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const notifications = await Notification.markAllAsRead(userId);
+
+        res.status(200).json({
+            status: 'success',
+            message: `${notifications.length} notifications marked as read`
+        });
+    } catch (error) {
+        console.error('Error marking my notifications as read:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to mark notifications as read',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};

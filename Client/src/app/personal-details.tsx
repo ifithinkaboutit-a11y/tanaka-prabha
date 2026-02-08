@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import PersonalDetailsForm from "../components/molecules/PersonalDetailsForm";
 
@@ -15,31 +15,43 @@ export const unstable_settings = {
 
 const PersonalDetailsScreen = () => {
   const router = useRouter();
-  const { profile, updatePersonalDetails } = useUserProfile();
+  const { profile, loading, updatePersonalDetails } = useUserProfile();
+
+  if (loading || !profile) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   const initialData = {
-    fathersName: profile.fathersName,
-    mothersName: profile.mothersName,
-    educationalQualification: profile.educationalQualification,
-    sonsMarried: profile.sonsMarried,
-    sonsUnmarried: profile.sonsUnmarried,
-    daughtersMarried: profile.daughtersMarried,
-    daughtersUnmarried: profile.daughtersUnmarried,
-    otherFamilyMembers: profile.otherFamilyMembers,
-    village: profile.village,
-    gramPanchayat: profile.gramPanchayat,
-    nyayPanchayat: profile.nyayPanchayat,
-    postOffice: profile.postOffice,
-    tehsil: profile.tehsil,
-    block: profile.block,
-    district: profile.district,
-    pinCode: profile.pinCode,
-    state: profile.state,
+    fathersName: profile.fathersName || '',
+    mothersName: profile.mothersName || '',
+    educationalQualification: profile.educationalQualification || '',
+    sonsMarried: profile.sonsMarried || 0,
+    sonsUnmarried: profile.sonsUnmarried || 0,
+    daughtersMarried: profile.daughtersMarried || 0,
+    daughtersUnmarried: profile.daughtersUnmarried || 0,
+    otherFamilyMembers: profile.otherFamilyMembers || 0,
+    village: profile.village || '',
+    gramPanchayat: profile.gramPanchayat || '',
+    nyayPanchayat: profile.nyayPanchayat || '',
+    postOffice: profile.postOffice || '',
+    tehsil: profile.tehsil || '',
+    block: profile.block || '',
+    district: profile.district || '',
+    pinCode: profile.pinCode || '',
+    state: profile.state || '',
   };
 
-  const handleSave = (data: typeof initialData) => {
-    updatePersonalDetails(data);
-    router.back();
+  const handleSave = async (data: typeof initialData) => {
+    try {
+      await updatePersonalDetails(data);
+      router.back();
+    } catch (error) {
+      console.error("Error saving personal details:", error);
+    }
   };
 
   const handleCancel = () => {

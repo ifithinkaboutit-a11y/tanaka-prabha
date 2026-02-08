@@ -21,17 +21,20 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
-  signIn: (phoneNumber: string, otp: string) => Promise<User>;
+  needsOnboarding: boolean;
+  signIn: (phoneNumber: string, otp: string) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
   resendOTP: (phoneNumber: string) => Promise<string>;
   refreshUser: () => Promise<void>;
+  completeOnboarding: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   user: null,
+  needsOnboarding: false,
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
@@ -39,6 +42,7 @@ const AuthContext = createContext<AuthContextType>({
   sendOTP: async () => "",
   resendOTP: async () => "",
   refreshUser: async () => {},
+  completeOnboarding: () => {},
 });
 
 export function useAuth() {
@@ -49,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -66,11 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (userData) {
             setUser(userData);
             setIsAuthenticated(true);
+            // Check if user needs onboarding
+            setNeedsOnboarding(userData.is_new_user === true);
           } else {
             // Token invalid, clear everything
             await tokenManager.clearAll();
             setIsAuthenticated(false);
             setUser(null);
+            setNeedsOnboarding(false);
           }
         } else {
           // No token, check for stored user (offline mode)
@@ -80,11 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsAuthenticated(false);
             setUser(null);
           }
+          setNeedsOnboarding(false);
         }
       } catch (error) {
         console.error("Auth check failed:", error);
         setIsAuthenticated(false);
         setUser(null);
+        setNeedsOnboarding(false);
       } finally {
         setIsLoading(false);
       }
@@ -98,16 +108,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-    const inTabGroup = segments[0] === "(tab)";
+    const inOnboarding = segments[1] === "onboarding";
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to auth if not authenticated and not in auth screens
       router.replace("/(auth)/welcome");
-    } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to home if authenticated and in auth screens
-      router.replace("/(tab)/");
+    } else if (isAuthenticated && inAuthGroup && !inOnboarding) {
+      // If authenticated but in auth screens (except onboarding), redirect appropriately
+      if (needsOnboarding) {
+        router.replace("/(auth)/onboarding");
+      } else {
+        router.replace("/(tab)/");
+      }
     }
-  }, [isAuthenticated, segments, isLoading]);
+  }, [isAuthenticated, segments, isLoading, needsOnboarding]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
@@ -122,16 +136,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  // Sign in function
+  // Sign in function - now returns isNewUser flag
   const signIn = useCallback(
-    async (phoneNumber: string, otp: string): Promise<User> => {
+    async (phoneNumber: string, otp: string): Promise<{ user: User; isNewUser: boolean }> => {
       const userData = await authVerifyOTP(phoneNumber, otp);
       setUser(userData);
       setIsAuthenticated(true);
-      return userData;
+      const isNewUser = userData.is_new_user === true;
+      setNeedsOnboarding(isNewUser);
+      return { user: userData, isNewUser };
     },
     []
   );
+
+  // Complete onboarding - called after user finishes onboarding
+  const completeOnboarding = useCallback(() => {
+    setNeedsOnboarding(false);
+    // Update user locally to reflect onboarding is complete
+    if (user) {
+      const updatedUser = { ...user, is_new_user: false };
+      setUser(updatedUser);
+      tokenManager.setUser(updatedUser);
+    }
+    router.replace("/(tab)/");
+  }, [user, router]);
 
   // Sign out function
   const signOut = useCallback(async () => {
@@ -139,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOutUser();
       setIsAuthenticated(false);
       setUser(null);
+      setNeedsOnboarding(false);
       router.replace("/(auth)/welcome");
     } catch (error) {
       console.error("Sign out error:", error);
@@ -152,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await verifyToken();
       if (userData) {
         setUser(userData);
+        setNeedsOnboarding(userData.is_new_user === true);
       }
     } catch (error) {
       console.error("Failed to refresh user:", error);
@@ -164,11 +194,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         isLoading,
         user,
+        needsOnboarding,
         signIn,
         signOut,
         sendOTP,
         resendOTP,
         refreshUser,
+        completeOnboarding,
       }}
     >
       {children}

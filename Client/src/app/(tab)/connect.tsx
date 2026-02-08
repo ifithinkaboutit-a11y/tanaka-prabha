@@ -1,25 +1,43 @@
 // src/app/(tab)/connect.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     Image,
     Linking,
     ScrollView,
     TouchableOpacity,
     View,
+    ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
-import {
-    connectServices,
-    getProfessionalById,
-    recentConnections,
-} from "../../data/content/connectServices";
+import { connectServices } from "../../data/content/connectServices";
+import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 
-const Connect = () => {
+export default function Connect() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [recentProfessionals, setRecentProfessionals] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch recent professionals (showing recently available ones as a proxy for recent connections)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Get a few professionals to show as recent connections
+        const professionals = await professionalsApi.getAll({ limit: 2, available_only: true });
+        setRecentProfessionals(professionals);
+      } catch (error) {
+        console.error("Error fetching professionals:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleServicePress = (serviceId: string) => {
     router.push({
@@ -96,13 +114,9 @@ const Connect = () => {
           </TouchableOpacity>
         </View>
 
-        {recentConnections.slice(0, 1).map((connection) => {
-          const professional = getProfessionalById(connection.professionalId);
-          if (!professional) return null;
-
-          return (
+        {recentProfessionals.map((professional) => (
             <TouchableOpacity
-              key={connection.id}
+              key={professional.id}
               className="bg-neutral-surface rounded-2xl p-4 mb-3 shadow-sm"
               onPress={() =>
                 router.push({
@@ -113,7 +127,7 @@ const Connect = () => {
             >
               <View className="flex-row items-center">
                 <Image
-                  source={{ uri: professional.imageUrl }}
+                  source={{ uri: professional.imageUrl || 'https://via.placeholder.com/64' }}
                   className="w-16 h-16 rounded-full mr-4"
                 />
                 <View className="flex-1">
@@ -124,21 +138,22 @@ const Connect = () => {
                     {professional.name}
                   </AppText>
                   <AppText variant="bodySm" className="text-neutral-textMedium">
-                    {t("connect.connectedOn")}: {connection.connectedOn}
+                    {professional.role}
                   </AppText>
                   <AppText variant="bodySm" className="text-neutral-textMedium">
-                    {t("connect.method")}:{" "}
-                    {t(`connect.methods.${connection.method}`)}
+                    {professional.district}
                   </AppText>
                 </View>
-                <Image
-                  source={{ uri: professional.imageUrl }}
-                  className="w-12 h-12 rounded-full"
-                />
+                <View className={`w-3 h-3 rounded-full ${professional.isAvailable ? 'bg-green-500' : 'bg-gray-400'}`} />
               </View>
             </TouchableOpacity>
-          );
-        })}
+          ))}
+
+        {recentProfessionals.length === 0 && !loading && (
+          <AppText variant="bodySm" className="text-neutral-textMedium text-center py-4">
+            No recent connections
+          </AppText>
+        )}
       </View>
 
       {/* Emergency Help */}
@@ -173,5 +188,3 @@ const Connect = () => {
     </ScrollView>
   );
 };
-
-export default Connect;

@@ -1,12 +1,12 @@
 // src/app/scheme-details.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Image, Linking, Pressable, ScrollView, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
-import { schemes } from "../data/content/schemes";
+import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 
 export const options = {
@@ -20,11 +20,35 @@ const SchemeDetailsScreen = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "eligibility" | "process"
   >("overview");
+  const [scheme, setScheme] = useState<Scheme | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const scheme = useMemo(
-    () => schemes.find((s) => s.id === schemeId),
-    [schemeId],
-  );
+  // Fetch scheme on mount
+  useEffect(() => {
+    const fetchScheme = async () => {
+      if (!schemeId) return;
+      
+      try {
+        setLoading(true);
+        const data = await schemesApi.getById(schemeId);
+        setScheme(data);
+      } catch (error) {
+        console.error("Error fetching scheme:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheme();
+  }, [schemeId]);
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#386641" />
+      </View>
+    );
+  }
 
   if (!scheme) {
     return (
@@ -117,84 +141,91 @@ const SchemeDetailsScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
-      {/* Navigation Header */}
-      <View className="flex-row items-center pt-12 pb-4 px-4 bg-white">
-        <Pressable onPress={() => router.back()} className="mr-4 p-2">
-          <Ionicons name="arrow-back" size={24} color="#386641" />
-        </Pressable>
-        <AppText
-          variant="h2"
-          className="text-neutral-textDark flex-1"
-          numberOfLines={1}
-        >
-          {scheme.title}
-        </AppText>
-      </View>
+    <View className="flex-1 bg-white">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Navigation Header */}
+        <View className="flex-row items-center pt-12 pb-4 px-4 bg-white">
+          <Pressable onPress={() => router.back()} className="mr-4 p-1">
+            <Ionicons name="arrow-back" size={24} color="#212121" />
+          </Pressable>
+          <AppText
+            variant="h3"
+            className="text-neutral-textDark flex-1 font-semibold"
+            numberOfLines={1}
+          >
+            {t("schemesPage.schemeDetails")}
+          </AppText>
+        </View>
 
-      {/* Hero Image */}
-      {scheme.heroImageUrl && (
-        <Image
-          source={{ uri: scheme.heroImageUrl }}
-          className="w-full h-48"
-          resizeMode="cover"
-        />
-      )}
+        {/* Hero Image */}
+        {scheme.heroImageUrl && (
+          <Image
+            source={{ uri: scheme.heroImageUrl }}
+            className="w-full h-52"
+            resizeMode="cover"
+          />
+        )}
 
-      {/* Scheme Title & Description */}
-      <View className="px-4 py-6">
-        <AppText variant="h1" className="text-neutral-textDark mb-4">
-          {scheme.title}
-        </AppText>
-        <AppText variant="bodyLg" className="text-neutral-textMedium leading-6">
-          {scheme.description}
-        </AppText>
-      </View>
+        {/* Scheme Title & Description */}
+        <View className="px-4 py-5">
+          <AppText variant="h2" className="text-neutral-textDark mb-3 font-bold">
+            {scheme.title}
+          </AppText>
+          <AppText variant="bodyMd" className="text-neutral-textMedium leading-6">
+            {scheme.description}{" "}
+            <AppText variant="bodyMd" className="text-[#2196F3] font-medium">
+              Read more
+            </AppText>
+          </AppText>
+        </View>
 
-      {/* Segmented Content Tabs */}
-      <View className="px-4 mb-6">
-        <View className="flex-row bg-neutral-surface border border-neutral-border rounded-lg p-1">
-          {[
-            { key: "overview", label: t("programReader.tabs.overview") },
-            { key: "eligibility", label: t("schemesPage.eligibility") },
-            { key: "process", label: t("programReader.tabs.process") },
-          ].map((tab) => (
-            <Pressable
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key as any)}
-              className={`flex-1 py-2 px-4 rounded-md ${
-                activeTab === tab.key ? "bg-[#7F5539]" : "bg-transparent"
-              }`}
-            >
-              <AppText
-                variant="bodyMd"
-                className={`text-center ${
-                  activeTab === tab.key
-                    ? "text-white font-medium"
-                    : "text-neutral-textMedium"
+        {/* Segmented Tab Buttons */}
+        <View className="px-4 mb-4">
+          <View className="flex-row">
+            {[
+              { key: "overview", label: t("programReader.tabs.overview") },
+              { key: "eligibility", label: t("schemesPage.eligibility") },
+              { key: "process", label: t("programReader.tabs.process") },
+            ].map((tab) => (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key as any)}
+                className={`py-2.5 px-5 mr-2 rounded-full border ${
+                  activeTab === tab.key 
+                    ? "bg-[#7F5539] border-[#7F5539]" 
+                    : "bg-white border-neutral-border"
                 }`}
               >
-                {tab.label}
-              </AppText>
-            </Pressable>
-          ))}
+                <AppText
+                  variant="bodyMd"
+                  className={`font-medium ${
+                    activeTab === tab.key
+                      ? "text-white"
+                      : "text-neutral-textDark"
+                  }`}
+                >
+                  {tab.label}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         {/* Tab Content */}
-        <Card className="mt-4 p-4">{renderTabContent()}</Card>
-      </View>
+        <View className="px-4 pb-6">{renderTabContent()}</View>
+      </ScrollView>
 
-      {/* Apply Now CTA */}
-      <View className="px-4 pb-8">
+      {/* Fixed Apply Now Button */}
+      <View className="px-4 py-4 bg-white border-t border-neutral-border">
         <Button
           label={t("programReader.applyNow")}
           variant="primary"
           size="lg"
           onPress={handleApplyNow}
-          className="w-full"
+          className="w-full rounded-full"
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

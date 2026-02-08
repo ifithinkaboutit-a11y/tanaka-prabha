@@ -1,14 +1,16 @@
 // src/contexts/UserProfileContext.tsx
-import React, { createContext, ReactNode, useContext, useState } from "react";
-import { defaultProfile } from "../data/content/profile";
-import { UserProfile } from "../data/interfaces";
+import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { userApi, UserProfile, UserProfileUpdate } from "../services/apiService";
 
 interface UserProfileContextType {
-  profile: UserProfile;
-  updateProfile: (updates: Partial<UserProfile>) => void;
-  updatePersonalDetails: (data: any) => void;
-  updateLandDetails: (data: any) => void;
-  updateLivestockDetails: (data: any) => void;
+  profile: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfileUpdate>) => Promise<void>;
+  updatePersonalDetails: (data: any) => Promise<void>;
+  updateLandDetails: (data: any) => Promise<void>;
+  updateLivestockDetails: (data: any) => Promise<void>;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(
@@ -30,61 +32,95 @@ interface UserProfileProviderProps {
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
   children,
 }) => {
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateProfile = (updates: Partial<UserProfile>) => {
-    setProfile((prev) => ({ ...prev, ...updates }));
+  const refreshProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await userApi.getProfile();
+      if (response.data?.user) {
+        setProfile(response.data.user);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setError("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updatePersonalDetails = (data: any) => {
-    setProfile((prev) => ({
-      ...prev,
-      fathersName: data.fathersName,
-      mothersName: data.mothersName,
-      educationalQualification: data.educationalQualification,
-      sonsMarried: data.sonsMarried,
-      sonsUnmarried: data.sonsUnmarried,
-      daughtersMarried: data.daughtersMarried,
-      daughtersUnmarried: data.daughtersUnmarried,
-      otherFamilyMembers: data.otherFamilyMembers,
+  useEffect(() => {
+    refreshProfile();
+  }, []);
+
+  const updateProfile = async (updates: Partial<UserProfileUpdate>) => {
+    try {
+      const response = await userApi.updateProfile(updates);
+      if (response.data?.user) {
+        setProfile(response.data.user);
+      }
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      throw err;
+    }
+  };
+
+  const updatePersonalDetails = async (data: any) => {
+    await updateProfile({
+      fathers_name: data.fathersName,
+      mothers_name: data.mothersName,
+      educational_qualification: data.educationalQualification,
+      sons_married: data.sonsMarried,
+      sons_unmarried: data.sonsUnmarried,
+      daughters_married: data.daughtersMarried,
+      daughters_unmarried: data.daughtersUnmarried,
+      other_family_members: data.otherFamilyMembers,
       village: data.village,
-      gramPanchayat: data.gramPanchayat,
-      nyayPanchayat: data.nyayPanchayat,
-      postOffice: data.postOffice,
+      gram_panchayat: data.gramPanchayat,
+      nyay_panchayat: data.nyayPanchayat,
+      post_office: data.postOffice,
       tehsil: data.tehsil,
       block: data.block,
       district: data.district,
-      pinCode: data.pinCode,
+      pin_code: data.pinCode,
       state: data.state,
-    }));
+    });
   };
 
-  const updateLandDetails = (data: any) => {
-    setProfile((prev) => ({
-      ...prev,
-      totalLandArea: data.totalLandArea,
-      rabiCrop: data.rabiCrop,
-      kharifCrop: data.kharifCrop,
-      zaidCrop: data.zaidCrop,
-    }));
+  const updateLandDetails = async (data: any) => {
+    await updateProfile({
+      land_details: {
+        total_land_area: data.totalLandArea,
+        rabi_crop: data.rabiCrop,
+        kharif_crop: data.kharifCrop,
+        zaid_crop: data.zaidCrop,
+      },
+    });
   };
 
-  const updateLivestockDetails = (data: any) => {
-    setProfile((prev) => ({
-      ...prev,
-      cows: data.cow,
-      buffaloes: data.buffalo,
-      sheep: data.sheep,
-      goats: data.goat,
-      poultry: data.hen,
-      pigs: data.others,
-    }));
+  const updateLivestockDetails = async (data: any) => {
+    await updateProfile({
+      livestock_details: {
+        cow: data.cow,
+        buffalo: data.buffalo,
+        sheep: data.sheep,
+        goat: data.goat,
+        poultry: data.hen,
+        others: data.others,
+      },
+    });
   };
 
   return (
     <UserProfileContext.Provider
       value={{
         profile,
+        loading,
+        error,
+        refreshProfile,
         updateProfile,
         updatePersonalDetails,
         updateLandDetails,

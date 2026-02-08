@@ -92,10 +92,12 @@
 
   "programs": {
     "title": "Programs",
+    "subtitle": "Explore government schemes and training programs",
     "searchPlaceholder": "PM Kisan Yojna",
     "governmentSchemes": "Government Schemes & Subsidies",
     "trainingPrograms": "Training & Awareness Programs",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "noPrograms": "No programs available"
   },
 
   "programReader": {
@@ -120,6 +122,7 @@
     },
     "welcomeBack": "Welcome back",
     "quickAccess": "Quick Access",
+    "quickActions": "Quick Actions",
     "popularSchemes": "Popular Schemes",
     "searchPlaceholder": "Search programs, schemes..."
   },

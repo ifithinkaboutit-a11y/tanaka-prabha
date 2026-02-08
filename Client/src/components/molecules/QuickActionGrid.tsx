@@ -1,12 +1,13 @@
 // src/components/molecules/QuickActionGrid.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import AppText from "../atoms/AppText";
 
 type QuickActionItem = {
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
-  imageUrl?: string;
+  iconColor?: string;
+  bgColor?: string;
   onPress?: () => void;
 };
 
@@ -17,19 +18,27 @@ type QuickActionGridProps = {
 const defaultActions: QuickActionItem[] = [
   {
     title: "Update your profile",
-    icon: "person-outline",
+    icon: "person",
+    iconColor: "#2563EB",
+    bgColor: "#DBEAFE",
   },
   {
     title: "Ongoing Events",
-    icon: "calendar-outline",
+    icon: "calendar",
+    iconColor: "#7C3AED",
+    bgColor: "#EDE9FE",
   },
   {
     title: "Government Schemes",
-    icon: "document-text-outline",
+    icon: "document-text",
+    iconColor: "#059669",
+    bgColor: "#D1FAE5",
   },
   {
     title: "Book an Appointment",
-    icon: "call-outline",
+    icon: "call",
+    iconColor: "#DC2626",
+    bgColor: "#FEE2E2",
   },
 ];
 
@@ -38,60 +47,61 @@ export default function QuickActionGrid({
 }: QuickActionGridProps) {
   return (
     <View
-      style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 8, gap: 12 }}
+      style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
     >
       {actions.map((action, index) => (
         <Pressable
           key={index}
           onPress={action.onPress}
           style={({ pressed }) => ({
-            width: "48%",
-            aspectRatio: 1,
+            width: "47%",
             backgroundColor: "#FFFFFF",
-            borderRadius: 16,
-            padding: 16,
+            borderRadius: 20,
+            paddingVertical: 20,
+            paddingHorizontal: 16,
             alignItems: "center",
             justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#F3F4F6",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 8,
-            elevation: 2,
-            opacity: pressed ? 0.7 : 1,
+            shadowOpacity: 0.06,
+            shadowRadius: 12,
+            elevation: 3,
+            opacity: pressed ? 0.8 : 1,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
           })}
         >
-          {/* Icon/Image */}
+          {/* Icon Circle */}
           <View
             style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: "#F0F9FF",
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: action.bgColor || "#F0F9FF",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: 12,
+              marginBottom: 14,
             }}
           >
-            {action.imageUrl ? (
-              <Image
-                source={{ uri: action.imageUrl }}
-                style={{ width: 40, height: 40 }}
-                resizeMode="contain"
-              />
-            ) : (
-              <Ionicons name={action.icon} size={32} color="#386641" />
-            )}
+            <Ionicons 
+              name={action.icon} 
+              size={36} 
+              color={action.iconColor || "#386641"} 
+            />
           </View>
 
           {/* Title */}
           <AppText
-            variant="bodySm"
+            variant="bodyMd"
             style={{
               textAlign: "center",
-              fontSize: 13,
-              fontWeight: "500",
+              fontSize: 14,
+              fontWeight: "600",
               color: "#1F2937",
+              lineHeight: 20,
             }}
+            numberOfLines={2}
           >
             {action.title}
           </AppText>

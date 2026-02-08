@@ -101,6 +101,7 @@ export const verifyOTP = async (req, res) => {
 
         // Check if user exists, if not create new user
         let user = await User.findByMobile(formattedNumber);
+        let isNewUser = false;
         
         if (!user) {
             // Create new user with just mobile number
@@ -108,6 +109,10 @@ export const verifyOTP = async (req, res) => {
                 name: 'New User', // Placeholder, can be updated later
                 mobile_number: formattedNumber
             });
+            isNewUser = true;
+        } else {
+            // Check if user has completed onboarding (has profile data)
+            isNewUser = !user.state || !user.district || user.name === 'New User';
         }
 
         // Generate JWT token
@@ -126,8 +131,10 @@ export const verifyOTP = async (req, res) => {
                     name: user.name,
                     mobile_number: user.mobile_number,
                     village: user.village,
-                    district: user.district
+                    district: user.district,
+                    state: user.state
                 },
+                is_new_user: isNewUser,
                 token,
                 token_type: 'Bearer'
             }
@@ -224,6 +231,9 @@ export const verifyToken = async (req, res) => {
             });
         }
 
+        // Check if user has completed onboarding
+        const isNewUser = !user.state || !user.district || user.name === 'New User';
+
         res.status(200).json({
             status: 'success',
             message: 'Token is valid',
@@ -233,8 +243,10 @@ export const verifyToken = async (req, res) => {
                     name: user.name,
                     mobile_number: user.mobile_number,
                     village: user.village,
-                    district: user.district
-                }
+                    district: user.district,
+                    state: user.state
+                },
+                is_new_user: isNewUser
             }
         });
 

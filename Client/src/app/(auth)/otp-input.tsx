@@ -99,9 +99,13 @@ const OTPInput = () => {
     setLoading(true);
     try {
       // Call backend API to verify OTP and sign in
-      await signIn(phoneNumber, otpString);
-      // Navigate to onboarding after successful auth
-      router.replace("/(auth)/onboarding");
+      const { isNewUser } = await signIn(phoneNumber, otpString);
+      // Navigate based on user status
+      if (isNewUser) {
+        router.replace("/(auth)/onboarding");
+      } else {
+        router.replace("/(tab)");
+      }
     } catch (error) {
       Alert.alert(
         "Error",

@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import LandDetailsForm from "../components/molecules/LandDetailsForm";
 
@@ -15,18 +15,30 @@ export const unstable_settings = {
 
 const LandDetailsScreen = () => {
   const router = useRouter();
-  const { profile, updateLandDetails } = useUserProfile();
+  const { profile, loading, updateLandDetails } = useUserProfile();
+
+  if (loading || !profile) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   const initialData = {
-    totalLandArea: profile.totalLandArea,
-    rabiCrop: profile.rabiCrop,
-    kharifCrop: profile.kharifCrop,
-    zaidCrop: profile.zaidCrop,
+    totalLandArea: profile.landDetails?.totalLandArea || 0,
+    rabiCrop: profile.landDetails?.rabiCrop || '',
+    kharifCrop: profile.landDetails?.kharifCrop || '',
+    zaidCrop: profile.landDetails?.zaidCrop || '',
   };
 
-  const handleSave = (data: typeof initialData) => {
-    updateLandDetails(data);
-    router.back();
+  const handleSave = async (data: typeof initialData) => {
+    try {
+      await updateLandDetails(data);
+      router.back();
+    } catch (error) {
+      console.error("Error saving land details:", error);
+    }
   };
 
   const handleCancel = () => {

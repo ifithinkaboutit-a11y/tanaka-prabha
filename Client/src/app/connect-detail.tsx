@@ -1,11 +1,11 @@
 // src/app/connect-detail.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Image, Modal, ScrollView, TouchableOpacity, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Image, Modal, ScrollView, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
-import { getProfessionalById } from "../data/content/connectServices";
+import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 
 const ConnectDetailScreen = () => {
@@ -13,16 +13,41 @@ const ConnectDetailScreen = () => {
   const { t } = useTranslation();
   const { professionalId } = useLocalSearchParams<{ professionalId: string }>();
   const [showOverlay, setShowOverlay] = useState(false);
+  const [professional, setProfessional] = useState<Professional | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const professional = useMemo(
-    () => (professionalId ? getProfessionalById(professionalId) : undefined),
-    [professionalId],
-  );
+  // Fetch professional on mount
+  useEffect(() => {
+    const fetchProfessional = async () => {
+      if (!professionalId) return;
+      
+      try {
+        setLoading(true);
+        const data = await professionalsApi.getById(professionalId);
+        setProfessional(data);
+      } catch (error) {
+        console.error("Error fetching professional:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfessional();
+  }, [professionalId]);
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-neutral-surface">
+        <ActivityIndicator size="large" color="#386641" />
+      </View>
+    );
+  }
 
   if (!professional) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-surface">
         <AppText variant="bodyMd">{t("connect.professionalNotFound")}</AppText>
+        <Button label={t("common.goBack")} onPress={() => router.back()} className="mt-4" />
       </View>
     );
   }
@@ -47,142 +72,106 @@ const ConnectDetailScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-neutral-surface">
+    <View className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-12 pb-4 bg-white border-b border-neutral-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <AppText variant="h3" className="font-semibold" numberOfLines={1}>
-          {t("connect.services.livestockVeterinary")}
+          {professional.category ? t(`connect.services.${professional.category.replace(/-/g, '')}`) : t("connect.services.livestockVeterinary")}
         </AppText>
       </View>
 
-      <ScrollView className="flex-1">
-        {/* Profile Card */}
-        <View className="bg-white px-4 py-6">
-          <View className="flex-row items-start">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Profile Section */}
+        <View className="px-4 py-6">
+          {/* Large Profile Image */}
+          <View className="items-center mb-6">
             <Image
-              source={{ uri: professional.imageUrl }}
-              className="w-24 h-24 rounded-xl mr-4"
+              source={{ uri: professional.imageUrl || 'https://via.placeholder.com/150' }}
+              className="w-36 h-40 rounded-2xl"
+              resizeMode="cover"
             />
-            <View className="flex-1">
-              <AppText variant="h3" className="font-bold text-neutral-textDark">
-                {professional.name}
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textMedium mt-1"
-              >
-                {t("connect.roleLabel")}: {professional.role}
-              </AppText>
-              <AppText variant="bodySm" className="text-neutral-textMedium">
-                {t("connect.departmentLabel")}: {professional.department}
-              </AppText>
-            </View>
           </View>
+
+          {/* Name and Basic Info */}
+          <AppText variant="h2" className="font-bold text-neutral-textDark text-center mb-2">
+            {professional.name}
+          </AppText>
+          <AppText variant="bodyMd" className="text-neutral-textMedium text-center mb-1">
+            <AppText className="font-medium">Role:</AppText> {professional.role}
+          </AppText>
+          <AppText variant="bodyMd" className="text-neutral-textMedium text-center">
+            <AppText className="font-medium">Department:</AppText> {professional.department}
+          </AppText>
         </View>
 
-        {/* Service Area */}
-        <View className="bg-white px-4 py-4 mt-2">
-          <AppText
-            variant="bodyMd"
-            className="font-semibold text-neutral-textDark mb-3"
-          >
+        {/* Service Area Section */}
+        <View className="px-4 py-5 border-t border-neutral-border">
+          <AppText variant="h3" className="font-bold text-neutral-textDark mb-4">
             {t("connect.serviceArea")}
           </AppText>
 
-          <View className="pl-2">
-            <View className="flex-row mb-2">
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textMedium w-20"
-              >
-                {t("connect.district")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark flex-1"
-              >
-                {professional.serviceArea.district}
-              </AppText>
-            </View>
-
-            <View className="flex-row mb-2">
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textMedium w-20"
-              >
-                {t("connect.blocks")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark flex-1"
-              >
-                {professional.serviceArea.blocks.join(", ")}
-              </AppText>
-            </View>
-
-            <View className="flex-row">
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textMedium w-20"
-              >
-                {t("connect.state")}:
-              </AppText>
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark flex-1"
-              >
-                {professional.serviceArea.state}
-              </AppText>
-            </View>
+          <View className="mb-3 flex-row items-start">
+            <AppText variant="bodyMd" className="text-neutral-textDark mr-2">•</AppText>
+            <AppText variant="bodyMd" className="text-neutral-textDark">
+              <AppText className="font-medium">District:</AppText> {professional.serviceArea?.district || professional.district || 'N/A'}
+            </AppText>
           </View>
 
-          <AppText variant="bodyLg" className="text-green-600 mt-3 italic">
-            {t("connect.availableForOnCall")}
-          </AppText>
+          <View className="mb-3 flex-row items-start">
+            <AppText variant="bodyMd" className="text-neutral-textDark mr-2">•</AppText>
+            <AppText variant="bodyMd" className="text-neutral-textDark flex-1">
+              <AppText className="font-medium">Blocks Covered:</AppText> {professional.serviceArea?.blocks?.join(", ") || 'N/A'}
+            </AppText>
+          </View>
+
+          <View className="mb-3 flex-row items-start">
+            <AppText variant="bodyMd" className="text-neutral-textDark mr-2">•</AppText>
+            <AppText variant="bodyMd" className="text-neutral-textDark">
+              <AppText className="font-medium">State:</AppText> {professional.serviceArea?.state || 'N/A'}
+            </AppText>
+          </View>
+
+          {professional.isAvailable && (
+            <AppText variant="bodySm" className="text-green-600 mt-2 italic">
+              {t("connect.availableForOnCall")}
+            </AppText>
+          )}
         </View>
 
-        {/* Specialization */}
-        <View className="bg-white px-4 py-4 mt-2">
-          <AppText
-            variant="bodyMd"
-            className="font-semibold text-neutral-textDark mb-3"
-          >
+        {/* Specialization Section */}
+        <View className="px-4 py-5 border-t border-neutral-border">
+          <AppText variant="h3" className="font-bold text-neutral-textDark mb-4">
             {t("connect.specialization")}
           </AppText>
 
-          {professional.specializations.map((spec, index) => (
+          {(professional.specializations || []).map((spec, index) => (
             <View key={index} className="flex-row items-start mb-2">
-              <View className="w-1.5 h-1.5 rounded-full bg-neutral-textDark mt-2 mr-3" />
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textDark flex-1"
-              >
+              <AppText variant="bodyMd" className="text-neutral-textDark mr-2">•</AppText>
+              <AppText variant="bodyMd" className="text-neutral-textDark flex-1">
                 {spec}
               </AppText>
             </View>
           ))}
         </View>
 
-        <View className="h-24" />
+        <View className="h-28" />
       </ScrollView>
 
-      {/* Connect Button */}
+      {/* Call Button - Fixed at Bottom */}
       <View className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white border-t border-neutral-border">
-        <Button
-          variant="primary"
+        <TouchableOpacity
           onPress={handleConnect}
-          className="w-full py-4"
+          className="w-full py-4 rounded-full flex-row items-center justify-center"
+          style={{ backgroundColor: '#DC2626' }}
         >
-          <AppText
-            variant="bodyMd"
-            className="text-white font-semibold text-center"
-          >
+          <Ionicons name="call" size={20} color="white" />
+          <AppText variant="bodyMd" className="text-white font-semibold ml-2">
             {t("connect.callThem")}
           </AppText>
-        </Button>
+        </TouchableOpacity>
       </View>
 
       {/* Connect Options Overlay */}

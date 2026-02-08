@@ -1,23 +1,57 @@
 // src/app/(tab)/profile.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Button from "../../components/atoms/Button";
-import { defaultProfile } from "../../data/content/profile";
-import { UserProfile } from "../../data/interfaces";
 import { useTranslation } from "../../i18n";
+import { userApi, UserProfile } from "../../services/apiService";
 
 const Profile = () => {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const [profile] = useState<UserProfile>(defaultProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await userApi.getProfile();
+        if (response.data?.user) {
+          setProfile(response.data.user);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const maskAadhaar = (aadhaar: string) =>
     aadhaar.replace(/(\d{4})(\d{4})(\d{4})/, "XXXX XXXX $3");
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <AppText variant="bodySm" className="text-neutral-textMedium">
+          {t("profile.error")}
+        </AppText>
+      </View>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-neutral-surface">
@@ -115,7 +149,7 @@ const Profile = () => {
               {t("profile.aadhaar")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {maskAadhaar(profile.aadhaarNumber)}
+              {profile.aadhaarNumber ? maskAadhaar(profile.aadhaarNumber) : '-'}
             </AppText>
           </View>
           <View className="flex-row justify-between">
@@ -123,7 +157,7 @@ const Profile = () => {
               {t("profile.address")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.village}, {profile.district}
+              {profile.village || '-'}, {profile.district || '-'}
             </AppText>
           </View>
         </View>
@@ -156,7 +190,7 @@ const Profile = () => {
               {t("profile.landOwned")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.totalLandArea} {t("profile.bigha")}
+              {profile.landDetails?.totalLandArea || 0} {t("profile.bigha")}
             </AppText>
           </View>
           <View className="flex-row justify-between mb-3">
@@ -164,7 +198,7 @@ const Profile = () => {
               {t("profile.primaryCrop")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.rabiCrop}
+              {profile.landDetails?.rabiCrop || '-'}
             </AppText>
           </View>
           <View className="flex-row justify-between">
@@ -203,7 +237,7 @@ const Profile = () => {
               {t("livestockDetails.cows")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.cows}
+              {profile.livestockDetails?.cow || 0}
             </AppText>
           </View>
           <View className="flex-row justify-between mb-3">
@@ -211,7 +245,7 @@ const Profile = () => {
               {t("livestockDetails.buffaloes")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.buffaloes}
+              {profile.livestockDetails?.buffalo || 0}
             </AppText>
           </View>
           <View className="flex-row justify-between">
@@ -219,7 +253,7 @@ const Profile = () => {
               {t("livestockDetails.goats")}
             </AppText>
             <AppText variant="bodySm" className="text-neutral-textDark">
-              {profile.goats}
+              {profile.livestockDetails?.goat || 0}
             </AppText>
           </View>
         </View>

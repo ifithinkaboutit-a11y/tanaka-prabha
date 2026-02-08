@@ -1,20 +1,42 @@
 // src/app/(tab)/schemes.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Image,
     ScrollView,
     TouchableOpacity,
-    View
+    View,
+    ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
-import { schemes } from "../../data/content/schemes";
+import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 
-const Schemes = () => {
+export default function Schemes() {
+
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch schemes on mount
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        setLoading(true);
+        const data = await schemesApi.getAll({ limit: 10 });
+        setSchemes(data);
+      } catch (error) {
+        console.error("Error fetching schemes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchemes();
+  }, []);
+
   const router = useRouter();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,7 +100,7 @@ const Schemes = () => {
               className="w-full h-44"
               resizeMode="cover"
             />
-            <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4">
+            <View className="absolute bottom-0 left-0 right-0 px-5 py-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <AppText variant="bodyMd" className="text-white font-bold mb-1">
                 {featuredScheme.title}
               </AppText>
@@ -194,5 +216,3 @@ const Schemes = () => {
     </ScrollView>
   );
 };
-
-export default Schemes;

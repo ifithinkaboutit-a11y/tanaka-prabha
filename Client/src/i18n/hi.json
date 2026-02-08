@@ -92,10 +92,12 @@
 
   "programs": {
     "title": "कार्यक्रम",
+    "subtitle": "सरकारी योजनाएं और प्रशिक्षण कार्यक्रम देखें",
     "searchPlaceholder": "पीएम किसान योजना",
     "governmentSchemes": "सरकारी योजनाएं और सब्सिडी",
     "trainingPrograms": "प्रशिक्षण और जागरूकता कार्यक्रम",
-    "viewAll": "सभी देखें"
+    "viewAll": "सभी देखें",
+    "noPrograms": "कोई कार्यक्रम उपलब्ध नहीं"
   },
 
   "programReader": {
@@ -120,6 +122,7 @@
     },
     "welcomeBack": "वापसी पर स्वागत है",
     "quickAccess": "त्वरित पहुंच",
+    "quickActions": "त्वरित कार्य",
     "popularSchemes": "लोकप्रिय योजनाएं",
     "searchPlaceholder": "कार्यक्रम, योजनाएं खोजें..."
   },

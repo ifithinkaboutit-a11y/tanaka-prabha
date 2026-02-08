@@ -4,26 +4,26 @@ import { QuickAction } from "../interfaces";
 export const quickActions: QuickAction[] = [
   {
     title: "home.updateProfile",
-    icon: "person-outline",
-    imageUrl:
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=profile&backgroundColor=b6e3f4",
+    icon: "person",
+    iconColor: "#2563EB",
+    bgColor: "#DBEAFE",
   },
   {
     title: "home.ongoingEvents",
-    icon: "calendar-outline",
-    imageUrl:
-      "https://api.dicebear.com/7.x/shapes/svg?seed=calendar&backgroundColor=c0aede",
+    icon: "calendar",
+    iconColor: "#7C3AED",
+    bgColor: "#EDE9FE",
   },
   {
     title: "home.governmentSchemes",
-    icon: "document-text-outline",
-    imageUrl:
-      "https://api.dicebear.com/7.x/identicon/svg?seed=building&backgroundColor=ffd5dc",
+    icon: "document-text",
+    iconColor: "#059669",
+    bgColor: "#D1FAE5",
   },
   {
     title: "home.bookAppointment",
-    icon: "call-outline",
-    imageUrl:
-      "https://api.dicebear.com/7.x/bottts/svg?seed=professional&backgroundColor=d1d4f9",
+    icon: "call",
+    iconColor: "#DC2626",
+    bgColor: "#FEE2E2",
   },
 ];

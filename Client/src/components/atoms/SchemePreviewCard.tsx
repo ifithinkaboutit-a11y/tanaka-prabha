@@ -1,6 +1,6 @@
 // src/components/molecules/SchemePreviewCard.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, View } from "react-native";
+import { Image, Pressable, View, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { colors } from "../../styles/colors";
 import AppText from "../atoms/AppText";
@@ -12,6 +12,7 @@ type SchemePreviewCardProps = {
   category: string;
   imageUrl?: string;
   onPress?: () => void;
+  showBookmark?: boolean;
 };
 
 export default function SchemePreviewCard({
@@ -20,75 +21,55 @@ export default function SchemePreviewCard({
   category,
   imageUrl,
   onPress,
+  showBookmark = true,
 }: SchemePreviewCardProps) {
-  const [isTruncated, setIsTruncated] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   return (
     <Pressable onPress={onPress}>
-      <Card className="mb-3 p-4">
-        <View className="flex-row">
-          {/* Image */}
-          {imageUrl && (
-            <Image
-              source={{ uri: imageUrl }}
-              className="w-16 h-16 rounded-lg mr-4"
-              resizeMode="cover"
-            />
-          )}
-
-          {/* Content */}
-          <View className="flex-1">
-            <AppText variant="h3" className="mb-1 text-[#386641]">
-              {title}
-            </AppText>
-
-            {/* Description */}
-            <AppText
-              variant="bodyMd"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-              onTextLayout={(e) => {
-                if (e.nativeEvent.lines.length > 2) {
-                  setIsTruncated(true);
-                }
-              }}
-              className="text-neutral-textMedium"
+      <Card className="mb-4 p-4 bg-white rounded-2xl shadow-sm border border-neutral-border">
+        {/* Title and Bookmark Row */}
+        <View className="flex-row justify-between items-start mb-2">
+          <AppText 
+            variant="h3" 
+            className="text-[#386641] font-semibold flex-1 pr-2"
+            numberOfLines={2}
+          >
+            {title}
+          </AppText>
+          {showBookmark && (
+            <TouchableOpacity 
+              onPress={() => setIsBookmarked(!isBookmarked)}
+              className="p-1"
             >
-              {description}
-            </AppText>
-
-            {/* Read more */}
-            {isTruncated && (
-              <AppText
-                variant="caption"
-                className="text-primary mt-1"
-              >
-                Read more
-              </AppText>
-            )}
-
-            {/* Footer */}
-            <View className="flex-row items-center justify-between mt-2">
-              <View className="flex-row items-center">
-                <Ionicons
-                  name="pricetag-outline"
-                  size={12}
-                  color={colors.primary.green}
-                />
-                <AppText
-                  variant="caption"
-                  className="ml-1 text-neutral-textMedium"
-                >
-                  {category}
-                </AppText>
-              </View>
-
               <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={colors.neutral.textLight}
+                name={isBookmarked ? "bookmark" : "bookmark-outline"}
+                size={22}
+                color={isBookmarked ? "#386641" : "#9E9E9E"}
               />
-            </View>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Description */}
+        <AppText
+          variant="bodyMd"
+          numberOfLines={3}
+          ellipsizeMode="tail"
+          className="text-neutral-textMedium leading-5 mb-3"
+        >
+          {description}
+        </AppText>
+
+        {/* Category Badge */}
+        <View className="flex-row items-center">
+          <View className="bg-[#F0FDF4] px-3 py-1 rounded-full">
+            <AppText
+              variant="caption"
+              className="text-[#386641] font-medium"
+            >
+              {category}
+            </AppText>
           </View>
         </View>
       </Card>

@@ -1,12 +1,12 @@
 // src/app/program-details.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Image, Linking, Pressable, ScrollView, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
-import { schemes, trainingPrograms } from "../data/content";
+import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 
 export const options = {
@@ -16,15 +16,39 @@ export const options = {
 const ProgramDetails = () => {
   const router = useRouter();
   const { t } = useTranslation();
-  const { programId } = useLocalSearchParams();
+  const { programId } = useLocalSearchParams<{ programId: string }>();
   const [activeTab, setActiveTab] = useState<
     "overview" | "process" | "support"
   >("overview");
+  const [program, setProgram] = useState<Scheme | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const program = useMemo(() => {
-    const allPrograms = [...schemes, ...trainingPrograms];
-    return allPrograms.find((p) => p.id === programId);
+  // Fetch program on mount
+  useEffect(() => {
+    const fetchProgram = async () => {
+      if (!programId) return;
+      
+      try {
+        setLoading(true);
+        const data = await schemesApi.getById(programId);
+        setProgram(data);
+      } catch (error) {
+        console.error("Error fetching program:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgram();
   }, [programId]);
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-neutral-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#386641" />
+      </View>
+    );
+  }
 
   if (!program) {
     return (
@@ -88,7 +112,7 @@ const ProgramDetails = () => {
       case "support":
         return (
           <AppText variant="bodyLg" className="text-neutral-textDark leading-6">
-            {program.support}
+            {program.supportContact}
           </AppText>
         );
       default:
@@ -97,7 +121,8 @@ const ProgramDetails = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-surface">
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       {/* Navigation Header */}
       <View className="flex-row items-center pt-12 pb-4 px-4 bg-white">
         <Pressable onPress={() => router.back()} className="mr-4 p-2">
@@ -131,9 +156,16 @@ const ProgramDetails = () => {
         </AppText>
       </View>
 
-      {/* Segmented Content Tabs */}
-      <View className="px-4 mb-6">
-        <View className="flex-row bg-neutral-surface border border-neutral-border rounded-lg p-1">
+      {/* Segmented Content Tabs - Pill Style */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            backgroundColor: "#F3F4F6",
+            borderRadius: 25,
+            padding: 4,
+          }}
+        >
           {[
             { key: "overview", label: t("programReader.tabs.overview") },
             { key: "process", label: t("programReader.tabs.process") },
@@ -142,17 +174,22 @@ const ProgramDetails = () => {
             <Pressable
               key={tab.key}
               onPress={() => setActiveTab(tab.key as any)}
-              className={`flex-1 py-2 px-4 rounded-md ${
-                activeTab === tab.key ? "bg-[#7F5539]" : "bg-transparent"
-              }`}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 22,
+                backgroundColor: activeTab === tab.key ? "#386641" : "transparent",
+              }}
             >
               <AppText
                 variant="bodyMd"
-                className={`text-center ${
-                  activeTab === tab.key
-                    ? "text-white font-medium"
-                    : "text-neutral-textMedium"
-                }`}
+                style={{
+                  textAlign: "center",
+                  color: activeTab === tab.key ? "#FFFFFF" : "#6B7280",
+                  fontWeight: activeTab === tab.key ? "600" : "500",
+                  fontSize: 14,
+                }}
               >
                 {tab.label}
               </AppText>
@@ -163,9 +200,24 @@ const ProgramDetails = () => {
         {/* Tab Content */}
         <Card className="mt-4 p-4">{renderTabContent()}</Card>
       </View>
+      </ScrollView>
 
-      {/* Apply Now CTA */}
-      <View className="px-4 pb-8">
+      {/* Fixed Apply Now CTA */}
+      <View
+        style={{
+          backgroundColor: "#FFFFFF",
+          paddingHorizontal: 16,
+          paddingVertical: 16,
+          paddingBottom: 24,
+          borderTopWidth: 1,
+          borderTopColor: "#E5E7EB",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 5,
+        }}
+      >
         <Button
           label={t("programReader.applyNow")}
           variant="primary"
@@ -174,7 +226,7 @@ const ProgramDetails = () => {
           className="w-full"
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

@@ -1,15 +1,31 @@
 import express from 'express';
 import {
     getUserNotifications,
+    getMyNotifications,
     createNotification,
     sendBulkNotification,
     markAsRead,
     markAllAsRead,
+    markMyNotificationsAsRead,
     deleteNotification
 } from '../controllers/notificationController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @route   GET /api/notifications/my
+ * @desc    Get current user's notifications
+ * @access  Protected
+ */
+router.get('/my', authMiddleware, getMyNotifications);
+
+/**
+ * @route   PATCH /api/notifications/my/read-all
+ * @desc    Mark all current user's notifications as read
+ * @access  Protected
+ */
+router.patch('/my/read-all', authMiddleware, markMyNotificationsAsRead);
 
 /**
  * @route   GET /api/notifications/user/:user_id

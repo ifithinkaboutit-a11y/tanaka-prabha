@@ -4,18 +4,19 @@ import { Pressable, View } from "react-native";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import Avatar from "../atoms/Avatar";
-import IconButton from "../atoms/IconButton";
 
 type GreetingHeaderProps = {
   name: string;
   onNotificationPress?: () => void;
   onAvatarPress?: () => void;
+  hasNotifications?: boolean;
 };
 
 export default function GreetingHeader({
   name,
   onNotificationPress,
   onAvatarPress,
+  hasNotifications = true,
 }: GreetingHeaderProps) {
   const { t } = useTranslation();
 
@@ -29,7 +30,7 @@ export default function GreetingHeader({
   const greeting = getGreeting();
 
   return (
-    <View style={{ paddingTop: 48, paddingBottom: 12, paddingHorizontal: 16 }}>
+    <View style={{ paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16 }}>
       <View
         style={{
           flexDirection: "row",
@@ -37,15 +38,15 @@ export default function GreetingHeader({
           justifyContent: "space-between",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
           <Pressable onPress={onAvatarPress}>
-            <Avatar size="lg" name={name} />
+            <Avatar size="xl" name={name} />
           </Pressable>
           <View>
             <AppText
               variant="bodySm"
               style={{
-                fontSize: 13,
+                fontSize: 14,
                 color: "#6B7280",
                 marginBottom: 2,
               }}
@@ -55,8 +56,8 @@ export default function GreetingHeader({
             <AppText
               variant="h2"
               style={{
-                fontSize: 18,
-                fontWeight: "600",
+                fontSize: 20,
+                fontWeight: "700",
                 color: "#1F2937",
               }}
             >
@@ -64,9 +65,39 @@ export default function GreetingHeader({
             </AppText>
           </View>
         </View>
-        <IconButton onPress={onNotificationPress}>
+        
+        {/* Notification Bell */}
+        <Pressable
+          onPress={onNotificationPress}
+          style={({ pressed }) => ({
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            position: "relative",
+          })}
+        >
           <Ionicons name="notifications-outline" size={24} color="#1F2937" />
-        </IconButton>
+          {hasNotifications && (
+            <View
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 12,
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: "#EF4444",
+                borderWidth: 2,
+                borderColor: "#FFFFFF",
+              }}
+            />
+          )}
+        </Pressable>
       </View>
     </View>
   );

@@ -1,17 +1,18 @@
 // src/app/category-listing.tsx - Category Listing (Screen 3)
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
     Pressable,
     ScrollView,
     TextInput,
     TouchableOpacity,
     View,
+    ActivityIndicator,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import SchemePreviewCard from "../components/atoms/SchemePreviewCard";
-import { schemes } from "../data/content";
+import { schemesApi, Scheme } from "@/services/apiService";
 import {
     categoryToSchemeCategory,
     schemeCategories,
@@ -28,6 +29,8 @@ const CategoryListing = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [showFilters, setShowFilters] = useState(false);
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Get category info
   const categoryInfo = useMemo(() => {
@@ -36,26 +39,40 @@ const CategoryListing = () => {
 
   // Get the mapped category name for filtering
   const mappedCategory = useMemo(() => {
-    if (category === "all") return null;
+    if (category === "all") return undefined;
     return categoryToSchemeCategory[category] || category;
   }, [category]);
 
-  // Filter schemes by category
-  const categorySchemes = useMemo(() => {
-    if (!mappedCategory) return schemes; // "all" category shows all schemes
-    return schemes.filter((scheme) => scheme.category === mappedCategory);
+  // Fetch schemes from API
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        setLoading(true);
+        const data = await schemesApi.getAll({
+          category: mappedCategory,
+          limit: 50,
+        });
+        setSchemes(data);
+      } catch (error) {
+        console.error("Error fetching schemes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchemes();
   }, [mappedCategory]);
 
   // Filter and sort schemes based on search and sort options
   const filteredSchemes = useMemo(() => {
-    let filtered = categorySchemes;
+    let filtered = schemes;
 
     // Apply search filter
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (scheme) =>
           scheme.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          scheme.description.toLowerCase().includes(searchQuery.toLowerCase()),
+          (scheme.description || "").toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -67,7 +84,7 @@ const CategoryListing = () => {
         case "date":
           // Assuming date is in format "DD Month YYYY"
           return (
-            new Date(b.date || "").getTime() - new Date(a.date || "").getTime()
+            new Date(b.eventDate || "").getTime() - new Date(a.eventDate || "").getTime()
           );
         default:
           return 0;
@@ -75,7 +92,7 @@ const CategoryListing = () => {
     });
 
     return filtered;
-  }, [categorySchemes, searchQuery, sortBy]);
+  }, [schemes, searchQuery, sortBy]);
 
   const handleSchemePress = (scheme: any) => {
     router.push({
@@ -115,16 +132,15 @@ const CategoryListing = () => {
 
       {/* Search Bar */}
       <View className="py-3 px-4 bg-white">
-        <View className="flex-row items-center bg-neutral-surface rounded-xl px-4 py-3 border border-neutral-border">
+        <View className="flex-row items-center bg-neutral-surface rounded-xl px-4 py-3.5 border border-neutral-border">
           <Ionicons name="search" size={20} color="#9E9E9E" />
           <TextInput
-            className="flex-1 ml-3 text-neutral-textDark"
+            className="flex-1 ml-3 text-base text-neutral-textDark"
             placeholder={t("schemesPage.searchPlaceholder")}
             placeholderTextColor="#9E9E9E"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <Ionicons name="mic-outline" size={20} color="#9E9E9E" />
         </View>
       </View>
 
