@@ -5,11 +5,11 @@ import {
     Modal,
     Pressable,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { colors } from "../../styles/colors";
+import AppText from "./AppText";
 
 interface SelectOption {
   label: string;
@@ -40,22 +40,25 @@ export default function Select({
   return (
     <View className="mb-4">
       {label && (
-        <Text className="text-neutral-textMedium text-sm mb-2">{label}</Text>
+        <AppText variant="bodySm" className="text-neutral-textMedium mb-2 font-medium">
+          {label}
+        </AppText>
       )}
 
       <Pressable
         onPress={() => !disabled && setIsOpen(true)}
-        className={`flex-row items-center justify-between border border-neutral-border rounded-xl px-4 py-4 bg-white ${
+        className={`flex-row items-center justify-between border border-neutral-border rounded-xl px-4 py-3.5 bg-white ${
           disabled ? "opacity-50" : ""
         }`}
       >
-        <Text
-          className={`text-base ${
+        <AppText
+          variant="bodyMd"
+          className={
             selectedOption ? "text-neutral-textDark" : "text-neutral-textLight"
-          }`}
+          }
         >
           {selectedOption?.label || placeholder}
-        </Text>
+        </AppText>
         <Ionicons
           name="chevron-down"
           size={20}
@@ -73,14 +76,22 @@ export default function Select({
           className="flex-1 bg-black/50 justify-end"
           onPress={() => setIsOpen(false)}
         >
-          <View className="bg-white rounded-t-3xl max-h-[60%]">
-            <View className="p-4 border-b border-neutral-border">
-              <Text className="text-lg font-semibold text-center">
-                {label || "Select"}
-              </Text>
+          {/* Stop propagation when tapping the modal content */}
+          <Pressable 
+            className="bg-white rounded-t-3xl max-h-[60%] w-full" 
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="p-4 border-b border-neutral-border flex-row justify-between items-center bg-gray-50 rounded-t-3xl">
+              <View className="w-6" /> 
+              <AppText variant="h3" className="font-semibold text-center text-neutral-textDark">
+                {label || "Select Option"}
+              </AppText>
+              <TouchableOpacity onPress={() => setIsOpen(false)}>
+                 <Ionicons name="close" size={24} color={colors.neutral.textDark} />
+              </TouchableOpacity>
             </View>
 
-            <ScrollView className="p-4">
+            <ScrollView className="p-4" contentContainerStyle={{ paddingBottom: 20 }}>
               {options.map((option) => (
                 <TouchableOpacity
                   key={option.value}
@@ -88,19 +99,20 @@ export default function Select({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`flex-row items-center justify-between py-4 px-2 border-b border-neutral-border ${
-                    value === option.value ? "bg-primary/10" : ""
+                  className={`flex-row items-center justify-between py-4 px-2 border-b border-gray-100 ${
+                    value === option.value ? "bg-primary-50 rounded-lg" : ""
                   }`}
                 >
-                  <Text
-                    className={`text-base ${
+                  <AppText
+                    variant="bodyMd"
+                    className={
                       value === option.value
                         ? "text-primary font-semibold"
                         : "text-neutral-textDark"
-                    }`}
+                    }
                   >
                     {option.label}
-                  </Text>
+                  </AppText>
                   {value === option.value && (
                     <Ionicons
                       name="checkmark"
@@ -111,7 +123,7 @@ export default function Select({
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </View>

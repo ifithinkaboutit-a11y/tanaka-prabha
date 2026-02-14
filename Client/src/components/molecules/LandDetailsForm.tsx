@@ -123,7 +123,7 @@ export default function LandDetailsForm({
             <View style={{ width: 130 }}>
               <Select
                 value={unit}
-                onValueChange={setUnit}
+                onChange={setUnit}
                 options={unitOptions}
                 placeholder="Unit"
               />
@@ -192,13 +192,13 @@ export default function LandDetailsForm({
           </View>
           <Select
             value={formData.rabiCrop}
-            onValueChange={(value) => updateField("rabiCrop", value)}
+            onChange={(value) => updateField("rabiCrop", value)}
             options={cropOptions}
             placeholder="Select rabi crop"
           />
         </View>
 
-        {/* Kharif Crop */}
+        {/* Kharif Crop */}}
         <View style={{ marginBottom: 20 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
             <View
@@ -225,13 +225,13 @@ export default function LandDetailsForm({
           </View>
           <Select
             value={formData.kharifCrop}
-            onValueChange={(value) => updateField("kharifCrop", value)}
+            onChange={(value) => updateField("kharifCrop", value)}
             options={cropOptions}
             placeholder="Select kharif crop"
           />
         </View>
 
-        {/* Zaid Crop */}
+        {/* Zaid Crop */}}
         <View style={{ marginBottom: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
             <View
@@ -258,7 +258,7 @@ export default function LandDetailsForm({
           </View>
           <Select
             value={formData.zaidCrop}
-            onValueChange={(value) => updateField("zaidCrop", value)}
+            onChange={(value) => updateField("zaidCrop", value)}
             options={cropOptions}
             placeholder="Select zaid crop"
           />

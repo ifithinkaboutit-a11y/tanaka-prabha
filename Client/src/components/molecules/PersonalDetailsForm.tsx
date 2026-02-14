@@ -1,11 +1,12 @@
 // src/components/molecules/PersonalDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 import {
   PersonalDetails,
   PersonalDetailsFormProps,
 } from "../../data/interfaces";
+import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import T from "../../i18n";
 import AppText from "../atoms/AppText";
 import Select from "../atoms/Select";
@@ -19,6 +20,12 @@ const educationOptions = [
   { value: "graduate", label: "Graduate", labelHi: "स्नातक" },
   { value: "postgraduate", label: "Post Graduate", labelHi: "स्नातकोत्तर" },
   { value: "phd", label: "PhD", labelHi: "पीएचडी" },
+];
+
+const genderOptions = [
+  { value: "male", label: "Male", labelHi: "पुरुष" },
+  { value: "female", label: "Female", labelHi: "महिला" },
+  { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 
 // Helper component for form inputs
@@ -110,10 +117,17 @@ export default function PersonalDetailsForm({
 }: PersonalDetailsFormProps) {
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
 
+  // Get state and district options
+  const stateOptions = useMemo(() => getStateOptions(), []);
+  const districtOptions = useMemo(
+    () => (formData.state ? getDistrictOptions(formData.state) : []),
+    [formData.state]
+  );
+
   const handleSave = () => {
     // Basic validation
-    if (!formData.fathersName.trim()) {
-      Alert.alert("Error", "Father's name is required");
+    if (!formData.name.trim()) {
+      Alert.alert("Error", "Name is required");
       return;
     }
     onSave(formData);
@@ -132,6 +146,89 @@ export default function PersonalDetailsForm({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 100 }}
     >
+      {/* Personal Information Section */}
+      <View
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 16,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 2,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "#F0FDF4",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Ionicons name="person" size={20} color="#386641" />
+          </View>
+          <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
+            {T.translate("personalDetails.personalInformation") || "Personal Information"}
+          </AppText>
+        </View>
+
+        <FormInput
+          label={String(T.translate("personalDetails.name") || "Name")}
+          value={formData.name}
+          onChangeText={(value) => updateField("name", value)}
+          placeholder="Enter your name"
+          required
+        />
+
+        <View style={{ marginBottom: 20 }}>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+          >
+            {T.translate("personalDetails.age") || "Age"}
+          </AppText>
+          <TextInput
+            style={{
+              backgroundColor: "#F9FAFB",
+              borderWidth: 1,
+              borderColor: "#E5E7EB",
+              borderRadius: 12,
+              padding: 14,
+              fontSize: 16,
+              color: "#1F2937",
+              width: 100,
+            }}
+            value={formData.age > 0 ? formData.age.toString() : ''}
+            onChangeText={(text) => updateField("age", parseInt(text) || 0)}
+            keyboardType="numeric"
+            placeholder="0"
+            placeholderTextColor="#9CA3AF"
+          />
+        </View>
+
+        <View style={{ marginBottom: 0 }}>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+          >
+            {T.translate("personalDetails.gender") || "Gender"}
+          </AppText>
+          <Select
+            value={formData.gender}
+            onChange={(value) => updateField("gender", value)}
+            options={genderOptions}
+            placeholder="Select gender"
+          />
+        </View>
+      </View>
+
       {/* Family Information Section */}
       <View
         style={{
@@ -189,7 +286,7 @@ export default function PersonalDetailsForm({
           </AppText>
           <Select
             value={formData.educationalQualification}
-            onValueChange={(value) => updateField("educationalQualification", value)}
+            onChange={(value) => updateField("educationalQualification", value)}
             options={educationOptions}
             placeholder="Select education level"
           />
@@ -376,19 +473,40 @@ export default function PersonalDetailsForm({
           placeholder="Enter block"
         />
 
-        <FormInput
-          label={String(T.translate("personalDetails.district"))}
-          value={formData.district}
-          onChangeText={(value) => updateField("district", value)}
-          placeholder="Enter district"
-        />
+        <View style={{ marginBottom: 20 }}>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+          >
+            {T.translate("personalDetails.state")}
+          </AppText>
+          <Select
+            value={formData.state}
+            onChange={(value) => {
+              updateField("state", value);
+              // Reset district when state changes
+              updateField("district", "");
+            }}
+            options={stateOptions}
+            placeholder="Select state"
+          />
+        </View>
 
-        <FormInput
-          label={String(T.translate("personalDetails.state"))}
-          value={formData.state}
-          onChangeText={(value) => updateField("state", value)}
-          placeholder="Enter state"
-        />
+        <View style={{ marginBottom: 20 }}>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+          >
+            {T.translate("personalDetails.district")}
+          </AppText>
+          <Select
+            value={formData.district}
+            onChange={(value) => updateField("district", value)}
+            options={districtOptions}
+            placeholder={formData.state ? "Select district" : "Select state first"}
+            disabled={!formData.state}
+          />
+        </View>
 
         <View style={{ marginBottom: 0 }}>
           <AppText

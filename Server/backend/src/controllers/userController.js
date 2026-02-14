@@ -341,26 +341,30 @@ export const updateCurrentUserProfile = async (req, res) => {
 
         // Don't allow changing mobile number through profile update
         delete userData.mobile_number;
+        
+        // Extract land_details and livestock_details before passing to User.update
+        // These belong to separate tables, not the users table
+        const { land_details, livestock_details, ...userOnlyData } = userData;
 
-        const user = await User.update(userId, userData);
+        const user = await User.update(userId, userOnlyData);
 
         // Update land details if provided
-        if (userData.land_details) {
+        if (land_details) {
             const existingLand = await LandDetails.findByUserId(userId);
             if (existingLand) {
-                await LandDetails.update(userId, userData.land_details);
+                await LandDetails.update(userId, land_details);
             } else {
-                await LandDetails.create({ user_id: userId, ...userData.land_details });
+                await LandDetails.create({ user_id: userId, ...land_details });
             }
         }
 
         // Update livestock details if provided
-        if (userData.livestock_details) {
+        if (livestock_details) {
             const existingLivestock = await LivestockDetails.findByUserId(userId);
             if (existingLivestock) {
-                await LivestockDetails.update(userId, userData.livestock_details);
+                await LivestockDetails.update(userId, livestock_details);
             } else {
-                await LivestockDetails.create({ user_id: userId, ...userData.livestock_details });
+                await LivestockDetails.create({ user_id: userId, ...livestock_details });
             }
         }
 

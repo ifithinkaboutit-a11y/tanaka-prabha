@@ -1,8 +1,10 @@
 // src/app/(auth)/livestock-details.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,22 +15,31 @@ import {
 import AppText from "../../components/atoms/AppText";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
-import { useOnboardingStore } from "../../stores/onboardingStore";
+import { useOnboardingStore, LivestockEntry } from "../../stores/onboardingStore";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "../../i18n";
 import {
   animalTypes,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
+import { validateLivestockEntry, validateLivestockCount } from "../../utils/validation";
+import { userApi } from "../../services/apiService";
 
 export const unstable_settings = {
   headerShown: false,
 };
 
+interface EntryErrors {
+  [entryId: string]: {
+    type?: string;
+    count?: string;
+  };
+}
+
 const AuthLivestockDetailsScreen = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, refreshUser } = useAuth();
   const {
     hasLivestock,
     setHasLivestock,
@@ -36,20 +47,260 @@ const AuthLivestockDetailsScreen = () => {
     addLivestockEntry,
     removeLivestockEntry,
     updateLivestockEntry,
+    personalDetails,
+    hasLand,
+    landEntries,
+    resetOnboarding,
   } = useOnboardingStore();
+
+  const [errors, setErrors] = useState<EntryErrors>({});
+  const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
 
-  const handleFinish = () => {
-    // Mark onboarding complete and navigate to home
-    completeOnboarding();
-    router.replace("/(tab)/" as any);
+  const validateAllEntries = (): boolean => {
+    if (!hasLivestock) return true;
+    
+    let allValid = true;
+    const newErrors: EntryErrors = {};
+    
+    livestockEntries.forEach((entry) => {
+      const validation = validateLivestockEntry({
+        type: entry.type,
+        count: entry.count,
+      });
+      
+      if (!validation.isValid) {
+        allValid = false;
+        const entryErrors: { type?: string; count?: string } = {};
+        
+        validation.errors.forEach((error) => {
+          if (error.toLowerCase().includes("type") || error.toLowerCase().includes("animal")) {
+            entryErrors.type = error;
+          } else if (error.toLowerCase().includes("count")) {
+            entryErrors.count = error;
+          }
+        });
+        
+        newErrors[entry.id] = entryErrors;
+      }
+    });
+    
+    setErrors(newErrors);
+    return allValid;
   };
 
-  const handleSkip = () => {
-    // Skip also marks onboarding as complete
-    completeOnboarding();
-    router.replace("/(tab)/" as any);
+  const handleCountChange = (entryId: string, text: string) => {
+    const num = parseInt(text) || 0;
+    updateLivestockEntry(entryId, { count: num });
+    
+    // Clear error if user starts typing
+    if (touched[entryId]?.count) {
+      const validation = validateLivestockCount(num);
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], count: validation.errors[0] },
+      }));
+    }
+  };
+
+  const handleCountBlur = (entryId: string, count: number) => {
+    setTouched((prev) => ({
+      ...prev,
+      [entryId]: { ...prev[entryId], count: true },
+    }));
+    
+    const validation = validateLivestockCount(count);
+    if (count <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], count: "Animal count must be greater than 0" },
+      }));
+    } else if (!validation.isValid) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], count: validation.errors[0] },
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], count: undefined },
+      }));
+    }
+  };
+
+  const handleTypeChange = (entryId: string, type: string) => {
+    updateLivestockEntry(entryId, { type });
+    
+    // Clear error if user selects type
+    if (type) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], type: undefined },
+      }));
+    }
+  };
+
+  const saveOnboardingData = async () => {
+    try {
+      // Prepare the profile data to save
+      const profileData: any = {
+        // Personal details
+        fathers_name: personalDetails.fathersName,
+        mothers_name: personalDetails.mothersName,
+        educational_qualification: personalDetails.educationalQualification,
+        sons_married: personalDetails.sonsMarried || 0,
+        sons_unmarried: personalDetails.sonsUnmarried || 0,
+        daughters_married: personalDetails.daughtersMarried || 0,
+        daughters_unmarried: personalDetails.daughtersUnmarried || 0,
+        other_family_members: personalDetails.otherFamilyMembers || 0,
+        village: personalDetails.village,
+        gram_panchayat: personalDetails.gramPanchayat,
+        nyay_panchayat: personalDetails.nyayPanchayat,
+        post_office: personalDetails.postOffice,
+        tehsil: personalDetails.tehsil,
+        block: personalDetails.block,
+        district: personalDetails.district,
+        pin_code: personalDetails.pinCode,
+        state: personalDetails.state,
+      };
+
+      // Add land details if user has land
+      if (hasLand && landEntries.length > 0) {
+        // Calculate total land area (convert all to acres for consistency)
+        let totalArea = 0;
+        const crops: string[] = [];
+        
+        landEntries.forEach((entry) => {
+          let areaInAcres = entry.area;
+          // Convert to acres if needed
+          if (entry.unit === "bigha") {
+            areaInAcres = entry.area * 0.62; // 1 bigha ≈ 0.62 acres
+          } else if (entry.unit === "hectare") {
+            areaInAcres = entry.area * 2.47; // 1 hectare ≈ 2.47 acres
+          }
+          totalArea += areaInAcres;
+          
+          if (entry.crops) {
+            entry.crops.forEach((crop) => {
+              if (!crops.includes(crop)) {
+                crops.push(crop);
+              }
+            });
+          }
+        });
+
+        profileData.land_details = {
+          total_land_area: Math.round(totalArea * 100) / 100, // Round to 2 decimal places
+          kharif_crop: crops.filter((c) => ["rice", "maize", "cotton", "soybean"].includes(c)).join(", "),
+          rabi_crop: crops.filter((c) => ["wheat", "mustard", "gram", "barley"].includes(c)).join(", "),
+          zaid_crop: crops.filter((c) => ["vegetables", "fruits", "fodder"].includes(c)).join(", "),
+        };
+      }
+
+      // Add livestock details if user has livestock
+      if (hasLivestock && livestockEntries.length > 0) {
+        const livestockData: any = {
+          cow: 0,
+          buffalo: 0,
+          goat: 0,
+          sheep: 0,
+          pig: 0,
+          poultry: 0,
+          others: 0,
+        };
+
+        livestockEntries.forEach((entry) => {
+          const type = entry.type.toLowerCase();
+          if (type in livestockData) {
+            livestockData[type] += entry.count;
+          } else {
+            livestockData.others += entry.count;
+          }
+        });
+
+        profileData.livestock_details = livestockData;
+      }
+
+      console.log("📤 Saving onboarding data:", JSON.stringify(profileData, null, 2));
+
+      // Save to backend
+      const response = await userApi.updateProfile(profileData);
+      
+      if (response.status === "success") {
+        console.log("✅ Onboarding data saved successfully");
+        // Refresh user data from server
+        await refreshUser();
+        // Reset onboarding store
+        resetOnboarding();
+        return true;
+      } else {
+        throw new Error(response.message || "Failed to save profile");
+      }
+    } catch (error) {
+      console.error("❌ Failed to save onboarding data:", error);
+      throw error;
+    }
+  };
+
+  const handleFinish = async () => {
+    if (hasLivestock && !validateAllEntries()) {
+      const firstErrorEntry = Object.values(errors).find((e) => e.type || e.count);
+      const errorMessage = firstErrorEntry?.type || firstErrorEntry?.count || 
+        t("validation.livestockDetailsError") || "Please fill in all livestock details correctly";
+      
+      Alert.alert(
+        t("validation.validationError") || "Validation Error",
+        errorMessage
+      );
+      
+      // Mark all fields as touched
+      const newTouched: Record<string, Record<string, boolean>> = {};
+      livestockEntries.forEach((entry) => {
+        newTouched[entry.id] = { type: true, count: true };
+      });
+      setTouched(newTouched);
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Save all onboarding data to backend
+      await saveOnboardingData();
+      
+      // Mark onboarding complete and navigate to home
+      completeOnboarding();
+      router.replace("/(tab)/" as any);
+    } catch (error) {
+      Alert.alert(
+        t("common.error") || "Error",
+        error instanceof Error ? error.message : "Failed to save your profile. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Save available data even when skipping
+      await saveOnboardingData();
+      
+      // Skip also marks onboarding as complete
+      completeOnboarding();
+      router.replace("/(tab)/" as any);
+    } catch (error) {
+      // Even if save fails, let user continue
+      console.error("Failed to save on skip:", error);
+      completeOnboarding();
+      router.replace("/(tab)/" as any);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -62,6 +313,16 @@ const AuthLivestockDetailsScreen = () => {
       (entry) => entry.type !== "" && entry.count > 0
     );
   };
+
+  const getCountInputStyle = (entryId: string) => ({
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: errors[entryId]?.count && touched[entryId]?.count ? "#EF4444" : "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#1F2937",
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
@@ -143,7 +404,16 @@ const AuthLivestockDetailsScreen = () => {
               >
                 {t("onboarding.hasLivestock")}
               </AppText>
-              <Toggle value={hasLivestock} onValueChange={setHasLivestock} />
+              <Toggle 
+                value={hasLivestock} 
+                onValueChange={(value) => {
+                  setHasLivestock(value);
+                  // Add a default entry when enabling livestock ownership
+                  if (value && livestockEntries.length === 0) {
+                    addLivestockEntry({ type: "", count: 0 });
+                  }
+                }} 
+              />
             </View>
           </View>
 
@@ -200,14 +470,26 @@ const AuthLivestockDetailsScreen = () => {
                     >
                       {t("onboarding.animalType")}
                     </AppText>
-                    <Select
-                      value={entry.type}
-                      onValueChange={(value) =>
-                        updateLivestockEntry(entry.id, { type: value })
-                      }
-                      options={animalOptions}
-                      placeholder={t("onboarding.selectAnimal")}
-                    />
+                    <View style={{ 
+                      borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
+                      borderColor: "#EF4444",
+                      borderRadius: 12 
+                    }}>
+                      <Select
+                        value={entry.type}
+                        onChange={(value) => handleTypeChange(entry.id, value)}
+                        options={animalOptions}
+                        placeholder={t("onboarding.selectAnimal")}
+                      />
+                    </View>
+                    {errors[entry.id]?.type && touched[entry.id]?.type && (
+                      <AppText
+                        variant="bodySm"
+                        style={{ color: "#EF4444", marginTop: 4 }}
+                      >
+                        {errors[entry.id].type}
+                      </AppText>
+                    )}
                   </View>
 
                   {/* Count Input */}
@@ -219,31 +501,29 @@ const AuthLivestockDetailsScreen = () => {
                       {t("onboarding.animalCount")}
                     </AppText>
                     <TextInput
-                      style={{
-                        backgroundColor: "#F9FAFB",
-                        borderWidth: 1,
-                        borderColor: "#E5E7EB",
-                        borderRadius: 12,
-                        padding: 14,
-                        fontSize: 16,
-                        color: "#1F2937",
-                      }}
+                      style={getCountInputStyle(entry.id)}
                       value={entry.count > 0 ? String(entry.count) : ""}
-                      onChangeText={(text) => {
-                        const num = parseInt(text) || 0;
-                        updateLivestockEntry(entry.id, { count: num });
-                      }}
+                      onChangeText={(text) => handleCountChange(entry.id, text)}
+                      onBlur={() => handleCountBlur(entry.id, entry.count)}
                       keyboardType="numeric"
                       placeholder="0"
                       placeholderTextColor="#9CA3AF"
                     />
+                    {errors[entry.id]?.count && touched[entry.id]?.count && (
+                      <AppText
+                        variant="bodySm"
+                        style={{ color: "#EF4444", marginTop: 4 }}
+                      >
+                        {errors[entry.id].count}
+                      </AppText>
+                    )}
                   </View>
                 </View>
               ))}
 
               {/* Add Another Livestock Entry */}
               <Pressable
-                onPress={addLivestockEntry}
+                onPress={() => addLivestockEntry({ type: "", count: 0 })}
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
@@ -319,6 +599,7 @@ const AuthLivestockDetailsScreen = () => {
       >
         <Pressable
           onPress={handleSkip}
+          disabled={isSubmitting}
           style={({ pressed }) => ({
             flex: 1,
             paddingVertical: 16,
@@ -327,6 +608,7 @@ const AuthLivestockDetailsScreen = () => {
             borderWidth: 1,
             borderColor: "#D1D5DB",
             alignItems: "center",
+            opacity: isSubmitting ? 0.5 : 1,
           })}
         >
           <AppText
@@ -338,12 +620,12 @@ const AuthLivestockDetailsScreen = () => {
         </Pressable>
         <Pressable
           onPress={handleFinish}
-          disabled={!isValid()}
+          disabled={!isValid() || isSubmitting}
           style={({ pressed }) => ({
             flex: 2,
             paddingVertical: 16,
             borderRadius: 25,
-            backgroundColor: isValid()
+            backgroundColor: isValid() && !isSubmitting
               ? pressed
                 ? "#2F5233"
                 : "#386641"
@@ -353,18 +635,24 @@ const AuthLivestockDetailsScreen = () => {
             justifyContent: "center",
           })}
         >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#FFFFFF", fontWeight: "700" }}
-          >
-            {t("onboarding.finish")}
-          </AppText>
-          <Ionicons
-            name="checkmark-circle"
-            size={20}
-            color="#FFFFFF"
-            style={{ marginLeft: 8 }}
-          />
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <>
+              <AppText
+                variant="bodyMd"
+                style={{ color: "#FFFFFF", fontWeight: "700" }}
+              >
+                {t("onboarding.finish")}
+              </AppText>
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
+            </>
+          )}
         </Pressable>
       </View>
     </View>

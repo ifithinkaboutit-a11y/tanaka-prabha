@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const DASHBOARD_API_KEY = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY || 'tanak-prabha-dashboard-secret-key-2024';
 
 class ApiError extends Error {
     constructor(message, status, data) {
@@ -22,12 +23,13 @@ async function apiRequest(endpoint, options = {}) {
     const config = {
         headers: {
             'Content-Type': 'application/json',
+            'X-Dashboard-Api-Key': DASHBOARD_API_KEY,
             ...options.headers,
         },
         ...options,
     };
 
-    // Add auth token if available
+    // Add auth token if available (for user-specific requests)
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('auth_token');
         if (token) {
@@ -332,7 +334,9 @@ async function uploadFile(endpoint, file, fieldName = 'image') {
     const config = {
         method: 'POST',
         body: formData,
-        headers: {},
+        headers: {
+            'X-Dashboard-Api-Key': DASHBOARD_API_KEY,
+        },
     };
 
     // Add auth token if available

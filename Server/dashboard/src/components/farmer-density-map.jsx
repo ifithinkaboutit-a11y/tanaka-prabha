@@ -35,7 +35,8 @@ export function FarmerDensityMap() {
     async function fetchFarmerLocations() {
       try {
         const response = await analyticsApi.getFarmerLocations()
-        const data = response.data || []
+        // Handle response structure: response.data can be { locations: [] } or array directly
+        const data = response.data?.locations || response.data || []
 
         // Transform data for heatmap - [lat, lng, intensity]
         const heatmapData = data.map(user => [

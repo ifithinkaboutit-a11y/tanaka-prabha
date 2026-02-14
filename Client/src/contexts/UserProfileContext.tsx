@@ -70,6 +70,9 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
 
   const updatePersonalDetails = async (data: any) => {
     await updateProfile({
+      name: data.name,
+      age: data.age,
+      gender: data.gender,
       fathers_name: data.fathersName,
       mothers_name: data.mothersName,
       educational_qualification: data.educationalQualification,
@@ -88,6 +91,8 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
       pin_code: data.pinCode,
       state: data.state,
     });
+    // Refresh profile after update to ensure UI reflects latest data
+    await refreshProfile();
   };
 
   const updateLandDetails = async (data: any) => {
@@ -99,6 +104,8 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
         zaid_crop: data.zaidCrop,
       },
     });
+    // Refresh profile after update to ensure UI reflects latest data
+    await refreshProfile();
   };
 
   const updateLivestockDetails = async (data: any) => {
@@ -112,6 +119,8 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
         others: data.others,
       },
     });
+    // Refresh profile after update to ensure UI reflects latest data
+    await refreshProfile();
   };
 
   return (

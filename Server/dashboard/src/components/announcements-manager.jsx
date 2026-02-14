@@ -184,7 +184,7 @@ export function AnnouncementsManager() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4">
         <div>
           <h2 className="text-lg font-semibold">Announcements</h2>
           <p className="text-sm text-muted-foreground">
@@ -198,7 +198,7 @@ export function AnnouncementsManager() {
               Send Announcement
             </Button>
           </SheetTrigger>
-          <SheetContent className="sm:max-w-md">
+          <SheetContent className="px-4 w-full">
             <SheetHeader>
               <SheetTitle>New Announcement</SheetTitle>
               <SheetDescription>

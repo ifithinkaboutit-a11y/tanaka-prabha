@@ -16,7 +16,7 @@ import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
 import MultiSelect from "../../components/atoms/MultiSelect";
 import Select from "../../components/atoms/Select";
-import { useOnboardingStore } from "../../stores/onboardingStore";
+import { useOnboardingStore, LandEntry } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
   cropTypes,
@@ -24,10 +24,18 @@ import {
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
 import { colors } from "../../styles/colors";
+import { validateLandEntry, validateLandArea } from "../../utils/validation";
 
 export const unstable_settings = {
   headerShown: false,
 };
+
+interface EntryErrors {
+  [entryId: string]: {
+    area?: string;
+    crops?: string;
+  };
+}
 
 const AuthLandDetailsScreen = () => {
   const router = useRouter();
@@ -40,11 +48,139 @@ const AuthLandDetailsScreen = () => {
     removeLandEntry,
     updateLandEntry,
   } = useOnboardingStore();
+  
+  const [errors, setErrors] = useState<EntryErrors>({});
+  const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
 
   const cropOptions = getLocalizedOptions(cropTypes, currentLanguage);
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
 
+  const validateEntry = (entry: LandEntry): boolean => {
+    const validation = validateLandEntry({
+      area: entry.area,
+      unit: entry.unit,
+      crops: entry.crops || [],
+    });
+    
+    const entryErrors: { area?: string; crops?: string } = {};
+    
+    validation.errors.forEach((error) => {
+      if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
+        entryErrors.area = error;
+      } else if (error.toLowerCase().includes("crop")) {
+        entryErrors.crops = error;
+      }
+    });
+    
+    setErrors((prev) => ({ ...prev, [entry.id]: entryErrors }));
+    return validation.isValid;
+  };
+
+  const validateAllEntries = (): boolean => {
+    if (!hasLand) return true;
+    
+    let allValid = true;
+    const newErrors: EntryErrors = {};
+    
+    landEntries.forEach((entry) => {
+      const validation = validateLandEntry({
+        area: entry.area,
+        unit: entry.unit,
+        crops: entry.crops || [],
+      });
+      
+      if (!validation.isValid) {
+        allValid = false;
+        const entryErrors: { area?: string; crops?: string } = {};
+        
+        validation.errors.forEach((error) => {
+          if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
+            entryErrors.area = error;
+          } else if (error.toLowerCase().includes("crop")) {
+            entryErrors.crops = error;
+          }
+        });
+        
+        newErrors[entry.id] = entryErrors;
+      }
+    });
+    
+    setErrors(newErrors);
+    return allValid;
+  };
+
+  const handleAreaChange = (entryId: string, text: string) => {
+    const num = parseFloat(text) || 0;
+    updateLandEntry(entryId, { area: num });
+    
+    // Clear error if user starts typing
+    if (touched[entryId]?.area) {
+      const validation = validateLandArea(num);
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+      }));
+    }
+  };
+
+  const handleAreaBlur = (entryId: string, area: number) => {
+    setTouched((prev) => ({
+      ...prev,
+      [entryId]: { ...prev[entryId], area: true },
+    }));
+    
+    const validation = validateLandArea(area);
+    if (area <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: "Land area must be greater than 0" },
+      }));
+    } else if (!validation.isValid) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: undefined },
+      }));
+    }
+  };
+
+  const handleCropsChange = (entryId: string, crops: string[]) => {
+    updateLandEntry(entryId, { crops });
+    
+    // Clear error if user selects crops
+    if (crops.length > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], crops: undefined },
+      }));
+    }
+  };
+
   const handleNext = () => {
+    if (hasLand && !validateAllEntries()) {
+      // Find the first error to display
+      const firstErrorEntry = Object.values(errors).find((e) => e.area || e.crops);
+      const errorMessage = firstErrorEntry?.area || firstErrorEntry?.crops || 
+        t("validation.landDetailsError") || "Please fill in all land details correctly";
+      
+      Alert.alert(
+        t("validation.validationError") || "Validation Error",
+        errorMessage
+      );
+      
+      // Mark all fields as touched
+      const newTouched: Record<string, Record<string, boolean>> = {};
+      landEntries.forEach((entry) => {
+        newTouched[entry.id] = { area: true, crops: true };
+      });
+      setTouched(newTouched);
+      return;
+    }
+    
     // Navigate to livestock details
     router.push("/(auth)/livestock-details");
   };
@@ -64,6 +200,16 @@ const AuthLandDetailsScreen = () => {
       (entry) => entry.area > 0 && entry.crops && entry.crops.length > 0
     );
   };
+
+  const getAreaInputStyle = (entryId: string) => ({
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: errors[entryId]?.area && touched[entryId]?.area ? "#EF4444" : "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#1F2937",
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
@@ -145,7 +291,16 @@ const AuthLandDetailsScreen = () => {
               >
                 {t("onboarding.hasLand")}
               </AppText>
-              <Toggle value={hasLand} onValueChange={setHasLand} />
+              <Toggle 
+                value={hasLand} 
+                onValueChange={(value) => {
+                  setHasLand(value);
+                  // Add a default entry when enabling land ownership
+                  if (value && landEntries.length === 0) {
+                    addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
+                  }
+                }} 
+              />
             </View>
           </View>
 
@@ -205,20 +360,10 @@ const AuthLandDetailsScreen = () => {
                     <View style={{ flexDirection: "row", gap: 12 }}>
                       <View style={{ flex: 1 }}>
                         <TextInput
-                          style={{
-                            backgroundColor: "#F9FAFB",
-                            borderWidth: 1,
-                            borderColor: "#E5E7EB",
-                            borderRadius: 12,
-                            padding: 14,
-                            fontSize: 16,
-                            color: "#1F2937",
-                          }}
+                          style={getAreaInputStyle(entry.id)}
                           value={entry.area > 0 ? String(entry.area) : ""}
-                          onChangeText={(text) => {
-                            const num = parseFloat(text) || 0;
-                            updateLandEntry(entry.id, { area: num });
-                          }}
+                          onChangeText={(text) => handleAreaChange(entry.id, text)}
+                          onBlur={() => handleAreaBlur(entry.id, entry.area)}
                           keyboardType="numeric"
                           placeholder="0"
                           placeholderTextColor="#9CA3AF"
@@ -227,7 +372,7 @@ const AuthLandDetailsScreen = () => {
                       <View style={{ width: 120 }}>
                         <Select
                           value={entry.unit}
-                          onValueChange={(value) =>
+                          onChange={(value) =>
                             updateLandEntry(entry.id, { unit: value })
                           }
                           options={unitOptions}
@@ -235,6 +380,14 @@ const AuthLandDetailsScreen = () => {
                         />
                       </View>
                     </View>
+                    {errors[entry.id]?.area && touched[entry.id]?.area && (
+                      <AppText
+                        variant="bodySm"
+                        style={{ color: "#EF4444", marginTop: 4 }}
+                      >
+                        {errors[entry.id].area}
+                      </AppText>
+                    )}
                   </View>
 
                   {/* Crops Selection */}
@@ -245,21 +398,33 @@ const AuthLandDetailsScreen = () => {
                     >
                       {t("onboarding.cropsGrown")}
                     </AppText>
-                    <MultiSelect
-                      value={entry.crops || []}
-                      onValueChange={(crops) =>
-                        updateLandEntry(entry.id, { crops })
-                      }
-                      options={cropOptions}
-                      placeholder={t("onboarding.selectCrops")}
-                    />
+                    <View style={{ 
+                      borderWidth: errors[entry.id]?.crops && touched[entry.id]?.crops ? 1 : 0,
+                      borderColor: "#EF4444",
+                      borderRadius: 12 
+                    }}>
+                      <MultiSelect
+                        value={entry.crops || []}
+                        onValueChange={(crops) => handleCropsChange(entry.id, crops)}
+                        options={cropOptions}
+                        placeholder={t("onboarding.selectCrops")}
+                      />
+                    </View>
+                    {errors[entry.id]?.crops && touched[entry.id]?.crops && (
+                      <AppText
+                        variant="bodySm"
+                        style={{ color: "#EF4444", marginTop: 4 }}
+                      >
+                        {errors[entry.id].crops}
+                      </AppText>
+                    )}
                   </View>
                 </View>
               ))}
 
               {/* Add Another Land Entry */}
               <Pressable
-                onPress={addLandEntry}
+                onPress={() => addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })}
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",

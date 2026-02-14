@@ -247,14 +247,77 @@ export const authApi = {
 };
 
 // User API endpoints
+// ============================================================
+// User API Helpers
+// ============================================================
+
+function convertApiUserToUserProfile(apiUser: ApiUserProfile): UserProfile {
+  return {
+    id: apiUser.id,
+    name: apiUser.name,
+    age: apiUser.age,
+    gender: apiUser.gender,
+    photoUrl: apiUser.photo_url,
+    mobileNumber: apiUser.mobile_number,
+    aadhaarNumber: apiUser.aadhaar_number,
+    fathersName: apiUser.fathers_name,
+    mothersName: apiUser.mothers_name,
+    educationalQualification: apiUser.educational_qualification,
+    sonsMarried: apiUser.sons_married,
+    sonsUnmarried: apiUser.sons_unmarried,
+    daughtersMarried: apiUser.daughters_married,
+    daughtersUnmarried: apiUser.daughters_unmarried,
+    otherFamilyMembers: apiUser.other_family_members,
+    village: apiUser.village,
+    gramPanchayat: apiUser.gram_panchayat,
+    nyayPanchayat: apiUser.nyay_panchayat,
+    postOffice: apiUser.post_office,
+    tehsil: apiUser.tehsil,
+    block: apiUser.block,
+    district: apiUser.district,
+    pinCode: apiUser.pin_code,
+    state: apiUser.state,
+    location: apiUser.location,
+    landDetails: apiUser.land_details
+      ? {
+          totalLandArea: apiUser.land_details.total_land_area,
+          rabiCrop: apiUser.land_details.rabi_crop,
+          kharifCrop: apiUser.land_details.kharif_crop,
+          zaidCrop: apiUser.land_details.zaid_crop,
+        }
+      : undefined,
+    livestockDetails: apiUser.livestock_details
+      ? {
+          cow: apiUser.livestock_details.cow,
+          buffalo: apiUser.livestock_details.buffalo,
+          goat: apiUser.livestock_details.goat,
+          sheep: apiUser.livestock_details.sheep,
+          pig: apiUser.livestock_details.pig,
+          poultry: apiUser.livestock_details.poultry,
+          others: apiUser.livestock_details.others,
+        }
+      : undefined,
+    isNewUser: apiUser.is_new_user,
+  };
+}
+
 export const userApi = {
   /**
    * Get current user profile with land and livestock details
    */
   async getProfile(): Promise<ApiResponse<{ user: UserProfile }>> {
-    return fetchWithAuth<{ user: UserProfile }>("/users/profile", {
+    const response = await fetchWithAuth<{ user: ApiUserProfile }>("/users/profile", {
       method: "GET",
     });
+    if (response.data?.user) {
+      return {
+        ...response,
+        data: {
+          user: convertApiUserToUserProfile(response.data.user),
+        },
+      };
+    }
+    return response as ApiResponse<{ user: UserProfile }>;
   },
 
   /**
@@ -263,10 +326,19 @@ export const userApi = {
   async updateProfile(
     userData: Partial<UserProfileUpdate>
   ): Promise<ApiResponse<{ user: UserProfile }>> {
-    return fetchWithAuth<{ user: UserProfile }>("/users/profile", {
+    const response = await fetchWithAuth<{ user: ApiUserProfile }>("/users/profile", {
       method: "PUT",
       body: JSON.stringify(userData),
     });
+    if (response.data?.user) {
+      return {
+        ...response,
+        data: {
+          user: convertApiUserToUserProfile(response.data.user),
+        },
+      };
+    }
+    return response as ApiResponse<{ user: UserProfile }>;
   },
 };
 
@@ -857,6 +929,12 @@ export interface Appointment {
   time: string; // Time string (e.g., "09:00 AM")
   status: "pending" | "confirmed" | "cancelled" | "completed";
   createdAt: string;
+  // Optional fields from backend join
+  professionalName?: string;
+  professionalRole?: string;
+  professionalDepartment?: string;
+  professionalImage?: string;
+  professionalPhone?: string;
 }
 
 export interface CreateAppointmentPayload {
@@ -878,10 +956,20 @@ export const appointmentsApi = {
   async getByProfessional(professionalId: string): Promise<Appointment[]> {
     try {
       // Try to get from backend first
-      const response = await fetchWithAuth<{ appointments: Appointment[] }>(
+      const response = await fetchWithAuth<{ appointments: any[] }>(
         `/appointments/professional/${professionalId}`
       );
-      return response.appointments || [];
+      // Convert snake_case to camelCase
+      const appointments = response.data?.appointments || [];
+      return appointments.map((a: any) => ({
+        id: a.id,
+        professionalId: a.professional_id,
+        userId: a.user_id,
+        date: a.appointment_date,
+        time: a.appointment_time,
+        status: a.status,
+        createdAt: a.created_at,
+      }));
     } catch (error) {
       // Fallback to local storage if backend is not available
       const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
@@ -900,10 +988,23 @@ export const appointmentsApi = {
    */
   async getMyAppointments(): Promise<Appointment[]> {
     try {
-      const response = await fetchWithAuth<{ appointments: Appointment[] }>(
+      const response = await fetchWithAuth<{ appointments: any[] }>(
         "/appointments/my"
       );
-      return response.appointments || [];
+      // Convert snake_case to camelCase
+      const appointments = response.data?.appointments || [];
+      return appointments.map((a: any) => ({
+        id: a.id,
+        professionalId: a.professional_id,
+        userId: a.user_id,
+        date: a.appointment_date,
+        time: a.appointment_time,
+        status: a.status,
+        createdAt: a.created_at,
+        professionalName: a.professional_name,
+        professionalRole: a.professional_role,
+        professionalImage: a.professional_image,
+      }));
     } catch (error) {
       // Fallback to local storage
       const stored = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
@@ -946,29 +1047,30 @@ export const appointmentsApi = {
    * Create a new appointment
    */
   async create(payload: CreateAppointmentPayload): Promise<Appointment> {
-    // Check if the date is fully booked
-    const isFullyBooked = await this.isDateFullyBooked(
-      payload.professionalId,
-      payload.date
-    );
-    if (isFullyBooked) {
-      throw new ApiError(
-        "This consultant has reached the maximum appointments for this date (3 per day)",
-        400
-      );
-    }
-
     try {
       // Try to create on backend first
-      const response = await fetchWithAuth<{ appointment: Appointment }>(
+      const response = await fetchWithAuth<{ appointment: any }>(
         "/appointments",
         {
           method: "POST",
           body: JSON.stringify(payload),
         }
       );
-      return response.appointment;
+      const a = response.data?.appointment;
+      if (a) {
+        return {
+          id: a.id,
+          professionalId: a.professional_id,
+          userId: a.user_id,
+          date: a.appointment_date,
+          time: a.appointment_time,
+          status: a.status,
+          createdAt: a.created_at,
+        };
+      }
+      throw new ApiError("No appointment data returned", 500);
     } catch (error) {
+      if (error instanceof ApiError) throw error;
       // Fallback to local storage
       const user = await tokenManager.getUser();
       const newAppointment: Appointment = {
@@ -1025,21 +1127,30 @@ export const appointmentsApi = {
     professionalId: string,
     date: string
   ): Promise<string[]> {
-    const allSlots = [
-      "09:00 AM",
-      "10:00 AM",
-      "11:00 AM",
-      "02:00 PM",
-      "03:00 PM",
-      "04:00 PM",
-    ];
+    try {
+      // Try to get from backend
+      const response = await fetchWithAuth<{ available_slots: string[] }>(
+        `/appointments/professional/${professionalId}/slots/${date}`
+      );
+      return response.data?.available_slots || [];
+    } catch (error) {
+      // Fallback to local calculation
+      const allSlots = [
+        "09:00 AM",
+        "10:00 AM",
+        "11:00 AM",
+        "02:00 PM",
+        "03:00 PM",
+        "04:00 PM",
+      ];
 
-    const appointments = await this.getByProfessional(professionalId);
-    const bookedSlots = appointments
-      .filter((a) => a.date === date && a.status !== "cancelled")
-      .map((a) => a.time);
+      const appointments = await this.getByProfessional(professionalId);
+      const bookedSlots = appointments
+        .filter((a) => a.date === date && a.status !== "cancelled")
+        .map((a) => a.time);
 
-    return allSlots.filter((slot) => !bookedSlots.includes(slot));
+      return allSlots.filter((slot) => !bookedSlots.includes(slot));
+    }
   },
 };
 

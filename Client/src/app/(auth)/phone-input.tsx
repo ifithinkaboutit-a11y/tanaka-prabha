@@ -4,6 +4,7 @@ import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { validateMobileNumber } from "@/utils/validation";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -18,6 +19,7 @@ import {
 const PhoneInput = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
   const { sendOTP } = useAuth();
@@ -29,12 +31,20 @@ const PhoneInput = () => {
   };
 
   const handlePhoneChange = (text: string) => {
-    setPhoneNumber(formatPhoneNumber(text));
+    const formatted = formatPhoneNumber(text);
+    setPhoneNumber(formatted);
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError(null);
+    }
   };
 
   const handleSendOTP = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      Alert.alert("Error", "Please enter a valid 10-digit phone number");
+    // Validate phone number
+    const validation = validateMobileNumber(phoneNumber);
+    if (!validation.isValid) {
+      setValidationError(validation.errors[0]);
+      Alert.alert(t("common.error") || "Error", validation.errors[0]);
       return;
     }
 
@@ -96,7 +106,7 @@ const PhoneInput = () => {
         </Text>
 
         {/* Phone Input Field */}
-        <View className="flex-row items-center border border-neutral-border rounded-xl bg-neutral-surface mb-6">
+        <View className={`flex-row items-center border rounded-xl bg-neutral-surface mb-2 ${validationError ? 'border-red-500' : 'border-neutral-border'}`}>
           {/* Country Code */}
           <View className="px-4 py-4 border-r border-neutral-border">
             <Text className="text-neutral-textDark font-medium">+91</Text>
@@ -114,6 +124,12 @@ const PhoneInput = () => {
             editable={!loading}
           />
         </View>
+        
+        {/* Validation Error */}
+        {validationError && (
+          <Text className="text-red-500 text-sm mb-4">{validationError}</Text>
+        )}
+        {!validationError && <View className="mb-4" />}
 
         {/* Get OTP Button */}
         <Button

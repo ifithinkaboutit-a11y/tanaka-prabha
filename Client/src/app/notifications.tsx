@@ -1,11 +1,19 @@
 // src/app/notifications.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  View,
+  RefreshControl,
+  TouchableOpacity
+} from "react-native";
 import AppText from "../components/atoms/AppText";
+import Card from "../components/atoms/Card";
 import { useTranslation } from "../i18n";
 import { notificationsApi, Notification } from "../services/apiService";
+import { colors } from "../styles/colors";
 
 // Helper to group notifications by date
 const groupNotificationsByDate = (notifs: Notification[]) => {
@@ -34,74 +42,89 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
 };
 
 const NotificationItem = ({ notification }: { notification: Notification }) => {
+  const { t } = useTranslation();
+  
   const getIconColor = (type: string) => {
     switch (type) {
       case "approval":
-        return "#2196F3";
+        return "#2196F3"; // info
       case "reminder":
-        return "#E91E63";
+        return "#E91E63"; // accent/error
       case "alert":
-        return "#FF5722";
+        return "#FF5722"; // warning
       default:
-        return "#757575";
+        return "#757575"; // neutral
     }
   };
 
+  const getIconName = (type: string): keyof typeof Ionicons.glyphMap => {
+    if (notification.icon) return notification.icon as any;
+    switch (type) {
+        case "approval": return "checkmark-circle-outline";
+        case "reminder": return "calendar-outline";
+        case "alert": return "alert-circle-outline";
+        default: return "notifications-outline";
+    }
+  }
+
   return (
-    <TouchableOpacity className="flex-row items-start py-4 px-4 bg-white">
-      {/* Icon */}
+    <Card className="mb-3 flex-row items-center p-3 border-transparent shadow-sm bg-white">
       <View
         className="w-12 h-12 rounded-full items-center justify-center mr-3"
-        style={{ backgroundColor: notification.iconBgColor }}
+        style={{ backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15` }}
       >
         <Ionicons
-          name={notification.icon as keyof typeof Ionicons.glyphMap}
+          name={getIconName(notification.type)}
           size={24}
-          color={getIconColor(notification.type)}
+          color={notification.iconBgColor || getIconColor(notification.type)}
         />
       </View>
-
-      {/* Content */}
       <View className="flex-1">
-        <AppText
-          variant="bodyMd"
-          className="font-semibold text-neutral-textDark"
-        >
-          {notification.title}
-        </AppText>
-        <AppText variant="bodySm" className="text-neutral-textMedium mt-0.5">
-          {notification.description}
-        </AppText>
-        <AppText variant="bodyLg" className="text-neutral-textLight mt-1">
-          {notification.time}
+        <View className="flex-row justify-between items-start mb-1">
+          <AppText variant="bodyMd" className="font-semibold text-neutral-textDark flex-1 mr-2">
+            {notification.titleKey ? t(notification.titleKey) : notification.title}
+          </AppText>
+          <AppText variant="caption" className="text-neutral-textLight text-xs mt-1">
+            {notification.time}
+          </AppText>
+        </View>
+        <AppText variant="bodySm" className="text-neutral-textMedium">
+           {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
         </AppText>
       </View>
-
-      {/* Unread indicator */}
       {!notification.isRead && (
-        <View className="w-2.5 h-2.5 rounded-full bg-primary mt-2" />
+        <View className="w-2 h-2 rounded-full bg-red-500 absolute top-3 right-3" />
       )}
-    </TouchableOpacity>
+    </Card>
   );
 };
 
-const NotificationsScreen = () => {
+export default function NotificationsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+        // Fallback to getMy if available, or getAll
+        const data = await (notificationsApi as any).getMy(); 
+        setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const data = await notificationsApi.getMy();
-        setNotifications(data);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchNotifications();
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
     fetchNotifications();
   }, []);
 
@@ -109,68 +132,59 @@ const NotificationsScreen = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-neutral-surface">
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-4 pt-12 pb-4 bg-white border-b border-neutral-border">
-          <View className="flex-row items-center">
-            <TouchableOpacity onPress={() => router.back()} className="mr-4">
-              <Ionicons name="arrow-back" size={24} color="#212121" />
-            </TouchableOpacity>
-            <AppText variant="h3" className="font-semibold">
-              {t("notifications.title")}
-            </AppText>
-          </View>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4CAF50" />
-        </View>
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <Stack.Screen options={{ title: t("notifications.title") || "Notifications" }} />
+        <ActivityIndicator size="large" color={colors.primary.green} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-neutral-surface">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-12 pb-4 bg-white border-b border-neutral-border">
-        <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={24} color="#212121" />
-          </TouchableOpacity>
-          <AppText variant="h3" className="font-semibold">
-            {t("notifications.title")}
-          </AppText>
-        </View>
+    <View className="flex-1 bg-gray-50">
+      <Stack.Screen 
+        options={{ 
+            title: t("notifications.title") || "Notifications",
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: '#F9FAFB' },
+            headerTitleStyle: { color: '#1F2937' }, 
+            headerTintColor: '#1F2937'
+        }} 
+      />
+      
+      {/* Fallback header if Stack.Screen is not managing it (e.g. if _layout doesn't use stack properly here) */}
+      <View className="px-4 py-2">
+         {/* Optional: Add custom header content here if needed, but Stack.Screen handles the title */}
       </View>
 
-      <ScrollView className="flex-1">
-        {groupedNotifications.map((group) => (
-          <View key={group.titleKey}>
-            {/* Group Header */}
-            <View className="px-4 py-3 bg-neutral-surface">
-              <AppText
-                variant="bodySm"
-                className="text-neutral-textMedium font-medium"
-              >
-                {t(group.titleKey)}
-              </AppText>
-            </View>
-
-            {/* Notifications */}
-            <View className="bg-white">
-              {group.data.map((notification, index) => (
-                <View key={notification.id}>
-                  <NotificationItem notification={notification} />
-                  {index < group.data.length - 1 && (
-                    <View className="h-px bg-neutral-border ml-16 mr-4" />
-                  )}
-                </View>
-              ))}
-            </View>
+      <ScrollView
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary.green]} />
+        }
+      >
+        {groupedNotifications.length === 0 ? (
+          <View className="items-center justify-center py-20 opacity-60">
+            <Ionicons name="notifications-off-outline" size={64} color={colors.neutral.textLight} />
+             <AppText className="mt-4 text-neutral-textMedium text-center">
+              {t("notifications.empty") || "No notifications yet"}
+            </AppText>
           </View>
-        ))}
+        ) : (
+          <View className="pb-8">
+            {groupedNotifications.map((group, index) => (
+              <View key={index} className="mb-6">
+                <AppText variant="h3" className="mb-3 ml-1 text-base font-bold text-neutral-textMedium">
+                  {t(group.titleKey) || group.title}
+                </AppText>
+                {group.data.map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
-};
-
-export default NotificationsScreen;
+}

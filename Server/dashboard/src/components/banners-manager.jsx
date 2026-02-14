@@ -51,6 +51,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { bannersApi, uploadApi } from "@/lib/api"
 import { toast } from "sonner"
 
@@ -64,13 +70,19 @@ export function BannersManager() {
   const [deleteId, setDeleteId] = React.useState(null)
   const [editingBanner, setEditingBanner] = React.useState(null)
   const [formData, setFormData] = React.useState({
+    // English fields
     title: "",
     subtitle: "",
+    // Hindi fields
+    title_hi: "",
+    subtitle_hi: "",
+    // Shared fields
     image_url: "",
     redirect_url: "",
     sort_order: 0,
     is_active: true,
   })
+  const [activeLanguageTab, setActiveLanguageTab] = React.useState("english")
   const [selectedFile, setSelectedFile] = React.useState(null)
   const [previewUrl, setPreviewUrl] = React.useState(null)
   const fileInputRef = React.useRef(null)
@@ -244,8 +256,13 @@ export function BannersManager() {
   function openEditSheet(banner) {
     setEditingBanner(banner)
     setFormData({
+      // English fields
       title: banner.title || "",
       subtitle: banner.subtitle || "",
+      // Hindi fields
+      title_hi: banner.title_hi || "",
+      subtitle_hi: banner.subtitle_hi || "",
+      // Shared fields
       image_url: banner.image_url || "",
       redirect_url: banner.redirect_url || "",
       sort_order: banner.sort_order || 0,
@@ -253,13 +270,19 @@ export function BannersManager() {
     })
     setPreviewUrl(banner.image_url || null)
     setSelectedFile(null)
+    setActiveLanguageTab("english")
     setIsEditOpen(true)
   }
 
   function resetForm() {
     setFormData({
+      // English fields
       title: "",
       subtitle: "",
+      // Hindi fields
+      title_hi: "",
+      subtitle_hi: "",
+      // Shared fields
       image_url: "",
       redirect_url: "",
       sort_order: 0,
@@ -267,6 +290,7 @@ export function BannersManager() {
     })
     setSelectedFile(null)
     setPreviewUrl(null)
+    setActiveLanguageTab("english")
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -274,25 +298,72 @@ export function BannersManager() {
 
   function renderFormFields() {
     return (
-      <div className="mt-6 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="banner-title">Banner Title *</Label>
-          <Input
-            id="banner-title"
-            placeholder="e.g., PM Kisan Awareness Drive"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="banner-subtitle">Subtitle</Label>
-          <Input
-            id="banner-subtitle"
-            placeholder="e.g., NOV 2025"
-            value={formData.subtitle}
-            onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-          />
-        </div>
+      <div className="mt-6 space-y-4 px-4">
+        {/* Language Tabs for Text Content */}
+        <Tabs value={activeLanguageTab} onValueChange={setActiveLanguageTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="english" className="gap-2 px-4">
+              🇬🇧 English
+            </TabsTrigger>
+            <TabsTrigger value="hindi" className="gap-2 px-4">
+              🇮🇳 हिंदी
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* English Content Tab */}
+          <TabsContent value="english" className="space-y-4 mt-4">
+            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                Enter the banner text in English below
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner-title-en">Banner Title (English) *</Label>
+              <Input
+                id="banner-title-en"
+                placeholder="e.g., PM Kisan Awareness Drive"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner-subtitle-en">Subtitle (English)</Label>
+              <Input
+                id="banner-subtitle-en"
+                placeholder="e.g., NOV 2025"
+                value={formData.subtitle}
+                onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+              />
+            </div>
+          </TabsContent>
+          
+          {/* Hindi Content Tab */}
+          <TabsContent value="hindi" className="space-y-4 mt-4">
+            <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
+              <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">
+                बैनर का विवरण हिंदी में दर्ज करें
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner-title-hi">बैनर शीर्षक (Hindi Title) *</Label>
+              <Input
+                id="banner-title-hi"
+                placeholder="उदा., पीएम किसान जागरूकता अभियान"
+                value={formData.title_hi}
+                onChange={(e) => setFormData(prev => ({ ...prev, title_hi: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner-subtitle-hi">उपशीर्षक (Hindi Subtitle)</Label>
+              <Input
+                id="banner-subtitle-hi"
+                placeholder="उदा., नवंबर 2025"
+                value={formData.subtitle_hi}
+                onChange={(e) => setFormData(prev => ({ ...prev, subtitle_hi: e.target.value }))}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
         
         {/* Image Upload Section */}
         <div className="space-y-2">

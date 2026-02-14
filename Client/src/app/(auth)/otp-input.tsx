@@ -4,6 +4,7 @@ import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { validateOTP, validateMobileNumber } from "@/utils/validation";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -22,6 +23,7 @@ const OTPInput = () => {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const router = useRouter();
   const { phoneNumber } = useLocalSearchParams<{
@@ -86,16 +88,33 @@ const OTPInput = () => {
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join("");
-    if (otpString.length !== OTP_LENGTH) {
-      Alert.alert("Error", "Please enter a valid 6-digit OTP");
+    
+    // Validate OTP format
+    const otpValidation = validateOTP(otpString);
+    if (!otpValidation.isValid) {
+      setValidationError(otpValidation.errors[0]);
+      Alert.alert(t("common.error") || "Error", otpValidation.errors[0]);
       return;
     }
 
+    // Validate phone number exists
     if (!phoneNumber) {
-      Alert.alert("Error", "Phone number not found. Please go back and try again.");
+      const error = "Phone number not found. Please go back and try again.";
+      setValidationError(error);
+      Alert.alert(t("common.error") || "Error", error);
+      return;
+    }
+    
+    // Validate phone number format
+    const cleanedNumber = phoneNumber.replace(/^\+91/, "");
+    const phoneValidation = validateMobileNumber(cleanedNumber);
+    if (!phoneValidation.isValid) {
+      setValidationError(phoneValidation.errors[0]);
+      Alert.alert(t("common.error") || "Error", phoneValidation.errors[0]);
       return;
     }
 
+    setValidationError(null);
     setLoading(true);
     try {
       // Call backend API to verify OTP and sign in
@@ -107,9 +126,11 @@ const OTPInput = () => {
         router.replace("/(tab)");
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Invalid OTP";
+      setValidationError(errorMessage);
       Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Invalid OTP",
+        t("common.error") || "Error",
+        errorMessage,
       );
       // Clear OTP on error
       setOtp(Array(OTP_LENGTH).fill(""));
@@ -177,7 +198,7 @@ const OTPInput = () => {
         </Text>
 
         {/* OTP Input Fields */}
-        <View className="flex-row justify-center gap-2 mb-6">
+        <View className="flex-row justify-center gap-2 mb-2">
           {otp.map((digit, index) => (
             <TextInput
               key={index}
@@ -192,11 +213,14 @@ const OTPInput = () => {
                 textAlign: "center",
                 fontSize: 22,
                 fontWeight: "bold",
-                borderColor: digit ? "#386641" : "#E5E7EB",
+                borderColor: validationError ? "#EF4444" : digit ? "#386641" : "#E5E7EB",
                 backgroundColor: digit ? "rgba(56, 102, 65, 0.05)" : "#F9FAFB",
               }}
               value={digit}
-              onChangeText={(value) => handleOtpChange(value, index)}
+              onChangeText={(value) => {
+                handleOtpChange(value, index);
+                if (validationError) setValidationError(null);
+              }}
               onKeyPress={(e) => handleKeyPress(e, index)}
               keyboardType="number-pad"
               maxLength={1}
@@ -205,6 +229,12 @@ const OTPInput = () => {
             />
           ))}
         </View>
+        
+        {/* Validation Error */}
+        {validationError && (
+          <Text className="text-red-500 text-sm text-center mb-4">{validationError}</Text>
+        )}
+        {!validationError && <View className="mb-4" />}
 
         {/* Resend OTP */}
         <View className="items-center mb-6">

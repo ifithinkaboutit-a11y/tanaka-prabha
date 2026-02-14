@@ -248,7 +248,9 @@ export function ProfessionalsTable() {
   async function fetchProfessionals() {
     try {
       const response = await professionalsApi.getAll()
-      setData(response.data || [])
+      // Handle response structure: response.data can be { professionals: [] } or array directly
+      const professionals = response.data?.professionals || response.data || []
+      setData(professionals)
     } catch (error) {
       console.error("Error fetching professionals:", error)
       toast.error("Failed to load professionals")
@@ -266,13 +268,15 @@ export function ProfessionalsTable() {
     setSaving(true)
     try {
       const response = await professionalsApi.create({ ...formData, is_available: true })
-      setData(prev => [response.data, ...prev])
+      // Handle response structure: response.data can be { professional: {} } or professional directly
+      const newProfessional = response.data?.professional || response.data
+      setData(prev => [newProfessional, ...prev])
       setIsAddOpen(false)
       resetForm()
       toast.success("Professional added successfully")
     } catch (error) {
       console.error("Error adding professional:", error)
-      toast.error("Failed to add professional")
+      toast.error(error.message || "Failed to add professional")
     } finally {
       setSaving(false)
     }
@@ -376,7 +380,7 @@ export function ProfessionalsTable() {
                 Add Professional
               </Button>
             </SheetTrigger>
-            <SheetContent className="sm:max-w-md">
+            <SheetContent className="w-full px-4 overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Add New Professional</SheetTitle>
                 <SheetDescription>
@@ -455,15 +459,37 @@ export function ProfessionalsTable() {
                     <SelectTrigger id="prof-district">
                       <SelectValue placeholder="Select district" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Kamrup">Kamrup</SelectItem>
-                      <SelectItem value="Jorhat">Jorhat</SelectItem>
-                      <SelectItem value="Dibrugarh">Dibrugarh</SelectItem>
-                      <SelectItem value="Sivasagar">Sivasagar</SelectItem>
-                      <SelectItem value="Tezpur">Tezpur</SelectItem>
-                      <SelectItem value="Nagaon">Nagaon</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <SelectContent>
+                  <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                  <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
+                  <SelectItem value="Assam">Assam</SelectItem>
+                  <SelectItem value="Bihar">Bihar</SelectItem>
+                  <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
+                  <SelectItem value="Goa">Goa</SelectItem>
+                  <SelectItem value="Gujarat">Gujarat</SelectItem>
+                  <SelectItem value="Haryana">Haryana</SelectItem>
+                  <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
+                  <SelectItem value="Jharkhand">Jharkhand</SelectItem>
+                  <SelectItem value="Karnataka">Karnataka</SelectItem>
+                  <SelectItem value="Kerala">Kerala</SelectItem>
+                  <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
+                  <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                  <SelectItem value="Manipur">Manipur</SelectItem>
+                  <SelectItem value="Meghalaya">Meghalaya</SelectItem>
+                  <SelectItem value="Mizoram">Mizoram</SelectItem>
+                  <SelectItem value="Nagaland">Nagaland</SelectItem>
+                  <SelectItem value="Odisha">Odisha</SelectItem>
+                  <SelectItem value="Punjab">Punjab</SelectItem>
+                  <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                  <SelectItem value="Sikkim">Sikkim</SelectItem>
+                  <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                  <SelectItem value="Telangana">Telangana</SelectItem>
+                  <SelectItem value="Tripura">Tripura</SelectItem>
+                  <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
+                  <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
+                  <SelectItem value="West Bengal">West Bengal</SelectItem>
+                </SelectContent>
+                </Select>
                 </div>
               </div>
               <SheetFooter className="mt-6">

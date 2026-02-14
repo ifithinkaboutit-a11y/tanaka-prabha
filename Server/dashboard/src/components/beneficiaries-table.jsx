@@ -238,7 +238,8 @@ export function BeneficiariesTable() {
   async function fetchFarmers() {
     try {
       const response = await usersApi.getAll()
-      const users = response.data || []
+      // Handle response structure: response.data can be { users: [] } or array directly
+      const users = response.data?.users || response.data || []
 
       const uniqueDistricts = [...new Set(users.map(u => u.district).filter(Boolean))]
       const uniqueCrops = [...new Set(users.map(u => u.main_crop).filter(Boolean))]
@@ -263,13 +264,15 @@ export function BeneficiariesTable() {
     setSaving(true)
     try {
       const response = await usersApi.create(formData)
-      setData(prev => [response.data, ...prev])
+      // Handle response structure: response.data can be { user: {} } or user directly
+      const newUser = response.data?.user || response.data
+      setData(prev => [newUser, ...prev])
       setIsAddOpen(false)
       resetForm()
       toast.success("Farmer added successfully")
     } catch (error) {
       console.error("Error adding farmer:", error)
-      toast.error("Failed to add farmer")
+      toast.error(error.message || "Failed to add farmer")
     } finally {
       setSaving(false)
     }
@@ -399,7 +402,7 @@ export function BeneficiariesTable() {
                 Add Farmer
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className='w-full px-4 overflow-y-auto'>
               <SheetHeader>
                 <SheetTitle>Add New Farmer</SheetTitle>
                 <SheetDescription>

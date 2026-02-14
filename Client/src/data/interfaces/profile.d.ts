@@ -49,6 +49,11 @@ export interface UserProfile {
 }
 
 export interface PersonalDetails {
+  // User's own details
+  name: string;
+  age: number;
+  gender: string;
+  // Family info
   fathersName: string;
   mothersName: string;
   educationalQualification: string;

@@ -3,20 +3,28 @@ import { query } from '../config/db.js';
 class Banner {
     /**
      * Create a new banner
+     * Supports multi-language fields (English and Hindi)
      */
     static async create(bannerData) {
-        const { title, subtitle, image_url, redirect_url, sort_order, is_active } = bannerData;
+        const { 
+            title, subtitle, 
+            title_hi, subtitle_hi,
+            image_url, redirect_url, sort_order, is_active 
+        } = bannerData;
 
         const text = `
             INSERT INTO public.banners (
-                title, subtitle, image_url, redirect_url, sort_order, is_active
-            ) VALUES ($1, $2, $3, $4, $5, $6)
+                title, subtitle, title_hi, subtitle_hi,
+                image_url, redirect_url, sort_order, is_active
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
 
         const values = [
             title,
             subtitle,
+            title_hi || null,
+            subtitle_hi || null,
             image_url,
             redirect_url,
             sort_order || 0,
@@ -63,29 +71,83 @@ class Banner {
 
     /**
      * Update banner
+     * Only updates fields that exist in the database
      */
     static async update(id, bannerData) {
+        // List of allowed fields to update (prevents SQL injection and handles missing columns)
+        const allowedFields = [
+            'title', 'subtitle', 'title_hi', 'subtitle_hi',
+            'image_url', 'redirect_url', 'sort_order', 'is_active', 'scheme_id'
+        ];
+        
         const fields = [];
         const values = [];
         let paramCount = 1;
 
         Object.keys(bannerData).forEach(key => {
-            fields.push(`${key} = $${paramCount}`);
-            values.push(bannerData[key]);
-            paramCount++;
+            // Only include fields that are in the allowed list and have a value
+            if (allowedFields.includes(key) && bannerData[key] !== undefined) {
+                fields.push(`${key} = $${paramCount}`);
+                values.push(bannerData[key]);
+                paramCount++;
+            }
         });
+
+        // If no valid fields to update, return the existing banner
+        if (fields.length === 0) {
+            return Banner.findById(id);
+        }
 
         values.push(id);
 
         const text = `
             UPDATE public.banners
-            SET ${fields.join(', ')}
+            SET ${fields.join(', ')}, updated_at = NOW()
             WHERE id = $${paramCount}
             RETURNING *
         `;
 
-        const result = await query(text, values);
-        return result.rows[0];
+        try {
+            const result = await query(text, values);
+            return result.rows[0];
+        } catch (error) {
+            // If Hindi columns don't exist yet, retry without them
+            if (error.code === '42703' && (error.message.includes('title_hi') || error.message.includes('subtitle_hi'))) {
+                console.warn('Hindi columns not found in banners table. Updating without Hindi fields...');
+                
+                // Filter out Hindi fields and retry
+                const fallbackFields = [];
+                const fallbackValues = [];
+                let fallbackParamCount = 1;
+                
+                Object.keys(bannerData).forEach(key => {
+                    if (allowedFields.includes(key) && 
+                        bannerData[key] !== undefined && 
+                        !key.endsWith('_hi')) {
+                        fallbackFields.push(`${key} = $${fallbackParamCount}`);
+                        fallbackValues.push(bannerData[key]);
+                        fallbackParamCount++;
+                    }
+                });
+                
+                if (fallbackFields.length === 0) {
+                    return Banner.findById(id);
+                }
+                
+                fallbackValues.push(id);
+                
+                const fallbackText = `
+                    UPDATE public.banners
+                    SET ${fallbackFields.join(', ')}
+                    WHERE id = $${fallbackParamCount}
+                    RETURNING *
+                `;
+                
+                const fallbackResult = await query(fallbackText, fallbackValues);
+                return fallbackResult.rows[0];
+            }
+            throw error;
+        }
     }
 
     /**

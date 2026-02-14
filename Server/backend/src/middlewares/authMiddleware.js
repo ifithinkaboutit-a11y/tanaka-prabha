@@ -1,11 +1,32 @@
 import jwt from 'jsonwebtoken';
 
+// Dashboard API Key for admin dashboard access
+const DASHBOARD_API_KEY = process.env.DASHBOARD_API_KEY || 'tanak-prabha-dashboard-secret-key-2024';
+
+/**
+ * Check if request has valid dashboard API key
+ */
+const isDashboardRequest = (req) => {
+    const apiKey = req.headers['x-dashboard-api-key'] || req.headers['x-api-key'];
+    return apiKey === DASHBOARD_API_KEY;
+};
+
 /**
  * Authentication middleware to protect routes
- * Verifies JWT token from Authorization header
+ * Verifies JWT token from Authorization header OR Dashboard API key
  */
 const authMiddleware = (req, res, next) => {
     try {
+        // Check for Dashboard API key first (for admin dashboard)
+        if (isDashboardRequest(req)) {
+            req.user = { 
+                id: 'dashboard-admin',
+                role: 'admin',
+                source: 'dashboard'
+            };
+            return next();
+        }
+
         // Get token from header
         const authHeader = req.headers.authorization;
 

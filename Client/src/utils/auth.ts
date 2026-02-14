@@ -179,7 +179,7 @@ export const syncUserProfile = async (
   try {
     const { userApi } = await import("@/services/apiService");
     const response = await userApi.updateProfile(userData);
-
+    
     if (response.status === "success" && response.data) {
       await tokenManager.setUser(response.data.user);
       return response.data.user;

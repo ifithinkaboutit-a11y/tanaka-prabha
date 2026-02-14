@@ -3,27 +3,47 @@ import { query } from '../config/db.js';
 class Scheme {
     /**
      * Create a new scheme
+     * Supports multi-language fields (English and Hindi)
      */
     static async create(schemeData) {
         const {
-            title, description, category, image_url, hero_image_url,
-            location, event_date, key_objectives, overview, process,
-            support_contact, apply_url, is_active
+            // English fields
+            title, description, overview, process, eligibility, key_objectives,
+            // Hindi fields
+            title_hi, description_hi, overview_hi, process_hi, eligibility_hi, key_objectives_hi,
+            // Shared fields
+            category, image_url, hero_image_url,
+            location, event_date, documents_required, tags,
+            support_contact, apply_url, is_active, is_featured
         } = schemeData;
 
         const text = `
             INSERT INTO public.schemes (
-                title, description, category, image_url, hero_image_url,
-                location, event_date, key_objectives, overview, process,
-                support_contact, apply_url, is_active
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                title, description, overview, process, eligibility, key_objectives,
+                title_hi, description_hi, overview_hi, process_hi, eligibility_hi, key_objectives_hi,
+                category, image_url, hero_image_url,
+                location, event_date, documents_required, tags,
+                support_contact, apply_url, is_active, is_featured
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6,
+                $7, $8, $9, $10, $11, $12,
+                $13, $14, $15,
+                $16, $17, $18, $19,
+                $20, $21, $22, $23
+            )
             RETURNING *
         `;
 
         const values = [
-            title, description, category, image_url, hero_image_url,
-            location, event_date, key_objectives, overview, process,
-            support_contact, apply_url, is_active !== false
+            // English
+            title, description, overview, process, eligibility, key_objectives,
+            // Hindi
+            title_hi || null, description_hi || null, overview_hi || null, 
+            process_hi || null, eligibility_hi || null, key_objectives_hi || null,
+            // Shared
+            category, image_url, hero_image_url,
+            location, event_date, documents_required, tags,
+            support_contact, apply_url, is_active !== false, is_featured || false
         ];
 
         const result = await query(text, values);
@@ -102,29 +122,85 @@ class Scheme {
 
     /**
      * Update scheme
+     * Only updates fields that exist in the database
      */
     static async update(id, schemeData) {
+        // List of allowed fields to update
+        const allowedFields = [
+            // English fields
+            'title', 'description', 'overview', 'process', 'eligibility', 'key_objectives',
+            // Hindi fields
+            'title_hi', 'description_hi', 'overview_hi', 'process_hi', 'eligibility_hi', 'key_objectives_hi',
+            // Shared fields
+            'category', 'image_url', 'hero_image_url', 'location', 'event_date',
+            'documents_required', 'tags', 'support_contact', 'apply_url', 'is_active', 'is_featured'
+        ];
+        
         const fields = [];
         const values = [];
         let paramCount = 1;
 
         Object.keys(schemeData).forEach(key => {
-            fields.push(`${key} = $${paramCount}`);
-            values.push(schemeData[key]);
-            paramCount++;
+            if (allowedFields.includes(key) && schemeData[key] !== undefined) {
+                fields.push(`${key} = $${paramCount}`);
+                values.push(schemeData[key]);
+                paramCount++;
+            }
         });
+
+        if (fields.length === 0) {
+            return Scheme.findById(id);
+        }
 
         values.push(id);
 
         const text = `
             UPDATE public.schemes
-            SET ${fields.join(', ')}
+            SET ${fields.join(', ')}, updated_at = NOW()
             WHERE id = $${paramCount}
             RETURNING *
         `;
 
-        const result = await query(text, values);
-        return result.rows[0];
+        try {
+            const result = await query(text, values);
+            return result.rows[0];
+        } catch (error) {
+            // If Hindi columns don't exist yet, retry without them
+            if (error.code === '42703' && error.message.includes('_hi')) {
+                console.warn('Hindi columns not found in schemes table. Updating without Hindi fields...');
+                
+                const fallbackFields = [];
+                const fallbackValues = [];
+                let fallbackParamCount = 1;
+                
+                Object.keys(schemeData).forEach(key => {
+                    if (allowedFields.includes(key) && 
+                        schemeData[key] !== undefined && 
+                        !key.endsWith('_hi')) {
+                        fallbackFields.push(`${key} = $${fallbackParamCount}`);
+                        fallbackValues.push(schemeData[key]);
+                        fallbackParamCount++;
+                    }
+                });
+                
+                if (fallbackFields.length === 0) {
+                    return Scheme.findById(id);
+                }
+                
+                fallbackValues.push(id);
+                
+                const fallbackText = `
+                    UPDATE public.schemes
+                    SET ${fallbackFields.join(', ')}
+                    WHERE id = $${fallbackParamCount}
+                    RETURNING *
+                `;
+                
+                const fallbackResult = await query(fallbackText, fallbackValues);
+                return fallbackResult.rows[0];
+            }
+            throw error;
+        }
     }
 
     /**

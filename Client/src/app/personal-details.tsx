@@ -29,6 +29,9 @@ const PersonalDetailsScreen = () => {
   }
 
   const initialData = {
+    name: profile.name || '',
+    age: profile.age || 0,
+    gender: profile.gender || '',
     fathersName: profile.fathersName || '',
     mothersName: profile.mothersName || '',
     educationalQualification: profile.educationalQualification || '',
