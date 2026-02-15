@@ -3,6 +3,7 @@ export const metadata = {
   description: "Sign in to access the Tanak Prabha admin dashboard",
 }
 
+
 export default function LoginLayout({ children }) {
   return children
 }
