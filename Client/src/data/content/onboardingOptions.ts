@@ -80,6 +80,12 @@ export const animalTypes: SelectOption[] = [
   { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 
+export const genderOptions: SelectOption[] = [
+  { value: "male", label: "Male", labelHi: "पुरुष" },
+  { value: "female", label: "Female", labelHi: "महिला" },
+  { value: "other", label: "Other", labelHi: "अन्य" },
+];
+
 // Helper function to get localized options
 export const getLocalizedOptions = (
   options: SelectOption[],

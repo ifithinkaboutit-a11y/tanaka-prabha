@@ -3,11 +3,19 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 
 interface ToggleProps {
-  label: string;
+  label?: string;
   value: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
 }
+
+// Color constants
+const COLORS = {
+  primary: "#386641",
+  border: "#D9D9D9",
+  white: "#FFFFFF",
+  textDark: "#212121",
+};
 
 export default function Toggle({
   label,
@@ -16,19 +24,38 @@ export default function Toggle({
   disabled = false,
 }: ToggleProps) {
   return (
-    <View className="flex-row items-center justify-between py-2">
-      <Text className="text-neutral-textDark text-base flex-1">{label}</Text>
+    <View style={label ? { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 } : undefined}>
+      {label && (
+        <Text style={{ color: COLORS.textDark, fontSize: 16, flex: 1 }}>
+          {label}
+        </Text>
+      )}
 
       <Pressable
         onPress={() => !disabled && onChange(!value)}
-        className={`w-14 h-8 rounded-full p-1 ${
-          value ? "bg-primary" : "bg-neutral-border"
-        } ${disabled ? "opacity-50" : ""}`}
+        style={{
+          width: 56,
+          height: 32,
+          borderRadius: 16,
+          padding: 4,
+          backgroundColor: value ? COLORS.primary : COLORS.border,
+          opacity: disabled ? 0.5 : 1,
+          justifyContent: "center",
+        }}
       >
         <View
-          className={`w-6 h-6 rounded-full bg-white shadow-sm ${
-            value ? "ml-auto" : "ml-0"
-          }`}
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: COLORS.white,
+            alignSelf: value ? "flex-end" : "flex-start",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 2,
+            elevation: 2,
+          }}
         />
       </Pressable>
     </View>

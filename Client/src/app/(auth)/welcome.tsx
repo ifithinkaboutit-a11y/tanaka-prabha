@@ -11,15 +11,15 @@ import { View } from "react-native";
 export default function Welcome() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { signIn } = useAuth();
+  const { skipAuth } = useAuth();
 
   const handleContinue = () => {
     router.push("/(auth)/phone-input" as any);
   };
 
   const handleSkip = () => {
-    signIn();
-    router.replace("/(tab)/" as any);
+    // Skip authentication - enter guest mode
+    skipAuth();
   };
 
   return (

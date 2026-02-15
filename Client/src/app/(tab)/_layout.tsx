@@ -1,11 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useTranslation } from "../../i18n";
 
 const ACTIVE_COLOR = "#386641";
 const INACTIVE_COLOR = "#9E9E9E";
 
 const TabNavigation = () => {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -26,7 +29,7 @@ const TabNavigation = () => {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -40,7 +43,7 @@ const TabNavigation = () => {
       <Tabs.Screen
         name="program"
         options={{
-          title: "Programs",
+          title: t("tabs.programs"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
@@ -54,7 +57,7 @@ const TabNavigation = () => {
       <Tabs.Screen
         name="schemes"
         options={{
-          title: "Schemes",
+          title: t("tabs.schemes"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "pie-chart" : "pie-chart-outline"}
@@ -68,7 +71,7 @@ const TabNavigation = () => {
       <Tabs.Screen
         name="connect"
         options={{
-          title: "Connect",
+          title: t("tabs.connect"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "time" : "time-outline"}
@@ -82,7 +85,7 @@ const TabNavigation = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("tabs.profile"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

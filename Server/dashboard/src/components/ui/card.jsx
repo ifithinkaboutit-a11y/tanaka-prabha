@@ -2,6 +2,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Card Component - Vibecode Architect Rules Applied:
+ * - Rule 1: Corner Radius Formula (Inner = Outer - Padding)
+ * - Card outer radius: rounded-2xl (16px)
+ * - CardHeader/Content padding: 24px, so inner elements use rounded-lg (12px)
+ * - Rule 2: Spacing Multiplier - 24px internal padding (1.5x base)
+ */
+
 function Card({
   className,
   ...props
@@ -10,9 +18,18 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        // Surface layer with elevation
+        "bg-card text-card-foreground flex flex-col gap-6",
+        // Outer radius: 16px (rounded-2xl) 
+        "rounded-2xl border shadow-sm",
+        // Padding matches spacing multiplier (24px = 1.5x base)
+        "py-6",
         className
       )}
+      style={{
+        // iOS Smooth Corners (Rule 1 refinement)
+        borderRadius: '16px',
+      }}
       {...props} />
   );
 }
@@ -25,7 +42,9 @@ function CardHeader({
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start",
+        // 1x spacing between header elements (16px)
+        "gap-4 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
         className
       )}
       {...props} />
@@ -39,7 +58,10 @@ function CardTitle({
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn(
+        "leading-none font-semibold tracking-tight",
+        className
+      )}
       {...props} />
   );
 }
@@ -75,7 +97,13 @@ function CardContent({
   className,
   ...props
 }) {
-  return (<div data-slot="card-content" className={cn("px-6", className)} {...props} />);
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-6", className)}
+      {...props}
+    />
+  );
 }
 
 function CardFooter({
@@ -85,7 +113,10 @@ function CardFooter({
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      className={cn(
+        "flex items-center px-6 [.border-t]:pt-6",
+        className
+      )}
       {...props} />
   );
 }

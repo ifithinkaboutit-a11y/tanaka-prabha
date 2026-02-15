@@ -149,7 +149,12 @@ const AuthLivestockDetailsScreen = () => {
     try {
       // Prepare the profile data to save
       const profileData: any = {
-        // Personal details
+        // Basic personal details (name, age, gender, aadhaar)
+        name: personalDetails.name,
+        age: personalDetails.age,
+        gender: personalDetails.gender,
+        aadhaar_number: personalDetails.aadhaar,
+        // Extended personal details
         fathers_name: personalDetails.fathersName,
         mothers_name: personalDetails.mothersName,
         educational_qualification: personalDetails.educationalQualification,
@@ -355,17 +360,6 @@ const AuthLivestockDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Dark overlay for better text visibility */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          }}
-        />
         {/* Progress bar */}
         <View
           style={{
@@ -385,22 +379,7 @@ const AuthLivestockDetailsScreen = () => {
               backgroundColor: "#F59E0B",
               borderRadius: 3,
             }}
-          />
-        </View>
-        {/* Sun Icon */}
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingTop: 30,
-          }}
-        >
-          <MaterialCommunityIcons
-            name="white-balance-sunny"
-            size={80}
-            color="#F59E0B"
-          />
+          />        
         </View>
       </View>
 
@@ -464,7 +443,7 @@ const AuthLivestockDetailsScreen = () => {
                 </AppText>
                 <Toggle 
                   value={hasLivestock} 
-                  onValueChange={(value) => {
+                  onChange={(value: boolean) => {
                     setHasLivestock(value);
                     // Add a default entry when enabling livestock ownership
                     if (value && livestockEntries.length === 0) {
@@ -586,19 +565,19 @@ const AuthLivestockDetailsScreen = () => {
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: pressed ? "#FEF3C7" : "#FFFBEB",
+                  backgroundColor: pressed ? "#DCFCE7" : "#F0FDF4",
                   borderRadius: 12,
                   padding: 16,
                   marginBottom: 16,
                   borderWidth: 2,
-                  borderColor: "#FCD34D",
+                  borderColor: "#86EFAC",
                   borderStyle: "dashed",
                 })}
               >
-                <Ionicons name="add-circle-outline" size={20} color="#D97706" />
+                <Ionicons name="add-circle-outline" size={20} color="#16A34A" />
                 <AppText
                   variant="bodySm"
-                  style={{ color: "#D97706", fontWeight: "600", marginLeft: 8 }}
+                  style={{ color: "#16A34A", fontWeight: "600", marginLeft: 8 }}
                 >
                   {t("onboarding.addAnotherLivestock")}
                 </AppText>
@@ -667,7 +646,7 @@ const AuthLivestockDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#6B7280", fontWeight: "600" }}
             >
-              {t("common.skip")}
+              {t("onboarding.skip")}
             </AppText>
           </Pressable>
           <Pressable

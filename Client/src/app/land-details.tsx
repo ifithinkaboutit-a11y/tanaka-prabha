@@ -7,7 +7,7 @@ import AppText from "../components/atoms/AppText";
 import LandDetailsForm from "../components/molecules/LandDetailsForm";
 
 import { useUserProfile } from "../contexts/UserProfileContext";
-import T from "../i18n";
+import { useTranslation } from "../i18n";
 
 export const unstable_settings = {
   headerShown: false,
@@ -15,6 +15,7 @@ export const unstable_settings = {
 
 const LandDetailsScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { profile, loading, updateLandDetails } = useUserProfile();
 
   if (loading || !profile) {
@@ -78,10 +79,10 @@ const LandDetailsScreen = () => {
         </Pressable>
         <View style={{ flex: 1 }}>
           <AppText variant="h2" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 22 }}>
-            {T.translate("landDetails.title")}
+            {t("landDetails.title")}
           </AppText>
           <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-            {T.translate("landDetails.editSubtitle")}
+            {t("landDetails.editSubtitle")}
           </AppText>
         </View>
       </View>

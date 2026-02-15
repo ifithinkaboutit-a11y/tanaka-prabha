@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================
+   VIBECODE ARCHITECT DESIGN SYSTEM
+   Rules: 4-Layer Color System, 8px Grid, 
+   Dark Mode Contrast Law, Smooth Corners
+   ============================================ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -37,6 +43,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Corner Radius Formula: Inner = Outer - Padding (Rule 1) */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -44,75 +51,110 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  /* Spacing Multiplier (Rule 2): 8px base grid */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  --spacing-4xl: 96px;
 }
 
+/* ============================================
+   LIGHT MODE - 4-Layer Product System (Rule 4)
+   Layer 1: Base (background) - Light gray, not pure white
+   Layer 2: Surface (card) - White cards pop on gray base
+   Layer 3: Stroke (border) - Definition
+   Layer 4: Input - Interaction areas
+   ============================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --radius: 0.75rem; /* 12px for modern smooth corners */
+  /* Layer 1: Base - Light gray (NOT pure white) */
+  --background: oklch(0.975 0.002 250); /* Subtle blue-gray tint */
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  /* Layer 2: Surface - White cards elevated on base */
+  --card: oklch(0.998 0 0); /* Near-white for surface */
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.998 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* Brand Colors - Forest Green (HSB Generative Hack - Rule 6) */
+  --primary: oklch(0.45 0.12 145); /* Forest green primary */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.005 145); /* Light green tint */
+  --secondary-foreground: oklch(0.25 0.08 145);
+  --muted: oklch(0.96 0.002 250);
+  --muted-foreground: oklch(0.50 0 0);
+  --accent: oklch(0.94 0.015 145); /* Green accent surface */
+  --accent-foreground: oklch(0.30 0.10 145);
+  /* Layer 3: Stroke - Border definition */
+  --border: oklch(0.91 0.005 250);
+  /* Layer 4: Input - Interaction areas */
+  --input: oklch(0.96 0.003 250);
+  --ring: oklch(0.55 0.10 145);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  /* Chart colors following HSB Generative Hack */
+  --chart-1: oklch(0.55 0.15 145); /* Green */
+  --chart-2: oklch(0.60 0.12 200); /* Teal */
+  --chart-3: oklch(0.50 0.08 250); /* Blue */
+  --chart-4: oklch(0.70 0.15 85); /* Yellow-green */
+  --chart-5: oklch(0.60 0.18 45); /* Orange */
+  /* Sidebar follows 4-layer system */
+  --sidebar: oklch(0.99 0 0); /* Surface layer */
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-primary: oklch(0.45 0.12 145);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.015 145);
+  --sidebar-accent-foreground: oklch(0.30 0.10 145);
+  --sidebar-border: oklch(0.91 0.005 250);
+  --sidebar-ring: oklch(0.55 0.10 145);
 }
 
+/* ============================================
+   DARK MODE - Contrast Law (Rule 5)
+   Double the contrast distance (6% min separation)
+   Surfaces get LIGHTER as they elevate
+   ============================================ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  /* Layer 1: Base - Deep dark */
+  --background: oklch(0.12 0.005 250); /* Deep blue-black */
+  --foreground: oklch(0.95 0 0);
+  /* Layer 2: Surface - Elevated (lighter than base by 6%+) */
+  --card: oklch(0.18 0.005 250); /* +6% elevation */
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.20 0.005 250); /* +8% for popovers */
+  --popover-foreground: oklch(0.95 0 0);
+  /* Brand - Brighter in dark mode */
+  --primary: oklch(0.65 0.14 145); /* Brighter forest green */
+  --primary-foreground: oklch(0.12 0 0);
+  --secondary: oklch(0.24 0.015 250); /* +12% from base */
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.22 0.008 250); /* +10% from base */
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.25 0.02 145); /* Green-tinted elevation */
+  --accent-foreground: oklch(0.95 0 0);
+  /* Layer 3: Stroke - More contrast in dark */
+  --border: oklch(1 0 0 / 12%);
+  /* Layer 4: Input */
+  --input: oklch(1 0 0 / 8%);
+  --ring: oklch(0.60 0.12 145);
+  --destructive: oklch(0.65 0.20 25);
+  /* Chart colors - Vibrant against dark */
+  --chart-1: oklch(0.60 0.18 145);
+  --chart-2: oklch(0.65 0.15 180);
+  --chart-3: oklch(0.70 0.15 85);
+  --chart-4: oklch(0.60 0.22 300);
+  --chart-5: oklch(0.65 0.20 30);
+  /* Sidebar - Elevated surface */
+  --sidebar: oklch(0.16 0.005 250); /* +4% from base */
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.60 0.15 145);
+  --sidebar-primary-foreground: oklch(0.12 0 0);
+  --sidebar-accent: oklch(0.22 0.02 145);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.60 0.12 145);
 }
 
 @layer base {
@@ -122,4 +164,113 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   VIBECODE ANIMATIONS (Rules 7, 8, 9)
+   Shimmer, Glow, Physics-based effects
+   ============================================ */
+
+/* Rule 8: Shimmer Stroke Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.8 0.1 145 / 50%) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Rule 8: Glow Effect */
+.glow {
+  position: relative;
+}
+
+.glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(20px);
+  opacity: 0.4;
+  z-index: -1;
+  transform: translateY(4px);
+}
+
+/* Rule 7: Optimistic UI - Instant feedback animations */
+@keyframes success-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.optimistic-success {
+  animation: success-pop 0.2s ease-out;
+}
+
+@keyframes fade-out-up {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.optimistic-delete {
+  animation: fade-out-up 0.3s ease-out forwards;
+}
+
+/* Rule 3: Large Text Kerning (-2% to -4% for >70px) */
+.display-text {
+  letter-spacing: -0.03em;
+}
+
+/* Rule 1: iOS Smooth Corners */
+* {
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+/* Rule 2: Spacing utility classes (8px grid) */
+.gap-1x { gap: 16px; } /* 1x base spacing */
+.gap-2x { gap: 32px; } /* 2x jump spacing */
+.gap-4x { gap: 80px; } /* 4x section break */
+
+/* Card hover interaction with elevation change */
+[data-slot="card"] {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-slot="card"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px -5px oklch(0 0 0 / 10%),
+    0 4px 10px -5px oklch(0 0 0 / 8%);
+}
+
+.dark [data-slot="card"]:hover {
+  box-shadow: 
+    0 8px 25px -5px oklch(0 0 0 / 40%),
+    0 4px 10px -5px oklch(0 0 0 / 30%);
 }

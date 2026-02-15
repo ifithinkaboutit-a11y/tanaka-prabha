@@ -53,6 +53,7 @@ export interface PersonalDetails {
   name: string;
   age: number;
   gender: string;
+  aadhaar: string;
   // Family info
   fathersName: string;
   mothersName: string;

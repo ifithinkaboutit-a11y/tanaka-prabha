@@ -68,6 +68,10 @@ interface OnboardingState {
 }
 
 const initialPersonalDetails: PersonalDetails = {
+  name: "",
+  age: 0,
+  gender: "",
+  aadhaar: "",
   fathersName: "",
   mothersName: "",
   educationalQualification: "",

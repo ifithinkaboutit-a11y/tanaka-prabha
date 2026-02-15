@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
-import T from "../../i18n";
+import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import Select from "../atoms/Select";
 
@@ -37,6 +37,7 @@ export default function LandDetailsForm({
   onSave,
   onCancel,
 }: LandDetailsFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LandDetails>(initialData);
   const [unit, setUnit] = useState("acre");
 
@@ -88,7 +89,7 @@ export default function LandDetailsForm({
             <Ionicons name="map" size={20} color="#16A34A" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("landDetails.landInformation")}
+            {t("landDetails.landInformation")}
           </AppText>
         </View>
 
@@ -97,7 +98,7 @@ export default function LandDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {T.translate("landDetails.totalLandArea")}
+            {t("landDetails.totalLandArea")}
           </AppText>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <View style={{ flex: 1 }}>
@@ -161,7 +162,7 @@ export default function LandDetailsForm({
             <Ionicons name="leaf" size={20} color="#D97706" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("landDetails.cropInformation")}
+            {t("landDetails.cropInformation")}
           </AppText>
         </View>
 
@@ -181,7 +182,7 @@ export default function LandDetailsForm({
               variant="bodySm"
               style={{ color: "#374151", fontWeight: "600" }}
             >
-              {T.translate("landDetails.rabiCrop")}
+              {t("landDetails.rabiCrop")}
             </AppText>
             <AppText
               variant="bodySm"
@@ -214,7 +215,7 @@ export default function LandDetailsForm({
               variant="bodySm"
               style={{ color: "#374151", fontWeight: "600" }}
             >
-              {T.translate("landDetails.kharifCrop")}
+              {t("landDetails.kharifCrop")}
             </AppText>
             <AppText
               variant="bodySm"
@@ -247,7 +248,7 @@ export default function LandDetailsForm({
               variant="bodySm"
               style={{ color: "#374151", fontWeight: "600" }}
             >
-              {T.translate("landDetails.zaidCrop")}
+              {t("landDetails.zaidCrop")}
             </AppText>
             <AppText
               variant="bodySm"
@@ -281,7 +282,7 @@ export default function LandDetailsForm({
           variant="bodySm"
           style={{ color: "#1E40AF", marginLeft: 10, flex: 1, lineHeight: 20 }}
         >
-          {T.translate("landDetails.infoMessage")}
+          {t("landDetails.infoMessage")}
         </AppText>
       </View>
 
@@ -309,7 +310,7 @@ export default function LandDetailsForm({
             variant="bodyMd"
             style={{ color: "#6B7280", fontWeight: "600" }}
           >
-            {T.translate("landDetails.cancel")}
+            {t("landDetails.cancel")}
           </AppText>
         </Pressable>
         <Pressable
@@ -326,7 +327,7 @@ export default function LandDetailsForm({
             variant="bodyMd"
             style={{ color: "#FFFFFF", fontWeight: "700" }}
           >
-            {T.translate("landDetails.save")}
+            {t("landDetails.save")}
           </AppText>
         </Pressable>
       </View>

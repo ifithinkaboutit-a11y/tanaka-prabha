@@ -1,7 +1,7 @@
 // src/app/(auth)/personal-details.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -20,8 +20,10 @@ import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
   indianStates,
+  genderOptions,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
+import { indianDistricts } from "../../data/indianLocations";
 import {
   validatePersonalDetails,
   validateName,
@@ -33,6 +35,10 @@ export const unstable_settings = {
 };
 
 interface FieldErrors {
+  name?: string;
+  age?: string;
+  gender?: string;
+  aadhaar?: string;
   fathersName?: string;
   mothersName?: string;
   village?: string;
@@ -49,11 +55,49 @@ const AuthPersonalDetailsScreen = () => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const stateOptions = getLocalizedOptions(indianStates, currentLanguage);
+  const genderSelectOptions = getLocalizedOptions(genderOptions, currentLanguage);
+
+  // Get districts filtered by selected state
+  const districtOptions = useMemo(() => {
+    if (!personalDetails.state) return [];
+    return indianDistricts
+      .filter((d) => d.stateValue === personalDetails.state)
+      .map((d) => ({
+        value: d.value,
+        label: currentLanguage === "hi" ? d.labelHi : d.label,
+      }));
+  }, [personalDetails.state, currentLanguage]);
 
   const validateField = (field: keyof FieldErrors, value: string) => {
     let error: string | undefined;
     
     switch (field) {
+      case "name":
+        if (!value.trim()) {
+          error = t("validation.nameRequired") || "Name is required";
+        } else {
+          const nameValidation = validateName(value, "Name");
+          error = nameValidation.errors[0];
+        }
+        break;
+      case "age":
+        const ageNum = parseInt(value);
+        if (!value.trim()) {
+          error = t("validation.ageRequired") || "Age is required";
+        } else if (isNaN(ageNum) || ageNum < 18 || ageNum > 120) {
+          error = t("validation.ageInvalid") || "Please enter a valid age (18-120)";
+        }
+        break;
+      case "gender":
+        if (!value) {
+          error = t("validation.genderRequired") || "Gender is required";
+        }
+        break;
+      case "aadhaar":
+        if (value && !/^\d{12}$/.test(value.replace(/\s/g, ""))) {
+          error = t("validation.aadhaarInvalid") || "Aadhaar must be 12 digits";
+        }
+        break;
       case "fathersName":
         if (!value.trim()) {
           error = t("validation.fathersNameRequired") || "Father's name is required";
@@ -94,12 +138,17 @@ const AuthPersonalDetailsScreen = () => {
 
   const handleFieldBlur = (field: keyof FieldErrors) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    validateField(field, personalDetails[field] || "");
+    const value = personalDetails[field as keyof typeof personalDetails];
+    validateField(field, String(value ?? ""));
   };
 
   const handleNext = () => {
     // Mark all fields as touched
     setTouched({
+      name: true,
+      age: true,
+      gender: true,
+      aadhaar: true,
       fathersName: true,
       mothersName: true,
       village: true,
@@ -108,28 +157,36 @@ const AuthPersonalDetailsScreen = () => {
       pinCode: true,
     });
 
-    // Validate all fields
-    const validation = validatePersonalDetails(personalDetails);
+    // Validate required fields manually
+    let hasErrors = false;
+    const newErrors: FieldErrors = {};
+
+    if (!personalDetails.name?.trim()) {
+      newErrors.name = t("validation.nameRequired") || "Name is required";
+      hasErrors = true;
+    }
+    if (!personalDetails.age || personalDetails.age < 18 || personalDetails.age > 120) {
+      newErrors.age = t("validation.ageInvalid") || "Please enter a valid age (18-120)";
+      hasErrors = true;
+    }
+    if (!personalDetails.gender) {
+      newErrors.gender = t("validation.genderRequired") || "Gender is required";
+      hasErrors = true;
+    }
+    if (!personalDetails.fathersName?.trim()) {
+      newErrors.fathersName = t("validation.fathersNameRequired") || "Father's name is required";
+      hasErrors = true;
+    }
+    if (!personalDetails.state) {
+      newErrors.state = t("validation.stateRequired") || "State is required";
+      hasErrors = true;
+    }
     
-    if (!validation.isValid) {
-      // Set individual field errors
-      const newErrors: FieldErrors = {};
-      validation.errors.forEach((error) => {
-        if (error.toLowerCase().includes("father")) {
-          newErrors.fathersName = error;
-        } else if (error.toLowerCase().includes("mother")) {
-          newErrors.mothersName = error;
-        } else if (error.toLowerCase().includes("state")) {
-          newErrors.state = error;
-        } else if (error.toLowerCase().includes("pin")) {
-          newErrors.pinCode = error;
-        }
-      });
+    if (hasErrors) {
       setErrors(newErrors);
-      
       Alert.alert(
         t("validation.validationError") || "Validation Error",
-        validation.errors[0]
+        Object.values(newErrors)[0] || "Please fill all required fields"
       );
       return;
     }
@@ -145,7 +202,10 @@ const AuthPersonalDetailsScreen = () => {
 
   const isValid = () => {
     return (
-      personalDetails.fathersName.trim() !== "" &&
+      personalDetails.name?.trim() !== "" &&
+      personalDetails.age > 0 &&
+      personalDetails.gender !== "" &&
+      personalDetails.fathersName?.trim() !== "" &&
       personalDetails.state !== "" &&
       Object.values(errors).every((e) => !e)
     );
@@ -189,17 +249,6 @@ const AuthPersonalDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Dark overlay for better text visibility */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          }}
-        />
         {/* Progress bar */}
         <View
           style={{
@@ -219,21 +268,6 @@ const AuthPersonalDetailsScreen = () => {
               backgroundColor: "#F59E0B",
               borderRadius: 3,
             }}
-          />
-        </View>
-        {/* Sun Icon */}
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingTop: 30,
-          }}
-        >
-          <MaterialCommunityIcons
-            name="white-balance-sunny"
-            size={80}
-            color="#F59E0B"
           />
         </View>
       </View>
@@ -274,6 +308,134 @@ const AuthPersonalDetailsScreen = () => {
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
+            {/* Full Name */}
+            <View style={{ marginBottom: 20 }}>
+              <AppText
+                variant="bodySm"
+                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+              >
+                {t("onboarding.fullName")} *
+              </AppText>
+              <TextInput
+                style={getInputStyle("name")}
+                value={personalDetails.name}
+                onChangeText={(text) => handleFieldChange("name", text)}
+                onBlur={() => handleFieldBlur("name")}
+                placeholder={t("onboarding.enterFullName")}
+                placeholderTextColor="#9CA3AF"
+              />
+              {errors.name && touched.name && (
+                <AppText
+                  variant="bodySm"
+                  style={{ color: "#EF4444", marginTop: 4 }}
+                >
+                  {errors.name}
+                </AppText>
+              )}
+            </View>
+
+            {/* Age and Gender Row */}
+            <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
+              {/* Age */}
+              <View style={{ flex: 1 }}>
+                <AppText
+                  variant="bodySm"
+                  style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+                >
+                  {t("onboarding.age")} *
+                </AppText>
+                <TextInput
+                  style={getInputStyle("age")}
+                  value={personalDetails.age > 0 ? String(personalDetails.age) : ""}
+                  onChangeText={(text) => {
+                    const num = parseInt(text) || 0;
+                    updatePersonalDetails({ age: num });
+                    if (touched.age) {
+                      validateField("age", text);
+                    }
+                  }}
+                  onBlur={() => handleFieldBlur("age")}
+                  placeholder={t("onboarding.enterAge")}
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="numeric"
+                  maxLength={3}
+                />
+                {errors.age && touched.age && (
+                  <AppText
+                    variant="bodySm"
+                    style={{ color: "#EF4444", marginTop: 4 }}
+                  >
+                    {errors.age}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Gender */}
+              <View style={{ flex: 1 }}>
+                <AppText
+                  variant="bodySm"
+                  style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+                >
+                  {t("onboarding.gender")} *
+                </AppText>
+                <View style={{ 
+                  borderWidth: errors.gender && touched.gender ? 1 : 0,
+                  borderColor: "#EF4444",
+                  borderRadius: 12 
+                }}>
+                  <Select
+                    value={personalDetails.gender}
+                    onChange={(value) => {
+                      handleFieldChange("gender", value);
+                    }}
+                    options={genderSelectOptions}
+                    placeholder={t("onboarding.selectGender")}
+                  />
+                </View>
+                {errors.gender && touched.gender && (
+                  <AppText
+                    variant="bodySm"
+                    style={{ color: "#EF4444", marginTop: 4 }}
+                  >
+                    {errors.gender}
+                  </AppText>
+                )}
+              </View>
+            </View>
+
+            {/* Aadhaar Number */}
+            <View style={{ marginBottom: 20 }}>
+              <AppText
+                variant="bodySm"
+                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+              >
+                {t("onboarding.aadhaar")}
+              </AppText>
+              <TextInput
+                style={getInputStyle("aadhaar")}
+                value={personalDetails.aadhaar}
+                onChangeText={(text) => {
+                  // Format as XXXX XXXX XXXX
+                  const cleaned = text.replace(/\D/g, "").slice(0, 12);
+                  const formatted = cleaned.replace(/(\d{4})(?=\d)/g, "$1 ");
+                  handleFieldChange("aadhaar", cleaned);
+                }}
+                onBlur={() => handleFieldBlur("aadhaar")}
+                placeholder={t("onboarding.enterAadhaar")}
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                maxLength={14}
+              />
+              {errors.aadhaar && touched.aadhaar && (
+                <AppText
+                  variant="bodySm"
+                  style={{ color: "#EF4444", marginTop: 4 }}
+                >
+                  {errors.aadhaar}
+                </AppText>
+              )}
+            </View>
+
             {/* Father's Name */}
             <View style={{ marginBottom: 20 }}>
               <AppText
@@ -352,14 +514,24 @@ const AuthPersonalDetailsScreen = () => {
               >
                 {t("onboarding.district")}
               </AppText>
-              <TextInput
-                style={getInputStyle("district")}
-                value={personalDetails.district}
-                onChangeText={(text) => handleFieldChange("district", text)}
-                onBlur={() => handleFieldBlur("district")}
-                placeholder={t("onboarding.enterDistrict")}
-                placeholderTextColor="#9CA3AF"
-              />
+              {districtOptions.length > 0 ? (
+                <Select
+                  value={personalDetails.district}
+                  onChange={(value) => handleFieldChange("district", value)}
+                  options={districtOptions}
+                  placeholder={t("onboarding.selectDistrict")}
+                />
+              ) : (
+                <TextInput
+                  style={getInputStyle("district")}
+                  value={personalDetails.district}
+                  onChangeText={(text) => handleFieldChange("district", text)}
+                  onBlur={() => handleFieldBlur("district")}
+                  placeholder={personalDetails.state ? t("onboarding.enterDistrict") : t("onboarding.selectStateFirst")}
+                  placeholderTextColor="#9CA3AF"
+                  editable={!!personalDetails.state}
+                />
+              )}
             </View>
 
             {/* State */}
@@ -447,7 +619,7 @@ const AuthPersonalDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#6B7280", fontWeight: "600" }}
             >
-              {t("common.skip")}
+              {t("onboarding.skip")}
             </AppText>
           </Pressable>
           <Pressable
@@ -469,7 +641,7 @@ const AuthPersonalDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#FFFFFF", fontWeight: "700" }}
             >
-              {t("common.next")}
+              {t("onboarding.next")}
             </AppText>
           </Pressable>
         </View>

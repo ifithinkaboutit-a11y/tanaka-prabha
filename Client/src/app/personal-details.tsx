@@ -7,7 +7,7 @@ import AppText from "../components/atoms/AppText";
 import PersonalDetailsForm from "../components/molecules/PersonalDetailsForm";
 
 import { useUserProfile } from "../contexts/UserProfileContext";
-import T from "../i18n";
+import { useTranslation } from "../i18n";
 
 export const unstable_settings = {
   headerShown: false,
@@ -15,6 +15,7 @@ export const unstable_settings = {
 
 const PersonalDetailsScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { profile, loading, updatePersonalDetails } = useUserProfile();
 
   if (loading || !profile) {
@@ -94,10 +95,10 @@ const PersonalDetailsScreen = () => {
         </Pressable>
         <View style={{ flex: 1 }}>
           <AppText variant="h2" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 22 }}>
-            {T.translate("personalDetails.title")}
+            {t("personalDetails.title")}
           </AppText>
           <AppText variant="bodySm" style={{ color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-            {T.translate("personalDetails.editSubtitle")}
+            {t("personalDetails.editSubtitle")}
           </AppText>
         </View>
       </View>
