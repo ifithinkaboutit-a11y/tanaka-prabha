@@ -1,5 +1,5 @@
 // src/app/(auth)/personal-details.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,7 +10,10 @@ import {
   ScrollView,
   View,
   TextInput,
+  Dimensions,
 } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
+import MediaPath from "../../constants/MediaPath";
 import AppText from "../../components/atoms/AppText";
 import Select from "../../components/atoms/Select";
 import { useOnboardingStore } from "../../stores/onboardingStore";
@@ -158,84 +161,118 @@ const AuthPersonalDetailsScreen = () => {
     color: "#1F2937",
   });
 
+  const { height: screenHeight } = Dimensions.get("window");
+  const videoHeight = screenHeight * 0.28;
+
+  const player = useVideoPlayer(MediaPath.videos.authBackground, (player) => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      {/* Header */}
+      {/* Video Background Header */}
+      <View style={{ height: videoHeight, position: "relative" }}>
+        <VideoView
+          player={player}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="cover"
+          nativeControls={false}
+          allowsPictureInPicture={false}
+        />
+        {/* Dark overlay for better text visibility */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+          }}
+        />
+        {/* Progress bar */}
+        <View
+          style={{
+            position: "absolute",
+            top: 50,
+            left: 20,
+            right: 20,
+            height: 6,
+            backgroundColor: "rgba(255,255,255,0.3)",
+            borderRadius: 3,
+          }}
+        >
+          <View
+            style={{
+              width: "33%",
+              height: "100%",
+              backgroundColor: "#F59E0B",
+              borderRadius: 3,
+            }}
+          />
+        </View>
+        {/* Sun Icon */}
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: 30,
+          }}
+        >
+          <MaterialCommunityIcons
+            name="white-balance-sunny"
+            size={80}
+            color="#F59E0B"
+          />
+        </View>
+      </View>
+
+      {/* Content Card */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingTop: 48,
-          paddingBottom: 16,
-          paddingHorizontal: 20,
-          backgroundColor: "#386641",
+          flex: 1,
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          marginTop: -20,
+          paddingTop: 24,
         }}
       >
-        <View style={{ flex: 1 }}>
+        {/* Title Section */}
+        <View style={{ alignItems: "center", paddingHorizontal: 20, marginBottom: 16 }}>
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#FFFFFF", fontSize: 20 }}
+            style={{ fontWeight: "700", color: "#1F2937", fontSize: 22, textAlign: "center" }}
           >
             {t("onboarding.personalTitle")}
           </AppText>
           <AppText
             variant="bodySm"
-            style={{ color: "rgba(255,255,255,0.8)", marginTop: 2 }}
+            style={{ color: "#6B7280", marginTop: 6, textAlign: "center" }}
           >
-            {t("onboarding.step")} 1/3
+            {t("onboarding.personalSubtitle")}
           </AppText>
         </View>
-      </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 20 }}
-          showsVerticalScrollIndicator={false}
         >
-          {/* Welcome Message */}
-          <View
-            style={{
-              backgroundColor: "#DCFCE7",
-              borderRadius: 16,
-              padding: 20,
-              marginBottom: 20,
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="person-circle" size={40} color="#16A34A" />
-            <View style={{ marginLeft: 14, flex: 1 }}>
-              <AppText
-                variant="bodyMd"
-                style={{ fontWeight: "700", color: "#166534" }}
-              >
-                {t("onboarding.welcomeTitle")}
-              </AppText>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#15803D", marginTop: 2 }}
-              >
-                {t("onboarding.personalSubtitle")}
-              </AppText>
-            </View>
-          </View>
-
-          {/* Personal Information Form */}
-          <View
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 8,
-              elevation: 2,
-            }}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
           >
             {/* Father's Name */}
             <View style={{ marginBottom: 20 }}>
@@ -380,68 +417,62 @@ const AuthPersonalDetailsScreen = () => {
                 </AppText>
               )}
             </View>
-          </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Bottom Buttons */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 20,
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
-          flexDirection: "row",
-          gap: 12,
-        }}
-      >
-        <Pressable
-          onPress={handleSkip}
-          style={({ pressed }) => ({
-            flex: 1,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-            borderWidth: 1,
-            borderColor: "#D1D5DB",
-            alignItems: "center",
-          })}
+        {/* Bottom Buttons */}
+        <View
+          style={{
+            padding: 20,
+            backgroundColor: "#FFFFFF",
+            borderTopWidth: 1,
+            borderTopColor: "#E5E7EB",
+            flexDirection: "row",
+            gap: 12,
+          }}
         >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#6B7280", fontWeight: "600" }}
+          <Pressable
+            onPress={handleSkip}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: 25,
+              backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
+              borderWidth: 1,
+              borderColor: "#D1D5DB",
+              alignItems: "center",
+            })}
           >
-            {t("common.skip")}
-          </AppText>
-        </Pressable>
-        <Pressable
-          onPress={handleNext}
-          disabled={!isValid()}
-          style={({ pressed }) => ({
-            flex: 2,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: isValid()
-              ? pressed
-                ? "#2F5233"
-                : "#386641"
-              : "#D1D5DB",
-            alignItems: "center",
-          })}
-        >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#FFFFFF", fontWeight: "700" }}
+            <AppText
+              variant="bodyMd"
+              style={{ color: "#6B7280", fontWeight: "600" }}
+            >
+              {t("common.skip")}
+            </AppText>
+          </Pressable>
+          <Pressable
+            onPress={handleNext}
+            disabled={!isValid()}
+            style={({ pressed }) => ({
+              flex: 2,
+              paddingVertical: 16,
+              borderRadius: 25,
+              backgroundColor: isValid()
+                ? pressed
+                  ? "#2F5233"
+                  : "#386641"
+                : "#D1D5DB",
+              alignItems: "center",
+            })}
           >
-            {t("common.next")}
-          </AppText>
-        </Pressable>
+            <AppText
+              variant="bodyMd"
+              style={{ color: "#FFFFFF", fontWeight: "700" }}
+            >
+              {t("common.next")}
+            </AppText>
+          </Pressable>
+        </View>
       </View>
     </View>
   );

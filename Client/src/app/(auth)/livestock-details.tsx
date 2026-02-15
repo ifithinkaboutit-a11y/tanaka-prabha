@@ -1,5 +1,5 @@
 // src/app/(auth)/livestock-details.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,7 +11,10 @@ import {
   ScrollView,
   View,
   TextInput,
+  Dimensions,
 } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
+import MediaPath from "../../constants/MediaPath";
 import AppText from "../../components/atoms/AppText";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
@@ -324,97 +327,152 @@ const AuthLivestockDetailsScreen = () => {
     color: "#1F2937",
   });
 
+  const { height: screenHeight } = Dimensions.get("window");
+  const videoHeight = screenHeight * 0.28;
+
+  const player = useVideoPlayer(MediaPath.videos.authBackground, (player) => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingTop: 48,
-          paddingBottom: 16,
-          paddingHorizontal: 20,
-          backgroundColor: "#386641",
-        }}
-      >
-        <Pressable
-          onPress={handleBack}
-          style={({ pressed }) => ({
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "rgba(255,255,255,0.2)",
+      {/* Video Background Header */}
+      <View style={{ height: videoHeight, position: "relative" }}>
+        <VideoView
+          player={player}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="cover"
+          nativeControls={false}
+          allowsPictureInPicture={false}
+        />
+        {/* Dark overlay for better text visibility */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+          }}
+        />
+        {/* Progress bar */}
+        <View
+          style={{
+            position: "absolute",
+            top: 50,
+            left: 20,
+            right: 20,
+            height: 6,
+            backgroundColor: "rgba(255,255,255,0.3)",
+            borderRadius: 3,
+          }}
+        >
+          <View
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "#F59E0B",
+              borderRadius: 3,
+            }}
+          />
+        </View>
+        {/* Sun Icon */}
+        <View
+          style={{
+            flex: 1,
             alignItems: "center",
             justifyContent: "center",
-            marginRight: 12,
-            opacity: pressed ? 0.7 : 1,
-          })}
+            paddingTop: 30,
+          }}
         >
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </Pressable>
-        <View style={{ flex: 1 }}>
+          <MaterialCommunityIcons
+            name="white-balance-sunny"
+            size={80}
+            color="#F59E0B"
+          />
+        </View>
+      </View>
+
+      {/* Content Card */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          marginTop: -20,
+          paddingTop: 24,
+        }}
+      >
+        {/* Title Section */}
+        <View style={{ alignItems: "center", paddingHorizontal: 20, marginBottom: 16 }}>
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#FFFFFF", fontSize: 20 }}
+            style={{ fontWeight: "700", color: "#1F2937", fontSize: 22, textAlign: "center" }}
           >
             {t("onboarding.livestockTitle")}
           </AppText>
           <AppText
             variant="bodySm"
-            style={{ color: "rgba(255,255,255,0.8)", marginTop: 2 }}
+            style={{ color: "#6B7280", marginTop: 6, textAlign: "center" }}
           >
-            {t("onboarding.step")} 3/3
+            {t("onboarding.livestockSubtitle")}
           </AppText>
         </View>
-      </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 20 }}
-          showsVerticalScrollIndicator={false}
         >
-          {/* Do you have livestock? */}
-          <View
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              marginBottom: 16,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 8,
-              elevation: 2,
-            }}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
           >
+            {/* Do you have livestock? */}
             <View
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
+                backgroundColor: "#F9FAFB",
+                borderRadius: 16,
+                padding: 20,
+                marginBottom: 16,
               }}
             >
-              <AppText
-                variant="bodyMd"
-                style={{ fontWeight: "600", color: "#374151" }}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                {t("onboarding.hasLivestock")}
-              </AppText>
-              <Toggle 
-                value={hasLivestock} 
-                onValueChange={(value) => {
-                  setHasLivestock(value);
-                  // Add a default entry when enabling livestock ownership
-                  if (value && livestockEntries.length === 0) {
-                    addLivestockEntry({ type: "", count: 0 });
-                  }
-                }} 
-              />
-            </View>
+                <AppText
+                  variant="bodyMd"
+                  style={{ fontWeight: "600", color: "#374151" }}
+                >
+                  {t("onboarding.hasLivestock")}
+                </AppText>
+                <Toggle 
+                  value={hasLivestock} 
+                  onValueChange={(value) => {
+                    setHasLivestock(value);
+                    // Add a default entry when enabling livestock ownership
+                    if (value && livestockEntries.length === 0) {
+                      addLivestockEntry({ type: "", count: 0 });
+                    }
+                  }} 
+                />
+              </View>
           </View>
 
           {/* Livestock Entries */}
@@ -577,83 +635,78 @@ const AuthLivestockDetailsScreen = () => {
               {t("onboarding.finishMessage")}
             </AppText>
           </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Bottom Buttons */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 20,
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
-          flexDirection: "row",
-          gap: 12,
-        }}
-      >
-        <Pressable
-          onPress={handleSkip}
-          disabled={isSubmitting}
-          style={({ pressed }) => ({
-            flex: 1,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-            borderWidth: 1,
-            borderColor: "#D1D5DB",
-            alignItems: "center",
-            opacity: isSubmitting ? 0.5 : 1,
-          })}
-        >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#6B7280", fontWeight: "600" }}
-          >
-            {t("common.skip")}
-          </AppText>
-        </Pressable>
-        <Pressable
-          onPress={handleFinish}
-          disabled={!isValid() || isSubmitting}
-          style={({ pressed }) => ({
-            flex: 2,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: isValid() && !isSubmitting
-              ? pressed
-                ? "#2F5233"
-                : "#386641"
-              : "#D1D5DB",
-            alignItems: "center",
+        {/* Bottom Buttons */}
+        <View
+          style={{
+            padding: 20,
+            backgroundColor: "#FFFFFF",
+            borderTopWidth: 1,
+            borderTopColor: "#E5E7EB",
             flexDirection: "row",
-            justifyContent: "center",
-          })}
+            gap: 12,
+          }}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <>
-              <AppText
-                variant="bodyMd"
-                style={{ color: "#FFFFFF", fontWeight: "700" }}
-              >
-                {t("onboarding.finish")}
-              </AppText>
-              <Ionicons
-                name="checkmark-circle"
-                size={20}
-                color="#FFFFFF"
-                style={{ marginLeft: 8 }}
-              />
-            </>
-          )}
-        </Pressable>
+          <Pressable
+            onPress={handleSkip}
+            disabled={isSubmitting}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: 25,
+              backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
+              borderWidth: 1,
+              borderColor: "#D1D5DB",
+              alignItems: "center",
+              opacity: isSubmitting ? 0.5 : 1,
+            })}
+          >
+            <AppText
+              variant="bodyMd"
+              style={{ color: "#6B7280", fontWeight: "600" }}
+            >
+              {t("common.skip")}
+            </AppText>
+          </Pressable>
+          <Pressable
+            onPress={handleFinish}
+            disabled={!isValid() || isSubmitting}
+            style={({ pressed }) => ({
+              flex: 2,
+              paddingVertical: 16,
+              borderRadius: 25,
+              backgroundColor: isValid() && !isSubmitting
+                ? pressed
+                  ? "#2F5233"
+                  : "#386641"
+                : "#D1D5DB",
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+            })}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <AppText
+                  variant="bodyMd"
+                  style={{ color: "#FFFFFF", fontWeight: "700" }}
+                >
+                  {t("onboarding.finish")}
+                </AppText>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color="#FFFFFF"
+                  style={{ marginLeft: 8 }}
+                />
+              </>
+            )}
+          </Pressable>
+        </View>
       </View>
     </View>
   );
