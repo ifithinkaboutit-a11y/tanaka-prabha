@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { IconTrendingUp, IconUsers, IconPlant, IconPaw, IconFileCheck } from "@tabler/icons-react"
+import { IconTrendingUp, IconUsers, IconPlant, IconPaw, IconFileCheck, IconArrowUpRight, IconArrowDownRight } from "@tabler/icons-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -14,13 +14,159 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { analyticsApi } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 /**
  * SectionCards - Vibecode Architect Rules Applied:
  * - Rule 10: Dashboard Hygiene - Clean, purposeful cards
- * - Rule 11: Anti-AI Content Check - No redundant labels
- * - Rule 2: Spacing Multiplier - 8px grid spacing
+ * - Rule 11: Anti-AI Content Check - No redundant labels, icons instead of emojis
+ * - Rule 2: Spacing Multiplier - 8px grid spacing (gap-4 = 16px)
+ * - Rule 8: Glow effects on interactive cards
+ * - Rule 7: Optimistic UI animations for data refresh
  */
+
+// Stat card configuration following Rule 11 - meaningful icons only
+const STAT_CONFIG = [
+  {
+    key: "totalFarmers",
+    label: "Farmers",
+    sublabel: "Registered beneficiaries",
+    icon: IconUsers,
+    colorScheme: "emerald",
+    format: (v) => v.toLocaleString(),
+  },
+  {
+    key: "totalLandCoverage",
+    label: "Land Coverage",
+    sublabel: "Cultivable area",
+    icon: IconPlant,
+    colorScheme: "green",
+    format: (v) => v.toLocaleString(),
+    suffix: "acres",
+  },
+  {
+    key: "livestockCount",
+    label: "Livestock",
+    sublabel: "Total animals",
+    icon: IconPaw,
+    colorScheme: "amber",
+    format: (v) => v.toLocaleString(),
+  },
+  {
+    key: "activeSchemes",
+    label: "Active Schemes",
+    sublabel: "Government programs",
+    icon: IconFileCheck,
+    colorScheme: "blue",
+    format: (v) => v.toLocaleString(),
+  },
+]
+
+// Color scheme mapping for consistent HSB-based colors (Rule 6)
+const COLOR_SCHEMES = {
+  emerald: {
+    bg: "bg-emerald-500/10 dark:bg-emerald-500/20",
+    text: "text-emerald-600 dark:text-emerald-400",
+    trend: "text-emerald-500",
+    glow: "group-hover:shadow-emerald-500/20",
+  },
+  green: {
+    bg: "bg-green-500/10 dark:bg-green-500/20",
+    text: "text-green-600 dark:text-green-400",
+    trend: "text-green-500",
+    glow: "group-hover:shadow-green-500/20",
+  },
+  amber: {
+    bg: "bg-amber-500/10 dark:bg-amber-500/20",
+    text: "text-amber-600 dark:text-amber-400",
+    trend: "text-amber-500",
+    glow: "group-hover:shadow-amber-500/20",
+  },
+  blue: {
+    bg: "bg-blue-500/10 dark:bg-blue-500/20",
+    text: "text-blue-600 dark:text-blue-400",
+    trend: "text-blue-500",
+    glow: "group-hover:shadow-blue-500/20",
+  },
+}
+
+function StatIcon({ icon: Icon, colorScheme, className }) {
+  const colors = COLOR_SCHEMES[colorScheme]
+  return (
+    <div
+      className={cn(
+        // Rule 1: Corner radius 12px (rounded-xl)
+        "flex size-11 items-center justify-center rounded-xl transition-all duration-300",
+        // Rule 8: Subtle glow on hover
+        "group-hover:scale-105",
+        colors.bg,
+        colors.text,
+        className
+      )}
+    >
+      <Icon className="size-5" />
+    </div>
+  )
+}
+
+function StatCardSkeleton() {
+  return (
+    <Card className="@container/card">
+      <CardHeader>
+        <Skeleton className="h-4 w-24 rounded-lg" />
+        <Skeleton className="h-9 w-32 mt-2 rounded-lg" />
+      </CardHeader>
+      <CardFooter>
+        <Skeleton className="h-4 w-32 rounded-lg" />
+      </CardFooter>
+    </Card>
+  )
+}
+
+function StatCard({ config, value, trend }) {
+  const colors = COLOR_SCHEMES[config.colorScheme]
+  const TrendIcon = trend >= 0 ? IconArrowUpRight : IconArrowDownRight
+  
+  return (
+    <Card 
+      className={cn(
+        "@container/card group cursor-default",
+        // Rule 8: Enhanced hover with glow
+        "transition-all duration-300",
+        colors.glow
+      )}
+      interactive
+    >
+      <CardHeader>
+        {/* Rule 11: Concise label without redundant prefix */}
+        <CardDescription className="text-xs font-medium uppercase tracking-wider">
+          {config.label}
+        </CardDescription>
+        <CardTitle className="flex items-baseline gap-1.5">
+          {/* Rule 3: Tight kerning for large numbers */}
+          <span className="text-2xl font-semibold tabular-nums tracking-tight @[250px]/card:text-3xl stat-number">
+            {config.format(value)}
+          </span>
+          {config.suffix && (
+            <span className="text-base font-normal text-muted-foreground">
+              {config.suffix}
+            </span>
+          )}
+        </CardTitle>
+        <CardAction>
+          <StatIcon icon={config.icon} colorScheme={config.colorScheme} />
+        </CardAction>
+      </CardHeader>
+      <CardFooter className="text-sm text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <TrendIcon className={cn("size-3.5", colors.trend)} />
+          <span>{config.sublabel}</span>
+        </span>
+      </CardFooter>
+    </Card>
+  )
+}
+
 export function SectionCards() {
   const [stats, setStats] = useState({
     totalFarmers: 0,
@@ -28,6 +174,7 @@ export function SectionCards() {
     livestockCount: 0,
     activeSchemes: 0,
     loading: true,
+    animateIn: false,
   })
 
   useEffect(() => {
@@ -42,6 +189,7 @@ export function SectionCards() {
             livestockCount: response.data.livestockCount || 0,
             activeSchemes: response.data.activeSchemes || 0,
             loading: false,
+            animateIn: true,
           })
         } else {
           console.error("Error fetching stats:", response.message)
@@ -58,17 +206,10 @@ export function SectionCards() {
 
   if (stats.loading) {
     return (
+      // Rule 2: 16px gap (gap-4) for related elements, responsive grid
       <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="@container/card">
-            <CardHeader>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-32 mt-2" />
-            </CardHeader>
-            <CardFooter>
-              <Skeleton className="h-4 w-32" />
-            </CardFooter>
-          </Card>
+        {STAT_CONFIG.map((config) => (
+          <StatCardSkeleton key={config.key} />
         ))}
       </div>
     )
@@ -76,91 +217,23 @@ export function SectionCards() {
 
   return (
     <div
-      className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-      {/* Card 1: Total Farmers - Rule 11: Context-obvious, no redundant labels */}
-      <Card className="@container/card group">
-        <CardHeader>
-          <CardDescription>Farmers</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl tracking-tight">
-            {stats.totalFarmers.toLocaleString()}
-          </CardTitle>
-          <CardAction>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20">
-              <IconUsers className="size-5" />
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <IconTrendingUp className="size-3.5 text-emerald-500" />
-            Registered beneficiaries
-          </span>
-        </CardFooter>
-      </Card>
-
-      {/* Card 2: Land Coverage */}
-      <Card className="@container/card group">
-        <CardHeader>
-          <CardDescription>Land Coverage</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl tracking-tight">
-            {stats.totalLandCoverage.toLocaleString()}
-            <span className="ml-1.5 text-base font-normal text-muted-foreground">acres</span>
-          </CardTitle>
-          <CardAction>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-green-500/10 text-green-600 dark:bg-green-500/20">
-              <IconPlant className="size-5" />
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <IconTrendingUp className="size-3.5 text-green-500" />
-            Cultivable area
-          </span>
-        </CardFooter>
-      </Card>
-
-      {/* Card 3: Livestock */}
-      <Card className="@container/card group">
-        <CardHeader>
-          <CardDescription>Livestock</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl tracking-tight">
-            {stats.livestockCount.toLocaleString()}
-          </CardTitle>
-          <CardAction>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20">
-              <IconPaw className="size-5" />
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <IconTrendingUp className="size-3.5 text-amber-500" />
-            Total animals
-          </span>
-        </CardFooter>
-      </Card>
-
-      {/* Card 4: Active Schemes */}
-      <Card className="@container/card group">
-        <CardHeader>
-          <CardDescription>Active Schemes</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl tracking-tight">
-            {stats.activeSchemes.toLocaleString()}
-          </CardTitle>
-          <CardAction>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20">
-              <IconFileCheck className="size-5" />
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <IconTrendingUp className="size-3.5 text-blue-500" />
-            Government programs
-          </span>
-        </CardFooter>
-      </Card>
+      className={cn(
+        // Rule 2: Spacing Multiplier - 16px base gap
+        "grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4",
+        // Rule 4: Cards with gradient from primary to card (depth layer)
+        "*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-linear-to-t",
+        // Rule 7: Optimistic slide-in animation
+        stats.animateIn && "animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+      )}
+    >
+      {STAT_CONFIG.map((config) => (
+        <StatCard
+          key={config.key}
+          config={config}
+          value={stats[config.key]}
+          trend={1} // Placeholder positive trend
+        />
+      ))}
     </div>
-  );
+  )
 }

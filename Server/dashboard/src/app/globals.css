@@ -247,6 +247,16 @@
   letter-spacing: -0.03em;
 }
 
+/* Rule 8: Skeleton shimmer animation */
+@keyframes animate-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: animate-shimmer 2s ease-in-out infinite;
+}
+
 /* Rule 1: iOS Smooth Corners */
 * {
   -webkit-mask-image: -webkit-radial-gradient(white, black);
@@ -273,4 +283,320 @@
   box-shadow: 
     0 8px 25px -5px oklch(0 0 0 / 40%),
     0 4px 10px -5px oklch(0 0 0 / 30%);
+}
+
+/* ============================================
+   ENHANCED VIBECODE EFFECTS (Rules 8, 9)
+   Premium shine, glow variants, physics motion
+   ============================================ */
+
+/* Rule 8: Premium Shimmer - Rotating angular gradient */
+@keyframes shimmer-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.shimmer-premium {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.shimmer-premium::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    oklch(0.8 0.15 145 / 30%) 60deg,
+    transparent 120deg
+  );
+  animation: shimmer-rotate 4s linear infinite;
+  z-index: -2;
+}
+
+.shimmer-premium::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+}
+
+/* Rule 8: Glow Variants for different brand colors */
+.glow-primary {
+  position: relative;
+}
+.glow-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: oklch(0.55 0.15 145 / 40%);
+  filter: blur(24px);
+  opacity: 0;
+  z-index: -1;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease;
+}
+.glow-primary:hover::after {
+  opacity: 0.6;
+}
+
+.glow-success {
+  position: relative;
+}
+.glow-success::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: oklch(0.65 0.18 145 / 40%);
+  filter: blur(20px);
+  opacity: 0.5;
+  z-index: -1;
+  transform: translateY(4px);
+}
+
+/* Rule 9: Physics-based swiping - Horizon fade effect */
+.horizon-fade-left {
+  mask-image: linear-gradient(to right, transparent 0%, black 15%, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 100%);
+}
+
+.horizon-fade-right {
+  mask-image: linear-gradient(to left, transparent 0%, black 15%, black 100%);
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, black 15%, black 100%);
+}
+
+/* Rule 9: Rotational skew for card swiping */
+@keyframes card-swipe-right {
+  0% { transform: translateX(0) rotateY(0deg); opacity: 1; }
+  100% { transform: translateX(100%) rotateY(15deg); opacity: 0; }
+}
+
+@keyframes card-swipe-left {
+  0% { transform: translateX(0) rotateY(0deg); opacity: 1; }
+  100% { transform: translateX(-100%) rotateY(-15deg); opacity: 0; }
+}
+
+.swipe-right {
+  animation: card-swipe-right 0.4s ease-out forwards;
+  transform-origin: center center;
+}
+
+.swipe-left {
+  animation: card-swipe-left 0.4s ease-out forwards;
+  transform-origin: center center;
+}
+
+/* Rule 7: Enhanced Optimistic UI animations */
+@keyframes like-burst {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  50% { transform: scale(0.9); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.optimistic-like {
+  animation: like-burst 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes slide-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.optimistic-add {
+  animation: slide-in-up 0.3s ease-out;
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(0deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.optimistic-check {
+  animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Rule 10: Dashboard table grid lines */
+[data-slot="table"] {
+  --table-grid-color: oklch(0 0 0 / 6%);
+}
+
+.dark [data-slot="table"] {
+  --table-grid-color: oklch(1 0 0 / 8%);
+}
+
+[data-slot="table-row"] {
+  border-color: var(--table-grid-color);
+}
+
+[data-slot="table-head"],
+[data-slot="table-cell"] {
+  border-right: 1px solid var(--table-grid-color);
+}
+
+[data-slot="table-head"]:last-child,
+[data-slot="table-cell"]:last-child {
+  border-right: none;
+}
+
+/* Rule 11: Anti-AI Content - Professional icon button */
+.icon-action {
+  color: oklch(0.5 0 0);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.icon-action:hover {
+  color: oklch(0.3 0 0);
+  transform: scale(1.1);
+}
+
+.dark .icon-action {
+  color: oklch(0.6 0 0);
+}
+
+.dark .icon-action:hover {
+  color: oklch(0.85 0 0);
+}
+
+/* Rule 3: Typography scale with proper kerning */
+.text-display-xl {
+  font-size: 4.5rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.text-display-lg {
+  font-size: 3.75rem;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+.text-display-md {
+  font-size: 3rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.text-display-sm {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+
+/* Stat number styling with tabular figures */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* Rule 2: Section spacing helpers */
+.section-break {
+  margin-block: 96px;
+}
+
+.section-padding {
+  padding-block: 80px;
+}
+
+/* Rule 1: Smooth corner refinement for specific elements */
+[data-slot="button"],
+[data-slot="input"],
+[data-slot="card"],
+[data-slot="badge"] {
+  /* Enable smooth corners where supported */
+  border-radius: var(--radius-lg);
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+}
+
+/* Elevation system for depth */
+.elevation-1 {
+  box-shadow: 
+    0 1px 3px 0 oklch(0 0 0 / 5%),
+    0 1px 2px -1px oklch(0 0 0 / 5%);
+}
+
+.elevation-2 {
+  box-shadow: 
+    0 4px 6px -1px oklch(0 0 0 / 7%),
+    0 2px 4px -2px oklch(0 0 0 / 5%);
+}
+
+.elevation-3 {
+  box-shadow: 
+    0 10px 15px -3px oklch(0 0 0 / 8%),
+    0 4px 6px -4px oklch(0 0 0 / 5%);
+}
+
+.elevation-4 {
+  box-shadow: 
+    0 20px 25px -5px oklch(0 0 0 / 10%),
+    0 8px 10px -6px oklch(0 0 0 / 5%);
+}
+
+.dark .elevation-1 {
+  box-shadow: 
+    0 1px 3px 0 oklch(0 0 0 / 30%),
+    0 1px 2px -1px oklch(0 0 0 / 25%);
+}
+
+.dark .elevation-2 {
+  box-shadow: 
+    0 4px 6px -1px oklch(0 0 0 / 35%),
+    0 2px 4px -2px oklch(0 0 0 / 30%);
+}
+
+.dark .elevation-3 {
+  box-shadow: 
+    0 10px 15px -3px oklch(0 0 0 / 40%),
+    0 4px 6px -4px oklch(0 0 0 / 35%);
+}
+
+.dark .elevation-4 {
+  box-shadow: 
+    0 20px 25px -5px oklch(0 0 0 / 50%),
+    0 8px 10px -6px oklch(0 0 0 / 40%);
+}
+
+/* Interactive card with glow on hover */
+[data-slot="card"].interactive {
+  cursor: pointer;
+}
+
+[data-slot="card"].interactive::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    oklch(0.55 0.15 145 / 10%) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+[data-slot="card"].interactive:hover::before {
+  opacity: 1;
+}
+
+/* Focus ring improvements */
+:focus-visible {
+  outline: 2px solid oklch(0.55 0.12 145);
+  outline-offset: 2px;
 }

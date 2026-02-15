@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { IconMapPin } from "@tabler/icons-react"
+import { useEffect, useState } from "react"
+import { IconMapPin, IconMap, IconUsers, IconMapPinFilled } from "@tabler/icons-react"
 import dynamic from "next/dynamic"
 
 import {
@@ -11,20 +11,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { analyticsApi } from "@/lib/api"
+import { cn } from "@/lib/utils"
+
+/**
+ * FarmerDensityMap - Vibecode Architect Rules Applied:
+ * - Rule 10: Dashboard Hygiene - Clean, purposeful map display
+ * - Rule 11: Anti-AI Content - No redundant labels
+ * - Rule 2: Spacing Multiplier - Consistent padding
+ * - Rule 4: 4-Layer depth with proper elevation
+ */
 
 // Dynamically import the map to avoid SSR issues
 const MapComponent = dynamic(() => import("./map-component"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-lg">
-      <div className="text-center">
-        <Skeleton className="h-[400px] w-full" />
+    <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-xl animate-pulse">
+      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+        <IconMap className="size-10 opacity-40" />
+        <span className="text-sm">Loading map...</span>
       </div>
     </div>
   ),
 })
+
+function StatBadge({ icon: Icon, value, label, colorScheme = "default" }) {
+  const colors = {
+    default: "bg-muted text-foreground",
+    primary: "bg-primary/10 text-primary",
+    success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors",
+        colors[colorScheme]
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <Icon className="size-4" />
+        <span className="font-semibold tabular-nums text-lg">
+          {value.toLocaleString()}
+        </span>
+      </div>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  )
+}
 
 export function FarmerDensityMap() {
   const [locations, setLocations] = useState([])
@@ -64,35 +100,52 @@ export function FarmerDensityMap() {
   }, [])
 
   return (
-    <Card className="@container/card">
+    <Card className="h-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <IconMapPin className="size-5" />
-              Farmer Location Density
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <IconMapPinFilled className="size-4" />
+              </div>
+              Farmer Distribution
             </CardTitle>
             <CardDescription>
-              Location-based density scan of registered farmers
+              Geographic density of registered farmers
             </CardDescription>
           </div>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <div className="text-center">
-              <div className="font-semibold text-foreground">{stats.totalLocations}</div>
-              <div>Locations</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-foreground">{stats.districts}</div>
-              <div>Districts</div>
-            </div>
+          {/* Rule 10: Stats inline, not separate section */}
+          <div className="flex gap-2">
+            <StatBadge
+              icon={IconMapPin}
+              value={stats.totalLocations}
+              label="Locations"
+              colorScheme="success"
+            />
+            <StatBadge
+              icon={IconUsers}
+              value={stats.districts}
+              label="Districts"
+              colorScheme="primary"
+            />
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-0 sm:px-6">
+      {/* Rule 2: Proper padding for content */}
+      <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-6">
         {loading ? (
-          <Skeleton className="h-[400px] w-full rounded-lg" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
         ) : (
-          <div className="h-[400px] w-full rounded-lg overflow-hidden border">
+          <div
+            className={cn(
+              // Rule 1: Smooth rounded corners
+              "h-[400px] w-full rounded-xl overflow-hidden",
+              // Rule 4: Border for definition layer
+              "border bg-muted/20",
+              // Subtle shadow for depth
+              "shadow-inner"
+            )}
+          >
             <MapComponent locations={locations} />
           </div>
         )}

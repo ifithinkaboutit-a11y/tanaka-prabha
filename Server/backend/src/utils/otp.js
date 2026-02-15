@@ -1,4 +1,10 @@
 import crypto from 'crypto';
+import { sendOTPEmail, initializeTransporter } from './emailService.js';
+
+// Initialize email transporter when module loads
+initializeTransporter().catch(err => {
+    console.warn('⚠️ Email service initialization failed:', err.message);
+});
 
 /**
  * Generate a 6-digit OTP
@@ -29,11 +35,23 @@ const isOTPExpired = (expiryTime) => {
 /**
  * Mock SMS sending function (MSG91 integration placeholder)
  * In production, replace with actual MSG91 API call
+ * Also sends email via Ethereal for development testing
  */
 const sendSMS = async (mobileNumber, otp) => {
     // TODO: Implement MSG91 integration
     // For now, just log to console for testing
     console.log(`📱 SMS to ${mobileNumber}: Your OTP is ${otp}. Valid for 10 minutes.`);
+    
+    // Send email via Ethereal for development testing
+    let emailResult = null;
+    try {
+        emailResult = await sendOTPEmail(mobileNumber, otp);
+        if (emailResult.success) {
+            console.log(`📧 Email sent! Preview URL: ${emailResult.previewUrl}`);
+        }
+    } catch (emailError) {
+        console.warn('⚠️ Email sending failed:', emailError.message);
+    }
     
     // In production, use MSG91:
     /*
@@ -50,7 +68,8 @@ const sendSMS = async (mobileNumber, otp) => {
     return {
         success: true,
         message: 'OTP sent successfully (mock)',
-        otp: process.env.NODE_ENV === 'development' ? otp : undefined // Only return OTP in dev mode
+        otp: process.env.NODE_ENV === 'development' ? otp : undefined, // Only return OTP in dev mode
+        emailPreviewUrl: emailResult?.previewUrl || null
     };
 };
 

@@ -10,6 +10,9 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -79,14 +82,24 @@ const PhoneInput = () => {
   };
 
   return (
-    <View className="flex-1 justify-end">
-      {/* Video Background */}
-      <View className="flex h-[60vh]">
-        <AuthVideoBackground />
-      </View>
+    <KeyboardAvoidingView 
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        {/* Video Background */}
+        <View className="flex-1 min-h-[40vh]">
+          <AuthVideoBackground />
+        </View>
 
-      {/* Phone Input Card */}
-      <View className="bg-white rounded-t-3xl p-6 shadow-lg">
+        {/* Phone Input Card */}
+        <View className="bg-white rounded-t-3xl p-6 shadow-lg">
         {/* Title */}
         <AppText
           variant="h2"
@@ -155,7 +168,8 @@ const PhoneInput = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
