@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { IconLoader2, IconLock, IconMail, IconPlant2 } from "@tabler/icons-react"
@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/"
@@ -156,5 +156,29 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+      <div className="w-full text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-4 shadow-lg">
+          <IconPlant2 className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <IconLoader2 className="h-5 w-5 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
   )
 }
