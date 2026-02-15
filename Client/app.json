@@ -44,16 +44,23 @@
       "expo-video",
       [
         "expo-notifications",
-        {
-          "icon": "./src/assets/images/notification-icon.png",
-          "color": "#386641",
-          "defaultChannel": "default"
-        }
+        // {
+        //   "icon": "./src/assets/images/notification-icon.png",
+        //   "color": "#386641",
+        //   "defaultChannel": "default"
+        // }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
+      }
+    },
+    "owner": "cr-8"
   }
 }
