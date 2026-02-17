@@ -9,7 +9,6 @@ type AvatarProps = {
   name?: string;
   size?: AvatarSize;
   shape?: "circle" | "square";
-  className?: string;
   bgColor?: string;
 };
 
@@ -53,7 +52,6 @@ export default function Avatar({
   name,
   size = "md",
   shape = "circle",
-  className,
   bgColor,
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false);

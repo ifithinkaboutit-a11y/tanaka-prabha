@@ -68,10 +68,9 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
   }
 
   return (
-    <Card className="mb-3 flex-row items-center p-3 border-transparent shadow-sm bg-white">
+    <Card style={{ marginBottom: 12, flexDirection: "row", alignItems: "center", padding: 12, borderColor: "transparent", backgroundColor: "#FFFFFF", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}>
       <View
-        className="w-12 h-12 rounded-full items-center justify-center mr-3"
-        style={{ backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15` }}
+        style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15` }}
       >
         <Ionicons
           name={getIconName(notification.type)}
@@ -79,21 +78,21 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
           color={notification.iconBgColor || getIconColor(notification.type)}
         />
       </View>
-      <View className="flex-1">
-        <View className="flex-row justify-between items-start mb-1">
-          <AppText variant="bodyMd" className="font-semibold text-neutral-textDark flex-1 mr-2">
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+          <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121", flex: 1, marginRight: 8 }}>
             {notification.titleKey ? t(notification.titleKey) : notification.title}
           </AppText>
-          <AppText variant="caption" className="text-neutral-textLight text-xs mt-1">
+          <AppText variant="caption" style={{ color: "#9E9E9E", fontSize: 12, marginTop: 4 }}>
             {notification.time}
           </AppText>
         </View>
-        <AppText variant="bodySm" className="text-neutral-textMedium">
+        <AppText variant="bodySm" style={{ color: "#616161" }}>
            {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
         </AppText>
       </View>
       {!notification.isRead && (
-        <View className="w-2 h-2 rounded-full bg-red-500 absolute top-3 right-3" />
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF4444", position: "absolute", top: 12, right: 12 }} />
       )}
     </Card>
   );
@@ -132,7 +131,7 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F9FAFB" }}>
         <Stack.Screen options={{ title: t("notifications.title") || "Notifications" }} />
         <ActivityIndicator size="large" color={colors.primary.green} />
       </View>
@@ -140,7 +139,7 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       <Stack.Screen 
         options={{ 
             title: t("notifications.title") || "Notifications",
@@ -151,30 +150,28 @@ export default function NotificationsScreen() {
         }} 
       />
       
-      {/* Fallback header if Stack.Screen is not managing it (e.g. if _layout doesn't use stack properly here) */}
-      <View className="px-4 py-2">
-         {/* Optional: Add custom header content here if needed, but Stack.Screen handles the title */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
       </View>
 
       <ScrollView
-        className="flex-1 px-4"
+        style={{ flex: 1, paddingHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary.green]} />
         }
       >
         {groupedNotifications.length === 0 ? (
-          <View className="items-center justify-center py-20 opacity-60">
+          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80, opacity: 0.6 }}>
             <Ionicons name="notifications-off-outline" size={64} color={colors.neutral.textLight} />
-             <AppText className="mt-4 text-neutral-textMedium text-center">
+             <AppText style={{ marginTop: 16, color: "#616161", textAlign: "center" }}>
               {t("notifications.empty") || "No notifications yet"}
             </AppText>
           </View>
         ) : (
-          <View className="pb-8">
+          <View style={{ paddingBottom: 32 }}>
             {groupedNotifications.map((group, index) => (
-              <View key={index} className="mb-6">
-                <AppText variant="h3" className="mb-3 ml-1 text-base font-bold text-neutral-textMedium">
+              <View key={index} style={{ marginBottom: 24 }}>
+                <AppText variant="h3" style={{ marginBottom: 12, marginLeft: 4, fontSize: 16, fontWeight: "700", color: "#616161" }}>
                   {t(group.titleKey) || group.title}
                 </AppText>
                 {group.data.map((notification) => (

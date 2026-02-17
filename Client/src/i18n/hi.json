@@ -162,6 +162,14 @@
     "applyNow": "आवेदन करें"
   },
 
+  "tabs": {
+    "home": "होम",
+    "programs": "कार्यक्रम",
+    "schemes": "योजनाएं",
+    "connect": "कनेक्ट",
+    "profile": "प्रोफ़ाइल"
+  },
+
   "home": {
     "updateProfile": "अपना प्रोफ़ाइल अपडेट करें",
     "ongoingEvents": "चल रहे कार्यक्रम",
@@ -261,13 +269,17 @@
     "settings": "सेटिंग्स",
     "switchToHindi": "हिंदी में स्विच करें",
     "switchToEnglish": "Switch to English",
-    "selectLanguage": "भाषा चुनें"
+    "selectLanguage": "भाषा चुनें",
+    "logout": "लॉग आउट",
+    "logoutConfirm": "क्या आप वाकई लॉग आउट करना चाहते हैं?",
+    "appLanguage": "ऐप भाषा"
   },
 
   "common": {
     "cancel": "रद्द करें",
     "save": "सहेजें",
     "yes": "हाँ",
+    "skip": "अभी के लिए छोड़ें",
     "no": "नहीं",
     "ok": "ठीक है",
     "loading": "लोड हो रहा है...",

@@ -1,5 +1,9 @@
 // src/i18n/index.ts
 import { useLanguageStore } from "../stores/languageStore";
+import en from "./en.json";
+import hi from "./hi.json";
+
+const translationData: Record<string, any> = { en, hi };
 
 // For backward compatibility - this won't be reactive
 const T = {
@@ -17,12 +21,19 @@ const T = {
 
 export default T;
 
-// Export the hook for reactive usage
+// Reactive hook — t function re-creates on language change
 export const useTranslation = () => {
-  const { translate, currentLanguage, setLanguage } = useLanguageStore();
-  return {
-    t: translate,
-    currentLanguage,
-    setLanguage,
+  const currentLanguage = useLanguageStore((s) => s.currentLanguage);
+  const setLanguage = useLanguageStore((s) => s.setLanguage);
+
+  const t = (key: string): string => {
+    const keys = key.split(".");
+    let value: any = translationData[currentLanguage];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return typeof value === "string" ? value : key;
   };
+
+  return { t, currentLanguage, setLanguage };
 };

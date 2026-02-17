@@ -1,6 +1,7 @@
 // src/components/molecules/SchemePreviewCard.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, View, TouchableOpacity } from "react-native";
+import React from "react";
+import { Pressable, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
 import { colors } from "../../styles/colors";
 import AppText from "../atoms/AppText";
@@ -27,25 +28,25 @@ export default function SchemePreviewCard({
 
   return (
     <Pressable onPress={onPress}>
-      <Card className="mb-4 p-4 bg-white rounded-2xl shadow-sm border border-neutral-border">
+      <Card style={styles.card}>
         {/* Title and Bookmark Row */}
-        <View className="flex-row justify-between items-start mb-2">
-          <AppText 
-            variant="h3" 
-            className="text-[#386641] font-semibold flex-1 pr-2"
+        <View style={styles.titleRow}>
+          <AppText
+            variant="h3"
+            style={styles.title}
             numberOfLines={2}
           >
             {title}
           </AppText>
           {showBookmark && (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setIsBookmarked(!isBookmarked)}
-              className="p-1"
+              style={styles.bookmarkBtn}
             >
               <Ionicons
                 name={isBookmarked ? "bookmark" : "bookmark-outline"}
                 size={22}
-                color={isBookmarked ? "#386641" : "#9E9E9E"}
+                color={isBookmarked ? colors.primary.green : colors.neutral.textLight}
               />
             </TouchableOpacity>
           )}
@@ -56,18 +57,15 @@ export default function SchemePreviewCard({
           variant="bodyMd"
           numberOfLines={3}
           ellipsizeMode="tail"
-          className="text-neutral-textMedium leading-5 mb-3"
+          style={styles.description}
         >
           {description}
         </AppText>
 
         {/* Category Badge */}
-        <View className="flex-row items-center">
-          <View className="bg-[#F0FDF4] px-3 py-1 rounded-full">
-            <AppText
-              variant="caption"
-              className="text-[#386641] font-medium"
-            >
+        <View style={styles.badgeRow}>
+          <View style={styles.badge}>
+            <AppText variant="caption" style={styles.badgeText}>
               {category}
             </AppText>
           </View>
@@ -76,3 +74,53 @@ export default function SchemePreviewCard({
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  title: {
+    color: colors.primary.green,
+    fontWeight: "600",
+    flex: 1,
+    paddingRight: 8,
+  },
+  bookmarkBtn: {
+    padding: 4,
+  },
+  description: {
+    color: colors.neutral.textMedium,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  badge: {
+    backgroundColor: "#F0FDF4",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  badgeText: {
+    color: colors.primary.green,
+    fontWeight: "500",
+  },
+});

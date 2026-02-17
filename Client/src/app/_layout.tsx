@@ -46,16 +46,16 @@ export default function RootLayout() {
 
   if (!isReady) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
         <Image
           source={require("../assets/images/splash-icon.png")}
-          className="w-32 h-32 mb-8"
+          style={{ width: 128, height: 128, marginBottom: 32 }}
           resizeMode="contain"
         />
-        <Text className="text-2xl font-bold text-neutral-textDark mb-2">
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#212121", marginBottom: 8 }}>
           Tanak Prabha
         </Text>
-        <Text className="text-neutral-textLight">Empowering Farmers</Text>
+        <Text style={{ color: "#9E9E9E" }}>Empowering Farmers</Text>
       </View>
     );
   }

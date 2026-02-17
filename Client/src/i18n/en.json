@@ -157,6 +157,14 @@
     "applyNow": "Apply Now"
   },
 
+  "tabs": {
+    "home": "Home",
+    "programs": "Programs",
+    "schemes": "Schemes",
+    "connect": "Connect",
+    "profile": "Profile"
+  },
+
   "home": {
     "updateProfile": "Update your profile",
     "ongoingEvents": "Ongoing Events",
@@ -256,7 +264,10 @@
     "settings": "Settings",
     "switchToHindi": "हिंदी में स्विच करें",
     "switchToEnglish": "Switch to English",
-    "selectLanguage": "Select Language"
+    "selectLanguage": "Select Language",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "appLanguage": "App Language"
   },
 
   "common": {
@@ -266,6 +277,7 @@
     "no": "No",
     "ok": "OK",
     "loading": "Loading...",
+    "skip": "Skip",
     "retry": "Retry",
     "farmer": "Farmer"
   },

@@ -1,6 +1,7 @@
 // src/components/atoms/ProgressBar.tsx
 import React from "react";
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { colors } from "../../styles/colors";
 
 interface ProgressBarProps {
   currentStep: number;
@@ -12,15 +13,33 @@ export default function ProgressBar({
   totalSteps,
 }: ProgressBarProps) {
   return (
-    <View className="flex-row h-2 gap-1">
+    <View style={styles.container}>
       {Array.from({ length: totalSteps }).map((_, index) => (
         <View
           key={index}
-          className={`flex-1 rounded-full ${
-            index <= currentStep ? "bg-secondary-harvest" : "bg-white/30"
-          }`}
+          style={[
+            styles.step,
+            {
+              backgroundColor:
+                index <= currentStep
+                  ? colors.secondary.harvest
+                  : "rgba(255, 255, 255, 0.3)",
+            },
+          ]}
         />
       ))}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    height: 8,
+    gap: 4,
+  },
+  step: {
+    flex: 1,
+    borderRadius: 999,
+  },
+});

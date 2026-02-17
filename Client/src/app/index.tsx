@@ -3,7 +3,9 @@ import { useTranslation } from "@/i18n";
 import { useLanguageStore } from "@/stores/languageStore";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
+import { AppText } from "@/components/atoms/AppText";
+import { colors } from "@/styles/colors";
 
 const Index = () => {
   const router = useRouter();
@@ -16,21 +18,21 @@ const Index = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white p-6">
-      <Text className="text-2xl font-bold mb-8 text-center">
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF", padding: 24 }}>
+      <AppText variant="headingLg" style={{ marginBottom: 32, textAlign: "center" }}>
         {t("language.selectLanguage")}
-      </Text>
+      </AppText>
       <TouchableOpacity
-        className="bg-blue-500 py-4 px-8 rounded-lg mb-4 w-full"
+        style={{ backgroundColor: "#3B82F6", paddingVertical: 16, paddingHorizontal: 32, borderRadius: 8, marginBottom: 16, width: "100%" }}
         onPress={() => handleLanguageSelect("en")}
       >
-        <Text className="text-white text-center font-semibold">English</Text>
+        <AppText variant="bodyMd" style={{ color: "#FFFFFF", textAlign: "center", fontWeight: "600" }}>English</AppText>
       </TouchableOpacity>
       <TouchableOpacity
-        className="bg-green-500 py-4 px-8 rounded-lg w-full"
+        style={{ backgroundColor: colors.primary.green, paddingVertical: 16, paddingHorizontal: 32, borderRadius: 8, width: "100%" }}
         onPress={() => handleLanguageSelect("hi")}
       >
-        <Text className="text-white text-center font-semibold">हिंदी</Text>
+        <AppText variant="bodyMd" style={{ color: "#FFFFFF", textAlign: "center", fontWeight: "600" }}>हिंदी</AppText>
       </TouchableOpacity>
     </View>
   );

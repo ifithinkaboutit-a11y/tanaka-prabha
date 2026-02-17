@@ -2,12 +2,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Button from "../../components/atoms/Button";
 import { useTranslation } from "../../i18n";
 import { userApi, UserProfile } from "../../services/apiService";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLanguageStore } from "../../stores/languageStore";
 
 // Profile Info Row Component
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
@@ -115,10 +117,38 @@ const SectionCard = ({
 const Profile = () => {
   const router = useRouter();
   const { t } = useTranslation();
+  const { signOut } = useAuth();
+  const { currentLanguage, setLanguage } = useLanguageStore();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const handleLogout = () => {
+    Alert.alert(
+      t("profile.logout"),
+      t("profile.logoutConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("profile.logout"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error("Logout failed:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLanguageToggle = () => {
+    const newLang = currentLanguage === "en" ? "hi" : "en";
+    setLanguage(newLang);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -214,20 +244,23 @@ const Profile = () => {
           {t("profile.title")}
         </AppText>
         <Pressable
-          onPress={() => router.replace("/(auth)/language-selection")}
+          onPress={handleLanguageToggle}
           style={({ pressed }) => ({
-            width: 44,
-            height: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 14,
+            paddingVertical: 8,
             borderRadius: 22,
             backgroundColor: "#FFFFFF",
-            alignItems: "center",
-            justifyContent: "center",
             borderWidth: 1,
             borderColor: "#E5E7EB",
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Ionicons name="settings-outline" size={22} color="#1F2937" />
+          <Ionicons name="language-outline" size={18} color="#386641" />
+          <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", marginLeft: 6, fontSize: 13 }}>
+            {currentLanguage === "en" ? "हिंदी" : "English"}
+          </AppText>
         </Pressable>
       </View>
 
@@ -449,6 +482,65 @@ const Profile = () => {
             {t("profile.viewAll")}
           </AppText>
           <Ionicons name="chevron-forward" size={16} color="#386641" style={{ marginLeft: 4 }} />
+        </Pressable>
+      </SectionCard>
+
+      {/* SETTINGS */}
+      <SectionCard
+        title={t("profile.settings")}
+        icon="settings-outline"
+        iconBgColor="#6B7280"
+      >
+        {/* Language Toggle Row */}
+        <Pressable
+          onPress={handleLanguageToggle}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingVertical: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: "#F3F4F6",
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="language-outline" size={20} color="#386641" />
+            <AppText variant="bodyMd" style={{ color: "#1F2937", marginLeft: 12, fontSize: 15 }}>
+              {t("profile.appLanguage")}
+            </AppText>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#F0FDF4",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 16,
+            }}
+          >
+            <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 13 }}>
+              {currentLanguage === "en" ? "English" : "हिंदी"}
+            </AppText>
+            <Ionicons name="chevron-forward" size={14} color="#386641" style={{ marginLeft: 4 }} />
+          </View>
+        </Pressable>
+
+        {/* Logout Button */}
+        <Pressable
+          onPress={handleLogout}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 14,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
+          <AppText variant="bodyMd" style={{ color: "#DC2626", marginLeft: 12, fontWeight: "600", fontSize: 15 }}>
+            {t("profile.logout")}
+          </AppText>
         </Pressable>
       </SectionCard>
 

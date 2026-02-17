@@ -20,10 +20,10 @@ export default function SearchScreen() {
   }, [initialQuery, performSearch]);
 
   return (
-    <View className="flex-1 bg-neutral-surface">
+    <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
       {/* Header */}
-      <View className="pt-12 pb-4 px-4 bg-white">
-        <AppText variant="h2" className="mb-4">
+      <View style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+        <AppText variant="h2" style={{ marginBottom: 16 }}>
           {t("search.title")}
         </AppText>
         <SearchBar
@@ -31,7 +31,7 @@ export default function SearchScreen() {
           onSearch={performSearch}
         />
         {totalResults > 0 && (
-          <AppText variant="bodySm" className="mt-2 text-neutral-textLight">
+          <AppText variant="bodySm" style={{ marginTop: 8, color: "#9E9E9E" }}>
             {t("search.resultsCount", { count: totalResults })}
           </AppText>
         )}

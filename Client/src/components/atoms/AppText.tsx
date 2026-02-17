@@ -10,13 +10,10 @@ type Variant =
   | "bodySm"
   | "caption";
 
-type AppTextProps = Omit<TextProps, "className"> & {
+type AppTextProps = TextProps & {
   variant?: Variant;
-  className?: string;
 };
 
-// Variant base styles via StyleSheet so that `style` prop can override them.
-// NativeWind `className` (if provided) takes highest priority automatically.
 const variantStyles = StyleSheet.create({
   h1: { fontSize: 36, fontWeight: "bold", color: "#212121" },
   h2: { fontSize: 30, fontWeight: "600", color: "#212121" },
@@ -29,7 +26,6 @@ const variantStyles = StyleSheet.create({
 
 export default function AppText({
   variant = "bodyMd",
-  className,
   style,
   ...props
 }: AppTextProps) {
@@ -37,7 +33,6 @@ export default function AppText({
     <Text
       {...props}
       style={[variantStyles[variant], style]}
-      className={className}
     />
   );
 }

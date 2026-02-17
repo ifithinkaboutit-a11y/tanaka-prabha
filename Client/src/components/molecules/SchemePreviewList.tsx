@@ -1,4 +1,5 @@
 // src/components/molecules/SchemePreviewList.tsx
+import React from "react";
 import { View } from "react-native";
 import { useTranslation } from "../../i18n";
 import SchemePreviewCard from "../atoms/SchemePreviewCard";
@@ -55,7 +56,7 @@ export default function SchemePreviewList({
   const displaySchemes = schemes || defaultSchemes;
 
   return (
-    <View className="mt-4">
+    <View style={{ marginTop: 16 }}>
       {displaySchemes.map((scheme) => (
         <SchemePreviewCard
           key={scheme.id}

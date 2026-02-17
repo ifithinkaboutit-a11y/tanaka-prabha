@@ -1,6 +1,8 @@
 // src/components/atoms/CategoryCard.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View } from "react-native";
+import React from "react";
+import { Pressable, View, StyleSheet } from "react-native";
+import { colors } from "../../styles/colors";
 import AppText from "./AppText";
 import Card from "./Card";
 
@@ -19,28 +21,63 @@ export default function CategoryCard({
 }: CategoryCardProps) {
   return (
     <Pressable onPress={onPress}>
-      <Card className="mb-3 p-4">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <View className="w-10 h-10 bg-primary-green/10 rounded-lg items-center justify-center mr-3">
-              <Ionicons name={icon} size={20} color="#386641" />
+      <Card style={styles.card}>
+        <View style={styles.row}>
+          <View style={styles.leftRow}>
+            <View style={styles.iconContainer}>
+              <Ionicons name={icon} size={20} color={colors.primary.green} />
             </View>
-            <View className="flex-1">
-              <AppText variant="bodyMd" className="font-semibold text-neutral-textDark">
+            <View style={styles.textContainer}>
+              <AppText
+                variant="bodyMd"
+                style={styles.title}
+              >
                 {title}
               </AppText>
-              <AppText variant="caption" className="text-neutral-textMedium">
+              <AppText variant="caption" style={styles.count}>
                 {count} schemes
               </AppText>
             </View>
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color="#9CA3AF"
-          />
+          <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
         </View>
       </Card>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 12,
+    padding: 16,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  leftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    backgroundColor: "rgba(56, 102, 65, 0.1)",
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  title: {
+    fontWeight: "600",
+    color: colors.neutral.textDark,
+  },
+  count: {
+    color: colors.neutral.textMedium,
+  },
+});

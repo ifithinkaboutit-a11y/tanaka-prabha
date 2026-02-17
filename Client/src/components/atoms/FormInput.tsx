@@ -1,36 +1,71 @@
 // src/components/atoms/FormInput.tsx
 import React from "react";
-import { Text, TextInput, TextInputProps, View } from "react-native";
+import { TextInput, TextInputProps, View, StyleSheet, ViewStyle } from "react-native";
+import { colors } from "../../styles/colors";
+import AppText from "./AppText";
 
-interface FormInputProps extends Omit<TextInputProps, "className"> {
+interface FormInputProps extends Omit<TextInputProps, "style"> {
   label?: string;
   error?: string;
-  containerClassName?: string;
+  containerStyle?: ViewStyle;
 }
 
 export default function FormInput({
   label,
   error,
-  containerClassName = "",
+  containerStyle,
   ...props
 }: FormInputProps) {
   return (
-    <View className={`mb-4 ${containerClassName}`}>
+    <View style={[styles.container, containerStyle]}>
       {label && (
-        <Text className="text-neutral-textMedium text-sm mb-2">{label}</Text>
+        <AppText variant="bodySm" style={styles.label}>
+          {label}
+        </AppText>
       )}
 
       <TextInput
-        className={`border rounded-xl px-4 py-4 bg-white text-base text-neutral-textDark ${
-          error ? "border-semantic-error" : "border-neutral-border"
-        }`}
-        placeholderTextColor="#9E9E9E"
+        style={[styles.input, error ? styles.inputError : styles.inputNormal]}
+        placeholderTextColor={colors.neutral.textLight}
         {...props}
       />
 
       {error && (
-        <Text className="text-semantic-error text-sm mt-1">{error}</Text>
+        <AppText variant="bodySm" style={styles.error}>
+          {error}
+        </AppText>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    color: colors.neutral.textMedium,
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    fontSize: 16,
+    color: colors.neutral.textDark,
+  },
+  inputNormal: {
+    borderColor: colors.neutral.border,
+  },
+  inputError: {
+    borderColor: colors.semantic.error,
+  },
+  error: {
+    color: colors.semantic.error,
+    fontSize: 13,
+    marginTop: 4,
+  },
+});

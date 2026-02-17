@@ -44,7 +44,7 @@ const SchemeDetailsScreen = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-neutral-surface items-center justify-center">
+      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator size="large" color="#386641" />
       </View>
     );
@@ -52,8 +52,8 @@ const SchemeDetailsScreen = () => {
 
   if (!scheme) {
     return (
-      <View className="flex-1 bg-neutral-surface items-center justify-center">
-        <AppText variant="h2" className="text-neutral-textDark mb-4">
+      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
+        <AppText variant="h2" style={{ color: "#212121", marginBottom: 16 }}>
           {t("schemesPage.schemeNotFound")}
         </AppText>
         <Button label={t("common.goBack")} onPress={() => router.back()} />
@@ -74,28 +74,22 @@ const SchemeDetailsScreen = () => {
           <View>
             <AppText
               variant="bodyLg"
-              className="text-neutral-textDark mb-6 leading-6"
+              style={{ color: "#212121", marginBottom: 24, lineHeight: 24 }}
             >
               {scheme.overview}
             </AppText>
 
             {/* Key Objectives */}
-            <AppText variant="h3" className="text-neutral-textDark mb-4">
+            <AppText variant="h3" style={{ color: "#212121", marginBottom: 16 }}>
               {t("programReader.keyObjectives")}
             </AppText>
-            <View className="mb-6">
+            <View style={{ marginBottom: 24 }}>
               {scheme.keyObjectives?.map((objective: string, index: number) => (
-                <View key={index} className="flex-row items-start mb-3">
-                  <AppText
-                    variant="bodyMd"
-                    className="text-neutral-textDark mr-2"
-                  >
+                <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+                  <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
                     •
                   </AppText>
-                  <AppText
-                    variant="bodyMd"
-                    className="text-neutral-textDark flex-1"
-                  >
+                  <AppText variant="bodyMd" style={{ color: "#212121", flex: 1 }}>
                     {objective}
                   </AppText>
                 </View>
@@ -106,22 +100,16 @@ const SchemeDetailsScreen = () => {
       case "eligibility":
         return (
           <View>
-            <AppText variant="h3" className="text-neutral-textDark mb-3">
+            <AppText variant="h3" style={{ color: "#212121", marginBottom: 12 }}>
               {t("schemesPage.eligibility")}
             </AppText>
-            <View className="mb-6">
+            <View style={{ marginBottom: 24 }}>
               {scheme.eligibility?.map((criterion: string, index: number) => (
-                <View key={index} className="flex-row items-start mb-3">
-                  <AppText
-                    variant="bodyMd"
-                    className="text-neutral-textDark mr-2"
-                  >
+                <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+                  <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
                     •
                   </AppText>
-                  <AppText
-                    variant="bodyMd"
-                    className="text-neutral-textDark flex-1"
-                  >
+                  <AppText variant="bodyMd" style={{ color: "#212121", flex: 1 }}>
                     {criterion}
                   </AppText>
                 </View>
@@ -131,7 +119,7 @@ const SchemeDetailsScreen = () => {
         );
       case "process":
         return (
-          <AppText variant="bodyLg" className="text-neutral-textDark leading-6">
+          <AppText variant="bodyLg" style={{ color: "#212121", lineHeight: 24 }}>
             {scheme.process}
           </AppText>
         );
@@ -141,16 +129,16 @@ const SchemeDetailsScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Navigation Header */}
-        <View className="flex-row items-center pt-12 pb-4 px-4 bg-white">
-          <Pressable onPress={() => router.back()} className="mr-4 p-1">
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+          <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 4 }}>
             <Ionicons name="arrow-back" size={24} color="#212121" />
           </Pressable>
           <AppText
             variant="h3"
-            className="text-neutral-textDark flex-1 font-semibold"
+            style={{ color: "#212121", flex: 1, fontWeight: "600" }}
             numberOfLines={1}
           >
             {t("schemesPage.schemeDetails")}
@@ -161,27 +149,27 @@ const SchemeDetailsScreen = () => {
         {scheme.heroImageUrl && (
           <Image
             source={{ uri: scheme.heroImageUrl }}
-            className="w-full h-52"
+            style={{ width: "100%", height: 208 }}
             resizeMode="cover"
           />
         )}
 
         {/* Scheme Title & Description */}
-        <View className="px-4 py-5">
-          <AppText variant="h2" className="text-neutral-textDark mb-3 font-bold">
+        <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
+          <AppText variant="h2" style={{ color: "#212121", marginBottom: 12, fontWeight: "700" }}>
             {scheme.title}
           </AppText>
-          <AppText variant="bodyMd" className="text-neutral-textMedium leading-6">
+          <AppText variant="bodyMd" style={{ color: "#616161", lineHeight: 24 }}>
             {scheme.description}{" "}
-            <AppText variant="bodyMd" className="text-[#2196F3] font-medium">
+            <AppText variant="bodyMd" style={{ color: "#2196F3", fontWeight: "500" }}>
               Read more
             </AppText>
           </AppText>
         </View>
 
         {/* Segmented Tab Buttons */}
-        <View className="px-4 mb-4">
-          <View className="flex-row">
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+          <View style={{ flexDirection: "row" }}>
             {[
               { key: "overview", label: t("programReader.tabs.overview") },
               { key: "eligibility", label: t("schemesPage.eligibility") },
@@ -190,19 +178,22 @@ const SchemeDetailsScreen = () => {
               <Pressable
                 key={tab.key}
                 onPress={() => setActiveTab(tab.key as any)}
-                className={`py-2.5 px-5 mr-2 rounded-full border ${
-                  activeTab === tab.key 
-                    ? "bg-[#7F5539] border-[#7F5539]" 
-                    : "bg-white border-neutral-border"
-                }`}
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  marginRight: 8,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  backgroundColor: activeTab === tab.key ? "#7F5539" : "#FFFFFF",
+                  borderColor: activeTab === tab.key ? "#7F5539" : "#D9D9D9",
+                }}
               >
                 <AppText
                   variant="bodyMd"
-                  className={`font-medium ${
-                    activeTab === tab.key
-                      ? "text-white"
-                      : "text-neutral-textDark"
-                  }`}
+                  style={{
+                    fontWeight: "500",
+                    color: activeTab === tab.key ? "#FFFFFF" : "#212121",
+                  }}
                 >
                   {tab.label}
                 </AppText>
@@ -212,17 +203,17 @@ const SchemeDetailsScreen = () => {
         </View>
 
         {/* Tab Content */}
-        <View className="px-4 pb-6">{renderTabContent()}</View>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>{renderTabContent()}</View>
       </ScrollView>
 
       {/* Fixed Apply Now Button */}
-      <View className="px-4 py-4 bg-white border-t border-neutral-border">
+      <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#D9D9D9" }}>
         <Button
           label={t("programReader.applyNow")}
           variant="primary"
           size="lg"
           onPress={handleApplyNow}
-          className="w-full rounded-full"
+          style={{ width: "100%", borderRadius: 999 }}
         />
       </View>
     </View>

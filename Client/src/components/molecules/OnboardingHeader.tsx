@@ -1,6 +1,7 @@
 // src/components/molecules/OnboardingHeader.tsx
 import React from "react";
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { colors } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import ProgressBar from "../atoms/ProgressBar";
 
@@ -18,51 +19,102 @@ export default function OnboardingHeader({
   totalSteps = 3,
 }: OnboardingHeaderProps) {
   return (
-    <View className="bg-primary pt-12 pb-8 px-6 rounded-b-[40px]">
+    <View style={styles.container}>
       {/* Progress Bar */}
-      <View className="mb-6">
+      <View style={styles.progressContainer}>
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
       </View>
 
       {/* Sun icon */}
-      <View className="items-center mb-4">
-        <View className="w-20 h-20 items-center justify-center">
+      <View style={styles.iconRow}>
+        <View style={styles.sunOuter}>
           {/* Sun rays */}
-          <View className="absolute w-24 h-24">
+          <View style={styles.raysContainer}>
             {[...Array(8)].map((_, i) => (
               <View
                 key={i}
-                className="absolute w-1 h-4 bg-secondary-harvest rounded-full"
-                style={{
-                  top: "50%",
-                  left: "50%",
-                  transform: [
-                    { translateX: -2 },
-                    { translateY: -40 },
-                    { rotate: `${i * 45}deg` },
-                  ],
-                  transformOrigin: "center bottom",
-                }}
+                style={[
+                  styles.ray,
+                  {
+                    transform: [
+                      { translateX: -2 },
+                      { translateY: -40 },
+                      { rotate: `${i * 45}deg` },
+                    ],
+                  },
+                ]}
               />
             ))}
           </View>
           {/* Sun circle */}
-          <View className="w-12 h-12 bg-secondary-harvest rounded-full" />
+          <View style={styles.sunCircle} />
         </View>
       </View>
 
       {/* Title */}
-      <AppText
-        variant="h2"
-        className="text-white text-center font-bold text-2xl"
-      >
+      <AppText variant="h2" style={styles.title}>
         {title}
       </AppText>
 
       {/* Subtitle */}
-      <AppText variant="bodySm" className="text-white/80 text-center mt-2">
+      <AppText variant="bodySm" style={styles.subtitle}>
         {subtitle}
       </AppText>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.primary.green,
+    paddingTop: 48,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  progressContainer: {
+    marginBottom: 24,
+  },
+  iconRow: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sunOuter: {
+    width: 80,
+    height: 80,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  raysContainer: {
+    position: "absolute",
+    width: 96,
+    height: 96,
+  },
+  ray: {
+    position: "absolute",
+    width: 4,
+    height: 16,
+    backgroundColor: colors.secondary.harvest,
+    borderRadius: 999,
+    top: "50%",
+    left: "50%",
+  },
+  sunCircle: {
+    width: 48,
+    height: 48,
+    backgroundColor: colors.secondary.harvest,
+    borderRadius: 24,
+  },
+  title: {
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontWeight: "700",
+    fontSize: 24,
+  },
+  subtitle: {
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
+    marginTop: 8,
+  },
+});
