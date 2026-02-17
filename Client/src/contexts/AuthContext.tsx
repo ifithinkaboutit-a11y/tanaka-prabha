@@ -112,10 +112,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to auth if not authenticated and not in auth screens
       router.replace("/(auth)/" as any);
+    } else if (isAuthenticated && inAuthGroup && !needsOnboarding) {
+      // Authenticated user who doesn't need onboarding — skip auth stack
+      router.replace("/(tab)/" as any);
     }
-    // Don't auto-redirect authenticated users away from auth screens
-    // — they may be completing the onboarding flow
-  }, [isAuthenticated, segments, isLoading]);
+  }, [isAuthenticated, segments, isLoading, needsOnboarding]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {

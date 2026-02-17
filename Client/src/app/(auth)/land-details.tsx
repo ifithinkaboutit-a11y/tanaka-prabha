@@ -1,5 +1,5 @@
 // src/app/(auth)/land-details.tsx
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -242,17 +242,6 @@ const AuthLandDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Dark overlay for better text visibility */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          }}
-        />
         {/* Progress bar */}
         <View
           style={{
@@ -272,21 +261,6 @@ const AuthLandDetailsScreen = () => {
               backgroundColor: "#F59E0B",
               borderRadius: 3,
             }}
-          />
-        </View>
-        {/* Sun Icon */}
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingTop: 30,
-          }}
-        >
-          <MaterialCommunityIcons
-            name="white-balance-sunny"
-            size={80}
-            color="#F59E0B"
           />
         </View>
       </View>

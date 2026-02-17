@@ -23,7 +23,7 @@ export default function LanguageSelection() {
     await setLanguage(selectedLanguage);
     // Small delay to ensure language is persisted
     setTimeout(() => {
-      router.push("/(auth)/phone-input" as any);
+      router.push("/(auth)/welcome" as any);
     }, 100);
   };
 

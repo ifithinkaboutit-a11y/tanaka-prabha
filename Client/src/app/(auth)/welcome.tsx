@@ -4,15 +4,17 @@ import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
+import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function Welcome() {
   const { t } = useTranslation();
   const { completeOnboarding } = useAuth();
+  const router = useRouter();
 
   const handleContinue = () => {
-    completeOnboarding();
+    router.push("/(auth)/phone-input" as any);
   };
 
   const handleSkip = () => {

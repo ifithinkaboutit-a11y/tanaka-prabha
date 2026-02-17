@@ -1,5 +1,5 @@
 // src/app/(auth)/livestock-details.tsx
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -42,7 +42,7 @@ interface EntryErrors {
 const AuthLivestockDetailsScreen = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
-  const { refreshUser } = useAuth();
+  const { refreshUser, completeOnboarding } = useAuth();
   const {
     hasLivestock,
     setHasLivestock,
@@ -273,8 +273,8 @@ const AuthLivestockDetailsScreen = () => {
       // Save all onboarding data to backend
       await saveOnboardingData();
       
-      // Navigate to welcome screen (final step)
-      router.push("/(auth)/welcome" as any);
+      // Onboarding complete — go to main app
+      completeOnboarding();
     } catch (error) {
       Alert.alert(
         t("common.error") || "Error",
@@ -292,12 +292,12 @@ const AuthLivestockDetailsScreen = () => {
       // Save available data even when skipping
       await saveOnboardingData();
       
-      // Navigate to welcome screen (final step)
-      router.push("/(auth)/welcome" as any);
+      // Onboarding complete — go to main app
+      completeOnboarding();
     } catch (error) {
       // Even if save fails, let user continue
       console.error("Failed to save on skip:", error);
-      router.push("/(auth)/welcome" as any);
+      completeOnboarding();
     } finally {
       setIsSubmitting(false);
     }
@@ -352,17 +352,6 @@ const AuthLivestockDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Dark overlay for better text visibility */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          }}
-        />
         {/* Progress bar */}
         <View
           style={{
@@ -382,21 +371,6 @@ const AuthLivestockDetailsScreen = () => {
               backgroundColor: "#F59E0B",
               borderRadius: 3,
             }}
-          />
-        </View>
-        {/* Sun Icon */}
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingTop: 30,
-          }}
-        >
-          <MaterialCommunityIcons
-            name="white-balance-sunny"
-            size={80}
-            color="#F59E0B"
           />
         </View>
       </View>
