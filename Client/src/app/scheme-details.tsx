@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
+import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
@@ -61,36 +61,10 @@ const SchemeDetailsScreen = () => {
     );
   }
 
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
-  const handleApplyNow = async () => {
+  const handleApplyNow = () => {
     if (scheme.applyUrl) {
-      try {
-        const supported = await Linking.canOpenURL(scheme.applyUrl);
-        if (supported) {
-          await Linking.openURL(scheme.applyUrl);
-        } else {
-          Alert.alert(
-            t("common.error") || "Error",
-            t("schemesPage.cannotOpenUrl") || "Cannot open this URL"
-          );
-        }
-      } catch (error) {
-        Alert.alert(
-          t("common.error") || "Error",
-          t("schemesPage.urlOpenFailed") || "Failed to open the application URL"
-        );
-      }
-    } else {
-      Alert.alert(
-        t("schemesPage.noApplicationUrl") || "No Application URL",
-        t("schemesPage.contactAuthorities") || "Please contact the relevant authorities to apply for this scheme."
-      );
+      Linking.openURL(scheme.applyUrl);
     }
-  };
-
-  const handleReadMore = () => {
-    setShowFullDescription(!showFullDescription);
   };
 
   const renderTabContent = () => {
@@ -198,19 +172,11 @@ const SchemeDetailsScreen = () => {
             {scheme.title}
           </AppText>
           <AppText variant="bodyMd" className="text-neutral-textMedium leading-6">
-            {showFullDescription 
-              ? scheme.description 
-              : scheme.description?.slice(0, 150) + (scheme.description?.length > 150 ? "..." : "")}
+            {scheme.description}{" "}
+            <AppText variant="bodyMd" className="text-[#2196F3] font-medium">
+              Read more
+            </AppText>
           </AppText>
-          {scheme.description?.length > 150 && (
-            <TouchableOpacity onPress={handleReadMore}>
-              <AppText variant="bodyMd" className="text-[#2196F3] font-medium mt-2">
-                {showFullDescription 
-                  ? (t("common.readLess") || "Read less") 
-                  : (t("common.readMore") || "Read more")}
-              </AppText>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Segmented Tab Buttons */}

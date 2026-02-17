@@ -22,14 +22,12 @@ interface AuthContextType {
   isLoading: boolean;
   user: User | null;
   needsOnboarding: boolean;
-  isGuestMode: boolean;
   signIn: (phoneNumber: string, otp: string) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
   resendOTP: (phoneNumber: string) => Promise<string>;
   refreshUser: () => Promise<void>;
   completeOnboarding: () => void;
-  skipAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -37,7 +35,6 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   needsOnboarding: false,
-  isGuestMode: false,
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
@@ -46,7 +43,6 @@ const AuthContext = createContext<AuthContextType>({
   resendOTP: async () => "",
   refreshUser: async () => {},
   completeOnboarding: () => {},
-  skipAuth: () => {},
 });
 
 export function useAuth() {
@@ -57,7 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [isGuestMode, setIsGuestMode] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
@@ -113,22 +108,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-    const currentScreen = segments[1];
-    // Allow onboarding-related screens
-    const inOnboardingFlow = ["onboarding", "personal-details", "land-details", "livestock-details"].includes(currentScreen);
 
-    if (!isAuthenticated && !isGuestMode && !inAuthGroup) {
-      // Redirect to auth if not authenticated, not in guest mode, and not in auth screens
-      router.replace("/(auth)/welcome");
-    } else if (isAuthenticated && inAuthGroup && !inOnboardingFlow) {
-      // If authenticated but in auth screens (except onboarding flow), redirect appropriately
-      if (needsOnboarding) {
-        router.replace("/(auth)/personal-details");
-      } else {
-        router.replace("/(tab)/");
-      }
+    if (!isAuthenticated && !inAuthGroup) {
+      // Redirect to auth if not authenticated and not in auth screens
+      router.replace("/(auth)/" as any);
     }
-  }, [isAuthenticated, segments, isLoading, needsOnboarding, isGuestMode]);
+    // Don't auto-redirect authenticated users away from auth screens
+    // — they may be completing the onboarding flow
+  }, [isAuthenticated, segments, isLoading]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
@@ -175,18 +162,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
       setUser(null);
       setNeedsOnboarding(false);
-      setIsGuestMode(false);
       router.replace("/(auth)/welcome");
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;
     }
-  }, [router]);
-
-  // Skip authentication - enter guest mode
-  const skipAuth = useCallback(() => {
-    setIsGuestMode(true);
-    router.replace("/(tab)/");
   }, [router]);
 
   // Refresh user data
@@ -209,14 +189,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         user,
         needsOnboarding,
-        isGuestMode,
         signIn,
         signOut,
         sendOTP,
         resendOTP,
         refreshUser,
         completeOnboarding,
-        skipAuth,
       }}
     >
       {children}

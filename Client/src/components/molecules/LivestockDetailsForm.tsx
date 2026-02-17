@@ -1,4 +1,4 @@
-﻿// src/components/molecules/LivestockDetailsForm.tsx
+// src/components/molecules/LivestockDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View, Image } from "react-native";
@@ -6,17 +6,17 @@ import {
   LivestockDetails,
   LivestockDetailsFormProps,
 } from "../../data/interfaces";
-import { useTranslation } from "../../i18n";
+import T from "../../i18n";
 import AppText from "../atoms/AppText";
 
 // Animal icons/emojis for visual representation
 const animalData = [
-  { key: "cow", icon: "ðŸ„", color: "#FEF3C7", iconColor: "#D97706" },
-  { key: "buffalo", icon: "ðŸƒ", color: "#E0E7FF", iconColor: "#4F46E5" },
-  { key: "sheep", icon: "ðŸ‘", color: "#FCE7F3", iconColor: "#DB2777" },
-  { key: "goat", icon: "ðŸ", color: "#DCFCE7", iconColor: "#16A34A" },
-  { key: "hen", icon: "ðŸ”", color: "#FEF9C3", iconColor: "#CA8A04" },
-  { key: "others", icon: "ðŸ¾", color: "#F3F4F6", iconColor: "#6B7280" },
+  { key: "cow", icon: "🐄", color: "#FEF3C7", iconColor: "#D97706" },
+  { key: "buffalo", icon: "🐃", color: "#E0E7FF", iconColor: "#4F46E5" },
+  { key: "sheep", icon: "🐑", color: "#FCE7F3", iconColor: "#DB2777" },
+  { key: "goat", icon: "🐐", color: "#DCFCE7", iconColor: "#16A34A" },
+  { key: "hen", icon: "🐔", color: "#FEF9C3", iconColor: "#CA8A04" },
+  { key: "others", icon: "🐾", color: "#F3F4F6", iconColor: "#6B7280" },
 ];
 
 // Helper component for animal count input
@@ -120,7 +120,6 @@ export default function LivestockDetailsForm({
   onSave,
   onCancel,
 }: LivestockDetailsFormProps) {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
 
   const handleSave = () => {
@@ -175,7 +174,7 @@ export default function LivestockDetailsForm({
               variant="bodySm"
               style={{ color: "#15803D", fontSize: 12 }}
             >
-              {t("livestockDetails.totalAnimals")}
+              {T.translate("livestockDetails.totalAnimals")}
             </AppText>
             <AppText
               variant="h2"
@@ -231,12 +230,12 @@ export default function LivestockDetailsForm({
             <Ionicons name="list" size={20} color="#D97706" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {t("livestockDetails.livestockCount")}
+            {T.translate("livestockDetails.livestockCount")}
           </AppText>
         </View>
 
         <AnimalCountInput
-          label={String(t("livestockDetails.cow"))}
+          label={String(T.translate("livestockDetails.cow"))}
           value={formData.cow}
           onChangeText={(value) => updateField("cow", value)}
           emoji={animalData[0].icon}
@@ -244,7 +243,7 @@ export default function LivestockDetailsForm({
         />
 
         <AnimalCountInput
-          label={String(t("livestockDetails.buffalo"))}
+          label={String(T.translate("livestockDetails.buffalo"))}
           value={formData.buffalo}
           onChangeText={(value) => updateField("buffalo", value)}
           emoji={animalData[1].icon}
@@ -252,7 +251,7 @@ export default function LivestockDetailsForm({
         />
 
         <AnimalCountInput
-          label={String(t("livestockDetails.sheep"))}
+          label={String(T.translate("livestockDetails.sheep"))}
           value={formData.sheep}
           onChangeText={(value) => updateField("sheep", value)}
           emoji={animalData[2].icon}
@@ -260,7 +259,7 @@ export default function LivestockDetailsForm({
         />
 
         <AnimalCountInput
-          label={String(t("livestockDetails.goat"))}
+          label={String(T.translate("livestockDetails.goat"))}
           value={formData.goat}
           onChangeText={(value) => updateField("goat", value)}
           emoji={animalData[3].icon}
@@ -268,7 +267,7 @@ export default function LivestockDetailsForm({
         />
 
         <AnimalCountInput
-          label={String(t("livestockDetails.hen"))}
+          label={String(T.translate("livestockDetails.hen"))}
           value={formData.hen}
           onChangeText={(value) => updateField("hen", value)}
           emoji={animalData[4].icon}
@@ -277,7 +276,7 @@ export default function LivestockDetailsForm({
 
         <View style={{ borderBottomWidth: 0 }}>
           <AnimalCountInput
-            label={String(t("livestockDetails.others"))}
+            label={String(T.translate("livestockDetails.others"))}
             value={formData.others}
             onChangeText={(value) => updateField("others", value)}
             emoji={animalData[5].icon}
@@ -302,7 +301,7 @@ export default function LivestockDetailsForm({
           variant="bodySm"
           style={{ color: "#92400E", marginLeft: 10, flex: 1, lineHeight: 20 }}
         >
-          {t("livestockDetails.infoMessage")}
+          {T.translate("livestockDetails.infoMessage")}
         </AppText>
       </View>
 
@@ -330,7 +329,7 @@ export default function LivestockDetailsForm({
             variant="bodyMd"
             style={{ color: "#6B7280", fontWeight: "600" }}
           >
-            {t("livestockDetails.cancel")}
+            {T.translate("livestockDetails.cancel")}
           </AppText>
         </Pressable>
         <Pressable
@@ -347,7 +346,7 @@ export default function LivestockDetailsForm({
             variant="bodyMd"
             style={{ color: "#FFFFFF", fontWeight: "700" }}
           >
-            {t("livestockDetails.save")}
+            {T.translate("livestockDetails.save")}
           </AppText>
         </Pressable>
       </View>

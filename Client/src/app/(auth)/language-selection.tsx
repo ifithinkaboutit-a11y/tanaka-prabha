@@ -6,7 +6,7 @@ import { LanguageOption } from "@/data/interfaces";
 import { useLanguageStore } from "@/stores/languageStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function LanguageSelection() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function LanguageSelection() {
     await setLanguage(selectedLanguage);
     // Small delay to ensure language is persisted
     setTimeout(() => {
-      router.replace("/(tab)/" as any);
+      router.push("/(auth)/phone-input" as any);
     }, 100);
   };
 
@@ -42,61 +42,63 @@ export default function LanguageSelection() {
   };
 
   return (
-    <View className="flex-1 bg-[#E8F4EA] justify-center px-6">
+    <View style={s.container}>
       {/* Header */}
-      <View className="items-center mb-8">
-        <AppText variant="h2" className="text-neutral-textDark font-bold">
+      <View style={s.header}>
+        <AppText
+          variant="h2"
+          style={{ color: "#212121", fontWeight: "700" }}
+        >
           {t("language.selectLanguage")}
         </AppText>
         <AppText
           variant="bodySm"
-          className="text-neutral-textMedium mt-2 text-center"
+          style={{ color: "#616161", marginTop: 8, textAlign: "center" }}
         >
           {t("language.selectSubtitle")}
         </AppText>
       </View>
 
       {/* Language Options */}
-      <View className="flex-row justify-center gap-4 mb-12">
-        {languages.map((language) => (
-          <Pressable
-            key={language.code}
-            onPress={() => handleLanguageSelect(language)}
-            className={`w-28 h-28 rounded-2xl items-center justify-center border-2 ${
-              selectedLanguage === language.code
-                ? "bg-[#386641] border-[#005005]"
-                : "bg-white border-neutral-border"
-            }`}
-          >
-            <Text
-              className={`text-4xl font-bold ${
-                selectedLanguage === language.code
-                  ? "text-white"
-                  : "text-neutral-textDark"
-              }`}
+      <View style={s.languageRow}>
+        {languages.map((language) => {
+          const isSelected = selectedLanguage === language.code;
+          return (
+            <Pressable
+              key={language.code}
+              onPress={() => handleLanguageSelect(language)}
+              style={[
+                s.languageCard,
+                isSelected ? s.cardSelected : s.cardDefault,
+              ]}
             >
-              {language.symbol}
-            </Text>
-            <Text
-              className={`mt-1 text-sm ${
-                selectedLanguage === language.code
-                  ? "text-white"
-                  : "text-neutral-textMedium"
-              }`}
-            >
-              {language.nativeLabel}
-            </Text>
-            <Text
-              className={`text-xs ${
-                selectedLanguage === language.code
-                  ? "text-white/80"
-                  : "text-neutral-textLight"
-              }`}
-            >
-              ({language.label})
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  s.symbol,
+                  { color: isSelected ? "#FFFFFF" : "#212121" },
+                ]}
+              >
+                {language.symbol}
+              </Text>
+              <Text
+                style={[
+                  s.nativeLabel,
+                  { color: isSelected ? "#FFFFFF" : "#616161" },
+                ]}
+              >
+                {language.nativeLabel}
+              </Text>
+              <Text
+                style={[
+                  s.label,
+                  { color: isSelected ? "rgba(255,255,255,0.8)" : "#9E9E9E" },
+                ]}
+              >
+                ({language.label})
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* Continue Button */}
@@ -104,8 +106,54 @@ export default function LanguageSelection() {
         label={t("language.continue")}
         variant="primary"
         onPress={handleContinue}
-        className="w-full py-4"
+        style={{ width: "100%", paddingVertical: 16 }}
       />
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#E8F4EA",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  languageRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    marginBottom: 48,
+  },
+  languageCard: {
+    width: 112,
+    height: 112,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+  },
+  cardSelected: {
+    backgroundColor: "#386641",
+    borderColor: "#005005",
+  },
+  cardDefault: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D9D9D9",
+  },
+  symbol: {
+    fontSize: 32,
+    fontWeight: "700",
+  },
+  nativeLabel: {
+    marginTop: 4,
+    fontSize: 14,
+  },
+  label: {
+    fontSize: 12,
+  },
+});

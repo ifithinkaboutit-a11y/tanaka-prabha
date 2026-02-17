@@ -1,6 +1,5 @@
 // src/components/atoms/AppText.tsx
-import { Text, TextProps } from "react-native";
-import clsx from "clsx";
+import { Text, TextProps, StyleSheet } from "react-native";
 
 type Variant =
   | "h1"
@@ -16,25 +15,29 @@ type AppTextProps = Omit<TextProps, "className"> & {
   className?: string;
 };
 
-const variantClasses: Record<Variant, string> = {
-  h1: "text-4xl font-bold text-neutral-textDark",
-  h2: "text-3xl font-semibold text-neutral-textDark",
-  h3: "text-2xl font-semibold text-neutral-textDark",
-  bodyLg: "text-xl text-neutral-textDark",
-  bodyMd: "text-lg text-neutral-textDark",
-  bodySm: "text-md text-neutral-textMedium",
-  caption: "text-sm text-neutral-textLight",
-};
+// Variant base styles via StyleSheet so that `style` prop can override them.
+// NativeWind `className` (if provided) takes highest priority automatically.
+const variantStyles = StyleSheet.create({
+  h1: { fontSize: 36, fontWeight: "bold", color: "#212121" },
+  h2: { fontSize: 30, fontWeight: "600", color: "#212121" },
+  h3: { fontSize: 24, fontWeight: "600", color: "#212121" },
+  bodyLg: { fontSize: 20, color: "#212121" },
+  bodyMd: { fontSize: 18, color: "#212121" },
+  bodySm: { fontSize: 16, color: "#616161" },
+  caption: { fontSize: 14, color: "#9E9E9E" },
+});
 
 export default function AppText({
   variant = "bodyMd",
   className,
+  style,
   ...props
 }: AppTextProps) {
   return (
     <Text
       {...props}
-      className={clsx(variantClasses[variant], className)}
+      style={[variantStyles[variant], style]}
+      className={className}
     />
   );
 }

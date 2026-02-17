@@ -12,7 +12,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -174,44 +174,37 @@ const OTPInput = () => {
     : "";
 
   return (
-    <KeyboardAvoidingView 
-      className="flex-1"
+    <KeyboardAvoidingView
+      style={s.root}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
-        keyboardShouldPersistTaps="handled"
-        bounces={false}
-      >
-        {/* Video Background */}
-        <View className="flex-1 min-h-[35vh]">
-          <AuthVideoBackground />
-        </View>
+      {/* Video Background */}
+      <View style={s.videoBg}>
+        <AuthVideoBackground />
+      </View>
 
-        {/* OTP Input Card */}
-        <View className="bg-white rounded-t-3xl p-6 shadow-lg">
+      {/* OTP Input Card */}
+      <View style={s.card}>
         {/* Title */}
         <AppText
           variant="h2"
-          className="text-center text-neutral-textDark font-bold mb-2"
+          style={s.title}
         >
           {t("auth.enterOTP")}
         </AppText>
 
         {/* Subtitle with masked phone */}
-        <Text className="text-center text-neutral-textMedium text-sm mb-2">
+        <Text style={s.subtitle}>
           {t("auth.otpSentTo")} {maskedPhone}
         </Text>
 
         {/* Demo hint */}
-        <Text className="text-center text-primary text-xs mb-4 font-medium">
+        <Text style={s.demoHint}>
           Test Mode: Check backend console for OTP
         </Text>
 
         {/* OTP Input Fields */}
-        <View className="flex-row justify-center gap-2 mb-2">
+        <View style={s.otpRow}>
           {otp.map((digit, index) => (
             <TextInput
               key={index}
@@ -245,22 +238,22 @@ const OTPInput = () => {
         
         {/* Validation Error */}
         {validationError && (
-          <Text className="text-red-500 text-sm text-center mb-4">{validationError}</Text>
+          <Text style={s.errorText}>{validationError}</Text>
         )}
-        {!validationError && <View className="mb-4" />}
+        {!validationError && <View style={{ marginBottom: 16 }} />}
 
         {/* Resend OTP */}
-        <View className="items-center mb-6">
+        <View style={s.resendRow}>
           {canResend ? (
             <TouchableOpacity onPress={handleResendOTP}>
-              <Text className="text-primary font-medium">
+              <Text style={s.resendLink}>
                 {t("auth.resendOTP")}
               </Text>
             </TouchableOpacity>
           ) : (
-            <Text className="text-neutral-textMedium text-sm">
+            <Text style={s.resendTimer}>
               {t("auth.didntReceiveOtp")}{" "}
-              <Text className="text-primary font-medium">
+              <Text style={s.resendLink}>
                 {t("auth.resendOtpIn")} {countdown}s
               </Text>
             </Text>
@@ -272,12 +265,12 @@ const OTPInput = () => {
           variant="primary"
           onPress={handleVerifyOTP}
           disabled={loading || otp.join("").length !== OTP_LENGTH}
-          className="w-full py-4 mb-4"
+          style={{ width: "100%", paddingVertical: 16, marginBottom: 16 }}
         >
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white text-center font-semibold text-base">
+            <Text style={s.btnText}>
               {t("auth.verifyOTP")}
             </Text>
           )}
@@ -285,14 +278,88 @@ const OTPInput = () => {
 
         {/* Change Number Link */}
         <TouchableOpacity onPress={handleChangeNumber}>
-          <Text className="text-center text-neutral-textMedium">
+          <Text style={s.changeNumber}>
             {t("auth.changeNumber")}
           </Text>
         </TouchableOpacity>
       </View>
-      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 export default OTPInput;
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  videoBg: {
+    flex: 1,
+    height: "55%",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  title: {
+    textAlign: "center",
+    color: "#212121",
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#616161",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  demoHint: {
+    textAlign: "center",
+    color: "#386641",
+    fontSize: 12,
+    marginBottom: 16,
+    fontWeight: "500",
+  },
+  otpRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  resendRow: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  resendLink: {
+    color: "#386641",
+    fontWeight: "500",
+  },
+  resendTimer: {
+    color: "#616161",
+    fontSize: 14,
+  },
+  btnText: {
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  changeNumber: {
+    textAlign: "center",
+    color: "#616161",
+  },
+});

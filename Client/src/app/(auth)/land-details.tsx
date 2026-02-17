@@ -242,6 +242,17 @@ const AuthLandDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
+        {/* Dark overlay for better text visibility */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+          }}
+        />
         {/* Progress bar */}
         <View
           style={{
@@ -263,7 +274,21 @@ const AuthLandDetailsScreen = () => {
             }}
           />
         </View>
-
+        {/* Sun Icon */}
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: 30,
+          }}
+        >
+          <MaterialCommunityIcons
+            name="white-balance-sunny"
+            size={80}
+            color="#F59E0B"
+          />
+        </View>
       </View>
 
       {/* Content Card */}
@@ -326,7 +351,7 @@ const AuthLandDetailsScreen = () => {
                 </AppText>
                 <Toggle 
                   value={hasLand} 
-                  onChange={(value: boolean) => {
+                  onValueChange={(value) => {
                     setHasLand(value);
                   // Add a default entry when enabling land ownership
                   if (value && landEntries.length === 0) {
@@ -437,8 +462,8 @@ const AuthLandDetailsScreen = () => {
                       borderRadius: 12 
                     }}>
                       <MultiSelect
-                        values={entry.crops || []}
-                        onChange={(crops) => handleCropsChange(entry.id, crops)}
+                        value={entry.crops || []}
+                        onValueChange={(crops) => handleCropsChange(entry.id, crops)}
                         options={cropOptions}
                         placeholder={t("onboarding.selectCrops")}
                       />
@@ -511,7 +536,7 @@ const AuthLandDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#6B7280", fontWeight: "600" }}
             >
-              {t("onboarding.skip")}
+              {t("common.skip")}
             </AppText>
           </Pressable>
           <Pressable
@@ -533,7 +558,7 @@ const AuthLandDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#FFFFFF", fontWeight: "700" }}
             >
-              {t("onboarding.next")}
+              {t("common.next")}
             </AppText>
           </Pressable>
         </View>

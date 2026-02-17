@@ -2,13 +2,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View, Alert } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Button from "../../components/atoms/Button";
 import { useTranslation } from "../../i18n";
 import { userApi, UserProfile } from "../../services/apiService";
-import { useAuth } from "../../contexts/AuthContext";
 
 // Profile Info Row Component
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
@@ -115,8 +114,7 @@ const SectionCard = ({
 
 const Profile = () => {
   const router = useRouter();
-  const { t, currentLanguage, setLanguage } = useTranslation();
-  const { signOut } = useAuth();
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,41 +148,6 @@ const Profile = () => {
 
   const maskAadhaar = (aadhaar: string) =>
     aadhaar.replace(/(\d{4})(\d{4})(\d{4})/, "XXXX XXXX $3");
-
-  const handleLogout = () => {
-    Alert.alert(
-      t("profile.logoutTitle") || "Logout",
-      t("profile.logoutConfirm") || "Are you sure you want to logout?",
-      [
-        {
-          text: t("common.cancel") || "Cancel",
-          style: "cancel",
-        },
-        {
-          text: t("profile.logout") || "Logout",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error) {
-              console.error("Logout error:", error);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleLanguageChange = () => {
-    const newLanguage = currentLanguage === "en" ? "hi" : "en";
-    setLanguage(newLanguage);
-    Alert.alert(
-      t("profile.languageChanged") || "Language Changed",
-      newLanguage === "hi" 
-        ? "भाषा हिंदी में बदल दी गई है" 
-        : "Language has been changed to English"
-    );
-  };
 
   if (loading) {
     return (
@@ -486,78 +449,6 @@ const Profile = () => {
             {t("profile.viewAll")}
           </AppText>
           <Ionicons name="chevron-forward" size={16} color="#386641" style={{ marginLeft: 4 }} />
-        </Pressable>
-      </SectionCard>
-
-      {/* SETTINGS */}
-      <SectionCard
-        title={t("profile.settings") || "Settings"}
-        icon="settings-outline"
-        iconBgColor="#6B7280"
-      >
-        {/* Language Toggle */}
-        <Pressable
-          onPress={handleLanguageChange}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 14,
-            borderBottomWidth: 1,
-            borderBottomColor: "#F3F4F6",
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons name="language-outline" size={20} color="#6B7280" style={{ marginRight: 12 }} />
-            <AppText variant="bodySm" style={{ color: "#1F2937", fontWeight: "500", fontSize: 15 }}>
-              {t("profile.changeLanguage") || "Change Language"}
-            </AppText>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                backgroundColor: "#EEF2FF",
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 12,
-                marginRight: 8,
-              }}
-            >
-              <AppText variant="bodySm" style={{ color: "#4F46E5", fontWeight: "600", fontSize: 12 }}>
-                {currentLanguage === "en" ? "English" : "हिंदी"}
-              </AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </View>
-        </Pressable>
-
-        {/* Logout Button */}
-        <Pressable
-          onPress={handleLogout}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 14,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: "#FEE2E2",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="log-out-outline" size={18} color="#DC2626" />
-          </View>
-          <AppText variant="bodySm" style={{ color: "#DC2626", fontWeight: "600", fontSize: 15 }}>
-            {t("profile.logout") || "Logout"}
-          </AppText>
         </Pressable>
       </SectionCard>
 

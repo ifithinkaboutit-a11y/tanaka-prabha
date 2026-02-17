@@ -1,7 +1,6 @@
 // src/components/atoms/Button.tsx
-import clsx from "clsx";
 import { ReactNode } from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 
 type ButtonProps = {
   children?: ReactNode;
@@ -9,8 +8,26 @@ type ButtonProps = {
   onPress?: () => void;
   variant?: "primary" | "secondary" | "outline";
   disabled?: boolean;
-  className?: string;
+  style?: ViewStyle;
   size?: "sm" | "md" | "lg";
+};
+
+const sizeStyles: Record<string, ViewStyle> = {
+  sm: { paddingHorizontal: 8, paddingVertical: 4 },
+  md: { paddingHorizontal: 16, paddingVertical: 12 },
+  lg: { paddingHorizontal: 24, paddingVertical: 16 },
+};
+
+const variantStyles: Record<string, ViewStyle> = {
+  primary: { backgroundColor: "#386641" },
+  secondary: { backgroundColor: "#7F5539" },
+  outline: { borderWidth: 1, borderColor: "#D9D9D9", backgroundColor: "#FFFFFF" },
+};
+
+const textColors: Record<string, string> = {
+  primary: "#FFFFFF",
+  secondary: "#FFFFFF",
+  outline: "#212121",
 };
 
 export default function Button({
@@ -19,22 +36,13 @@ export default function Button({
   onPress,
   variant = "primary",
   disabled,
-  className,
+  style,
   size = "md",
 }: ButtonProps) {
-  const sizeClasses = {
-    sm: "px-2 py-1",
-    md: "px-4 py-3",
-    lg: "px-6 py-4",
-  };
-
-  const textColorClass =
-    variant === "outline" ? "text-neutral-textDark" : "text-white";
-
   const content =
     children ||
     (label ? (
-      <Text className={clsx("text-bodyMd font-medium", textColorClass)}>
+      <Text style={[styles.label, { color: textColors[variant] }]}>
         {label}
       </Text>
     ) : null);
@@ -43,17 +51,35 @@ export default function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className={clsx(
-        "rounded-lg items-center justify-center flex-row",
-        sizeClasses[size],
-        variant === "primary" && "bg-[#386641]",
-        variant === "secondary" && "bg-[#7F5539]",
-        variant === "outline" && "border border-neutral-border bg-white",
-        disabled && "opacity-50",
-        className,
-      )}
+      style={({ pressed }) => [
+        styles.base,
+        sizeStyles[size],
+        variantStyles[variant],
+        disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
+        style,
+      ]}
     >
       {content}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+});

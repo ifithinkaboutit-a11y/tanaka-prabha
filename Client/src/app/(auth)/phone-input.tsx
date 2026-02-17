@@ -12,7 +12,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -82,52 +82,50 @@ const PhoneInput = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      className="flex-1"
+    <KeyboardAvoidingView
+      style={s.root}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
-        keyboardShouldPersistTaps="handled"
-        bounces={false}
-      >
-        {/* Video Background */}
-        <View className="flex-1 min-h-[40vh]">
-          <AuthVideoBackground />
-        </View>
+      {/* Video Background */}
+      <View style={s.videoBg}>
+        <AuthVideoBackground />
+      </View>
 
-        {/* Phone Input Card */}
-        <View className="bg-white rounded-t-3xl p-6 shadow-lg">
+      {/* Phone Input Card */}
+      <View style={s.card}>
         {/* Title */}
         <AppText
           variant="h2"
-          className="text-center text-neutral-textDark font-bold mb-2"
+          style={s.title}
         >
           {t("auth.enterPhone")}
         </AppText>
 
         {/* Subtitle */}
-        <Text className="text-center text-neutral-textMedium text-sm mb-6">
+        <Text style={s.subtitle}>
           {t("auth.phoneSubtitle")}
         </Text>
 
         {/* Phone Input Label */}
-        <Text className="text-neutral-textMedium text-sm mb-2">
+        <Text style={s.inputLabel}>
           {t("auth.mobileNumber")}
         </Text>
 
         {/* Phone Input Field */}
-        <View className={`flex-row items-center border rounded-xl bg-neutral-surface mb-2 ${validationError ? 'border-red-500' : 'border-neutral-border'}`}>
+        <View
+          style={[
+            s.inputRow,
+            { borderColor: validationError ? "#EF4444" : "#D9D9D9" },
+          ]}
+        >
           {/* Country Code */}
-          <View className="px-4 py-4 border-r border-neutral-border">
-            <Text className="text-neutral-textDark font-medium">+91</Text>
+          <View style={s.countryCode}>
+            <Text style={s.countryCodeText}>+91</Text>
           </View>
 
           {/* Phone Number Input */}
           <TextInput
-            className="flex-1 px-4 py-4 text-base text-neutral-textDark"
+            style={s.phoneInput}
             placeholder="9555402857"
             placeholderTextColor="#9E9E9E"
             keyboardType="phone-pad"
@@ -140,21 +138,21 @@ const PhoneInput = () => {
         
         {/* Validation Error */}
         {validationError && (
-          <Text className="text-red-500 text-sm mb-4">{validationError}</Text>
+          <Text style={s.errorText}>{validationError}</Text>
         )}
-        {!validationError && <View className="mb-4" />}
+        {!validationError && <View style={{ marginBottom: 16 }} />}
 
         {/* Get OTP Button */}
         <Button
           variant="primary"
           onPress={handleSendOTP}
           disabled={loading || phoneNumber.length < 10}
-          className="w-full py-4 mb-4"
+          style={{ width: "100%", paddingVertical: 16, marginBottom: 16 }}
         >
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white text-center font-semibold text-base">
+            <Text style={s.btnText}>
               {t("auth.getOtp")}
             </Text>
           )}
@@ -162,15 +160,97 @@ const PhoneInput = () => {
 
         {/* Already Registered Link */}
         <TouchableOpacity onPress={handleAlreadyRegistered}>
-          <Text className="text-center text-neutral-textMedium">
+          <Text style={s.alreadyText}>
             {t("auth.alreadyRegistered")}{" "}
-            <Text className="text-primary font-medium">{t("auth.login")}</Text>
+            <Text style={s.loginLink}>{t("auth.login")}</Text>
           </Text>
         </TouchableOpacity>
       </View>
-      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 export default PhoneInput;
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  videoBg: {
+    flex: 1,
+    height: "60%",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  title: {
+    textAlign: "center",
+    color: "#212121",
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#616161",
+    fontSize: 14,
+    marginBottom: 24,
+  },
+  inputLabel: {
+    color: "#616161",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: "#F6F6F6",
+    marginBottom: 8,
+  },
+  countryCode: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRightWidth: 1,
+    borderRightColor: "#D9D9D9",
+  },
+  countryCodeText: {
+    color: "#212121",
+    fontWeight: "500",
+  },
+  phoneInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: "#212121",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  btnText: {
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  alreadyText: {
+    textAlign: "center",
+    color: "#616161",
+  },
+  loginLink: {
+    color: "#386641",
+    fontWeight: "500",
+  },
+});

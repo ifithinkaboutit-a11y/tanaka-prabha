@@ -5,6 +5,7 @@ import {
     Modal,
     Pressable,
     ScrollView,
+    StyleSheet,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -38,24 +39,27 @@ export default function Select({
   const selectedOption = options.find((opt) => opt.value === value);
 
   return (
-    <View className="mb-4">
+    <View style={s.container}>
       {label && (
-        <AppText variant="bodySm" className="text-neutral-textMedium mb-2 font-medium">
+        <AppText
+          variant="bodySm"
+          style={{ color: colors.neutral.textMedium, marginBottom: 8, fontWeight: "500" }}
+        >
           {label}
         </AppText>
       )}
 
       <Pressable
         onPress={() => !disabled && setIsOpen(true)}
-        className={`flex-row items-center justify-between border border-neutral-border rounded-xl px-4 py-3.5 bg-white ${
-          disabled ? "opacity-50" : ""
-        }`}
+        style={[s.trigger, disabled && s.disabled]}
       >
         <AppText
           variant="bodyMd"
-          className={
-            selectedOption ? "text-neutral-textDark" : "text-neutral-textLight"
-          }
+          style={{
+            color: selectedOption
+              ? colors.neutral.textDark
+              : colors.neutral.textLight,
+          }}
         >
           {selectedOption?.label || placeholder}
         </AppText>
@@ -72,56 +76,61 @@ export default function Select({
         animationType="fade"
         onRequestClose={() => setIsOpen(false)}
       >
-        <Pressable
-          className="flex-1 bg-black/50 justify-end"
-          onPress={() => setIsOpen(false)}
-        >
-          {/* Stop propagation when tapping the modal content */}
-          <Pressable 
-            className="bg-white rounded-t-3xl max-h-[60%] w-full" 
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View className="p-4 border-b border-neutral-border flex-row justify-between items-center bg-gray-50 rounded-t-3xl">
-              <View className="w-6" /> 
-              <AppText variant="h3" className="font-semibold text-center text-neutral-textDark">
+        <Pressable style={s.overlay} onPress={() => setIsOpen(false)}>
+          <Pressable style={s.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={s.header}>
+              <View style={{ width: 24 }} />
+              <AppText
+                variant="h3"
+                style={{
+                  fontWeight: "600",
+                  textAlign: "center",
+                  color: colors.neutral.textDark,
+                }}
+              >
                 {label || "Select Option"}
               </AppText>
               <TouchableOpacity onPress={() => setIsOpen(false)}>
-                 <Ionicons name="close" size={24} color={colors.neutral.textDark} />
+                <Ionicons name="close" size={24} color={colors.neutral.textDark} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="p-4" contentContainerStyle={{ paddingBottom: 20 }}>
-              {options.map((option) => (
-                <TouchableOpacity
-                  key={option.value}
-                  onPress={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`flex-row items-center justify-between py-4 px-2 border-b border-gray-100 ${
-                    value === option.value ? "bg-primary-50 rounded-lg" : ""
-                  }`}
-                >
-                  <AppText
-                    variant="bodyMd"
-                    className={
-                      value === option.value
-                        ? "text-primary font-semibold"
-                        : "text-neutral-textDark"
-                    }
+            <ScrollView
+              style={{ padding: 16 }}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
+              {options.map((option) => {
+                const isSelected = value === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    onPress={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    style={[s.option, isSelected && s.optionSelected]}
                   >
-                    {option.label}
-                  </AppText>
-                  {value === option.value && (
-                    <Ionicons
-                      name="checkmark"
-                      size={20}
-                      color={colors.primary.green}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
+                    <AppText
+                      variant="bodyMd"
+                      style={{
+                        color: isSelected
+                          ? colors.primary.green
+                          : colors.neutral.textDark,
+                        fontWeight: isSelected ? "600" : "400",
+                      }}
+                    >
+                      {option.label}
+                    </AppText>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.primary.green}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </Pressable>
         </Pressable>
@@ -129,3 +138,59 @@ export default function Select({
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "60%",
+    width: "100%",
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  optionSelected: {
+    backgroundColor: "#E8F4EA",
+    borderRadius: 8,
+  },
+});

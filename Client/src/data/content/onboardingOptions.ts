@@ -69,6 +69,12 @@ export const landUnits: SelectOption[] = [
   { value: "hectare", label: "Hectare", labelHi: "हेक्टेयर" },
 ];
 
+export const genderOptions: SelectOption[] = [
+  { value: "male", label: "Male", labelHi: "पुरुष" },
+  { value: "female", label: "Female", labelHi: "महिला" },
+  { value: "other", label: "Other", labelHi: "अन्य" },
+];
+
 export const animalTypes: SelectOption[] = [
   { value: "cow", label: "Cow", labelHi: "गाय" },
   { value: "buffalo", label: "Buffalo", labelHi: "भैंस" },
@@ -77,12 +83,6 @@ export const animalTypes: SelectOption[] = [
   { value: "pig", label: "Pig", labelHi: "सुअर" },
   { value: "poultry", label: "Poultry/Hen", labelHi: "मुर्गी" },
   { value: "horse", label: "Horse", labelHi: "घोड़ा" },
-  { value: "other", label: "Other", labelHi: "अन्य" },
-];
-
-export const genderOptions: SelectOption[] = [
-  { value: "male", label: "Male", labelHi: "पुरुष" },
-  { value: "female", label: "Female", labelHi: "महिला" },
   { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 

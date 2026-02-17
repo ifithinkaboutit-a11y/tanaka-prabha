@@ -12,12 +12,12 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="language-selection" />
-      <Stack.Screen name="welcome" />
       <Stack.Screen name="phone-input" />
       <Stack.Screen name="otp-input" />
       <Stack.Screen name="personal-details" />
       <Stack.Screen name="land-details" />
       <Stack.Screen name="livestock-details" />
+      <Stack.Screen name="welcome" />
       <Stack.Screen name="onboarding" />
     </Stack>
   );
