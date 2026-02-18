@@ -35,7 +35,7 @@ const initializeTransporter = async () => {
                 pass: emailPass,
             },
         });
-        console.log('📧 Email service initialized with configured SMTP');
+        console.log(`📧 Email service initialized with configured SMTP (${emailHost}, user: ${emailUser})`);
     } else {
         // Create Ethereal test account for development
         try {
