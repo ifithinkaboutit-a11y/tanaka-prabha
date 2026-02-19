@@ -3,10 +3,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000/api";
+  "https://tanak-prabha.onrender.com/api";
 
 // Log API URL on startup for debugging
 console.log("🔗 API Base URL:", API_BASE_URL);
+
+if (!process.env.EXPO_PUBLIC_API_URL) {
+  console.warn(
+    "⚠️ EXPO_PUBLIC_API_URL is not set! Using hardcoded fallback. " +
+      "Set it in eas.json env or .env file."
+  );
+}
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -139,14 +146,16 @@ export const tokenManager = {
   },
 };
 
-// Base fetch wrapper with auth handling
+// Base fetch wrapper with auth handling and automatic retry for cold starts
 async function fetchWithAuth<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  _retryCount = 0
 ): Promise<ApiResponse<T>> {
+  const MAX_RETRIES = 1; // retry once on timeout (covers Render cold-start)
   const url = `${API_BASE_URL}${endpoint}`;
 
-  console.log(`📤 API Request: ${options.method || "GET"} ${url}`);
+  console.log(`📤 API Request: ${options.method || "GET"} ${url}${_retryCount ? ` (retry #${_retryCount})` : ""}`);
   if (options.body) {
     console.log("📦 Request Body:", options.body);
   }
@@ -165,10 +174,17 @@ async function fetchWithAuth<T>(
   }
 
   try {
+    // 50-second timeout to handle Render free-tier cold starts (~30-40s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
+
     const response = await fetch(url, {
       ...options,
       headers,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const data = await response.json();
     console.log(`📥 API Response (${response.status}):`, JSON.stringify(data).slice(0, 200));
@@ -188,12 +204,26 @@ async function fetchWithAuth<T>(
       throw error;
     }
 
-    // Network or other error
+    // Network or timeout error — retry once for Render cold starts
+    const isTimeout = error instanceof Error && error.name === "AbortError";
+    const isNetworkError =
+      error instanceof Error &&
+      (error.message.includes("Network request failed") ||
+        error.message.includes("Failed to fetch"));
+
+    if ((isTimeout || isNetworkError) && _retryCount < MAX_RETRIES) {
+      console.log(`🔄 Server may be waking up — retrying in 3s... (attempt ${_retryCount + 1}/${MAX_RETRIES})`);
+      await new Promise((r) => setTimeout(r, 3000));
+      return fetchWithAuth<T>(endpoint, options, _retryCount + 1);
+    }
+
     console.error("❌ API Request Error:", error);
-    throw new ApiError(
-      error instanceof Error ? error.message : "Network error",
-      0
-    );
+    const message = isTimeout
+      ? "Request timed out — the server may be starting up, please try again"
+      : error instanceof Error
+        ? error.message
+        : "Network error";
+    throw new ApiError(message, 0);
   }
 }
 

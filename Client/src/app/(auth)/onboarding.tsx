@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "@/i18n";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/contexts/AuthContext";
+import type { OnboardingData } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -80,20 +81,50 @@ const Onboarding = () => {
     }
   };
 
-  const handleNext = () => {
+  // Collect all onboarding data from the store and build the payload
+  const collectOnboardingData = (): OnboardingData => {
+    const data: OnboardingData = {
+      personalDetails: { ...personalDetails },
+    };
+
+    if (hasLand && landEntries.length > 0) {
+      // Sum up land areas and collect all crops
+      const totalArea = landEntries.reduce((sum, e) => sum + (e.area || 0), 0);
+      const allCrops = landEntries.flatMap((e) => e.crops || []);
+      data.landDetails = {
+        totalLandArea: totalArea,
+        crops: allCrops,
+      };
+    }
+
+    if (hasLivestock && livestockEntries.length > 0) {
+      // Aggregate livestock counts by type
+      const livestock: Record<string, number> = {};
+      for (const entry of livestockEntries) {
+        if (entry.type) {
+          livestock[entry.type] = (livestock[entry.type] || 0) + entry.count;
+        }
+      }
+      data.livestockDetails = livestock;
+    }
+
+    return data;
+  };
+
+  const handleNext = async () => {
     if (currentStep < TOTAL_STEPS - 1) {
       nextStep();
     } else {
-      // Final step - mark onboarding complete and navigate to home
-      completeOnboarding();
-      router.replace("/(tab)/" as any);
+      // Final step — sync all onboarding data to backend then navigate
+      const data = collectOnboardingData();
+      await completeOnboarding(data);
     }
   };
 
-  const handleSkip = () => {
-    // Skip also marks onboarding as complete
-    completeOnboarding();
-    router.replace("/(tab)/" as any);
+  const handleSkip = async () => {
+    // Skip — still sync whatever data has been entered so far
+    const data = collectOnboardingData();
+    await completeOnboarding(data);
   };
 
   const stateOptions = getLocalizedOptions(indianStates, currentLanguage);

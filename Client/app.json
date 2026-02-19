@@ -28,6 +28,8 @@
       "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withAndroidPackagingOptions",
+      "./plugins/withGradleNetworkTimeout",
       "expo-router",
       [
         "expo-splash-screen",
@@ -54,6 +56,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
+      }
     }
   }
 }

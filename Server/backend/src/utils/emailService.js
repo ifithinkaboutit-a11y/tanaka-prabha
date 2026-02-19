@@ -8,6 +8,10 @@ import nodemailer from 'nodemailer';
  * and can be viewed at https://ethereal.email
  */
 
+// Timeouts (ms) — make these configurable via environment variables
+const EMAIL_CONN_TIMEOUT = parseInt(process.env.EMAIL_CONN_TIMEOUT || '5000');
+const EMAIL_SEND_TIMEOUT = parseInt(process.env.EMAIL_SEND_TIMEOUT || '5000');
+
 let transporter = null;
 let etherealAccount = null;
 
@@ -34,6 +38,10 @@ const initializeTransporter = async () => {
                 user: emailUser,
                 pass: emailPass,
             },
+            // Short connection timeouts so SMTP issues don't block requests
+            connectionTimeout: EMAIL_CONN_TIMEOUT,
+            greetingTimeout: EMAIL_CONN_TIMEOUT,
+            socketTimeout: EMAIL_CONN_TIMEOUT,
         });
         console.log(`📧 Email service initialized with configured SMTP (${emailHost}, user: ${emailUser})`);
     } else {
@@ -49,6 +57,10 @@ const initializeTransporter = async () => {
                     user: etherealAccount.user,
                     pass: etherealAccount.pass,
                 },
+                // Short timeouts for development SMTP as well
+                connectionTimeout: EMAIL_CONN_TIMEOUT,
+                greetingTimeout: EMAIL_CONN_TIMEOUT,
+                socketTimeout: EMAIL_CONN_TIMEOUT,
             });
 
             console.log('📧 Ethereal Mail test account created:');
@@ -114,8 +126,13 @@ const sendOTPEmail = async (mobileNumber, otp) => {
             `,
         };
 
-        const info = await transport.sendMail(mailOptions);
-        
+        // Send with a short per-send timeout so a single send cannot hang the request
+        const sendPromise = transport.sendMail(mailOptions);
+        const info = await Promise.race([
+            sendPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Email send timeout')), EMAIL_SEND_TIMEOUT))
+        ]);
+
         // Get Ethereal preview URL if using test account
         const previewUrl = nodemailer.getTestMessageUrl(info);
         
