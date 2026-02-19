@@ -1,5 +1,5 @@
 // src/app/(auth)/land-details.tsx
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -263,7 +263,6 @@ const AuthLandDetailsScreen = () => {
             }}
           />
         </View>
-
       </View>
 
       {/* Content Card */}
@@ -326,7 +325,7 @@ const AuthLandDetailsScreen = () => {
                 </AppText>
                 <Toggle 
                   value={hasLand} 
-                  onChange={(value: boolean) => {
+                  onValueChange={(value) => {
                     setHasLand(value);
                   // Add a default entry when enabling land ownership
                   if (value && landEntries.length === 0) {
@@ -437,8 +436,8 @@ const AuthLandDetailsScreen = () => {
                       borderRadius: 12 
                     }}>
                       <MultiSelect
-                        values={entry.crops || []}
-                        onChange={(crops) => handleCropsChange(entry.id, crops)}
+                        value={entry.crops || []}
+                        onValueChange={(crops) => handleCropsChange(entry.id, crops)}
                         options={cropOptions}
                         placeholder={t("onboarding.selectCrops")}
                       />
@@ -511,7 +510,7 @@ const AuthLandDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#6B7280", fontWeight: "600" }}
             >
-              {t("onboarding.skip")}
+              {t("common.skip")}
             </AppText>
           </Pressable>
           <Pressable
@@ -533,7 +532,7 @@ const AuthLandDetailsScreen = () => {
               variant="bodyMd"
               style={{ color: "#FFFFFF", fontWeight: "700" }}
             >
-              {t("onboarding.next")}
+              {t("common.next")}
             </AppText>
           </Pressable>
         </View>

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary */
+    --color-primary: #386641;
+    --color-primary-green: #386641;
+    --color-primary-greenLight: #6A8F74;
+    --color-primary-greenDark: #005005;
+
+    /* Secondary */
+    --color-secondary-soil: #7F5539;
+    --color-secondary-harvest: #FBC02D;
+    --color-secondary-clay: #F57C00;
+    --color-secondary-sky: #4FC3F7;
+
+    /* Neutral */
+    --color-neutral-surface: #F6F6F6;
+    --color-neutral-border: #D9D9D9;
+    --color-neutral-textLight: #9E9E9E;
+    --color-neutral-textMedium: #616161;
+    --color-neutral-textDark: #212121;
+
+    /* Semantic */
+    --color-semantic-success: #4CAF50;
+    --color-semantic-error: #F44336;
+    --color-semantic-warning: #FF9800;
+    --color-semantic-info: #0275D8;
+  }
+}

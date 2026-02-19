@@ -52,8 +52,24 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
     }
   };
 
+  // Don't auto-fetch on mount — wait until explicitly called
+  // Profile will be fetched when navigating to screens that need it
   useEffect(() => {
-    refreshProfile();
+    // Only attempt to load profile if a token exists
+    const loadIfAuthenticated = async () => {
+      try {
+        const { tokenManager } = require("../services/apiService");
+        const token = await tokenManager.getToken();
+        if (token) {
+          await refreshProfile();
+        } else {
+          setLoading(false);
+        }
+      } catch {
+        setLoading(false);
+      }
+    };
+    loadIfAuthenticated();
   }, []);
 
   const updateProfile = async (updates: Partial<UserProfileUpdate>) => {

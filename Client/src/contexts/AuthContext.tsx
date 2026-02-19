@@ -15,21 +15,51 @@ import {
   sendOTP as authSendOTP,
   resendOTP as authResendOTP,
 } from "@/utils/auth";
-import { User, tokenManager } from "@/services/apiService";
+import { User, tokenManager, userApi, UserProfileUpdate } from "@/services/apiService";
+
+export interface OnboardingData {
+  personalDetails?: {
+    name?: string;
+    age?: number;
+    gender?: string;
+    fathersName?: string;
+    mothersName?: string;
+    educationalQualification?: string;
+    sonsMarried?: number;
+    sonsUnmarried?: number;
+    daughtersMarried?: number;
+    daughtersUnmarried?: number;
+    otherFamilyMembers?: number;
+    village?: string;
+    gramPanchayat?: string;
+    nyayPanchayat?: string;
+    postOffice?: string;
+    tehsil?: string;
+    block?: string;
+    district?: string;
+    pinCode?: string;
+    state?: string;
+  };
+  landDetails?: {
+    totalLandArea?: number;
+    crops?: string[];
+  };
+  livestockDetails?: {
+    [type: string]: number;
+  };
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
   needsOnboarding: boolean;
-  isGuestMode: boolean;
   signIn: (phoneNumber: string, otp: string) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
   resendOTP: (phoneNumber: string) => Promise<string>;
   refreshUser: () => Promise<void>;
-  completeOnboarding: () => void;
-  skipAuth: () => void;
+  completeOnboarding: (data?: OnboardingData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -37,7 +67,6 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   needsOnboarding: false,
-  isGuestMode: false,
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
@@ -45,8 +74,7 @@ const AuthContext = createContext<AuthContextType>({
   sendOTP: async () => "",
   resendOTP: async () => "",
   refreshUser: async () => {},
-  completeOnboarding: () => {},
-  skipAuth: () => {},
+  completeOnboarding: async () => {},
 });
 
 export function useAuth() {
@@ -57,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [isGuestMode, setIsGuestMode] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
@@ -113,22 +140,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-    const currentScreen = segments[1];
-    // Allow onboarding-related screens
-    const inOnboardingFlow = ["onboarding", "personal-details", "land-details", "livestock-details"].includes(currentScreen);
 
-    if (!isAuthenticated && !isGuestMode && !inAuthGroup) {
-      // Redirect to auth if not authenticated, not in guest mode, and not in auth screens
-      router.replace("/(auth)/welcome");
-    } else if (isAuthenticated && inAuthGroup && !inOnboardingFlow) {
-      // If authenticated but in auth screens (except onboarding flow), redirect appropriately
-      if (needsOnboarding) {
-        router.replace("/(auth)/personal-details");
-      } else {
-        router.replace("/(tab)/");
-      }
+    if (!isAuthenticated && !inAuthGroup) {
+      // Redirect to auth if not authenticated and not in auth screens
+      router.replace("/(auth)/" as any);
+    } else if (isAuthenticated && inAuthGroup && !needsOnboarding) {
+      // Authenticated user who doesn't need onboarding — skip auth stack
+      router.replace("/(tab)/" as any);
     }
-  }, [isAuthenticated, segments, isLoading, needsOnboarding, isGuestMode]);
+  }, [isAuthenticated, segments, isLoading, needsOnboarding]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
@@ -156,8 +176,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  // Complete onboarding - called after user finishes onboarding
-  const completeOnboarding = useCallback(() => {
+  // Complete onboarding - syncs collected data to backend, then navigates
+  const completeOnboarding = useCallback(async (data?: OnboardingData) => {
+    try {
+      // Build the profile update payload from onboarding data
+      if (data?.personalDetails) {
+        const pd = data.personalDetails;
+        const profilePayload: Partial<UserProfileUpdate> = {
+          name: pd.fathersName || pd.name || undefined, // onboarding uses fathersName for full name
+          age: pd.age || undefined,
+          gender: pd.gender || undefined,
+          fathers_name: pd.fathersName || undefined,
+          mothers_name: pd.mothersName || undefined,
+          educational_qualification: pd.educationalQualification || undefined,
+          sons_married: pd.sonsMarried,
+          sons_unmarried: pd.sonsUnmarried,
+          daughters_married: pd.daughtersMarried,
+          daughters_unmarried: pd.daughtersUnmarried,
+          other_family_members: pd.otherFamilyMembers,
+          village: pd.village || undefined,
+          gram_panchayat: pd.gramPanchayat || undefined,
+          nyay_panchayat: pd.nyayPanchayat || undefined,
+          post_office: pd.postOffice || undefined,
+          tehsil: pd.tehsil || undefined,
+          block: pd.block || undefined,
+          district: pd.district || undefined,
+          pin_code: pd.pinCode || undefined,
+          state: pd.state || undefined,
+        };
+
+        // Add land details if present
+        if (data.landDetails) {
+          profilePayload.land_details = {
+            total_land_area: data.landDetails.totalLandArea,
+            rabi_crop: data.landDetails.crops?.join(", "),
+          };
+        }
+
+        // Add livestock details if present
+        if (data.livestockDetails) {
+          profilePayload.livestock_details = {
+            cow: data.livestockDetails.cow || 0,
+            buffalo: data.livestockDetails.buffalo || 0,
+            goat: data.livestockDetails.goat || 0,
+            sheep: data.livestockDetails.sheep || 0,
+            pig: data.livestockDetails.pig || 0,
+            poultry: data.livestockDetails.poultry || 0,
+            others: data.livestockDetails.others || 0,
+          };
+        }
+
+        console.log("📝 Syncing onboarding data to backend:", JSON.stringify(profilePayload).slice(0, 300));
+        await userApi.updateProfile(profilePayload);
+      }
+    } catch (error) {
+      console.error("Failed to sync onboarding data:", error);
+      // Continue anyway — data is saved locally, can be synced later
+    }
+
     setNeedsOnboarding(false);
     // Update user locally to reflect onboarding is complete
     if (user) {
@@ -175,18 +251,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
       setUser(null);
       setNeedsOnboarding(false);
-      setIsGuestMode(false);
       router.replace("/(auth)/welcome");
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;
     }
-  }, [router]);
-
-  // Skip authentication - enter guest mode
-  const skipAuth = useCallback(() => {
-    setIsGuestMode(true);
-    router.replace("/(tab)/");
   }, [router]);
 
   // Refresh user data
@@ -209,14 +278,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         user,
         needsOnboarding,
-        isGuestMode,
         signIn,
         signOut,
         sendOTP,
         resendOTP,
         refreshUser,
         completeOnboarding,
-        skipAuth,
       }}
     >
       {children}

@@ -48,6 +48,19 @@ const startServer = async () => {
             }, 10000);
         };
 
+        // Self-ping cron to keep Render free-tier alive (every 14 min)
+        const HEALTH_URL = 'https://tanak-prabha.onrender.com/health';
+        const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
+        setInterval(async () => {
+            try {
+                const res = await fetch(HEALTH_URL);
+                console.log(`🏓 Keep-alive ping: ${res.status}`);
+            } catch (err) {
+                console.warn('🏓 Keep-alive ping failed:', err.message);
+            }
+        }, PING_INTERVAL);
+        console.log(`🏓 Keep-alive cron set: pinging ${HEALTH_URL} every 14m`);
+
         // Handle shutdown signals
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));

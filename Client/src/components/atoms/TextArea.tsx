@@ -1,7 +1,7 @@
 // src/components/atoms/TextArea.tsx
 import React from "react";
-import { TextInput, View } from "react-native";
-import clsx from "clsx";
+import { TextInput, View, StyleSheet, ViewStyle } from "react-native";
+import { colors } from "../../styles/colors";
 
 type TextAreaProps = {
   value?: string;
@@ -9,7 +9,7 @@ type TextAreaProps = {
   onChangeText?: (text: string) => void;
   numberOfLines?: number;
   disabled?: boolean;
-  className?: string;
+  style?: ViewStyle;
 };
 
 const TextArea = ({
@@ -18,16 +18,10 @@ const TextArea = ({
   onChangeText,
   numberOfLines = 4,
   disabled = false,
-  className,
+  style,
 }: TextAreaProps) => {
   return (
-    <View
-      className={clsx(
-        "bg-neutral-surface border border-neutral-border rounded-lg px-3 py-3",
-        disabled && "opacity-50",
-        className
-      )}
-    >
+    <View style={[styles.container, disabled && styles.disabled, style]}>
       <TextInput
         value={value}
         placeholder={placeholder}
@@ -36,11 +30,29 @@ const TextArea = ({
         multiline
         numberOfLines={numberOfLines}
         textAlignVertical="top"
-        className="text-bodyMd text-neutral-textDark"
-        placeholderTextColor="#9E9E9E"
+        style={styles.input}
+        placeholderTextColor={colors.neutral.textLight}
       />
     </View>
   );
 };
 
 export default TextArea;
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.neutral.surface,
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  input: {
+    fontSize: 15,
+    color: colors.neutral.textDark,
+  },
+});

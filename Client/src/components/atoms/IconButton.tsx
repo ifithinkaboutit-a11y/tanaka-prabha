@@ -1,27 +1,29 @@
 // src/components/atoms/IconButton.tsx
-import { Pressable } from "react-native";
-import clsx from "clsx";
+import React from "react";
+import { Pressable, StyleSheet, ViewStyle } from "react-native";
+import { colors } from "../../styles/colors";
 
 type IconButtonProps = {
   children: React.ReactNode;
   onPress?: () => void;
-  className?: string;
+  style?: ViewStyle;
 };
 
-export default function IconButton({
-  children,
-  onPress,
-  className,
-}: IconButtonProps) {
+export default function IconButton({ children, onPress, style }: IconButtonProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      className={clsx(
-        "w-10 h-10 items-center justify-center bg-neutral-surface",
-        className
-      )}
-    >
+    <Pressable onPress={onPress} style={[styles.container, style]}>
       {children}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.neutral.surface,
+    borderRadius: 8,
+  },
+});

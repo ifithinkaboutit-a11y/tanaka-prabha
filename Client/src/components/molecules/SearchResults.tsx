@@ -1,8 +1,9 @@
 // src/components/molecules/SearchResults.tsx
 import { useRouter } from "expo-router";
 import React from "react";
-import { FlatList, TouchableOpacity, View } from "react-native";
+import { FlatList, TouchableOpacity, View, StyleSheet } from "react-native";
 import { useTranslation } from "../../i18n";
+import { colors } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import Card from "../atoms/Card";
 
@@ -54,22 +55,22 @@ export default function SearchResults({
 
   const renderResult = ({ item }: { item: SearchResult }) => (
     <TouchableOpacity onPress={() => handleResultPress(item)}>
-      <Card className="mx-4 mb-2">
-        <View className="p-4">
-          <View className="flex-row justify-between items-start mb-2">
-            <AppText variant="h3" className="flex-1 mr-2">
+      <Card style={styles.resultCard}>
+        <View style={styles.resultContent}>
+          <View style={styles.resultHeader}>
+            <AppText variant="h3" style={styles.resultTitle}>
               {item.title}
             </AppText>
-            <View className="bg-primary-light px-2 py-1 rounded">
-              <AppText variant="caption" className="text-primary-main">
+            <View style={styles.categoryBadge}>
+              <AppText variant="caption" style={styles.categoryText}>
                 {item.category}
               </AppText>
             </View>
           </View>
-          <AppText variant="bodySm" className="text-neutral-textLight mb-2">
+          <AppText variant="bodySm" style={styles.resultDescription}>
             {item.description}
           </AppText>
-          <AppText variant="caption" className="text-neutral-textLight">
+          <AppText variant="caption" style={styles.resultType}>
             {item.type === "scheme"
               ? t("search.scheme")
               : item.type === "training"
@@ -83,11 +84,8 @@ export default function SearchResults({
 
   if (results.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center p-8">
-        <AppText
-          variant="bodyMd"
-          className="text-neutral-textLight text-center"
-        >
+      <View style={styles.emptyContainer}>
+        <AppText variant="bodyMd" style={styles.emptyText}>
           {t("search.noResults")}
         </AppText>
       </View>
@@ -104,3 +102,49 @@ export default function SearchResults({
     />
   );
 }
+
+const styles = StyleSheet.create({
+  resultCard: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  resultContent: {
+    padding: 16,
+  },
+  resultHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  resultTitle: {
+    flex: 1,
+    marginRight: 8,
+  },
+  categoryBadge: {
+    backgroundColor: "rgba(56, 102, 65, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  categoryText: {
+    color: colors.primary.green,
+  },
+  resultDescription: {
+    color: colors.neutral.textLight,
+    marginBottom: 8,
+  },
+  resultType: {
+    color: colors.neutral.textLight,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
+    color: colors.neutral.textLight,
+    textAlign: "center",
+  },
+});

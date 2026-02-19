@@ -42,16 +42,17 @@ const sendSMS = async (mobileNumber, otp) => {
     // For now, just log to console for testing
     console.log(`📱 SMS to ${mobileNumber}: Your OTP is ${otp}. Valid for 10 minutes.`);
     
-    // Send email via Ethereal for development testing
-    let emailResult = null;
-    try {
-        emailResult = await sendOTPEmail(mobileNumber, otp);
-        if (emailResult.success) {
-            console.log(`📧 Email sent! Preview URL: ${emailResult.previewUrl}`);
+    // Send email via Ethereal for development testing (fire-and-forget)
+    // Do NOT await here — an SMTP timeout must not delay the OTP HTTP response.
+    sendOTPEmail(mobileNumber, otp)
+      .then((emailResult) => {
+        if (emailResult?.success) {
+          console.log(`📧 Email sent! Preview URL: ${emailResult.previewUrl}`);
         }
-    } catch (emailError) {
-        console.warn('⚠️ Email sending failed:', emailError.message);
-    }
+      })
+      .catch((emailError) => {
+        console.warn('⚠️ Email sending failed (async):', emailError.message);
+      });
     
     // In production, use MSG91:
     /*

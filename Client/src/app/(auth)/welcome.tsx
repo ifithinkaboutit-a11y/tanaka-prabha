@@ -2,36 +2,34 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
-import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
 import { useRouter } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 export default function Welcome() {
-  const router = useRouter();
   const { t } = useTranslation();
-  const { skipAuth } = useAuth();
+  const router = useRouter();
 
   const handleContinue = () => {
     router.push("/(auth)/phone-input" as any);
   };
 
   const handleSkip = () => {
-    // Skip authentication - enter guest mode
-    skipAuth();
+    // Skip means go straight to login — auth is still required
+    router.push("/(auth)/phone-input" as any);
   };
 
   return (
-    <View className="flex-1 justify-end">
-      <View className="flex h-[85vh]">
+    <View style={s.root}>
+      <View style={s.videoBg}>
         <AuthVideoBackground />
       </View>
-      <View className="bg-white rounded-3xl p-6 shadow-lg">
+      <View style={s.card}>
         {/* Title */}
         <AppText
           variant="h2"
-          className="text-center text-neutral-textDark font-bold mb-3"
+          style={s.title}
         >
           {t("auth.welcomeTitle")}
         </AppText>
@@ -39,7 +37,7 @@ export default function Welcome() {
         {/* Description */}
         <AppText
           variant="bodySm"
-          className="text-center text-neutral-textMedium text-base mb-6 leading-6"
+          style={s.description}
         >
           {t("auth.welcomeDescription")}
         </AppText>
@@ -48,7 +46,7 @@ export default function Welcome() {
         <Button
           label={t("auth.skipForNow")}
           variant="outline"
-          className="w-full py-4 mb-4"
+          style={{ width: "100%", paddingVertical: 16, marginBottom: 16 }}
           onPress={handleSkip}
         />
 
@@ -57,9 +55,43 @@ export default function Welcome() {
           label={t("auth.continue")}
           variant="primary"
           onPress={handleContinue}
-          className="w-full py-4"
+          style={{ width: "100%", paddingVertical: 16 }}
         />
       </View>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  videoBg: {
+    flex: 1,
+    height: "85%",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  title: {
+    textAlign: "center",
+    color: "#212121",
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  description: {
+    textAlign: "center",
+    color: "#616161",
+    fontSize: 16,
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+});

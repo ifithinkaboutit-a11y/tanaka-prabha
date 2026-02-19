@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "@/i18n";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/contexts/AuthContext";
+import type { OnboardingData } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -80,20 +81,50 @@ const Onboarding = () => {
     }
   };
 
-  const handleNext = () => {
+  // Collect all onboarding data from the store and build the payload
+  const collectOnboardingData = (): OnboardingData => {
+    const data: OnboardingData = {
+      personalDetails: { ...personalDetails },
+    };
+
+    if (hasLand && landEntries.length > 0) {
+      // Sum up land areas and collect all crops
+      const totalArea = landEntries.reduce((sum, e) => sum + (e.area || 0), 0);
+      const allCrops = landEntries.flatMap((e) => e.crops || []);
+      data.landDetails = {
+        totalLandArea: totalArea,
+        crops: allCrops,
+      };
+    }
+
+    if (hasLivestock && livestockEntries.length > 0) {
+      // Aggregate livestock counts by type
+      const livestock: Record<string, number> = {};
+      for (const entry of livestockEntries) {
+        if (entry.type) {
+          livestock[entry.type] = (livestock[entry.type] || 0) + entry.count;
+        }
+      }
+      data.livestockDetails = livestock;
+    }
+
+    return data;
+  };
+
+  const handleNext = async () => {
     if (currentStep < TOTAL_STEPS - 1) {
       nextStep();
     } else {
-      // Final step - mark onboarding complete and navigate to home
-      completeOnboarding();
-      router.replace("/(tab)/" as any);
+      // Final step — sync all onboarding data to backend then navigate
+      const data = collectOnboardingData();
+      await completeOnboarding(data);
     }
   };
 
-  const handleSkip = () => {
-    // Skip also marks onboarding as complete
-    completeOnboarding();
-    router.replace("/(tab)/" as any);
+  const handleSkip = async () => {
+    // Skip — still sync whatever data has been entered so far
+    const data = collectOnboardingData();
+    await completeOnboarding(data);
   };
 
   const stateOptions = getLocalizedOptions(indianStates, currentLanguage);
@@ -102,7 +133,7 @@ const Onboarding = () => {
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
 
   const renderPersonalStep = () => (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <OnboardingHeader
         title={t("onboarding.personal.title")}
         subtitle={t("onboarding.personal.subtitle")}
@@ -110,7 +141,7 @@ const Onboarding = () => {
         totalSteps={TOTAL_STEPS}
       />
 
-      <ScrollView className="flex-1 px-6 pt-6">
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
         <FormInput
           label={t("onboarding.personal.fullName")}
           placeholder={t("onboarding.personal.fullNamePlaceholder")}
@@ -156,7 +187,7 @@ const Onboarding = () => {
   );
 
   const renderLandStep = () => (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <OnboardingHeader
         title={t("onboarding.land.title")}
         subtitle={t("onboarding.land.subtitle")}
@@ -164,7 +195,7 @@ const Onboarding = () => {
         totalSteps={TOTAL_STEPS}
       />
 
-      <ScrollView className="flex-1 px-6 pt-6">
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
         <Toggle
           label={t("onboarding.land.doYouHaveLand")}
           value={hasLand}
@@ -178,17 +209,17 @@ const Onboarding = () => {
         />
 
         {hasLand && (
-          <View className="mt-4">
+          <View style={{ marginTop: 16 }}>
             {landEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                className="bg-white rounded-xl p-4 mb-4 border border-neutral-border"
+                style={{ backgroundColor: "#FFFFFF", borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#D9D9D9" }}
               >
                 {landEntries.length > 1 && (
-                  <View className="flex-row justify-between items-center mb-3">
-                    <Text className="font-semibold text-neutral-textDark">
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121" }}>
                       {t("onboarding.land.title")} #{index + 1}
-                    </Text>
+                    </AppText>
                     <TouchableOpacity onPress={() => removeLandEntry(entry.id)}>
                       <Ionicons
                         name="trash-outline"
@@ -199,8 +230,8 @@ const Onboarding = () => {
                   </View>
                 )}
 
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
+                <View style={{ flexDirection: "row", gap: 12 }}>
+                  <View style={{ flex: 1 }}>
                     <FormInput
                       label={t("onboarding.land.totalArea")}
                       placeholder="Eg. 47"
@@ -213,7 +244,7 @@ const Onboarding = () => {
                       }
                     />
                   </View>
-                  <View className="flex-1">
+                  <View style={{ flex: 1 }}>
                     <Select
                       label={t("onboarding.land.unit")}
                       placeholder="Select"
@@ -244,11 +275,20 @@ const Onboarding = () => {
               onPress={() =>
                 addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })
               }
-              className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-secondary-soil self-start"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: colors.secondary.soil,
+                alignSelf: "flex-start",
+              }}
             >
-              <Text className="text-white font-medium mr-2">
+              <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "500", marginRight: 8 }}>
                 {t("onboarding.land.addLand")}
-              </Text>
+              </AppText>
               <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
           </View>
@@ -258,7 +298,7 @@ const Onboarding = () => {
   );
 
   const renderLivestockStep = () => (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <OnboardingHeader
         title={t("onboarding.livestock.title")}
         subtitle={t("onboarding.livestock.subtitle")}
@@ -266,7 +306,7 @@ const Onboarding = () => {
         totalSteps={TOTAL_STEPS}
       />
 
-      <ScrollView className="flex-1 px-6 pt-6">
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
         <Toggle
           label={t("onboarding.livestock.doYouHaveLivestock")}
           value={hasLivestock}
@@ -280,17 +320,17 @@ const Onboarding = () => {
         />
 
         {hasLivestock && (
-          <View className="mt-4">
+          <View style={{ marginTop: 16 }}>
             {livestockEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                className="bg-white rounded-xl p-4 mb-4 border border-neutral-border"
+                style={{ backgroundColor: "#FFFFFF", borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#D9D9D9" }}
               >
                 {livestockEntries.length > 1 && (
-                  <View className="flex-row justify-between items-center mb-3">
-                    <Text className="font-semibold text-neutral-textDark">
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121" }}>
                       {t("onboarding.livestock.animal")} #{index + 1}
-                    </Text>
+                    </AppText>
                     <TouchableOpacity
                       onPress={() => removeLivestockEntry(entry.id)}
                     >
@@ -303,8 +343,8 @@ const Onboarding = () => {
                   </View>
                 )}
 
-                <View className="flex-row gap-3">
-                  <View className="flex-[1.5]">
+                <View style={{ flexDirection: "row", gap: 12 }}>
+                  <View style={{ flex: 1.5 }}>
                     <Select
                       label={t("onboarding.livestock.animal")}
                       placeholder="Select"
@@ -315,7 +355,7 @@ const Onboarding = () => {
                       }
                     />
                   </View>
-                  <View className="flex-1">
+                  <View style={{ flex: 1 }}>
                     <FormInput
                       label={t("onboarding.livestock.numberOfAnimals")}
                       placeholder="Eg. 5"
@@ -334,11 +374,20 @@ const Onboarding = () => {
 
             <TouchableOpacity
               onPress={() => addLivestockEntry({ type: "", count: 0 })}
-              className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-secondary-soil self-start"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: colors.secondary.soil,
+                alignSelf: "flex-start",
+              }}
             >
-              <Text className="text-white font-medium mr-2">
+              <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "500", marginRight: 8 }}>
                 {t("onboarding.livestock.addAnimal")}
-              </Text>
+              </AppText>
               <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
           </View>
@@ -362,18 +411,18 @@ const Onboarding = () => {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-neutral-surface"
+      style={{ flex: 1, backgroundColor: colors.neutral.surface }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {renderStep()}
 
       {/* Bottom Navigation */}
-      <View className="px-6 py-4 bg-neutral-surface">
+      <View style={{ paddingHorizontal: 24, paddingVertical: 16, backgroundColor: colors.neutral.surface }}>
         {/* Skip for now link */}
-        <TouchableOpacity onPress={handleSkip} className="items-center mb-4">
-          <Text className="text-neutral-textMedium text-sm">
+        <TouchableOpacity onPress={handleSkip} style={{ alignItems: "center", marginBottom: 16 }}>
+          <AppText variant="bodySm" style={{ color: colors.neutral.textMedium }}>
             {t("onboarding.skip")}
-          </Text>
+          </AppText>
         </TouchableOpacity>
 
         {/* Next/Finish Button */}
@@ -381,13 +430,13 @@ const Onboarding = () => {
           variant="primary"
           onPress={handleNext}
           disabled={!isStepValid()}
-          className="w-full py-4"
+          style={{ width: "100%", paddingVertical: 16 }}
         >
-          <Text className="text-white font-semibold text-base">
+          <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "600" }}>
             {currentStep === TOTAL_STEPS - 1
               ? t("onboarding.finish")
               : t("onboarding.next")}
-          </Text>
+          </AppText>
         </Button>
       </View>
     </KeyboardAvoidingView>

@@ -1,4 +1,4 @@
-﻿// src/components/molecules/PersonalDetailsForm.tsx
+// src/components/molecules/PersonalDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
@@ -7,25 +7,25 @@ import {
   PersonalDetailsFormProps,
 } from "../../data/interfaces";
 import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
-import { useTranslation } from "../../i18n";
+import T from "../../i18n";
 import AppText from "../atoms/AppText";
 import Select from "../atoms/Select";
 
 const educationOptions = [
-  { value: "illiterate", label: "Illiterate", labelHi: "à¤…à¤¶à¤¿à¤•à¥à¤·à¤¿à¤¤" },
-  { value: "5th", label: "5th Pass", labelHi: "5à¤µà¥€à¤‚ à¤ªà¤¾à¤¸" },
-  { value: "8th", label: "8th Pass", labelHi: "8à¤µà¥€à¤‚ à¤ªà¤¾à¤¸" },
-  { value: "10th", label: "10th Pass", labelHi: "10à¤µà¥€à¤‚ à¤ªà¤¾à¤¸" },
-  { value: "12th", label: "12th Pass", labelHi: "12à¤µà¥€à¤‚ à¤ªà¤¾à¤¸" },
-  { value: "graduate", label: "Graduate", labelHi: "à¤¸à¥à¤¨à¤¾à¤¤à¤•" },
-  { value: "postgraduate", label: "Post Graduate", labelHi: "à¤¸à¥à¤¨à¤¾à¤¤à¤•à¥‹à¤¤à¥à¤¤à¤°" },
-  { value: "phd", label: "PhD", labelHi: "à¤ªà¥€à¤à¤šà¤¡à¥€" },
+  { value: "illiterate", label: "Illiterate", labelHi: "अशिक्षित" },
+  { value: "5th", label: "5th Pass", labelHi: "5वीं पास" },
+  { value: "8th", label: "8th Pass", labelHi: "8वीं पास" },
+  { value: "10th", label: "10th Pass", labelHi: "10वीं पास" },
+  { value: "12th", label: "12th Pass", labelHi: "12वीं पास" },
+  { value: "graduate", label: "Graduate", labelHi: "स्नातक" },
+  { value: "postgraduate", label: "Post Graduate", labelHi: "स्नातकोत्तर" },
+  { value: "phd", label: "PhD", labelHi: "पीएचडी" },
 ];
 
 const genderOptions = [
-  { value: "male", label: "Male", labelHi: "à¤ªà¥à¤°à¥à¤·" },
-  { value: "female", label: "Female", labelHi: "à¤®à¤¹à¤¿à¤²à¤¾" },
-  { value: "other", label: "Other", labelHi: "à¤…à¤¨à¥à¤¯" },
+  { value: "male", label: "Male", labelHi: "पुरुष" },
+  { value: "female", label: "Female", labelHi: "महिला" },
+  { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 
 // Helper component for form inputs
@@ -115,7 +115,6 @@ export default function PersonalDetailsForm({
   onSave,
   onCancel,
 }: PersonalDetailsFormProps) {
-  const { t, currentLanguage } = useTranslation();
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
 
   // Get state and district options
@@ -176,12 +175,12 @@ export default function PersonalDetailsForm({
             <Ionicons name="person" size={20} color="#386641" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {t("personalDetails.personalInformation") || "Personal Information"}
+            {T.translate("personalDetails.personalInformation") || "Personal Information"}
           </AppText>
         </View>
 
         <FormInput
-          label={String(t("personalDetails.name") || "Name")}
+          label={String(T.translate("personalDetails.name") || "Name")}
           value={formData.name}
           onChangeText={(value) => updateField("name", value)}
           placeholder="Enter your name"
@@ -193,7 +192,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.age") || "Age"}
+            {T.translate("personalDetails.age") || "Age"}
           </AppText>
           <TextInput
             style={{
@@ -219,7 +218,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.gender") || "Gender"}
+            {T.translate("personalDetails.gender") || "Gender"}
           </AppText>
           <Select
             value={formData.gender}
@@ -259,12 +258,12 @@ export default function PersonalDetailsForm({
             <Ionicons name="people" size={20} color="#3B82F6" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {t("personalDetails.familyInformation")}
+            {T.translate("personalDetails.familyInformation")}
           </AppText>
         </View>
 
         <FormInput
-          label={String(t("personalDetails.fathersName"))}
+          label={String(T.translate("personalDetails.fathersName"))}
           value={formData.fathersName}
           onChangeText={(value) => updateField("fathersName", value)}
           placeholder="Enter father's name"
@@ -272,7 +271,7 @@ export default function PersonalDetailsForm({
         />
 
         <FormInput
-          label={String(t("personalDetails.mothersName"))}
+          label={String(T.translate("personalDetails.mothersName"))}
           value={formData.mothersName}
           onChangeText={(value) => updateField("mothersName", value)}
           placeholder="Enter mother's name"
@@ -283,7 +282,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.educationalQualification")}
+            {T.translate("personalDetails.educationalQualification")}
           </AppText>
           <Select
             value={formData.educationalQualification}
@@ -323,7 +322,7 @@ export default function PersonalDetailsForm({
             <Ionicons name="home" size={20} color="#16A34A" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {t("personalDetails.familyMembers")}
+            {T.translate("personalDetails.familyMembers")}
           </AppText>
         </View>
 
@@ -333,16 +332,16 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 12 }}
           >
-            {t("personalDetails.sonsLabel")}
+            {T.translate("personalDetails.sonsLabel")}
           </AppText>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <NumberInput
-              label={String(t("personalDetails.married"))}
+              label={String(T.translate("personalDetails.married"))}
               value={formData.sonsMarried}
               onChangeText={(value) => updateField("sonsMarried", value)}
             />
             <NumberInput
-              label={String(t("personalDetails.unmarried"))}
+              label={String(T.translate("personalDetails.unmarried"))}
               value={formData.sonsUnmarried}
               onChangeText={(value) => updateField("sonsUnmarried", value)}
             />
@@ -355,16 +354,16 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 12 }}
           >
-            {t("personalDetails.daughtersLabel")}
+            {T.translate("personalDetails.daughtersLabel")}
           </AppText>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <NumberInput
-              label={String(t("personalDetails.married"))}
+              label={String(T.translate("personalDetails.married"))}
               value={formData.daughtersMarried}
               onChangeText={(value) => updateField("daughtersMarried", value)}
             />
             <NumberInput
-              label={String(t("personalDetails.unmarried"))}
+              label={String(T.translate("personalDetails.unmarried"))}
               value={formData.daughtersUnmarried}
               onChangeText={(value) => updateField("daughtersUnmarried", value)}
             />
@@ -377,7 +376,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.otherFamilyMembers")}
+            {T.translate("personalDetails.otherFamilyMembers")}
           </AppText>
           <TextInput
             style={{
@@ -428,47 +427,47 @@ export default function PersonalDetailsForm({
             <Ionicons name="location" size={20} color="#D97706" />
           </View>
           <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {t("personalDetails.addressInformation")}
+            {T.translate("personalDetails.addressInformation")}
           </AppText>
         </View>
 
         <FormInput
-          label={String(t("personalDetails.village"))}
+          label={String(T.translate("personalDetails.village"))}
           value={formData.village}
           onChangeText={(value) => updateField("village", value)}
           placeholder="Enter village name"
         />
 
         <FormInput
-          label={String(t("personalDetails.gramPanchayat"))}
+          label={String(T.translate("personalDetails.gramPanchayat"))}
           value={formData.gramPanchayat}
           onChangeText={(value) => updateField("gramPanchayat", value)}
           placeholder="Enter gram panchayat"
         />
 
         <FormInput
-          label={String(t("personalDetails.nyayPanchayat"))}
+          label={String(T.translate("personalDetails.nyayPanchayat"))}
           value={formData.nyayPanchayat}
           onChangeText={(value) => updateField("nyayPanchayat", value)}
           placeholder="Enter nyay panchayat"
         />
 
         <FormInput
-          label={String(t("personalDetails.postOffice"))}
+          label={String(T.translate("personalDetails.postOffice"))}
           value={formData.postOffice}
           onChangeText={(value) => updateField("postOffice", value)}
           placeholder="Enter post office"
         />
 
         <FormInput
-          label={String(t("personalDetails.tehsil"))}
+          label={String(T.translate("personalDetails.tehsil"))}
           value={formData.tehsil}
           onChangeText={(value) => updateField("tehsil", value)}
           placeholder="Enter tehsil"
         />
 
         <FormInput
-          label={String(t("personalDetails.block"))}
+          label={String(T.translate("personalDetails.block"))}
           value={formData.block}
           onChangeText={(value) => updateField("block", value)}
           placeholder="Enter block"
@@ -479,7 +478,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.state")}
+            {T.translate("personalDetails.state")}
           </AppText>
           <Select
             value={formData.state}
@@ -498,7 +497,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.district")}
+            {T.translate("personalDetails.district")}
           </AppText>
           <Select
             value={formData.district}
@@ -514,7 +513,7 @@ export default function PersonalDetailsForm({
             variant="bodySm"
             style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
           >
-            {t("personalDetails.pinCode")}
+            {T.translate("personalDetails.pinCode")}
           </AppText>
           <TextInput
             style={{
@@ -561,7 +560,7 @@ export default function PersonalDetailsForm({
             variant="bodyMd"
             style={{ color: "#6B7280", fontWeight: "600" }}
           >
-            {t("personalDetails.cancel")}
+            {T.translate("personalDetails.cancel")}
           </AppText>
         </Pressable>
         <Pressable
@@ -578,7 +577,7 @@ export default function PersonalDetailsForm({
             variant="bodyMd"
             style={{ color: "#FFFFFF", fontWeight: "700" }}
           >
-            {t("personalDetails.save")}
+            {T.translate("personalDetails.save")}
           </AppText>
         </Pressable>
       </View>

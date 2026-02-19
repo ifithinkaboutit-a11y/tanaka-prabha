@@ -94,9 +94,6 @@ const TabNavigation = () => {
             />
           ),
           headerShown: false,
-          headerRight: () => (
-            <Ionicons name="settings-outline" size={24} color={ACTIVE_COLOR} style={{ marginRight: 20 }} />
-          ),
         }}
       />
     </Tabs>

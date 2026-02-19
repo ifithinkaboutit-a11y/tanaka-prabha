@@ -5,45 +5,6 @@
   "private": true,
   "author": "Pratyush Tiwari",
   "license": "ISC",
-  "scripts": {
-    "========== INDIVIDUAL SERVICES ==========": "",
-    "client": "cd Client && npm start",
-    "client:android": "cd Client && npm run android",
-    "client:ios": "cd Client && npm run ios",
-    "client:web": "cd Client && npm run web",
-    "backend": "cd Server/backend && npm run dev",
-    "backend:start": "cd Server/backend && npm start",
-    "dashboard": "cd Server/dashboard && npm run dev",
-    "dashboard:build": "cd Server/dashboard && npm run build",
-    "dashboard:start": "cd Server/dashboard && npm start",
-    
-    "========== COMBINED SERVICES ==========": "",
-    "dev": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD,CLIENT\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run backend\" \"npm run dashboard\" \"npm run client\"",
-    "dev:server": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD\" -c \"bgBlue.bold,bgMagenta.bold\" \"npm run backend\" \"npm run dashboard\"",
-    "dev:full-stack": "concurrently -k -p \"[{name}]\" -n \"BACKEND,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run backend\" \"npm run client\"",
-    "dev:web": "concurrently -k -p \"[{name}]\" -n \"BACKEND,DASHBOARD\" -c \"bgBlue.bold,bgMagenta.bold\" \"npm run backend\" \"npm run dashboard\"",
-    
-    "========== TESTING ==========": "",
-    "test:backend": "cd Server/backend && npm test",
-    "test:backend:watch": "cd Server/backend && npm run test:watch",
-    "test:backend:coverage": "cd Server/backend && npm run test:coverage",
-    
-    "========== LINTING ==========": "",
-    "lint:client": "cd Client && npm run lint",
-    "lint:dashboard": "cd Server/dashboard && npm run lint",
-    "lint:all": "concurrently \"npm run lint:client\" \"npm run lint:dashboard\"",
-    
-    "========== INSTALLATION ==========": "",
-    "install:all": "npm install && cd Client && npm install && cd ../Server/backend && npm install && cd ../dashboard && npm install",
-    "install:client": "cd Client && npm install",
-    "install:backend": "cd Server/backend && npm install",
-    "install:dashboard": "cd Server/dashboard && npm install",
-    
-    "========== BUILD ==========": "",
-    "build:dashboard": "cd Server/dashboard && npm run build",
-    "build:client:android": "cd Client && expo build:android",
-    "build:client:ios": "cd Client && expo build:ios"
-  },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },

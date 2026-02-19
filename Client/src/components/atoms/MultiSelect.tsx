@@ -5,6 +5,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -19,54 +20,62 @@ interface SelectOption {
 interface MultiSelectProps {
   label?: string;
   placeholder?: string;
-  values: string[];
+  value?: string[];
+  values?: string[];
   options: SelectOption[];
-  onChange: (values: string[]) => void;
+  onChange?: (values: string[]) => void;
+  onValueChange?: (values: string[]) => void;
   disabled?: boolean;
 }
 
 export default function MultiSelect({
   label,
   placeholder = "Select Multiple...",
-  values = [],
+  value,
+  values,
   options,
   onChange,
+  onValueChange,
   disabled = false,
 }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedOptions = options.filter((opt) => values.includes(opt.value));
+  const selected = value ?? values ?? [];
+
+  const handleChange = (newValues: string[]) => {
+    onValueChange?.(newValues);
+    onChange?.(newValues);
+  };
+
+  const selectedOptions = options.filter((opt) => selected.includes(opt.value));
   const displayText =
     selectedOptions.length > 0
       ? selectedOptions.map((o) => o.label).join(", ")
       : placeholder;
 
   const handleToggleOption = (optionValue: string) => {
-    if (values.includes(optionValue)) {
-      onChange(values.filter((v) => v !== optionValue));
+    if (selected.includes(optionValue)) {
+      handleChange(selected.filter((v) => v !== optionValue));
     } else {
-      onChange([...values, optionValue]);
+      handleChange([...selected, optionValue]);
     }
   };
 
   return (
-    <View className="mb-4">
-      {label && (
-        <Text className="text-neutral-textMedium text-sm mb-2">{label}</Text>
-      )}
+    <View style={s.container}>
+      {label ? (
+        <Text style={s.label}>{label}</Text>
+      ) : null}
 
       <Pressable
         onPress={() => !disabled && setIsOpen(true)}
-        className={`flex-row items-center justify-between border border-neutral-border rounded-xl px-4 py-4 bg-white ${
-          disabled ? "opacity-50" : ""
-        }`}
+        style={[s.trigger, disabled && { opacity: 0.5 }]}
       >
         <Text
-          className={`text-base flex-1 ${
-            selectedOptions.length > 0
-              ? "text-neutral-textDark"
-              : "text-neutral-textLight"
-          }`}
+          style={[
+            s.triggerText,
+            { color: selectedOptions.length > 0 ? "#212121" : "#9E9E9E" },
+          ]}
           numberOfLines={1}
         >
           {displayText}
@@ -84,44 +93,40 @@ export default function MultiSelect({
         animationType="fade"
         onRequestClose={() => setIsOpen(false)}
       >
-        <Pressable
-          className="flex-1 bg-black/50 justify-end"
-          onPress={() => setIsOpen(false)}
-        >
-          <View className="bg-white rounded-t-3xl max-h-[60%]">
-            <View className="p-4 border-b border-neutral-border flex-row justify-between items-center">
-              <Text className="text-lg font-semibold">{label || "Select"}</Text>
+        <Pressable style={s.overlay} onPress={() => setIsOpen(false)}>
+          <Pressable style={s.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={s.header}>
+              <Text style={s.headerTitle}>{label || "Select"}</Text>
               <TouchableOpacity onPress={() => setIsOpen(false)}>
                 <Ionicons name="checkmark" size={24} color={colors.primary.green} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="p-4">
+            <ScrollView style={{ padding: 16 }} contentContainerStyle={{ paddingBottom: 20 }}>
               {options.map((option) => {
-                const isSelected = values.includes(option.value);
+                const isSelected = selected.includes(option.value);
                 return (
                   <TouchableOpacity
                     key={option.value}
                     onPress={() => handleToggleOption(option.value)}
-                    className={`flex-row items-center justify-between py-4 px-2 border-b border-neutral-border ${
-                      isSelected ? "bg-primary/10" : ""
-                    }`}
+                    style={[
+                      s.option,
+                      isSelected && { backgroundColor: "rgba(56,102,65,0.08)" },
+                    ]}
                   >
                     <Text
-                      className={`text-base ${
-                        isSelected
-                          ? "text-primary font-semibold"
-                          : "text-neutral-textDark"
-                      }`}
+                      style={[
+                        s.optionText,
+                        isSelected && { color: colors.primary.green, fontWeight: "600" },
+                      ]}
                     >
                       {option.label}
                     </Text>
                     <View
-                      className={`w-6 h-6 rounded-md border-2 items-center justify-center ${
-                        isSelected
-                          ? "bg-primary border-primary"
-                          : "border-neutral-border"
-                      }`}
+                      style={[
+                        s.checkbox,
+                        isSelected && { backgroundColor: colors.primary.green, borderColor: colors.primary.green },
+                      ]}
                     >
                       {isSelected && (
                         <Ionicons name="checkmark" size={16} color="white" />
@@ -131,9 +136,80 @@ export default function MultiSelect({
                 );
               })}
             </ScrollView>
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    color: "#616161",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  triggerText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "60%",
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#D9D9D9",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#D9D9D9",
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#212121",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#D9D9D9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

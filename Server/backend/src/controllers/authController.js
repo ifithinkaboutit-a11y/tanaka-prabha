@@ -35,7 +35,7 @@ export const sendOTP = async (req, res) => {
 
         // Check rate limiting - max 3 OTPs per hour per number
         const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 60);
-        if (recentAttempts >= 3) {
+        if (recentAttempts >= 5) {
             return res.status(429).json({
                 status: 'error',
                 message: 'Too many OTP requests. Please try again after 1 hour.'
@@ -45,8 +45,8 @@ export const sendOTP = async (req, res) => {
         // Generate and store OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
 
-        // Send SMS (mock in development)
-        const smsResult = await sendSMS(formattedNumber, otpRecord.otp);
+        // Send SMS (mock in development) — run in background so SMTP/email issues don't block the response
+        sendSMS(formattedNumber, otpRecord.otp).catch(() => {});
 
         res.status(200).json({
             status: 'success',
@@ -192,7 +192,8 @@ export const resendOTP = async (req, res) => {
 
         // Generate and send new OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
-        await sendSMS(formattedNumber, otpRecord.otp);
+        // Fire-and-forget send — do not block on SMTP/email
+        sendSMS(formattedNumber, otpRecord.otp).catch(() => {});
 
         res.status(200).json({
             status: 'success',

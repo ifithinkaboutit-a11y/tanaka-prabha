@@ -10,6 +10,9 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
 import "../i18n"; // Initialize i18n
 
+// Debug: log API URL at startup (remove after confirming production works)
+console.log("🔗 [RootLayout] EXPO_PUBLIC_API_URL =", process.env.EXPO_PUBLIC_API_URL ?? "⚠️ UNDEFINED");
+
 // Prevent the splash screen from auto-hiding (only on native)
 if (Platform.OS !== "web") {
   SplashScreen.preventAutoHideAsync();
@@ -21,7 +24,12 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Simulate some loading time for initialization
+        // Fire-and-forget: wake the Render free-tier server while splash is shown
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
+        const healthUrl = apiUrl.replace(/\/api\/?$/, "/health");
+        fetch(healthUrl).catch(() => {}); // ignore errors, this is just a warm-up
+
+        // Hold splash for 1s while server wakes and assets load
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (e) {
         console.warn(e);
@@ -46,16 +54,16 @@ export default function RootLayout() {
 
   if (!isReady) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
         <Image
           source={require("../assets/images/splash-icon.png")}
-          className="w-32 h-32 mb-8"
+          style={{ width: 128, height: 128, marginBottom: 32 }}
           resizeMode="contain"
         />
-        <Text className="text-2xl font-bold text-neutral-textDark mb-2">
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#212121", marginBottom: 8 }}>
           Tanak Prabha
         </Text>
-        <Text className="text-neutral-textLight">Empowering Farmers</Text>
+        <Text style={{ color: "#9E9E9E" }}>Empowering Farmers</Text>
       </View>
     );
   }
