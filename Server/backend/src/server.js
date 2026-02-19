@@ -1,3 +1,4 @@
+import './utils/liveLogger.js';
 import dotenv from 'dotenv';
 import app from './app.js';
 import { pool } from './config/db.js';
@@ -27,10 +28,10 @@ const startServer = async () => {
         // Graceful shutdown
         const gracefulShutdown = async (signal) => {
             console.log(`\n${signal} received. Starting graceful shutdown...`);
-            
+
             server.close(async () => {
                 console.log('✅ HTTP server closed');
-                
+
                 try {
                     await pool.end();
                     console.log('✅ Database connections closed');
