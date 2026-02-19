@@ -12,6 +12,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -89,6 +90,9 @@ import liveLogger from './utils/liveLogger.js';
 
 // UI Route
 app.get('/log', (req, res) => {
+    const nonce = crypto.randomBytes(16).toString('base64');
+    res.setHeader('Content-Security-Policy', `script-src 'self' 'nonce-${nonce}'`);
+
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -135,7 +139,7 @@ app.get('/log', (req, res) => {
     <body>
         <div id="status" class="status">Connecting...</div>
         <div id="logs"></div>
-        <script>
+        <script nonce="${nonce}">
             const logsDiv = document.getElementById('logs');
             const statusDiv = document.getElementById('status');
             let eventSource;
