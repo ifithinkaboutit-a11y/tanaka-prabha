@@ -36,13 +36,15 @@ const ProfessionalCard = ({
         borderRadius: 20,
         padding: 16,
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.03)",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+        elevation: 2,
         opacity: pressed ? 0.95 : 1,
-        transform: [{ scale: pressed ? 0.995 : 1 }],
+        transform: [{ scale: pressed ? 0.99 : 1 }],
       })}
     >
       <View style={{ flexDirection: "row" }}>
@@ -83,7 +85,7 @@ const ProfessionalCard = ({
         <View style={{ flex: 1, justifyContent: "center" }}>
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", marginBottom: 4, fontSize: 16 }}
+            style={{ fontWeight: "800", color: "#111827", marginBottom: 4, fontSize: 16, letterSpacing: -0.2 }}
           >
             {professional.name}
           </AppText>
@@ -120,8 +122,8 @@ const ProfessionalCard = ({
                 variant="bodySm"
                 style={{ color: "#9CA3AF", marginLeft: 4, fontSize: 12 }}
               >
-                {typeof professional.serviceArea === 'string' 
-                  ? professional.serviceArea 
+                {typeof professional.serviceArea === 'string'
+                  ? professional.serviceArea
                   : [professional.serviceArea.district, professional.serviceArea.state].filter(Boolean).join(', ')}
               </AppText>
             </View>
@@ -136,7 +138,7 @@ const ProfessionalCard = ({
           marginTop: 14,
           paddingTop: 14,
           borderTopWidth: 1,
-          borderTopColor: "#F3F4F6",
+          borderTopColor: "rgba(0,0,0,0.03)",
           gap: 10,
         }}
       >
@@ -200,7 +202,7 @@ const ConnectListingScreen = () => {
 
   const fetchProfessionals = useCallback(async () => {
     if (!category) return;
-    
+
     try {
       const data = category === "all"
         ? await professionalsApi.getAll({})
@@ -255,86 +257,91 @@ const ConnectListingScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          backgroundColor: "#386641",
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => ({
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "rgba(255,255,255,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </Pressable>
-        <AppText
-          variant="h3"
-          style={{ flex: 1, fontWeight: "700", color: "#FFFFFF", fontSize: 20 }}
-          numberOfLines={1}
-        >
-          {service ? t(service.titleKey) : t("connect.allExperts")}
-        </AppText>
-      </View>
-
-      {/* Results Summary */}
-      {!loading && professionals.length > 0 && (
+      {/* Sticky Top Header Area */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        zIndex: 10,
+        marginBottom: 8,
+      }}>
+        {/* Header Title */}
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-between",
             alignItems: "center",
-            paddingHorizontal: 20,
-            paddingVertical: 14,
-            backgroundColor: "#FFFFFF",
-            borderBottomWidth: 1,
-            borderBottomColor: "#E5E7EB",
+            paddingHorizontal: 16,
+            paddingTop: 52,
+            paddingBottom: 16,
+            borderBottomWidth: (!loading && professionals.length > 0) ? 1 : 0,
+            borderBottomColor: "#F3F4F6",
           }}
         >
-          <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 14 }}>
-            {t("connect.showing")} {professionals.length} {t("connect.experts")}
+          <Pressable onPress={() => router.back()} style={({ pressed }) => ({
+            marginRight: 16,
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: pressed ? "#F3F4F6" : "transparent"
+          })}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+          <AppText
+            variant="h3"
+            style={{ flex: 1, fontWeight: "800", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
+            numberOfLines={1}
+          >
+            {service?.titleKey ? t(service.titleKey) : t("connect.allExperts")}
           </AppText>
+        </View>
+
+        {/* Results Summary integrated into header */}
+        {!loading && professionals.length > 0 && (
           <View
             style={{
               flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
-              backgroundColor: "#DCFCE7",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 12,
+              paddingHorizontal: 20,
+              paddingVertical: 14,
             }}
           >
+            <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 13, fontWeight: "500" }}>
+              {t("connect.showing")} {professionals.length} {t("connect.experts")}
+            </AppText>
             <View
               style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "#16A34A",
-                marginRight: 6,
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#DCFCE7",
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 12,
               }}
-            />
-            <AppText
-              variant="bodySm"
-              style={{ color: "#166534", fontWeight: "600", fontSize: 12 }}
             >
-              {availableCount} {t("connect.availableNow")}
-            </AppText>
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "#16A34A",
+                  marginRight: 6,
+                }}
+              />
+              <AppText
+                variant="bodySm"
+                style={{ color: "#166534", fontWeight: "700", fontSize: 12 }}
+              >
+                {availableCount} {t("connect.availableNow")}
+              </AppText>
+            </View>
           </View>
-        </View>
-      )}
+        )}
+      </View>
 
       {/* Professionals List */}
       <ScrollView

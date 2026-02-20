@@ -16,6 +16,7 @@ import {
 } from "../../data/interfaces";
 import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import T from "../../i18n";
+import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 
 // ─── Options ─────────────────────────────────────────────────────────────────
@@ -455,20 +456,18 @@ export default function PersonalDetailsForm({
 
       {/* ── Action Buttons ── */}
       <View style={s.btnRow}>
-        <Pressable
+        <Button
+          variant="outline"
+          label={String(T.translate("personalDetails.cancel"))}
           onPress={onCancel}
-          style={({ pressed }) => [s.cancelBtn, pressed && { opacity: 0.7 }]}
-        >
-          <Ionicons name="close-outline" size={18} color="#6B7280" />
-          <Text style={s.cancelBtnText}>{String(T.translate("personalDetails.cancel"))}</Text>
-        </Pressable>
-        <Pressable
+          style={{ flex: 1 }}
+        />
+        <Button
+          variant="primary"
+          label={String(T.translate("personalDetails.save"))}
           onPress={handleSave}
-          style={({ pressed }) => [s.saveBtn, pressed && { opacity: 0.85 }]}
-        >
-          <Ionicons name="checkmark-outline" size={18} color="#FFFFFF" />
-          <Text style={s.saveBtnText}>{String(T.translate("personalDetails.save"))}</Text>
-        </Pressable>
+          style={{ flex: 2, backgroundColor: "#2563EB" }}
+        />
       </View>
     </ScrollView>
   );
@@ -502,28 +501,4 @@ const s = StyleSheet.create({
   thinRow: { flexDirection: "row" },
 
   btnRow: { flexDirection: "row", gap: 12, marginTop: 4, marginBottom: 8 },
-  cancelBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 15,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-  },
-  cancelBtnText: { color: "#6B7280", fontWeight: "600", fontSize: 15 },
-  saveBtn: {
-    flex: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 15,
-    borderRadius: 14,
-    backgroundColor: "#2563EB",
-  },
-  saveBtnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
 });

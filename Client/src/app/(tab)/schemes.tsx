@@ -3,12 +3,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
-    Image,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    View,
-    ActivityIndicator,
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+  ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import SearchBar from "../../components/molecules/SearchBar";
@@ -42,12 +42,12 @@ const SchemeCard = ({
           overflow: "hidden",
           backgroundColor: "#FFFFFF",
           borderWidth: 1,
-          borderColor: "#E5E7EB",
+          borderColor: "rgba(0,0,0,0.05)",
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-          elevation: 3,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+          elevation: 2,
           transform: [{ scale: isPressed ? 0.98 : 1 }],
         }}
       >
@@ -106,7 +106,7 @@ const SchemeCard = ({
         <View style={{ padding: 14 }}>
           <AppText
             variant="bodyMd"
-            style={{ fontWeight: "600", color: "#1F2937", fontSize: 14, lineHeight: 20 }}
+            style={{ fontWeight: "800", color: "#111827", fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
             numberOfLines={2}
           >
             {scheme.title}
@@ -162,14 +162,14 @@ const CategoryItem = ({
       <View style={{ flex: 1 }}>
         <AppText
           variant="bodyMd"
-          style={{ fontWeight: "600", color: "#1F2937", fontSize: 16, marginBottom: 4 }}
+          style={{ fontWeight: "700", color: "#111827", fontSize: 16, marginBottom: 4, letterSpacing: -0.2 }}
         >
           {t(category.titleKey)}
         </AppText>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View
             style={{
-              backgroundColor: "#DBEAFE",
+              backgroundColor: "#E0E7FF",
               borderRadius: 10,
               paddingHorizontal: 8,
               paddingVertical: 2,
@@ -177,7 +177,7 @@ const CategoryItem = ({
           >
             <AppText
               variant="bodySm"
-              style={{ color: "#2563EB", fontWeight: "600", fontSize: 12 }}
+              style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}
             >
               {category.count}
             </AppText>
@@ -267,8 +267,9 @@ export default function Schemes() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
       showsVerticalScrollIndicator={false}
+      stickyHeaderIndices={[0]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -278,35 +279,48 @@ export default function Schemes() {
         />
       }
     >
-      {/* Header */}
-      <View
-        style={{
-          paddingTop: 48,
-          paddingBottom: 8,
-          paddingHorizontal: 16,
-          backgroundColor: "#FFFFFF",
-        }}
-      >
-        <AppText
-          variant="h2"
-          style={{ fontWeight: "700", color: "#1F2937", fontSize: 28 }}
+      {/* Elevated Header */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        paddingBottom: 16,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        marginBottom: 20,
+      }}>
+        {/* Title Area */}
+        <View
+          style={{
+            paddingTop: 48,
+            paddingBottom: 8,
+            paddingHorizontal: 20,
+          }}
         >
-          {t("schemesPage.title")}
-        </AppText>
-        <AppText
-          variant="bodySm"
-          style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}
-        >
-          {t("schemesPage.subtitle")}
-        </AppText>
-      </View>
+          <AppText
+            variant="h2"
+            style={{ fontWeight: "700", color: "#111827", fontSize: 26, letterSpacing: -0.3 }}
+          >
+            {t("schemesPage.title")}
+          </AppText>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#6B7280", marginTop: 4, fontSize: 13, fontWeight: "500" }}
+          >
+            {t("schemesPage.subtitle")}
+          </AppText>
+        </View>
 
-      {/* Search Bar */}
-      <View style={{ paddingBottom: 16, backgroundColor: "#FFFFFF" }}>
-        <SearchBar
-          placeholder={t("schemesPage.searchPlaceholder")}
-          onSearch={setSearchQuery}
-        />
+        {/* Search Bar */}
+        <View style={{ marginTop: 4 }}>
+          <SearchBar
+            placeholder={t("schemesPage.searchPlaceholder")}
+            onSearch={setSearchQuery}
+          />
+        </View>
       </View>
 
       {/* Featured Scheme Banner */}
@@ -391,7 +405,7 @@ export default function Schemes() {
                 variant="bodySm"
                 style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: "500" }}
               >
-                {featuredScheme.date || featuredScheme.category}
+                {featuredScheme.eventDate || featuredScheme.category}
               </AppText>
             </View>
           </View>
@@ -399,7 +413,7 @@ export default function Schemes() {
       )}
 
       {/* Recommended Schemes */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: "#FFFFFF" }}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: "#F8FAFC" }}>
         <View
           style={{
             flexDirection: "row",
@@ -411,7 +425,7 @@ export default function Schemes() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <AppText
               variant="h3"
-              style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
+              style={{ fontWeight: "700", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
             >
               {t("schemesPage.recommendedSchemes")}
             </AppText>
@@ -421,12 +435,12 @@ export default function Schemes() {
                 borderRadius: 12,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
-                marginLeft: 8,
+                marginLeft: 10,
               }}
             >
               <AppText
                 variant="bodySm"
-                style={{ color: "#16A34A", fontWeight: "600", fontSize: 12 }}
+                style={{ color: "#16A34A", fontWeight: "700", fontSize: 12 }}
               >
                 {recommendedSchemes.length}
               </AppText>
@@ -442,11 +456,11 @@ export default function Schemes() {
           >
             <AppText
               variant="bodySm"
-              style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}
+              style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
             >
               {t("schemesPage.viewAll")}
             </AppText>
-            <Ionicons name="chevron-forward" size={18} color="#386641" style={{ marginLeft: 2 }} />
+            <Ionicons name="chevron-forward" size={16} color="#16A34A" style={{ marginLeft: 2 }} />
           </Pressable>
         </View>
 

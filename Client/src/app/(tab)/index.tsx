@@ -52,7 +52,7 @@ export default function Home() {
     title: t(action.title), // Translate the title
     onPress: () => {
       switch (
-        action.title // Use original key for comparison
+      action.title // Use original key for comparison
       ) {
         case "home.updateProfile":
           router.push("/(tab)/profile");
@@ -94,39 +94,52 @@ export default function Home() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#F9FAFB" }}
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
       showsVerticalScrollIndicator={false}
+      stickyHeaderIndices={[0]}
     >
-      {/* Header with greeting and notification */}
-      <View style={{ backgroundColor: "#FFFFFF" }}>
+      {/* Top Header Section (Greeting + Search) */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        paddingBottom: 16,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        marginBottom: 16,
+      }}>
         <GreetingHeader
           name={userName}
           onNotificationPress={handleNotificationPress}
           onAvatarPress={() => router.push("/(tab)/profile")}
         />
+        <View style={{ marginTop: 4 }}>
+          <SearchBar
+            placeholder={t("home.searchPlaceholder")}
+            onSearch={(query) => {
+              router.push(`/search?q=${encodeURIComponent(query)}`);
+            }}
+          />
+        </View>
       </View>
-      {/* Search Bar */}
-      <View style={{ backgroundColor: "#FFFFFF", paddingBottom: 16 }}>
-        <SearchBar
-          placeholder={t("home.searchPlaceholder")}
-          onSearch={(query) => {
-            router.push(`/search?q=${encodeURIComponent(query)}`);
-          }}
-        />
-      </View>
+
       {/* Banner Slideshow */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 20 }}>
         <BannerSlideshow banners={translatedBanners} />
       </View>
       {/* Quick Actions Section */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <AppText
           variant="h2"
           style={{
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: "700",
-            color: "#1F2937",
-            marginBottom: 14,
+            color: "#111827",
+            marginBottom: 16,
+            letterSpacing: -0.2,
           }}
         >
           {t("home.quickActions")}
@@ -150,9 +163,10 @@ export default function Home() {
         <SchemePreviewList
           schemes={schemes.map((scheme) => ({
             ...scheme,
+            description: scheme.description || "",
             onPress: () =>
               router.push(`/scheme-details?schemeId=${scheme.id}` as any),
-          }))}
+          })) as any}
         />
       </View>
     </ScrollView>

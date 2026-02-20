@@ -73,190 +73,259 @@ export default function Connect() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#F8FAFC]"
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#386641"]}
-          tintColor="#386641"
-        />
-      }
-    >
-      {/* Header */}
-      <View className="pt-12 pb-6 px-5 bg-[#386641] rounded-b-[28px]">
-        <AppText variant="h2" className="font-extrabold text-white text-[28px]">
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      {/* Sticky Header */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        paddingBottom: 16,
+        paddingTop: 52,
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        zIndex: 10,
+      }}>
+        <AppText variant="h2" style={{ fontWeight: "800", color: "#111827", fontSize: 26, letterSpacing: -0.3 }}>
           {t("connect.title")}
         </AppText>
-        <AppText variant="bodySm" className="text-white/85 mt-1 text-sm">
+        <AppText variant="bodySm" style={{ color: "#6B7280", marginTop: 4, fontSize: 13, fontWeight: "500" }}>
           {t("connect.subtitle")}
         </AppText>
       </View>
 
-      {/* What do you need help with? */}
-      <View className="px-5 pt-6">
-        <AppText variant="h3" className="font-bold text-gray-800 mb-4 text-lg">
-          {t("connect.whatHelpWith")}
-        </AppText>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#386641"]}
+            tintColor="#386641"
+          />
+        }
+      >
+        {/* What do you need help with? */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+          <AppText variant="h3" style={{ fontWeight: "700", color: "#111827", marginBottom: 16, fontSize: 18, letterSpacing: -0.2 }}>
+            {t("connect.whatHelpWith")}
+          </AppText>
 
-        {/* Services Grid */}
+          {/* Services Grid */}
         <View className="flex-row flex-wrap gap-3">
-          {connectServices.map((service) => (
-            <Pressable
-              key={service.id}
-              onPress={() => handleServicePress(service.id)}
+            {connectServices.map((service) => (
+              <Pressable
+                key={service.id}
+                onPress={() => handleServicePress(service.id)}
               className="active:opacity-90 active:scale-[0.98]"
               style={{ flex: 1, minWidth: "45%" }}
-            >
+              >
               <View className="bg-white rounded-[20px] items-center justify-center py-6 px-4 shadow-sm elevation-3">
-                <View
+                  <View
                   className="w-18 h-18 rounded-full items-center justify-center mb-3"
                   style={{ backgroundColor: SERVICE_COLORS[service.id] || service.iconBgColor }}
-                >
-                  <Ionicons
-                    name={service.icon}
-                    size={36}
-                    color={SERVICE_ICON_COLORS[service.id] || "#386641"}
-                  />
-                </View>
+                  >
+                    <Ionicons
+                      name={service.icon}
+                      size={36}
+                      color={SERVICE_ICON_COLORS[service.id] || "#386641"}
+                    />
+                  </View>
                 <AppText variant="bodySm" className="text-center font-semibold text-gray-700 text-sm">
-                  {t(service.titleKey)}
-                </AppText>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {/* Recent Connections */}
-      <View className="mx-5 mt-6 bg-white rounded-[20px] p-5 shadow-sm elevation-3">
-        <View className="flex-row justify-between items-center mb-4">
-          <View className="flex-row items-center">
-            <Ionicons name="time-outline" size={20} color="#386641" />
-            <AppText variant="h3" className="font-bold text-gray-800 ml-2 text-base">
-              {t("connect.recentConnections")}
-            </AppText>
+                    {t(service.titleKey)}
+                  </AppText>
+                </View>
+              </Pressable>
+            ))}
           </View>
-          <Pressable
-            onPress={handleViewAllConnections}
-            className="flex-row items-center active:opacity-70"
-          >
-            <AppText variant="bodySm" className="text-[#386641] font-semibold">
-              {t("connect.viewAll")}
-            </AppText>
-            <Ionicons name="chevron-forward" size={16} color="#386641" />
-          </Pressable>
         </View>
 
-        {recentProfessionals.map((professional, index) => (
-          <Pressable
-            key={professional.id}
-            onPress={() =>
-              router.push({
-                pathname: "/connect-detail",
-                params: { professionalId: professional.id },
-              } as any)
-            }
-            className="rounded-2xl p-4 active:bg-[#F8FAFC] bg-gray-100"
-            style={{ marginBottom: index < recentProfessionals.length - 1 ? 12 : 0 }}
-          >
-            <View className="flex-row items-center">
-              <Image
-                source={{ uri: professional.imageUrl || "https://via.placeholder.com/64" }}
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 28,
-                  marginRight: 14,
-                  borderWidth: 2,
-                  borderColor: professional.isAvailable ? "#16A34A" : "#D1D5DB",
-                }}
-              />
-              <View className="flex-1">
-                <AppText variant="bodyMd" className="font-bold text-gray-800 text-[15px] mb-0.5">
-                  {professional.name}
-                </AppText>
-                <AppText variant="bodySm" className="text-gray-500 text-[13px]">
-                  {professional.role}
-                </AppText>
-                <View className="flex-row items-center mt-1">
-                  <Ionicons name="location-outline" size={12} color="#9CA3AF" />
-                  <AppText variant="bodySm" className="text-gray-400 text-xs ml-1">
-                    {professional.district}
+        {/* Recent Connections */}
+        <View style={{
+          marginHorizontal: 20,
+          marginTop: 24,
+          backgroundColor: "#FFFFFF",
+          borderRadius: 24,
+          padding: 20,
+          borderWidth: 1,
+          borderColor: "rgba(0,0,0,0.03)",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.03,
+          shadowRadius: 12,
+          elevation: 2,
+        }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons name="time-outline" size={20} color="#16A34A" />
+              <AppText variant="h3" style={{ fontWeight: "700", color: "#111827", marginLeft: 8, fontSize: 16 }}>
+                {t("connect.recentConnections")}
+              </AppText>
+            </View>
+            <Pressable
+              onPress={handleViewAllConnections}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "600", fontSize: 13 }}>
+                {t("connect.viewAll")}
+              </AppText>
+              <Ionicons name="chevron-forward" size={16} color="#16A34A" />
+            </Pressable>
+          </View>
+
+          {recentProfessionals.map((professional, index) => (
+            <Pressable
+              key={professional.id}
+              onPress={() =>
+                router.push({
+                  pathname: "/connect-detail",
+                  params: { professionalId: professional.id },
+                } as any)
+              }
+              style={({ pressed }) => ({
+                borderRadius: 16,
+                padding: 16,
+                backgroundColor: pressed ? "#F8FAFC" : "#F3F4F6",
+                marginBottom: index < recentProfessionals.length - 1 ? 12 : 0,
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.02)",
+              })}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Image
+                  source={{ uri: professional.imageUrl || "https://via.placeholder.com/64" }}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    marginRight: 14,
+                    borderWidth: 2,
+                    borderColor: professional.isAvailable ? "#16A34A" : "#D1D5DB",
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyMd" style={{ fontWeight: "700", color: "#111827", fontSize: 15, marginBottom: 2 }}>
+                    {professional.name}
+                  </AppText>
+                  <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 13 }}>
+                    {professional.role}
+                  </AppText>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                    <Ionicons name="location-outline" size={12} color="#9CA3AF" />
+                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 12, marginLeft: 4 }}>
+                      {professional.district}
+                    </AppText>
+                  </View>
+                </View>
+                <View style={{ alignItems: "center" }}>
+                  <View
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      marginBottom: 4,
+                      backgroundColor: professional.isAvailable ? "#16A34A" : "#D1D5DB"
+                    }}
+                  />
+                  <AppText
+                    variant="bodySm"
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "700",
+                      color: professional.isAvailable ? "#16A34A" : "#9CA3AF"
+                    }}
+                  >
+                    {professional.isAvailable ? t("connect.available") : t("connect.busy")}
                   </AppText>
                 </View>
               </View>
-              <View className="items-center">
-                <View
-                  className="w-2.5 h-2.5 rounded-full mb-1"
-                  style={{ backgroundColor: professional.isAvailable ? "#16A34A" : "#D1D5DB" }}
-                />
-                <AppText
-                  variant="bodySm"
-                  className="text-[10px] font-semibold"
-                  style={{ color: professional.isAvailable ? "#16A34A" : "#9CA3AF" }}
-                >
-                  {professional.isAvailable ? t("connect.available") : t("connect.busy")}
-                </AppText>
-              </View>
-            </View>
-          </Pressable>
-        ))}
+            </Pressable>
+          ))}
 
-        {recentProfessionals.length === 0 && !loading && (
-          <View className="items-center py-6">
-            <Ionicons name="people-outline" size={48} color="#D1D5DB" />
-            <AppText variant="bodySm" className="text-gray-400 text-center mt-3">
-              {t("connect.noRecentConnections")}
+          {recentProfessionals.length === 0 && !loading && (
+            <View style={{ alignItems: "center", paddingVertical: 24 }}>
+              <Ionicons name="people-outline" size={48} color="#D1D5DB" />
+              <AppText variant="bodySm" style={{ color: "#9CA3AF", textAlign: "center", marginTop: 12 }}>
+                {t("connect.noRecentConnections")}
+              </AppText>
+            </View>
+          )}
+        </View>
+
+        {/* Emergency Help */}
+        <View style={{
+          marginHorizontal: 20,
+          marginTop: 24,
+          backgroundColor: "#FEF2F2",
+          borderRadius: 24,
+          padding: 24,
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#FECACA",
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Ionicons name="alert-circle" size={24} color="#DC2626" />
+            <AppText variant="h3" style={{ fontWeight: "800", color: "#DC2626", marginLeft: 8, fontSize: 18 }}>
+              {t("connect.emergencyTitle")}
             </AppText>
           </View>
-        )}
-      </View>
+          <AppText variant="bodySm" style={{ color: "#7F1D1D", marginBottom: 20, textAlign: "center", fontSize: 13 }}>
+            {t("connect.emergencySubtitle")}
+          </AppText>
 
-      {/* Emergency Help */}
-      <View className="mx-5 mt-6 bg-red-50 rounded-[20px] p-6 items-center border border-red-200">
-        <View className="flex-row items-center mb-2">
-          <Ionicons name="alert-circle" size={24} color="#DC2626" />
-          <AppText variant="h3" className="font-bold text-red-600 ml-2 text-lg">
-            {t("connect.emergencyTitle")}
+          {/* Emergency Button */}
+          <Pressable
+            onPress={handleEmergencyPress}
+            style={({ pressed }) => ({
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+              position: "relative",
+              height: 144,
+              width: 144,
+            })}
+          >
+            {/* Outer Ring */}
+            <View style={{ position: "absolute", width: 144, height: 144, borderRadius: 72, backgroundColor: "rgba(220,38,38,0.15)" }} />
+            {/* Inner Ring */}
+            <View style={{ position: "absolute", width: 128, height: 128, borderRadius: 64, backgroundColor: "rgba(220,38,38,0.25)" }} />
+            {/* Main Button */}
+            <View
+              style={{
+                width: 112,
+                height: 112,
+                borderRadius: 56,
+                backgroundColor: "#DC2626",
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: "#DC2626",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.4,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <Ionicons name="call" size={48} color="white" />
+            </View>
+          </Pressable>
+
+          <AppText variant="bodySm" style={{ color: "#991B1B", marginTop: 16, fontWeight: "700", fontSize: 13 }}>
+            {t("connect.tapToCall")}
           </AppText>
         </View>
-        <AppText variant="bodySm" className="text-red-900 mb-5 text-center text-[13px]">
-          {t("connect.emergencySubtitle")}
-        </AppText>
 
-        {/* Emergency Button */}
-        <Pressable
-          onPress={handleEmergencyPress}
-          className="items-center justify-center active:opacity-90 active:scale-[0.95]"
-        >
-          {/* Outer Ring */}
-          <View className="absolute w-36 h-36 rounded-full bg-red-600/15" />
-          {/* Inner Ring */}
-          <View className="absolute w-32 h-32 rounded-full bg-red-600/25" />
-          {/* Main Button */}
-          <View
-            className="w-28 h-28 rounded-full bg-red-600 items-center justify-center elevation-8"
-            style={{
-              shadowColor: "#DC2626",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-            }}
-          >
-            <Ionicons name="call" size={48} color="white" />
-          </View>
-        </Pressable>
-
-        <AppText variant="bodySm" className="text-red-800 mt-4 font-semibold text-[13px]">
-          {t("connect.tapToCall")}
-        </AppText>
-      </View>
-
-      {/* Bottom padding for tab bar */}
-      <View className="h-24" />
-    </ScrollView>
+        {/* Bottom padding for tab bar */}
+        <View style={{ height: 96 }} />
+      </ScrollView>
+    </View>
   );
 }

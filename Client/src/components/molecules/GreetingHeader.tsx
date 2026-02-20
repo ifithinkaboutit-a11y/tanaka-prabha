@@ -30,7 +30,7 @@ export default function GreetingHeader({
   const greeting = getGreeting();
 
   return (
-    <View style={{ paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16 }}>
+    <View style={{ paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20 }}>
       <View
         style={{
           flexDirection: "row",
@@ -38,9 +38,16 @@ export default function GreetingHeader({
           justifyContent: "space-between",
         }}
       >
+        {/* Left side: Avatar + text */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <Pressable onPress={onAvatarPress}>
-            <Avatar size="xl" name={name} />
+          <Pressable onPress={onAvatarPress} style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 4,
+          }}>
+            <Avatar size="xl" name={name} shape="circle"/>
           </Pressable>
           <View>
             <AppText
@@ -49,6 +56,7 @@ export default function GreetingHeader({
                 fontSize: 14,
                 color: "#6B7280",
                 marginBottom: 2,
+                fontWeight: "500",
               }}
             >
               {greeting}
@@ -56,44 +64,45 @@ export default function GreetingHeader({
             <AppText
               variant="h2"
               style={{
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: "700",
-                color: "#1F2937",
+                color: "#111827",
+                letterSpacing: -0.3,
               }}
             >
               {name}
             </AppText>
           </View>
         </View>
-        
+
         {/* Notification Bell */}
         <Pressable
           onPress={onNotificationPress}
           style={({ pressed }) => ({
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: pressed ? "#E5E7EB" : "#F3F4F6",
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: "#E5E7EB",
+            borderColor: "rgba(0,0,0,0.03)",
             position: "relative",
           })}
         >
-          <Ionicons name="notifications-outline" size={24} color="#1F2937" />
+          <Ionicons name="notifications-outline" size={22} color="#1F2937" />
           {hasNotifications && (
             <View
               style={{
                 position: "absolute",
                 top: 10,
                 right: 12,
-                width: 10,
-                height: 10,
-                borderRadius: 5,
+                width: 9,
+                height: 9,
+                borderRadius: 4.5,
                 backgroundColor: "#EF4444",
-                borderWidth: 2,
-                borderColor: "#FFFFFF",
+                borderWidth: 1.5,
+                borderColor: "#F3F4F6",
               }}
             />
           )}

@@ -3,19 +3,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState, useEffect } from "react";
 import {
-    Pressable,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    View,
-    ActivityIndicator,
+  Pressable,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import SchemePreviewCard from "../components/atoms/SchemePreviewCard";
 import { schemesApi, Scheme } from "@/services/apiService";
 import {
-    categoryToSchemeCategory,
-    schemeCategories,
+  categoryToSchemeCategory,
+  schemeCategories,
 } from "../data/content/schemeCategories";
 import { useTranslation } from "../i18n";
 
@@ -113,88 +113,129 @@ const CategoryListing = () => {
       : category;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
-      {/* Navigation Header */}
-      <View style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#D9D9D9" }}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Pressable onPress={handleBack} style={{ marginRight: 16 }}>
-            <Ionicons name="arrow-back" size={24} color="#212121" />
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      {/* Sticky Top Header Area */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        paddingBottom: 16,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        marginBottom: 8,
+        zIndex: 10,
+      }}>
+        {/* Navigation Header */}
+        <View style={{
+          paddingTop: 52,
+          paddingBottom: 12,
+          paddingHorizontal: 16,
+          flexDirection: "row",
+          alignItems: "center"
+        }}>
+          <Pressable onPress={handleBack} style={({ pressed }) => ({
+            marginRight: 16,
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: pressed ? "#F3F4F6" : "transparent"
+          })}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
           <AppText
             variant="h3"
-            style={{ color: "#212121", flex: 1, fontWeight: "600" }}
+            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 20, letterSpacing: -0.2 }}
             numberOfLines={1}
           >
             {displayTitle}
           </AppText>
         </View>
-      </View>
 
-      {/* Search Bar */}
-      <View style={{ paddingVertical: 12, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F6F6F6", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: "#D9D9D9" }}>
-          <Ionicons name="search" size={20} color="#9E9E9E" />
-          <TextInput
-            style={{ flex: 1, marginLeft: 12, fontSize: 16, color: "#212121" }}
-            placeholder={t("schemesPage.searchPlaceholder")}
-            placeholderTextColor="#9E9E9E"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        {/* Search Bar */}
+        <View style={{ paddingHorizontal: 16, marginTop: 4 }}>
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#F1F5F9",
+            borderRadius: 16,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderWidth: 1,
+            borderColor: "rgba(0,0,0,0.03)"
+          }}>
+            <Ionicons name="search" size={20} color="#9CA3AF" />
+            <TextInput
+              style={{ flex: 1, marginLeft: 10, fontSize: 16, color: "#111827", fontWeight: "500" }}
+              placeholder={t("schemesPage.searchPlaceholder")}
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+        </View>
+
+        {/* Sort and Filter Controls */}
+        <View style={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <TouchableOpacity
+            onPress={() => setSortBy(sortBy === "name" ? "date" : "name")}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
+            <Ionicons name="swap-vertical" size={16} color="#4B5563" />
+            <AppText variant="bodySm" style={{ color: "#4B5563", marginLeft: 6, fontWeight: "600" }}>
+              {t("schemesPage.sortBy")}: {sortBy === "name" ? "A-Z" : "Newest"}
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setShowFilters(!showFilters)}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
+            <Ionicons name="options" size={16} color="#4B5563" />
+            <AppText variant="bodySm" style={{ color: "#4B5563", marginLeft: 6, fontWeight: "600" }}>
+              {t("schemesPage.filters")}
+            </AppText>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Sort and Filter Controls */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "#FFFFFF", flexDirection: "row", justifyContent: "center", alignItems: "center", borderTopWidth: 1, borderTopColor: "#D9D9D9" }}>
-        <TouchableOpacity
-          onPress={() => setSortBy(sortBy === "name" ? "date" : "name")}
-          style={{ flexDirection: "row", alignItems: "center", marginRight: 32 }}
-        >
-          <Ionicons name="swap-vertical" size={16} color="#757575" />
-          <AppText variant="bodySm" style={{ color: "#616161", marginLeft: 8 }}>
-            {t("schemesPage.sortBy")}
-          </AppText>
-        </TouchableOpacity>
+      <ScrollView style={{ flex: 1 }}>
+        {/* Schemes List */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          {filteredSchemes.map((scheme) => (
+            <SchemePreviewCard
+              key={scheme.id}
+              title={scheme.title}
+              description={scheme.description || ""}
+              category={scheme.category}
+              imageUrl={scheme.imageUrl}
+              onPress={() => handleSchemePress(scheme)}
+            />
+          ))}
 
-        <TouchableOpacity
-          onPress={() => setShowFilters(!showFilters)}
-          style={{ flexDirection: "row", alignItems: "center" }}
-        >
-          <Ionicons name="options-outline" size={16} color="#757575" />
-          <AppText variant="bodySm" style={{ color: "#616161", marginLeft: 8 }}>
-            {t("schemesPage.filters")}
-          </AppText>
-        </TouchableOpacity>
-      </View>
+          {filteredSchemes.length === 0 && (
+            <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 48 }}>
+              <Ionicons name="search" size={48} color="#D1D5DB" />
+              <AppText
+                variant="bodyMd"
+                style={{ color: "#616161", marginTop: 16, textAlign: "center" }}
+              >
+                {t("schemesPage.noSchemesFound")}
+              </AppText>
+            </View>
+          )}
+        </View>
 
-      {/* Schemes List */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-        {filteredSchemes.map((scheme) => (
-          <SchemePreviewCard
-            key={scheme.id}
-            title={scheme.title}
-            description={scheme.description}
-            category={scheme.category}
-            imageUrl={scheme.imageUrl}
-            onPress={() => handleSchemePress(scheme)}
-          />
-        ))}
-
-        {filteredSchemes.length === 0 && (
-          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 48 }}>
-            <Ionicons name="search" size={48} color="#D1D5DB" />
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#616161", marginTop: 16, textAlign: "center" }}
-            >
-              {t("schemesPage.noSchemesFound")}
-            </AppText>
-          </View>
-        )}
-      </View>
-
-      <View style={{ height: 32 }} />
-    </ScrollView>
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </View>
   );
 };
 

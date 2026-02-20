@@ -43,7 +43,7 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
 
 const NotificationItem = ({ notification }: { notification: Notification }) => {
   const { t } = useTranslation();
-  
+
   const getIconColor = (type: string) => {
     switch (type) {
       case "approval":
@@ -60,41 +60,98 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
   const getIconName = (type: string): keyof typeof Ionicons.glyphMap => {
     if (notification.icon) return notification.icon as any;
     switch (type) {
-        case "approval": return "checkmark-circle-outline";
-        case "reminder": return "calendar-outline";
-        case "alert": return "alert-circle-outline";
-        default: return "notifications-outline";
+      case "approval": return "checkmark-circle";
+      case "reminder": return "calendar";
+      case "alert": return "alert-circle";
+      default: return "notifications";
     }
   }
 
   return (
-    <Card style={{ marginBottom: 12, flexDirection: "row", alignItems: "center", padding: 12, borderColor: "transparent", backgroundColor: "#FFFFFF", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}>
+    <View style={{
+      marginBottom: 12,
+      flexDirection: "row",
+      backgroundColor: notification.isRead ? "#FFFFFF" : "#F8FAFC",
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: notification.isRead ? "#F1F5F9" : "#E2E8F0",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.03,
+      shadowRadius: 4,
+      elevation: 1,
+      position: "relative",
+    }}>
+      {/* Icon badge */}
       <View
-        style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15` }}
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: 14,
+          backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15`,
+        }}
       >
         <Ionicons
           name={getIconName(notification.type)}
-          size={24}
+          size={22}
           color={notification.iconBgColor || getIconColor(notification.type)}
         />
       </View>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-          <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121", flex: 1, marginRight: 8 }}>
+
+      {/* Content wrapper */}
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <AppText
+            variant="bodyMd"
+            style={{
+              fontWeight: notification.isRead ? "600" : "700",
+              color: notification.isRead ? "#374151" : "#111827",
+              flex: 1,
+              marginRight: 10,
+              fontSize: 15,
+              letterSpacing: -0.1,
+            }}
+            numberOfLines={1}
+          >
             {notification.titleKey ? t(notification.titleKey) : notification.title}
           </AppText>
-          <AppText variant="caption" style={{ color: "#9E9E9E", fontSize: 12, marginTop: 4 }}>
+          <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500" }}>
             {notification.time}
           </AppText>
         </View>
-        <AppText variant="bodySm" style={{ color: "#616161" }}>
-           {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
+        <AppText
+          variant="bodySm"
+          style={{
+            color: "#6B7280",
+            fontSize: 13,
+            lineHeight: 18,
+          }}
+          numberOfLines={2}
+        >
+          {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
         </AppText>
       </View>
+
+      {/* Unread dot indicator */}
       {!notification.isRead && (
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF4444", position: "absolute", top: 12, right: 12 }} />
+        <View style={{
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+          backgroundColor: "#3B82F6",
+          position: "absolute",
+          top: "50%",
+          left: -4,
+          marginTop: -5,
+          borderWidth: 2,
+          borderColor: "#FFFFFF",
+        }} />
       )}
-    </Card>
+    </View>
   );
 };
 
@@ -107,9 +164,9 @@ export default function NotificationsScreen() {
 
   const fetchNotifications = async () => {
     try {
-        // Fallback to getMy if available, or getAll
-        const data = await (notificationsApi as any).getMy(); 
-        setNotifications(data);
+      // Fallback to getMy if available, or getAll
+      const data = await (notificationsApi as any).getMy();
+      setNotifications(data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -140,16 +197,16 @@ export default function NotificationsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      <Stack.Screen 
-        options={{ 
-            title: t("notifications.title") || "Notifications",
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: '#F9FAFB' },
-            headerTitleStyle: { color: '#1F2937' }, 
-            headerTintColor: '#1F2937'
-        }} 
+      <Stack.Screen
+        options={{
+          title: t("notifications.title") || "Notifications",
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: '#F9FAFB' },
+          headerTitleStyle: { color: '#1F2937' },
+          headerTintColor: '#1F2937'
+        }}
       />
-      
+
       <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
       </View>
 
@@ -163,17 +220,20 @@ export default function NotificationsScreen() {
         {groupedNotifications.length === 0 ? (
           <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80, opacity: 0.6 }}>
             <Ionicons name="notifications-off-outline" size={64} color={colors.neutral.textLight} />
-             <AppText style={{ marginTop: 16, color: "#616161", textAlign: "center" }}>
+            <AppText style={{ marginTop: 16, color: "#616161", textAlign: "center" }}>
               {t("notifications.empty") || "No notifications yet"}
             </AppText>
           </View>
         ) : (
-          <View style={{ paddingBottom: 32 }}>
+          <View style={{ paddingBottom: 40, paddingTop: 10 }}>
             {groupedNotifications.map((group, index) => (
-              <View key={index} style={{ marginBottom: 24 }}>
-                <AppText variant="h3" style={{ marginBottom: 12, marginLeft: 4, fontSize: 16, fontWeight: "700", color: "#616161" }}>
-                  {t(group.titleKey) || group.title}
-                </AppText>
+              <View key={index} style={{ marginBottom: 28 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                  <AppText variant="h3" style={{ fontSize: 13, fontWeight: "700", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    {t(group.titleKey) || group.title}
+                  </AppText>
+                  <View style={{ flex: 1, height: 1, backgroundColor: "#E5E7EB", marginLeft: 12 }} />
+                </View>
                 {group.data.map((notification) => (
                   <NotificationItem key={notification.id} notification={notification} />
                 ))}

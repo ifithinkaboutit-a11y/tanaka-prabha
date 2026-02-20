@@ -13,11 +13,13 @@ import {
   View,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
+import Button from "@/components/atoms/Button";
 import Avatar from "../../components/atoms/Avatar";
 import { useTranslation } from "../../i18n";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUserProfile } from "../../contexts/UserProfileContext";
 import { useLanguageStore } from "../../stores/languageStore";
+import TextArea from "@/components/atoms/TextArea";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -69,13 +71,15 @@ const SectionCard = ({
         <Text style={[s.cardTitle, { color: accentColor }]}>{title}</Text>
       </View>
       {onEdit && (
-        <Pressable
+        <Button
+          size="sm"
+          variant="outline"
           onPress={onEdit}
-          style={({ pressed }) => [s.editChip, pressed && { opacity: 0.7 }]}
+          style={{ backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", borderRadius: 20 }}
         >
-          <Ionicons name="pencil-outline" size={13} color="#386641" />
-          <Text style={s.editChipText}>{editLabel || "Edit"}</Text>
-        </Pressable>
+          <Ionicons name="pencil-outline" size={13} color="#386641" style={{ marginRight: 6 }} />
+          <Text style={{ color: "#386641", fontSize: 12, fontWeight: "600" }}>{editLabel || "Edit"}</Text>
+        </Button>
       )}
     </View>
     <View style={s.cardBody}>{children}</View>
@@ -168,13 +172,17 @@ const Profile = () => {
         {/* Top bar */}
         <View style={s.heroTopBar}>
           <Text style={s.heroScreenTitle}>{t("profile.title")}</Text>
-          <Pressable
+          <Button
+            size="sm"
+            variant="outline"
             onPress={() => setLanguage(currentLanguage === "en" ? "hi" : "en")}
-            style={({ pressed }) => [s.langBtn, pressed && { opacity: 0.7 }]}
+            style={{ backgroundColor: "rgba(255,255,255,0.18)", borderColor: "rgba(255,255,255,0.25)", borderRadius: 20 }}
           >
-            <Ionicons name="language-outline" size={16} color="#FFFFFF" />
-            <Text style={s.langBtnText}>{currentLanguage === "en" ? "हिंदी" : "English"}</Text>
-          </Pressable>
+            <Ionicons name="language-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>
+              {currentLanguage === "en" ? "हिंदी" : "English"}
+            </Text>
+          </Button>
         </View>
 
         {/* Avatar + Identity */}
@@ -225,13 +233,15 @@ const Profile = () => {
         </View>
 
         {/* Edit Profile CTA */}
-        <Pressable
+        <Button
+          size="md"
+          variant="outline"
           onPress={() => router.push("/personal-details" as any)}
-          style={({ pressed }) => [s.editProfileBtn, pressed && { opacity: 0.85 }]}
+          style={{ backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 0 }}
         >
-          <Ionicons name="create-outline" size={16} color="#386641" />
-          <Text style={s.editProfileBtnText}>{t("profile.editDetails")}</Text>
-        </Pressable>
+          <Ionicons name="create-outline" size={16} color="#386641" style={{ marginRight: 6 }} />
+          <Text style={{ color: "#386641", fontSize: 15, fontWeight: "700" }}>{t("profile.editDetails")}</Text>
+        </Button>
       </View>
 
       {/* ── Personal Details Card ── */}
@@ -290,13 +300,15 @@ const Profile = () => {
           <View style={s.emptySection}>
             <Ionicons name="leaf-outline" size={32} color="#D1FAE5" />
             <Text style={s.emptySectionText}>No land details added yet</Text>
-            <Pressable
+            <Button
+              size="sm"
+              variant="outline"
               onPress={() => router.push("/land-details" as any)}
-              style={s.addBtn}
+              style={{ backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", borderRadius: 20, marginTop: 8 }}
             >
-              <Ionicons name="add-circle-outline" size={16} color="#16A34A" />
-              <Text style={s.addBtnText}>{t("landDetails.addLand")}</Text>
-            </Pressable>
+              <Ionicons name="add-circle-outline" size={16} color="#16A34A" style={{ marginRight: 6 }} />
+              <Text style={{ color: "#16A34A", fontSize: 13, fontWeight: "600" }}>{t("landDetails.addLand")}</Text>
+            </Button>
           </View>
         )}
       </SectionCard>
@@ -358,13 +370,15 @@ const Profile = () => {
           <View style={s.emptySection}>
             <Ionicons name="paw-outline" size={32} color="#FED7AA" />
             <Text style={s.emptySectionText}>No livestock details added yet</Text>
-            <Pressable
+            <Button
+              size="sm"
+              variant="outline"
               onPress={() => router.push("/livestock-details" as any)}
-              style={[s.addBtn, { borderColor: "#EA580C20" }]}
+              style={{ backgroundColor: "#FFF7ED", borderColor: "#FED7AA", borderRadius: 20, marginTop: 8 }}
             >
-              <Ionicons name="add-circle-outline" size={16} color="#EA580C" />
-              <Text style={[s.addBtnText, { color: "#EA580C" }]}>{t("livestockDetails.addLivestock")}</Text>
-            </Pressable>
+              <Ionicons name="add-circle-outline" size={16} color="#EA580C" style={{ marginRight: 6 }} />
+              <Text style={{ color: "#EA580C", fontSize: 13, fontWeight: "600" }}>{t("livestockDetails.addLivestock")}</Text>
+            </Button>
           </View>
         )}
       </SectionCard>
@@ -379,15 +393,16 @@ const Profile = () => {
         <Pressable
           onPress={() => setLanguage(currentLanguage === "en" ? "hi" : "en")}
           style={({ pressed }) => [s.settingRow, pressed && { opacity: 0.7 }]}
+          className="flex flex-row justify-between items-center"
         >
           <View style={s.settingLeft}>
-            <View style={[s.settingIconBg, { backgroundColor: "#EFF6FF" }]}>
+            <View style={[s.settingIconBg, { backgroundColor: "#EFF6FF", marginRight: 12 }]}>
               <Ionicons name="language-outline" size={18} color="#2563EB" />
             </View>
             <Text style={s.settingLabel}>{t("profile.appLanguage")}</Text>
           </View>
           <View style={s.settingRight}>
-            <Text style={s.settingBadge}>{currentLanguage === "en" ? "English" : "हिंदी"}</Text>
+            <Text style={[s.settingBadge, { marginRight: 8 }]}>{currentLanguage === "en" ? "English" : "हिंदी"}</Text>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
           </View>
         </Pressable>
@@ -396,10 +411,11 @@ const Profile = () => {
         <Pressable
           onPress={handleLogout}
           style={({ pressed }) => [s.settingRow, s.logoutRow, pressed && { opacity: 0.7 }]}
+          className="flex flex-row justify-between items-center"
         >
           <View style={s.settingLeft}>
-            <View style={[s.settingIconBg, { backgroundColor: "#FEF2F2" }]}>
-              <Ionicons name="log-out-outline" size={18} color="#DC2626" />
+            <View style={[s.settingIconBg, { backgroundColor: "#FEF2F2", marginRight: 12 }]}>
+              <Ionicons name="log-out-outline" size={18} color="#DC2626" style={{ marginLeft: 3}}/>
             </View>
             <Text style={[s.settingLabel, { color: "#DC2626" }]}>{t("profile.logout")}</Text>
           </View>
@@ -444,7 +460,6 @@ const s = StyleSheet.create({
   langBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
     backgroundColor: "rgba(255,255,255,0.18)",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -502,7 +517,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingVertical: 13,
@@ -540,7 +554,6 @@ const s = StyleSheet.create({
   editChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     backgroundColor: "#F0FDF4",
     paddingHorizontal: 11,
     paddingVertical: 6,
@@ -622,10 +635,10 @@ const s = StyleSheet.create({
     borderBottomColor: "#F8FAFC",
   },
   logoutRow: { borderBottomWidth: 0 },
-  settingLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  settingLeft: { flexDirection: "row", alignItems: "center" },
   settingIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   settingLabel: { fontSize: 15, color: "#1F2937", fontWeight: "500" },
-  settingRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  settingRight: { flexDirection: "row", alignItems: "center" },
   settingBadge: {
     fontSize: 13,
     color: "#2563EB",

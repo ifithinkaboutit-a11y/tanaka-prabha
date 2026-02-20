@@ -1,7 +1,7 @@
 // src/components/molecules/ProgramSection.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
-import { Scheme } from "../../data/interfaces";
+import { Scheme } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import ProgramCard from "../atoms/ProgramCard";
@@ -64,22 +64,22 @@ export default function ProgramSection({
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
+            style={{ fontWeight: "700", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
           >
             {title}
           </AppText>
           <View
             style={{
-              backgroundColor: "#DBEAFE",
+              backgroundColor: "#E0E7FF",
               borderRadius: 12,
               paddingHorizontal: 8,
               paddingVertical: 2,
-              marginLeft: 8,
+              marginLeft: 10,
             }}
           >
             <AppText
               variant="bodySm"
-              style={{ color: "#2563EB", fontWeight: "600", fontSize: 12 }}
+              style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}
             >
               {programs.length}
             </AppText>
@@ -95,11 +95,11 @@ export default function ProgramSection({
         >
           <AppText
             variant="bodySm"
-            style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}
+            style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
           >
             {t("programs.viewAll")}
           </AppText>
-          <Ionicons name="chevron-forward" size={18} color="#386641" style={{ marginLeft: 2 }} />
+          <Ionicons name="chevron-forward" size={16} color="#16A34A" style={{ marginLeft: 2 }} />
         </Pressable>
       </View>
 

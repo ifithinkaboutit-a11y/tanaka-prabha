@@ -21,11 +21,11 @@ const Program = () => {
   const fetchData = async () => {
     try {
       const allSchemes = await schemesApi.getAll({ limit: 50 });
-      
+
       // Separate training programs from regular schemes
       const training = allSchemes.filter((s) => s.category === "Training");
       const otherSchemes = allSchemes.filter((s) => s.category !== "Training");
-      
+
       setSchemes(otherSchemes);
       setTrainingPrograms(training);
     } catch (error) {
@@ -98,8 +98,9 @@ const Program = () => {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
       showsVerticalScrollIndicator={false}
+      stickyHeaderIndices={[0]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -109,35 +110,48 @@ const Program = () => {
         />
       }
     >
-      {/* Header */}
-      <View
-        style={{
-          paddingTop: 48,
-          paddingBottom: 8,
-          paddingHorizontal: 16,
-          backgroundColor: "#FFFFFF",
-        }}
-      >
-        <AppText
-          variant="h2"
-          style={{ fontWeight: "700", color: "#1F2937", fontSize: 28 }}
+      {/* Elevated Header Container */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        paddingBottom: 16,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        elevation: 4,
+        marginBottom: 20,
+      }}>
+        {/* Title Area */}
+        <View
+          style={{
+            paddingTop: 48,
+            paddingBottom: 8,
+            paddingHorizontal: 20,
+          }}
         >
-          {t("programs.title")}
-        </AppText>
-        <AppText
-          variant="bodySm"
-          style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}
-        >
-          {t("programs.subtitle")}
-        </AppText>
-      </View>
+          <AppText
+            variant="h2"
+            style={{ fontWeight: "700", color: "#111827", fontSize: 26, letterSpacing: -0.3 }}
+          >
+            {t("programs.title")}
+          </AppText>
+          <AppText
+            variant="bodySm"
+            style={{ color: "#6B7280", marginTop: 4, fontSize: 13, fontWeight: "500" }}
+          >
+            {t("programs.subtitle")}
+          </AppText>
+        </View>
 
-      {/* Search Bar */}
-      <View style={{ paddingBottom: 16, backgroundColor: "#FFFFFF" }}>
-        <SearchBar
-          placeholder={t("programs.searchPlaceholder")}
-          onSearch={setSearchQuery}
-        />
+        {/* Search Bar */}
+        <View style={{ marginTop: 4 }}>
+          <SearchBar
+            placeholder={t("programs.searchPlaceholder")}
+            onSearch={setSearchQuery}
+          />
+        </View>
       </View>
 
       {/* Government Schemes Section */}

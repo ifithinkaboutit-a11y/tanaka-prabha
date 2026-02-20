@@ -27,7 +27,7 @@ const SchemeDetailsScreen = () => {
   useEffect(() => {
     const fetchScheme = async () => {
       if (!schemeId) return;
-      
+
       try {
         setLoading(true);
         const data = await schemesApi.getById(schemeId);
@@ -104,7 +104,7 @@ const SchemeDetailsScreen = () => {
               {t("schemesPage.eligibility")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {scheme.eligibility?.map((criterion: string, index: number) => (
+              {(scheme as any).eligibility?.map((criterion: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
                   <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
                     •
@@ -132,13 +132,27 @@ const SchemeDetailsScreen = () => {
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Navigation Header */}
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
-          <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 4 }}>
-            <Ionicons name="arrow-back" size={24} color="#212121" />
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingTop: 52,
+          paddingBottom: 16,
+          paddingHorizontal: 16,
+          backgroundColor: "#FFFFFF",
+          borderBottomWidth: 1,
+          borderBottomColor: "#F3F4F6",
+        }}>
+          <Pressable onPress={() => router.back()} style={({ pressed }) => ({
+            marginRight: 16,
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: pressed ? "#F3F4F6" : "transparent"
+          })}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
           <AppText
             variant="h3"
-            style={{ color: "#212121", flex: 1, fontWeight: "600" }}
+            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 20, letterSpacing: -0.2 }}
             numberOfLines={1}
           >
             {t("schemesPage.schemeDetails")}
@@ -155,21 +169,21 @@ const SchemeDetailsScreen = () => {
         )}
 
         {/* Scheme Title & Description */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-          <AppText variant="h2" style={{ color: "#212121", marginBottom: 12, fontWeight: "700" }}>
+        <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
+          <AppText variant="h2" style={{ color: "#111827", marginBottom: 12, fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
             {scheme.title}
           </AppText>
-          <AppText variant="bodyMd" style={{ color: "#616161", lineHeight: 24 }}>
+          <AppText variant="bodyMd" style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}>
             {scheme.description}{" "}
-            <AppText variant="bodyMd" style={{ color: "#2196F3", fontWeight: "500" }}>
+            <AppText variant="bodyMd" style={{ color: "#2563EB", fontWeight: "600" }}>
               Read more
             </AppText>
           </AppText>
         </View>
 
         {/* Segmented Tab Buttons */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <View style={{ flexDirection: "row" }}>
+        <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+          <View style={{ flexDirection: "row", backgroundColor: "#F1F5F9", borderRadius: 12, padding: 4 }}>
             {[
               { key: "overview", label: t("programReader.tabs.overview") },
               { key: "eligibility", label: t("schemesPage.eligibility") },
@@ -179,20 +193,24 @@ const SchemeDetailsScreen = () => {
                 key={tab.key}
                 onPress={() => setActiveTab(tab.key as any)}
                 style={{
+                  flex: 1,
                   paddingVertical: 10,
-                  paddingHorizontal: 20,
-                  marginRight: 8,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  backgroundColor: activeTab === tab.key ? "#7F5539" : "#FFFFFF",
-                  borderColor: activeTab === tab.key ? "#7F5539" : "#D9D9D9",
+                  alignItems: "center",
+                  borderRadius: 10,
+                  backgroundColor: activeTab === tab.key ? "#FFFFFF" : "transparent",
+                  shadowColor: activeTab === tab.key ? "#000" : "transparent",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: activeTab === tab.key ? 0.05 : 0,
+                  shadowRadius: 2,
+                  elevation: activeTab === tab.key ? 2 : 0,
                 }}
               >
                 <AppText
                   variant="bodyMd"
                   style={{
-                    fontWeight: "500",
-                    color: activeTab === tab.key ? "#FFFFFF" : "#212121",
+                    fontWeight: activeTab === tab.key ? "700" : "500",
+                    color: activeTab === tab.key ? "#111827" : "#6B7280",
+                    fontSize: 14,
                   }}
                 >
                   {tab.label}
@@ -207,13 +225,24 @@ const SchemeDetailsScreen = () => {
       </ScrollView>
 
       {/* Fixed Apply Now Button */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#D9D9D9" }}>
+      <View style={{
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        backgroundColor: "#FFFFFF",
+        borderTopWidth: 1,
+        borderTopColor: "#F3F4F6",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 10,
+      }}>
         <Button
           label={t("programReader.applyNow")}
           variant="primary"
           size="lg"
           onPress={handleApplyNow}
-          style={{ width: "100%", borderRadius: 999 }}
+          style={{ width: "100%", borderRadius: 16, backgroundColor: "#16A34A" }}
         />
       </View>
     </View>
