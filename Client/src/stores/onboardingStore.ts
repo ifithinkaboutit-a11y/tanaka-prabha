@@ -103,12 +103,11 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       personalDetails: initialPersonalDetails,
 
-      hasLand: false,
+      hasLand: true,
       landEntries: [],
 
-      hasLivestock: false,
+      hasLivestock: true,
       livestockEntries: [],
-
       setCurrentStep: (step) => set({ currentStep: step }),
 
       nextStep: () => {
@@ -198,9 +197,9 @@ export const useOnboardingStore = create<OnboardingState>()(
           isLandCompleted: false,
           isLivestockCompleted: false,
           personalDetails: initialPersonalDetails,
-          hasLand: false,
+          hasLand: true,
           landEntries: [],
-          hasLivestock: false,
+          hasLivestock: true,
           livestockEntries: [],
         }),
     }),

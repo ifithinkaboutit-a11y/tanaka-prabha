@@ -1,5 +1,5 @@
 // src/components/atoms/AppText.tsx
-import { Text, TextProps, StyleSheet } from "react-native";
+import { StyleSheet, Text, TextProps, TextStyle } from "react-native";
 
 type Variant =
   | "h1"
@@ -12,20 +12,35 @@ type Variant =
 
 type AppTextProps = TextProps & {
   variant?: Variant;
+  className?: string;
 };
 
-const variantStyles = StyleSheet.create({
-  h1: { fontSize: 36, fontWeight: "bold", color: "#212121" },
+const variantStyles: Record<Variant, TextStyle> = {
+  h1: { fontSize: 36, fontWeight: "700", color: "#212121" },
   h2: { fontSize: 30, fontWeight: "600", color: "#212121" },
   h3: { fontSize: 24, fontWeight: "600", color: "#212121" },
   bodyLg: { fontSize: 20, color: "#212121" },
   bodyMd: { fontSize: 18, color: "#212121" },
   bodySm: { fontSize: 16, color: "#616161" },
   caption: { fontSize: 14, color: "#9E9E9E" },
-});
+};
 
+/**
+ * AppText uses StyleSheet-based variants internally.
+ *
+ * The `className` prop is accepted for compatibility (so existing callers
+ * compile without errors) but is NOT applied — this deliberately keeps
+ * react-native-css-interop out of AppText's render path.
+ *
+ * WHY: css-interop's render-component.js reads NavigationStateContext
+ * during React Fast Refresh before the NavigationContainer is re-mounted,
+ * causing: "Couldn't find a navigation context".
+ *
+ * To override a style, use the `style` prop instead of `className`.
+ */
 export default function AppText({
   variant = "bodyMd",
+  className: _className,   // accepted but not used — see note above
   style,
   ...props
 }: AppTextProps) {

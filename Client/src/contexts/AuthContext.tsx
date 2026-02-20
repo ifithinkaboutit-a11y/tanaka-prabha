@@ -54,7 +54,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: User | null;
   needsOnboarding: boolean;
-  signIn: (phoneNumber: string, otp: string) => Promise<{ user: User; isNewUser: boolean }>;
+  signIn: (phoneNumber: string, otp: string, isLoginMode?: boolean) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
   resendOTP: (phoneNumber: string) => Promise<string>;
@@ -70,11 +70,11 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
-  signOut: async () => {},
+  signOut: async () => { },
   sendOTP: async () => "",
   resendOTP: async () => "",
-  refreshUser: async () => {},
-  completeOnboarding: async () => {},
+  refreshUser: async () => { },
+  completeOnboarding: async () => { },
 });
 
 export function useAuth() {
@@ -97,29 +97,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const token = await tokenManager.getToken();
 
         if (token) {
-          // Verify token with backend
-          const userData = await verifyToken();
-
-          if (userData) {
-            setUser(userData);
-            setIsAuthenticated(true);
-            // Check if user needs onboarding
-            setNeedsOnboarding(userData.is_new_user === true);
-          } else {
-            // Token invalid, clear everything
-            await tokenManager.clearAll();
-            setIsAuthenticated(false);
-            setUser(null);
-            setNeedsOnboarding(false);
+          // Try to verify token with backend, but fall back to cached user
+          // if the server is unreachable (e.g. Render free-tier sleeping)
+          try {
+            const userData = await verifyToken();
+            if (userData) {
+              setUser(userData);
+              setIsAuthenticated(true);
+              setNeedsOnboarding(userData.is_new_user === true);
+            } else {
+              // Backend explicitly rejected the token — clear and re-auth
+              await tokenManager.clearAll();
+              setIsAuthenticated(false);
+              setUser(null);
+              setNeedsOnboarding(false);
+            }
+          } catch (networkError) {
+            // Network/server error — keep user logged in using cached data
+            console.warn("Token verification failed (server unreachable), using cached user:", networkError);
+            const cachedUser = await getStoredUser();
+            if (cachedUser) {
+              setUser(cachedUser);
+              setIsAuthenticated(true);
+              setNeedsOnboarding(cachedUser.is_new_user === true);
+            } else {
+              // No cached user either — force re-auth
+              setIsAuthenticated(false);
+              setUser(null);
+              setNeedsOnboarding(false);
+            }
           }
         } else {
-          // No token, check for stored user (offline mode)
-          const storedUser = await getStoredUser();
-          if (storedUser) {
-            // We have user data but no valid token - needs re-auth
-            setIsAuthenticated(false);
-            setUser(null);
-          }
+          // No token at all — user must log in
+          setIsAuthenticated(false);
+          setUser(null);
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -141,11 +152,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === "(auth)";
 
+    // Onboarding-only screens that login users must never see
+    const onboardingScreens = ["personal-details", "land-details", "livestock-details", "onboarding"];
+    const onCurrentOnboardingScreen = inAuthGroup && onboardingScreens.includes(segments[1] as string);
+
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to auth if not authenticated and not in auth screens
       router.replace("/(auth)/" as any);
-    } else if (isAuthenticated && inAuthGroup && !needsOnboarding) {
-      // Authenticated user who doesn't need onboarding — skip auth stack
+    } else if (isAuthenticated && !needsOnboarding && (inAuthGroup || onCurrentOnboardingScreen)) {
+      // Authenticated user who doesn't need onboarding — skip to tabs
+      // This also blocks login users from landing on onboarding screens
       router.replace("/(tab)/" as any);
     }
   }, [isAuthenticated, segments, isLoading, needsOnboarding]);
@@ -165,11 +181,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in function - now returns isNewUser flag
   const signIn = useCallback(
-    async (phoneNumber: string, otp: string): Promise<{ user: User; isNewUser: boolean }> => {
+    async (phoneNumber: string, otp: string, isLoginMode = false): Promise<{ user: User; isNewUser: boolean }> => {
       const userData = await authVerifyOTP(phoneNumber, otp);
       setUser(userData);
       setIsAuthenticated(true);
-      const isNewUser = userData.is_new_user === true;
+      // If the caller explicitly signals this is a login (not signup), skip onboarding
+      // regardless of what the server returns. Belt-and-suspenders alongside the server fix.
+      const isNewUser = isLoginMode ? false : userData.is_new_user === true;
       setNeedsOnboarding(isNewUser);
       return { user: userData, isNewUser };
     },
@@ -183,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data?.personalDetails) {
         const pd = data.personalDetails;
         const profilePayload: Partial<UserProfileUpdate> = {
-          name: pd.fathersName || pd.name || undefined, // onboarding uses fathersName for full name
+          name: pd.name || undefined, // Full name the user typed in the "Full Name" field
           age: pd.age || undefined,
           gender: pd.gender || undefined,
           fathers_name: pd.fathersName || undefined,
@@ -241,7 +259,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(updatedUser);
       tokenManager.setUser(updatedUser);
     }
-    router.replace("/(tab)/");
+    router.replace("/(tab)/" as any);
   }, [user, router]);
 
   // Sign out function

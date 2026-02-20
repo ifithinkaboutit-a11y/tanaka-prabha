@@ -12,35 +12,34 @@ type AvatarProps = {
   bgColor?: string;
 };
 
-const containerSizeStyles: Record<AvatarSize, { width: number; height: number }> = {
-  sm: { width: 32, height: 32 },
-  md: { width: 40, height: 40 },
-  lg: { width: 56, height: 56 },
-  xl: { width: 80, height: 80 },
-  "2xl": { width: 96, height: 96 },
-  "3xl": { width: 112, height: 112 },
+const containerSizeClasses: Record<AvatarSize, string> = {
+  sm: "w-8 h-8",
+  md: "w-10 h-10",
+  lg: "w-14 h-14",
+  xl: "w-20 h-20",
+  "2xl": "w-24 h-24",
+  "3xl": "w-28 h-28",
 };
 
-const textSizeStyles: Record<AvatarSize, number> = {
-  sm: 12,
-  md: 14,
-  lg: 18,
-  xl: 24,
-  "2xl": 28,
-  "3xl": 36,
+const textSizeClasses: Record<AvatarSize, string> = {
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-lg",
+  xl: "text-2xl",
+  "2xl": "text-[28px]",
+  "3xl": "text-4xl",
 };
 
-// Generate consistent color from name
 const getColorFromName = (name?: string): string => {
   const colors = [
-    "#386641", // Forest green
-    "#6A994E", // Light green
-    "#2563EB", // Blue
-    "#7F5539", // Brown
-    "#DC2626", // Red
-    "#9333EA", // Purple
-    "#EA580C", // Orange
-    "#0891B2", // Cyan
+    "#386641",
+    "#6A994E",
+    "#2563EB",
+    "#7F5539",
+    "#DC2626",
+    "#9333EA",
+    "#EA580C",
+    "#0891B2",
   ];
   if (!name) return colors[0];
   const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -67,40 +66,28 @@ export default function Avatar({
 
   const showInitials = !uri || imageError;
   const backgroundColor = bgColor || getColorFromName(name);
-  const sizeStyle = containerSizeStyles[size];
 
   return (
     <View
-      style={{
-        ...sizeStyle,
-        borderRadius: shape === "circle" ? sizeStyle.width / 2 : 16,
-        backgroundColor: showInitials ? backgroundColor : "#F3F4F6",
-        borderWidth: showInitials ? 0 : 2,
-        borderColor: "#E5E7EB",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-      }}
+      className={`
+        ${containerSizeClasses[size]}
+        ${shape === "circle" ? "rounded-full" : "rounded-2xl"}
+        ${showInitials ? "" : "bg-gray-100 border-2 border-gray-200"}
+        items-center justify-center overflow-hidden
+        shadow-sm elevation-3
+      `}
+      style={showInitials ? { backgroundColor } : undefined}
     >
       {showInitials ? (
         <Text
-          style={{
-            fontWeight: "700",
-            color: "#FFFFFF",
-            fontSize: textSizeStyles[size],
-          }}
+          className={`font-bold text-white ${textSizeClasses[size]}`}
         >
           {initials}
         </Text>
       ) : (
         <Image
           source={{ uri }}
-          style={{ width: "100%", height: "100%" }}
+          className="w-full h-full"
           resizeMode="cover"
           onError={() => setImageError(true)}
         />

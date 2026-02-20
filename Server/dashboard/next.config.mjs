@@ -41,6 +41,18 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 5,
   },
+  
+  // Production optimizations
+  swcMinify: true,
+  compress: true,
+  
+  // Output configuration
+  output: 'standalone',
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['@tabler/icons-react', 'lucide-react'],
+  },
 };
 
 export default nextConfig;

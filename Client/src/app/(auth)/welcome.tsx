@@ -5,19 +5,20 @@ import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
 
 export default function Welcome() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const handleContinue = () => {
-    router.push("/(auth)/phone-input" as any);
+  const handleSignUp = () => {
+    // New user — phone-input in signup mode
+    router.push({ pathname: "/(auth)/phone-input", params: { mode: "signup" } } as any);
   };
 
-  const handleSkip = () => {
-    // Skip means go straight to login — auth is still required
-    router.push("/(auth)/phone-input" as any);
+  const handleLogin = () => {
+    // Returning user — phone-input in login mode
+    router.push({ pathname: "/(auth)/phone-input", params: { mode: "login" } } as any);
   };
 
   return (
@@ -27,36 +28,38 @@ export default function Welcome() {
       </View>
       <View style={s.card}>
         {/* Title */}
-        <AppText
-          variant="h2"
-          style={s.title}
-        >
+        <AppText variant="h2" style={s.title}>
           {t("auth.welcomeTitle")}
         </AppText>
 
         {/* Description */}
-        <AppText
-          variant="bodySm"
-          style={s.description}
-        >
+        <AppText variant="bodySm" style={s.description}>
           {t("auth.welcomeDescription")}
         </AppText>
 
-        {/* Skip Button */}
+        {/* Sign Up Button (primary) */}
         <Button
-          label={t("auth.skipForNow")}
-          variant="outline"
-          style={{ width: "100%", paddingVertical: 16, marginBottom: 16 }}
-          onPress={handleSkip}
+          label={t("auth.signUp") || "Create Account"}
+          variant="primary"
+          onPress={handleSignUp}
+          style={{ width: "100%", paddingVertical: 16, marginBottom: 12 }}
         />
 
-        {/* Continue Button */}
+        {/* Login Button (outline) */}
         <Button
-          label={t("auth.continue")}
-          variant="primary"
-          onPress={handleContinue}
+          label={t("auth.loginWithPhone") || "Log In"}
+          variant="outline"
+          onPress={handleLogin}
           style={{ width: "100%", paddingVertical: 16 }}
         />
+
+        {/* Separator hint */}
+        <TouchableOpacity onPress={handleLogin} style={s.hintRow}>
+          <Text style={s.hintText}>
+            {t("auth.alreadyHaveAccount") || "Already have an account? "}
+            <Text style={s.hintLink}>{t("auth.login") || "Log In"}</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -93,5 +96,18 @@ const s = StyleSheet.create({
     fontSize: 16,
     marginBottom: 24,
     lineHeight: 24,
+  },
+  hintRow: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  hintText: {
+    textAlign: "center",
+    color: "#9E9E9E",
+    fontSize: 13,
+  },
+  hintLink: {
+    color: "#386641",
+    fontWeight: "600",
   },
 });

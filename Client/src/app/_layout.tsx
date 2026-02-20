@@ -3,8 +3,8 @@ import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
-import { Image, Platform, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { AuthProvider } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
@@ -19,22 +19,19 @@ if (Platform.OS !== "web") {
 }
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
     async function prepare() {
       try {
         // Fire-and-forget: wake the Render free-tier server while splash is shown
         const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
         const healthUrl = apiUrl.replace(/\/api\/?$/, "/health");
-        fetch(healthUrl).catch(() => {}); // ignore errors, this is just a warm-up
+        fetch(healthUrl).catch(() => { }); // ignore errors, this is just a warm-up
 
         // Hold splash for 1s while server wakes and assets load
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (e) {
         console.warn(e);
       } finally {
-        setIsReady(true);
         // Hide the native splash screen (only on native)
         if (Platform.OS !== "web") {
           await SplashScreen.hideAsync();
@@ -51,22 +48,6 @@ export default function RootLayout() {
       });
     }
   }, []);
-
-  if (!isReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
-        <Image
-          source={require("../assets/images/splash-icon.png")}
-          style={{ width: 128, height: 128, marginBottom: 32 }}
-          resizeMode="contain"
-        />
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#212121", marginBottom: 8 }}>
-          Tanak Prabha
-        </Text>
-        <Text style={{ color: "#9E9E9E" }}>Empowering Farmers</Text>
-      </View>
-    );
-  }
 
   return (
     <AuthProvider>

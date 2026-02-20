@@ -11,12 +11,18 @@
     "welcomeDescription": "View government & private farming schemes, apply easily and manage your farm, family & livestock details easily",
     "skipForNow": "Skip for now",
     "continue": "Continue",
+    "signUp": "Create Account",
+    "loginWithPhone": "Log In",
+    "alreadyHaveAccount": "Already have an account?",
     "enterPhone": "Enter Your Mobile Number",
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Enter your registered mobile number to log in",
+    "noAccount": "Don't have an account?",
     "phoneSubtitle": "We will send an OTP for verification",
     "mobileNumber": "Mobile Number",
     "getOtp": "Get OTP",
     "alreadyRegistered": "Already registered?",
-    "login": "Login",
+    "login": "Log In",
     "enterOTP": "Enter OTP",
     "otpSentTo": "We have sent a 6-digit OTP to",
     "verifyOTP": "Verify",
@@ -136,7 +142,6 @@
       "cropInsurance": "Crop Insurance"
     }
   },
-
   "programs": {
     "title": "Programs",
     "subtitle": "Explore government schemes and training programs",
@@ -146,7 +151,6 @@
     "viewAll": "View all",
     "noPrograms": "No programs available"
   },
-
   "programReader": {
     "keyObjectives": "Key Objectives",
     "tabs": {
@@ -156,7 +160,6 @@
     },
     "applyNow": "Apply Now"
   },
-
   "tabs": {
     "home": "Home",
     "programs": "Programs",
@@ -164,7 +167,6 @@
     "connect": "Connect",
     "profile": "Profile"
   },
-
   "home": {
     "updateProfile": "Update your profile",
     "ongoingEvents": "Ongoing Events",
@@ -181,7 +183,6 @@
     "popularSchemes": "Popular Schemes",
     "searchPlaceholder": "Search programs, schemes..."
   },
-
   "schemes": {
     "pmjdy": {
       "title": "Pradhan Mantri Jan Dhan Yojana",
@@ -204,7 +205,6 @@
       "category": "Sanitation"
     }
   },
-
   "personalDetails": {
     "title": "Personal Details",
     "editTitle": "Edit Personal Details",
@@ -240,7 +240,6 @@
     "save": "Save Changes",
     "cancel": "Cancel"
   },
-
   "profile": {
     "title": "Profile",
     "name": "Name",
@@ -269,7 +268,6 @@
     "logoutConfirm": "Are you sure you want to logout?",
     "appLanguage": "App Language"
   },
-
   "common": {
     "cancel": "Cancel",
     "save": "Save",
@@ -279,9 +277,9 @@
     "loading": "Loading...",
     "skip": "Skip",
     "retry": "Retry",
-    "farmer": "Farmer"
+    "farmer": "Farmer",
+    "error": "Error"
   },
-
   "banners": {
     "welcome": {
       "title": "Welcome to Tanak Prabha",
@@ -296,7 +294,6 @@
       "subtitle": "Get personalized assistance"
     }
   },
-
   "landDetails": {
     "title": "Land & Crop Summary",
     "editTitle": "Edit Land Details",
@@ -314,7 +311,6 @@
     "save": "Save",
     "cancel": "Cancel"
   },
-
   "livestockDetails": {
     "title": "Livestock Summary",
     "editTitle": "Edit Livestock Details",
@@ -335,7 +331,6 @@
     "save": "Save",
     "cancel": "Cancel"
   },
-
   "search": {
     "title": "Search",
     "placeholder": "Search schemes, programs, and more...",
@@ -345,7 +340,6 @@
     "trainingProgram": "Training Program",
     "quickAction": "Quick Action"
   },
-
   "connect": {
     "title": "Connect",
     "subtitle": "Get expert advice and support",
@@ -456,7 +450,6 @@
       "diseasePrevention": "Disease prevention"
     }
   },
-
   "notifications": {
     "title": "Notifications",
     "today": "Today",

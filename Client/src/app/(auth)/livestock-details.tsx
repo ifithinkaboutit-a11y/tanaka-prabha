@@ -64,20 +64,20 @@ const AuthLivestockDetailsScreen = () => {
 
   const validateAllEntries = (): boolean => {
     if (!hasLivestock) return true;
-    
+
     let allValid = true;
     const newErrors: EntryErrors = {};
-    
+
     livestockEntries.forEach((entry) => {
       const validation = validateLivestockEntry({
         type: entry.type,
         count: entry.count,
       });
-      
+
       if (!validation.isValid) {
         allValid = false;
         const entryErrors: { type?: string; count?: string } = {};
-        
+
         validation.errors.forEach((error) => {
           if (error.toLowerCase().includes("type") || error.toLowerCase().includes("animal")) {
             entryErrors.type = error;
@@ -85,11 +85,11 @@ const AuthLivestockDetailsScreen = () => {
             entryErrors.count = error;
           }
         });
-        
+
         newErrors[entry.id] = entryErrors;
       }
     });
-    
+
     setErrors(newErrors);
     return allValid;
   };
@@ -97,8 +97,7 @@ const AuthLivestockDetailsScreen = () => {
   const handleCountChange = (entryId: string, text: string) => {
     const num = parseInt(text) || 0;
     updateLivestockEntry(entryId, { count: num });
-    
-    // Clear error if user starts typing
+
     if (touched[entryId]?.count) {
       const validation = validateLivestockCount(num);
       setErrors((prev) => ({
@@ -113,7 +112,7 @@ const AuthLivestockDetailsScreen = () => {
       ...prev,
       [entryId]: { ...prev[entryId], count: true },
     }));
-    
+
     const validation = validateLivestockCount(count);
     if (count <= 0) {
       setErrors((prev) => ({
@@ -135,8 +134,7 @@ const AuthLivestockDetailsScreen = () => {
 
   const handleTypeChange = (entryId: string, type: string) => {
     updateLivestockEntry(entryId, { type });
-    
-    // Clear error if user selects type
+
     if (type) {
       setErrors((prev) => ({
         ...prev,
@@ -147,9 +145,7 @@ const AuthLivestockDetailsScreen = () => {
 
   const saveOnboardingData = async () => {
     try {
-      // Prepare the profile data to save
       const profileData: any = {
-        // Personal details
         fathers_name: personalDetails.fathersName,
         mothers_name: personalDetails.mothersName,
         educational_qualification: personalDetails.educationalQualification,
@@ -169,22 +165,19 @@ const AuthLivestockDetailsScreen = () => {
         state: personalDetails.state,
       };
 
-      // Add land details if user has land
       if (hasLand && landEntries.length > 0) {
-        // Calculate total land area (convert all to acres for consistency)
         let totalArea = 0;
         const crops: string[] = [];
-        
+
         landEntries.forEach((entry) => {
           let areaInAcres = entry.area;
-          // Convert to acres if needed
           if (entry.unit === "bigha") {
-            areaInAcres = entry.area * 0.62; // 1 bigha ≈ 0.62 acres
+            areaInAcres = entry.area * 0.62;
           } else if (entry.unit === "hectare") {
-            areaInAcres = entry.area * 2.47; // 1 hectare ≈ 2.47 acres
+            areaInAcres = entry.area * 2.47;
           }
           totalArea += areaInAcres;
-          
+
           if (entry.crops) {
             entry.crops.forEach((crop) => {
               if (!crops.includes(crop)) {
@@ -195,23 +188,17 @@ const AuthLivestockDetailsScreen = () => {
         });
 
         profileData.land_details = {
-          total_land_area: Math.round(totalArea * 100) / 100, // Round to 2 decimal places
+          total_land_area: Math.round(totalArea * 100) / 100,
           kharif_crop: crops.filter((c) => ["rice", "maize", "cotton", "soybean"].includes(c)).join(", "),
           rabi_crop: crops.filter((c) => ["wheat", "mustard", "gram", "barley"].includes(c)).join(", "),
           zaid_crop: crops.filter((c) => ["vegetables", "fruits", "fodder"].includes(c)).join(", "),
         };
       }
 
-      // Add livestock details if user has livestock
       if (hasLivestock && livestockEntries.length > 0) {
         const livestockData: any = {
-          cow: 0,
-          buffalo: 0,
-          goat: 0,
-          sheep: 0,
-          pig: 0,
-          poultry: 0,
-          others: 0,
+          cow: 0, buffalo: 0, goat: 0, sheep: 0,
+          pig: 0, poultry: 0, others: 0,
         };
 
         livestockEntries.forEach((entry) => {
@@ -228,14 +215,11 @@ const AuthLivestockDetailsScreen = () => {
 
       console.log("📤 Saving onboarding data:", JSON.stringify(profileData, null, 2));
 
-      // Save to backend
       const response = await userApi.updateProfile(profileData);
-      
+
       if (response.status === "success") {
         console.log("✅ Onboarding data saved successfully");
-        // Refresh user data from server
         await refreshUser();
-        // Reset onboarding store
         resetOnboarding();
         return true;
       } else {
@@ -250,15 +234,14 @@ const AuthLivestockDetailsScreen = () => {
   const handleFinish = async () => {
     if (hasLivestock && !validateAllEntries()) {
       const firstErrorEntry = Object.values(errors).find((e) => e.type || e.count);
-      const errorMessage = firstErrorEntry?.type || firstErrorEntry?.count || 
-        t("validation.livestockDetailsError") || "Please fill in all livestock details correctly";
-      
-      Alert.alert(
-        t("validation.validationError") || "Validation Error",
-        errorMessage
-      );
-      
-      // Mark all fields as touched
+      const errorMessage =
+        firstErrorEntry?.type ||
+        firstErrorEntry?.count ||
+        t("validation.livestockDetailsError") ||
+        "Please fill in all livestock details correctly";
+
+      Alert.alert(t("validation.validationError") || "Validation Error", errorMessage);
+
       const newTouched: Record<string, Record<string, boolean>> = {};
       livestockEntries.forEach((entry) => {
         newTouched[entry.id] = { type: true, count: true };
@@ -268,12 +251,8 @@ const AuthLivestockDetailsScreen = () => {
     }
 
     setIsSubmitting(true);
-    
     try {
-      // Save all onboarding data to backend
       await saveOnboardingData();
-      
-      // Onboarding complete — go to main app
       completeOnboarding();
     } catch (error) {
       Alert.alert(
@@ -287,15 +266,10 @@ const AuthLivestockDetailsScreen = () => {
 
   const handleSkip = async () => {
     setIsSubmitting(true);
-    
     try {
-      // Save available data even when skipping
       await saveOnboardingData();
-      
-      // Onboarding complete — go to main app
       completeOnboarding();
     } catch (error) {
-      // Even if save fails, let user continue
       console.error("Failed to save on skip:", error);
       completeOnboarding();
     } finally {
@@ -309,20 +283,8 @@ const AuthLivestockDetailsScreen = () => {
 
   const isValid = () => {
     if (!hasLivestock) return true;
-    return livestockEntries.some(
-      (entry) => entry.type !== "" && entry.count > 0
-    );
+    return livestockEntries.some((entry) => entry.type !== "" && entry.count > 0);
   };
-
-  const getCountInputStyle = (entryId: string) => ({
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: errors[entryId]?.count && touched[entryId]?.count ? "#EF4444" : "#E5E7EB",
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: "#1F2937",
-  });
 
   const { height: screenHeight } = Dimensions.get("window");
   const videoHeight = screenHeight * 0.28;
@@ -334,69 +296,38 @@ const AuthLivestockDetailsScreen = () => {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <View className="flex-1 bg-[#F8FAFC]">
       {/* Video Background Header */}
-      <View style={{ height: videoHeight, position: "relative" }}>
+      <View style={{ height: videoHeight }} className="relative">
         <VideoView
           player={player}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100%",
-            height: "100%",
-          }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
           contentFit="cover"
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Progress bar */}
+        {/* Progress Bar */}
         <View
-          style={{
-            position: "absolute",
-            top: 50,
-            left: 20,
-            right: 20,
-            height: 6,
-            backgroundColor: "rgba(255,255,255,0.3)",
-            borderRadius: 3,
-          }}
+          className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
+          style={{ top: 50 }}
         >
-          <View
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#F59E0B",
-              borderRadius: 3,
-            }}
-          />
+          <View className="w-full h-full bg-amber-400 rounded-full" />
         </View>
       </View>
 
       {/* Content Card */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          marginTop: -20,
-          paddingTop: 24,
-        }}
-      >
+      <View className="flex-1 bg-white rounded-t-3xl -mt-5 pt-6">
         {/* Title Section */}
-        <View style={{ alignItems: "center", paddingHorizontal: 20, marginBottom: 16 }}>
+        <View className="items-center px-5 mb-4">
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", fontSize: 22, textAlign: "center" }}
+            className="font-bold text-gray-800 text-[22px] text-center"
           >
             {t("onboarding.livestockTitle")}
           </AppText>
           <AppText
             variant="bodySm"
-            style={{ color: "#6B7280", marginTop: 6, textAlign: "center" }}
+            className="text-gray-500 mt-1.5 text-center"
           >
             {t("onboarding.livestockSubtitle")}
           </AppText>
@@ -404,276 +335,166 @@ const AuthLivestockDetailsScreen = () => {
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+          className="flex-1"
         >
           <ScrollView
-            style={{ flex: 1 }}
+            className="flex-1"
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Do you have livestock? */}
-            <View
-              style={{
-                backgroundColor: "#F9FAFB",
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 16,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <AppText
-                  variant="bodyMd"
-                  style={{ fontWeight: "600", color: "#374151" }}
-                >
+            {/* Has Livestock Toggle */}
+            <View className="bg-gray-50 rounded-2xl p-5 mb-4">
+              <View className="flex-row justify-between items-center">
+                <AppText variant="bodyMd" className="font-semibold text-gray-700">
                   {t("onboarding.hasLivestock")}
                 </AppText>
-                <Toggle 
-                  value={hasLivestock} 
-                  onValueChange={(value) => {
+                <Toggle
+                  checked={hasLivestock}
+                  onChange={(value) => {
                     setHasLivestock(value);
-                    // Add a default entry when enabling livestock ownership
                     if (value && livestockEntries.length === 0) {
                       addLivestockEntry({ type: "", count: 0 });
                     }
-                  }} 
+                  }}
                 />
               </View>
-          </View>
+            </View>
 
-          {/* Livestock Entries */}
-          {hasLivestock && (
-            <>
-              {livestockEntries.map((entry, index) => (
-                <View
-                  key={entry.id}
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 16,
-                    padding: 20,
-                    marginBottom: 16,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 8,
-                    elevation: 2,
-                  }}
-                >
+            {/* Livestock Entries */}
+            {hasLivestock && (
+              <>
+                {livestockEntries.map((entry, index) => (
                   <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 16,
-                    }}
+                    key={entry.id}
+                    className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
                   >
-                    <AppText
-                      variant="bodyMd"
-                      style={{ fontWeight: "700", color: "#1F2937" }}
-                    >
-                      {t("onboarding.livestockEntry")} {index + 1}
-                    </AppText>
-                    {livestockEntries.length > 1 && (
-                      <Pressable
-                        onPress={() => removeLivestockEntry(entry.id)}
-                        style={({ pressed }) => ({
-                          padding: 8,
-                          opacity: pressed ? 0.7 : 1,
-                        })}
-                      >
-                        <Ionicons name="trash-outline" size={20} color="#DC2626" />
-                      </Pressable>
-                    )}
-                  </View>
-
-                  {/* Animal Type Selection */}
-                  <View style={{ marginBottom: 16 }}>
-                    <AppText
-                      variant="bodySm"
-                      style={{ color: "#6B7280", marginBottom: 8 }}
-                    >
-                      {t("onboarding.animalType")}
-                    </AppText>
-                    <View style={{ 
-                      borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
-                      borderColor: "#EF4444",
-                      borderRadius: 12 
-                    }}>
-                      <Select
-                        value={entry.type}
-                        onChange={(value) => handleTypeChange(entry.id, value)}
-                        options={animalOptions}
-                        placeholder={t("onboarding.selectAnimal")}
-                      />
+                    {/* Entry Header */}
+                    <View className="flex-row justify-between items-center mb-4">
+                      <AppText variant="bodyMd" className="font-bold text-gray-800">
+                        {t("onboarding.livestockEntry")} {index + 1}
+                      </AppText>
+                      {livestockEntries.length > 1 && (
+                        <Pressable
+                          onPress={() => removeLivestockEntry(entry.id)}
+                          className="p-2 active:opacity-70"
+                        >
+                          <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                        </Pressable>
+                      )}
                     </View>
-                    {errors[entry.id]?.type && touched[entry.id]?.type && (
-                      <AppText
-                        variant="bodySm"
-                        style={{ color: "#EF4444", marginTop: 4 }}
-                      >
-                        {errors[entry.id].type}
-                      </AppText>
-                    )}
-                  </View>
 
-                  {/* Count Input */}
-                  <View>
-                    <AppText
-                      variant="bodySm"
-                      style={{ color: "#6B7280", marginBottom: 8 }}
-                    >
-                      {t("onboarding.animalCount")}
-                    </AppText>
-                    <TextInput
-                      style={getCountInputStyle(entry.id)}
-                      value={entry.count > 0 ? String(entry.count) : ""}
-                      onChangeText={(text) => handleCountChange(entry.id, text)}
-                      onBlur={() => handleCountBlur(entry.id, entry.count)}
-                      keyboardType="numeric"
-                      placeholder="0"
-                      placeholderTextColor="#9CA3AF"
-                    />
-                    {errors[entry.id]?.count && touched[entry.id]?.count && (
-                      <AppText
-                        variant="bodySm"
-                        style={{ color: "#EF4444", marginTop: 4 }}
-                      >
-                        {errors[entry.id].count}
+                    {/* Animal Type */}
+                    <View className="mb-4">
+                      <AppText variant="bodySm" className="text-gray-500 mb-2">
+                        {t("onboarding.animalType")}
                       </AppText>
-                    )}
-                  </View>
-                </View>
-              ))}
+                      <View
+                        style={{
+                          borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
+                          borderColor: "#EF4444",
+                          borderRadius: 12,
+                        }}
+                      >
+                        <Select
+                          value={entry.type}
+                          onChange={(value) => handleTypeChange(entry.id, value)}
+                          options={animalOptions}
+                          placeholder={t("onboarding.selectAnimal")}
+                        />
+                      </View>
+                      {errors[entry.id]?.type && touched[entry.id]?.type && (
+                        <AppText variant="bodySm" className="text-red-500 mt-1">
+                          {errors[entry.id].type}
+                        </AppText>
+                      )}
+                    </View>
 
-              {/* Add Another Livestock Entry */}
-              <Pressable
-                onPress={() => addLivestockEntry({ type: "", count: 0 })}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: pressed ? "#FEF3C7" : "#FFFBEB",
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 16,
-                  borderWidth: 2,
-                  borderColor: "#FCD34D",
-                  borderStyle: "dashed",
-                })}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#D97706" />
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#D97706", fontWeight: "600", marginLeft: 8 }}
+                    {/* Count Input */}
+                    <View>
+                      <AppText variant="bodySm" className="text-gray-500 mb-2">
+                        {t("onboarding.animalCount")}
+                      </AppText>
+                      <TextInput
+                        style={{
+                          backgroundColor: "#F9FAFB",
+                          borderWidth: 1,
+                          borderColor: errors[entry.id]?.count && touched[entry.id]?.count ? "#EF4444" : "#E5E7EB",
+                          borderRadius: 12,
+                          padding: 14,
+                          fontSize: 16,
+                          color: "#1F2937",
+                        }}
+                        value={entry.count > 0 ? String(entry.count) : ""}
+                        onChangeText={(text) => handleCountChange(entry.id, text)}
+                        onBlur={() => handleCountBlur(entry.id, entry.count)}
+                        keyboardType="numeric"
+                        placeholder="0"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                      {errors[entry.id]?.count && touched[entry.id]?.count && (
+                        <AppText variant="bodySm" className="text-red-500 mt-1">
+                          {errors[entry.id].count}
+                        </AppText>
+                      )}
+                    </View>
+                  </View>
+                ))}
+
+                {/* Add Another Entry */}
+                <Pressable
+                  onPress={() => addLivestockEntry({ type: "", count: 0 })}
+                  className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-yellow-300 border-dashed active:bg-yellow-100 bg-yellow-50"
                 >
-                  {t("onboarding.addAnotherLivestock")}
-                </AppText>
-              </Pressable>
-            </>
-          )}
+                  <Ionicons name="add-circle-outline" size={20} color="#D97706" />
+                  <AppText variant="bodySm" className="text-amber-600 font-semibold ml-2">
+                    {t("onboarding.addAnotherLivestock")}
+                  </AppText>
+                </Pressable>
+              </>
+            )}
 
-          {/* Completion Message */}
-          <View
-            style={{
-              backgroundColor: "#DCFCE7",
-              borderRadius: 16,
-              padding: 20,
-              marginTop: 8,
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="checkmark-circle" size={48} color="#16A34A" />
-            <AppText
-              variant="bodyMd"
-              style={{
-                color: "#166534",
-                fontWeight: "600",
-                marginTop: 12,
-                textAlign: "center",
-              }}
-            >
-              {t("onboarding.almostDone")}
-            </AppText>
-            <AppText
-              variant="bodySm"
-              style={{ color: "#15803D", marginTop: 4, textAlign: "center" }}
-            >
-              {t("onboarding.finishMessage")}
-            </AppText>
-          </View>
+            {/* Completion Message */}
+            <View className="bg-green-100 rounded-2xl p-5 mt-2 items-center">
+              <Ionicons name="checkmark-circle" size={48} color="#16A34A" />
+              <AppText variant="bodyMd" className="text-green-800 font-semibold mt-3 text-center">
+                {t("onboarding.almostDone")}
+              </AppText>
+              <AppText variant="bodySm" className="text-green-700 mt-1 text-center">
+                {t("onboarding.finishMessage")}
+              </AppText>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
 
         {/* Bottom Buttons */}
-        <View
-          style={{
-            padding: 20,
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#E5E7EB",
-            flexDirection: "row",
-            gap: 12,
-          }}
-        >
+        <View className="p-5 bg-white border-t border-gray-200 flex-row gap-3">
           <Pressable
             onPress={handleSkip}
             disabled={isSubmitting}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              alignItems: "center",
-              opacity: isSubmitting ? 0.5 : 1,
-            })}
+            className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
+            style={{ opacity: isSubmitting ? 0.5 : 1 }}
           >
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#6B7280", fontWeight: "600" }}
-            >
+            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
               {t("common.skip")}
             </AppText>
           </Pressable>
+
           <Pressable
             onPress={handleFinish}
             disabled={!isValid() || isSubmitting}
-            style={({ pressed }) => ({
-              flex: 2,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: isValid() && !isSubmitting
-                ? pressed
-                  ? "#2F5233"
-                  : "#386641"
-                : "#D1D5DB",
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-            })}
+            className="flex-[2] py-4 rounded-full items-center flex-row justify-center"
+            style={{
+              backgroundColor: isValid() && !isSubmitting ? "#386641" : "#D1D5DB",
+            }}
           >
             {isSubmitting ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <>
-                <AppText
-                  variant="bodyMd"
-                  style={{ color: "#FFFFFF", fontWeight: "700" }}
-                >
+                <AppText variant="bodyMd" className="text-white font-bold">
                   {t("onboarding.finish")}
                 </AppText>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color="#FFFFFF"
-                  style={{ marginLeft: 8 }}
-                />
+                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
               </>
             )}
           </Pressable>

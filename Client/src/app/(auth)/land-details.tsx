@@ -51,7 +51,7 @@ const AuthLandDetailsScreen = () => {
     removeLandEntry,
     updateLandEntry,
   } = useOnboardingStore();
-  
+
   const [errors, setErrors] = useState<EntryErrors>({});
   const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
 
@@ -64,9 +64,8 @@ const AuthLandDetailsScreen = () => {
       unit: entry.unit,
       crops: entry.crops || [],
     });
-    
+
     const entryErrors: { area?: string; crops?: string } = {};
-    
     validation.errors.forEach((error) => {
       if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
         entryErrors.area = error;
@@ -74,28 +73,28 @@ const AuthLandDetailsScreen = () => {
         entryErrors.crops = error;
       }
     });
-    
+
     setErrors((prev) => ({ ...prev, [entry.id]: entryErrors }));
     return validation.isValid;
   };
 
   const validateAllEntries = (): boolean => {
     if (!hasLand) return true;
-    
+
     let allValid = true;
     const newErrors: EntryErrors = {};
-    
+
     landEntries.forEach((entry) => {
       const validation = validateLandEntry({
         area: entry.area,
         unit: entry.unit,
         crops: entry.crops || [],
       });
-      
+
       if (!validation.isValid) {
         allValid = false;
         const entryErrors: { area?: string; crops?: string } = {};
-        
+
         validation.errors.forEach((error) => {
           if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
             entryErrors.area = error;
@@ -103,11 +102,11 @@ const AuthLandDetailsScreen = () => {
             entryErrors.crops = error;
           }
         });
-        
+
         newErrors[entry.id] = entryErrors;
       }
     });
-    
+
     setErrors(newErrors);
     return allValid;
   };
@@ -115,8 +114,7 @@ const AuthLandDetailsScreen = () => {
   const handleAreaChange = (entryId: string, text: string) => {
     const num = parseFloat(text) || 0;
     updateLandEntry(entryId, { area: num });
-    
-    // Clear error if user starts typing
+
     if (touched[entryId]?.area) {
       const validation = validateLandArea(num);
       setErrors((prev) => ({
@@ -131,7 +129,7 @@ const AuthLandDetailsScreen = () => {
       ...prev,
       [entryId]: { ...prev[entryId], area: true },
     }));
-    
+
     const validation = validateLandArea(area);
     if (area <= 0) {
       setErrors((prev) => ({
@@ -153,8 +151,7 @@ const AuthLandDetailsScreen = () => {
 
   const handleCropsChange = (entryId: string, crops: string[]) => {
     updateLandEntry(entryId, { crops });
-    
-    // Clear error if user selects crops
+
     if (crops.length > 0) {
       setErrors((prev) => ({
         ...prev,
@@ -165,17 +162,15 @@ const AuthLandDetailsScreen = () => {
 
   const handleNext = () => {
     if (hasLand && !validateAllEntries()) {
-      // Find the first error to display
       const firstErrorEntry = Object.values(errors).find((e) => e.area || e.crops);
-      const errorMessage = firstErrorEntry?.area || firstErrorEntry?.crops || 
-        t("validation.landDetailsError") || "Please fill in all land details correctly";
-      
-      Alert.alert(
-        t("validation.validationError") || "Validation Error",
-        errorMessage
-      );
-      
-      // Mark all fields as touched
+      const errorMessage =
+        firstErrorEntry?.area ||
+        firstErrorEntry?.crops ||
+        t("validation.landDetailsError") ||
+        "Please fill in all land details correctly";
+
+      Alert.alert(t("validation.validationError") || "Validation Error", errorMessage);
+
       const newTouched: Record<string, Record<string, boolean>> = {};
       landEntries.forEach((entry) => {
         newTouched[entry.id] = { area: true, crops: true };
@@ -183,13 +178,11 @@ const AuthLandDetailsScreen = () => {
       setTouched(newTouched);
       return;
     }
-    
-    // Navigate to livestock details
+
     router.push("/(auth)/livestock-details");
   };
 
   const handleSkip = () => {
-    // Skip to livestock details
     router.push("/(auth)/livestock-details");
   };
 
@@ -204,16 +197,6 @@ const AuthLandDetailsScreen = () => {
     );
   };
 
-  const getAreaInputStyle = (entryId: string) => ({
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: errors[entryId]?.area && touched[entryId]?.area ? "#EF4444" : "#E5E7EB",
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: "#1F2937",
-  });
-
   const { height: screenHeight } = Dimensions.get("window");
   const videoHeight = screenHeight * 0.28;
 
@@ -224,314 +207,191 @@ const AuthLandDetailsScreen = () => {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <View className="flex-1 bg-[#F8FAFC]">
       {/* Video Background Header */}
-      <View style={{ height: videoHeight, position: "relative" }}>
+      <View style={{ height: videoHeight }} className="relative">
         <VideoView
           player={player}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100%",
-            height: "100%",
-          }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
           contentFit="cover"
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Progress bar */}
+        {/* Progress Bar — 66% complete */}
         <View
-          style={{
-            position: "absolute",
-            top: 50,
-            left: 20,
-            right: 20,
-            height: 6,
-            backgroundColor: "rgba(255,255,255,0.3)",
-            borderRadius: 3,
-          }}
+          className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
+          style={{ top: 50 }}
         >
-          <View
-            style={{
-              width: "66%",
-              height: "100%",
-              backgroundColor: "#F59E0B",
-              borderRadius: 3,
-            }}
-          />
+          <View className="h-full bg-amber-400 rounded-full" style={{ width: "66%" }} />
         </View>
       </View>
 
       {/* Content Card */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          marginTop: -20,
-          paddingTop: 24,
-        }}
-      >
+      <View className="flex-1 bg-white rounded-t-3xl -mt-5 pt-6">
         {/* Title Section */}
-        <View style={{ alignItems: "center", paddingHorizontal: 20, marginBottom: 16 }}>
-          <AppText
-            variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", fontSize: 22, textAlign: "center" }}
-          >
+        <View className="items-center px-5 mb-4">
+          <AppText variant="h3" className="font-bold text-gray-800 text-[22px] text-center">
             {t("onboarding.landTitle")}
           </AppText>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#6B7280", marginTop: 6, textAlign: "center" }}
-          >
+          <AppText variant="bodySm" className="text-gray-500 mt-1.5 text-center">
             {t("onboarding.landSubtitle")}
           </AppText>
         </View>
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+          className="flex-1"
         >
           <ScrollView
-            style={{ flex: 1 }}
+            className="flex-1"
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Do you own land? */}
-            <View
-              style={{
-                backgroundColor: "#F9FAFB",
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 16,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <AppText
-                  variant="bodyMd"
-                  style={{ fontWeight: "600", color: "#374151" }}
-                >
+            {/* Has Land Toggle */}
+            <View className="bg-gray-50 rounded-2xl p-5 mb-4">
+              <View className="flex-row justify-between items-center">
+                <AppText variant="bodyMd" className="font-semibold text-gray-700">
                   {t("onboarding.hasLand")}
                 </AppText>
-                <Toggle 
-                  value={hasLand} 
-                  onValueChange={(value) => {
+                <Toggle
+                  checked={hasLand}
+                  onChange={(value) => {
                     setHasLand(value);
-                  // Add a default entry when enabling land ownership
-                  if (value && landEntries.length === 0) {
-                    addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
-                  }
-                }} 
-              />
-            </View>
-          </View>
-
-          {/* Land Entries */}
-          {hasLand && (
-            <>
-              {landEntries.map((entry, index) => (
-                <View
-                  key={entry.id}
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 16,
-                    padding: 20,
-                    marginBottom: 16,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 8,
-                    elevation: 2,
+                    if (value && landEntries.length === 0) {
+                      addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
+                    }
                   }}
-                >
+                />
+              </View>
+            </View>
+
+            {/* Land Entries */}
+            {hasLand && (
+              <>
+                {landEntries.map((entry, index) => (
                   <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 16,
-                    }}
+                    key={entry.id}
+                    className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
                   >
-                    <AppText
-                      variant="bodyMd"
-                      style={{ fontWeight: "700", color: "#1F2937" }}
-                    >
-                      {t("onboarding.landEntry")} {index + 1}
-                    </AppText>
-                    {landEntries.length > 1 && (
-                      <Pressable
-                        onPress={() => removeLandEntry(entry.id)}
-                        style={({ pressed }) => ({
-                          padding: 8,
-                          opacity: pressed ? 0.7 : 1,
-                        })}
-                      >
-                        <Ionicons name="trash-outline" size={20} color="#DC2626" />
-                      </Pressable>
-                    )}
-                  </View>
+                    {/* Entry Header */}
+                    <View className="flex-row justify-between items-center mb-4">
+                      <AppText variant="bodyMd" className="font-bold text-gray-800">
+                        {t("onboarding.landEntry")} {index + 1}
+                      </AppText>
+                      {landEntries.length > 1 && (
+                        <Pressable
+                          onPress={() => removeLandEntry(entry.id)}
+                          className="p-2 active:opacity-70"
+                        >
+                          <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                        </Pressable>
+                      )}
+                    </View>
 
-                  {/* Area Input */}
-                  <View style={{ marginBottom: 16 }}>
-                    <AppText
-                      variant="bodySm"
-                      style={{ color: "#6B7280", marginBottom: 8 }}
-                    >
-                      {t("onboarding.landArea")}
-                    </AppText>
-                    <View style={{ flexDirection: "row", gap: 12 }}>
-                      <View style={{ flex: 1 }}>
-                        <TextInput
-                          style={getAreaInputStyle(entry.id)}
-                          value={entry.area > 0 ? String(entry.area) : ""}
-                          onChangeText={(text) => handleAreaChange(entry.id, text)}
-                          onBlur={() => handleAreaBlur(entry.id, entry.area)}
-                          keyboardType="numeric"
-                          placeholder="0"
-                          placeholderTextColor="#9CA3AF"
+                    {/* Area Input */}
+                    <View className="mb-4">
+                      <AppText variant="bodySm" className="text-gray-500 mb-2">
+                        {t("onboarding.landArea")}
+                      </AppText>
+                      <View className="flex-row gap-3">
+                        <View className="flex-1">
+                          <TextInput
+                            style={{
+                              backgroundColor: "#F9FAFB",
+                              borderWidth: 1,
+                              borderColor: errors[entry.id]?.area && touched[entry.id]?.area ? "#EF4444" : "#E5E7EB",
+                              borderRadius: 12,
+                              padding: 14,
+                              fontSize: 16,
+                              color: "#1F2937",
+                            }}
+                            value={entry.area > 0 ? String(entry.area) : ""}
+                            onChangeText={(text) => handleAreaChange(entry.id, text)}
+                            onBlur={() => handleAreaBlur(entry.id, entry.area)}
+                            keyboardType="numeric"
+                            placeholder="0"
+                            placeholderTextColor="#9CA3AF"
+                          />
+                        </View>
+                        <View style={{ width: 120 }}>
+                          <Select
+                            value={entry.unit}
+                            onChange={(value) =>
+                              updateLandEntry(entry.id, { unit: value as "bigha" | "acre" | "hectare" })
+                            }
+                            options={unitOptions}
+                            placeholder={t("onboarding.selectUnit")}
+                          />
+                        </View>
+                      </View>
+                      {errors[entry.id]?.area && touched[entry.id]?.area && (
+                        <AppText variant="bodySm" className="text-red-500 mt-1">
+                          {errors[entry.id].area}
+                        </AppText>
+                      )}
+                    </View>
+
+                    {/* Crops Selection */}
+                    <View>
+                      <AppText variant="bodySm" className="text-gray-500 mb-2">
+                        {t("onboarding.cropsGrown")}
+                      </AppText>
+                      <View
+                        style={{
+                          borderWidth: errors[entry.id]?.crops && touched[entry.id]?.crops ? 1 : 0,
+                          borderColor: "#EF4444",
+                          borderRadius: 12,
+                        }}
+                      >
+                        <MultiSelect
+                          value={entry.crops || []}
+                          onValueChange={(crops) => handleCropsChange(entry.id, crops)}
+                          options={cropOptions}
+                          placeholder={t("onboarding.selectCrops")}
                         />
                       </View>
-                      <View style={{ width: 120 }}>
-                        <Select
-                          value={entry.unit}
-                          onChange={(value) =>
-                            updateLandEntry(entry.id, { unit: value })
-                          }
-                          options={unitOptions}
-                          placeholder={t("onboarding.selectUnit")}
-                        />
-                      </View>
+                      {errors[entry.id]?.crops && touched[entry.id]?.crops && (
+                        <AppText variant="bodySm" className="text-red-500 mt-1">
+                          {errors[entry.id].crops}
+                        </AppText>
+                      )}
                     </View>
-                    {errors[entry.id]?.area && touched[entry.id]?.area && (
-                      <AppText
-                        variant="bodySm"
-                        style={{ color: "#EF4444", marginTop: 4 }}
-                      >
-                        {errors[entry.id].area}
-                      </AppText>
-                    )}
                   </View>
+                ))}
 
-                  {/* Crops Selection */}
-                  <View>
-                    <AppText
-                      variant="bodySm"
-                      style={{ color: "#6B7280", marginBottom: 8 }}
-                    >
-                      {t("onboarding.cropsGrown")}
-                    </AppText>
-                    <View style={{ 
-                      borderWidth: errors[entry.id]?.crops && touched[entry.id]?.crops ? 1 : 0,
-                      borderColor: "#EF4444",
-                      borderRadius: 12 
-                    }}>
-                      <MultiSelect
-                        value={entry.crops || []}
-                        onValueChange={(crops) => handleCropsChange(entry.id, crops)}
-                        options={cropOptions}
-                        placeholder={t("onboarding.selectCrops")}
-                      />
-                    </View>
-                    {errors[entry.id]?.crops && touched[entry.id]?.crops && (
-                      <AppText
-                        variant="bodySm"
-                        style={{ color: "#EF4444", marginTop: 4 }}
-                      >
-                        {errors[entry.id].crops}
-                      </AppText>
-                    )}
-                  </View>
-                </View>
-              ))}
-
-              {/* Add Another Land Entry */}
-              <Pressable
-                onPress={() => addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: pressed ? "#DCFCE7" : "#F0FDF4",
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 16,
-                  borderWidth: 2,
-                  borderColor: "#86EFAC",
-                  borderStyle: "dashed",
-                })}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#16A34A" />
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#16A34A", fontWeight: "600", marginLeft: 8 }}
+                {/* Add Another Land Entry */}
+                <Pressable
+                  onPress={() => addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })}
+                  className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-green-300 border-dashed active:bg-green-100 bg-green-50"
                 >
-                  {t("onboarding.addAnotherLand")}
-                </AppText>
-              </Pressable>
-            </>
-          )}
+                  <Ionicons name="add-circle-outline" size={20} color="#16A34A" />
+                  <AppText variant="bodySm" className="text-green-600 font-semibold ml-2">
+                    {t("onboarding.addAnotherLand")}
+                  </AppText>
+                </Pressable>
+              </>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
 
         {/* Bottom Buttons */}
-        <View
-          style={{
-            padding: 20,
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#E5E7EB",
-            flexDirection: "row",
-            gap: 12,
-          }}
-        >
+        <View className="p-5 bg-white border-t border-gray-200 flex-row gap-3">
           <Pressable
             onPress={handleSkip}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              alignItems: "center",
-            })}
+            className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
           >
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#6B7280", fontWeight: "600" }}
-            >
+            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
               {t("common.skip")}
             </AppText>
           </Pressable>
+
           <Pressable
             onPress={handleNext}
             disabled={!isValid()}
-            style={({ pressed }) => ({
-              flex: 2,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: isValid()
-                ? pressed
-                  ? "#2F5233"
-                  : "#386641"
-                : "#D1D5DB",
-              alignItems: "center",
-            })}
+            className="flex-[2] py-4 rounded-full items-center"
+            style={{ backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
           >
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#FFFFFF", fontWeight: "700" }}
-            >
+            <AppText variant="bodyMd" className="text-white font-bold">
               {t("common.next")}
             </AppText>
           </Pressable>

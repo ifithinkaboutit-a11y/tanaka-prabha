@@ -10,7 +10,6 @@ import {
   IconEyeOff,
   IconPhoto,
   IconLoader2,
-  IconUpload,
   IconGripVertical,
 } from "@tabler/icons-react"
 
@@ -59,6 +58,8 @@ import {
 } from "@/components/ui/tabs"
 import { bannersApi, uploadApi } from "@/lib/api"
 import { toast } from "sonner"
+import { LocalizedContentEditor } from "@/components/cms/LocalizedContentEditor"
+import { CloudinaryImageUpload } from "@/components/cms/CloudinaryImageUpload"
 
 export function BannersManager() {
   const [banners, setBanners] = React.useState([])
@@ -66,7 +67,6 @@ export function BannersManager() {
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
-  const [uploading, setUploading] = React.useState(false)
   const [deleteId, setDeleteId] = React.useState(null)
   const [editingBanner, setEditingBanner] = React.useState(null)
   const [formData, setFormData] = React.useState({
@@ -83,9 +83,6 @@ export function BannersManager() {
     is_active: true,
   })
   const [activeLanguageTab, setActiveLanguageTab] = React.useState("english")
-  const [selectedFile, setSelectedFile] = React.useState(null)
-  const [previewUrl, setPreviewUrl] = React.useState(null)
-  const fileInputRef = React.useRef(null)
 
   React.useEffect(() => {
     fetchBanners()
@@ -94,53 +91,21 @@ export function BannersManager() {
   async function fetchBanners() {
     try {
       const response = await bannersApi.getAll()
-      setBanners(response.data?.banners || [])
+      const banners = response.data?.banners || response.data || []
+      
+      if (!Array.isArray(banners)) {
+        console.warn("Unexpected response format:", response)
+        setBanners([])
+        return
+      }
+      
+      setBanners(banners)
     } catch (error) {
       console.error("Error fetching banners:", error)
-      toast.error("Failed to load banners")
+      toast.error(error.message || "Failed to load banners. Please check your connection.")
+      setBanners([])
     } finally {
       setLoading(false)
-    }
-  }
-
-  function handleFileSelect(e) {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.")
-        return
-      }
-
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File is too large. Maximum size is 10MB.")
-        return
-      }
-
-      setSelectedFile(file)
-      // Create preview URL
-      const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
-      // Clear existing image_url since we're uploading a new one
-      setFormData(prev => ({ ...prev, image_url: "" }))
-    }
-  }
-
-  async function uploadImage() {
-    if (!selectedFile) return null
-
-    setUploading(true)
-    try {
-      const response = await uploadApi.uploadBanner(selectedFile)
-      return response.data.url
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      toast.error("Failed to upload image")
-      throw error
-    } finally {
-      setUploading(false)
     }
   }
 
@@ -150,33 +115,22 @@ export function BannersManager() {
       return
     }
 
-    if (!selectedFile && !formData.image_url) {
+    if (!formData.image_url) {
       toast.error("Please upload an image or provide an image URL")
       return
     }
 
     setSaving(true)
     try {
-      let imageUrl = formData.image_url
-
-      // Upload image if a file was selected
-      if (selectedFile) {
-        imageUrl = await uploadImage()
-      }
-
-      const bannerData = {
-        ...formData,
-        image_url: imageUrl,
-      }
-
-      const response = await bannersApi.create(bannerData)
-      setBanners(prev => [response.data.banner, ...prev])
+      const response = await bannersApi.create(formData)
+      const newBanner = response.data?.banner || response.data || response
+      setBanners(prev => [newBanner, ...prev])
       setIsAddOpen(false)
       resetForm()
       toast.success("Banner created successfully")
     } catch (error) {
       console.error("Error adding banner:", error)
-      toast.error("Failed to create banner")
+      toast.error(error.message || "Failed to create banner")
     } finally {
       setSaving(false)
     }
@@ -190,36 +144,23 @@ export function BannersManager() {
       return
     }
 
-    if (!selectedFile && !formData.image_url) {
+    if (!formData.image_url) {
       toast.error("Please upload an image or provide an image URL")
       return
     }
 
     setSaving(true)
     try {
-      let imageUrl = formData.image_url
-
-      // Upload new image if a file was selected
-      if (selectedFile) {
-        imageUrl = await uploadImage()
-      }
-
-      const bannerData = {
-        ...formData,
-        image_url: imageUrl,
-      }
-
-      const response = await bannersApi.update(editingBanner.id, bannerData)
-      setBanners(prev => prev.map(b => 
-        b.id === editingBanner.id ? response.data.banner : b
-      ))
+      const response = await bannersApi.update(editingBanner.id, formData)
+      const updated = response.data?.banner || response.data || response
+      setBanners(prev => prev.map(b => b.id === editingBanner.id ? { ...b, ...updated } : b))
       setIsEditOpen(false)
       setEditingBanner(null)
       resetForm()
       toast.success("Banner updated successfully")
     } catch (error) {
       console.error("Error updating banner:", error)
-      toast.error("Failed to update banner")
+      toast.error(error.message || "Failed to update banner")
     } finally {
       setSaving(false)
     }
@@ -256,200 +197,62 @@ export function BannersManager() {
   function openEditSheet(banner) {
     setEditingBanner(banner)
     setFormData({
-      // English fields
       title: banner.title || "",
       subtitle: banner.subtitle || "",
-      // Hindi fields
       title_hi: banner.title_hi || "",
       subtitle_hi: banner.subtitle_hi || "",
-      // Shared fields
       image_url: banner.image_url || "",
       redirect_url: banner.redirect_url || "",
       sort_order: banner.sort_order || 0,
       is_active: banner.is_active ?? true,
     })
-    setPreviewUrl(banner.image_url || null)
-    setSelectedFile(null)
     setActiveLanguageTab("english")
     setIsEditOpen(true)
   }
 
   function resetForm() {
     setFormData({
-      // English fields
       title: "",
       subtitle: "",
-      // Hindi fields
       title_hi: "",
       subtitle_hi: "",
-      // Shared fields
       image_url: "",
       redirect_url: "",
       sort_order: 0,
       is_active: true,
     })
-    setSelectedFile(null)
-    setPreviewUrl(null)
     setActiveLanguageTab("english")
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
+  }
+
+  async function handleImageUpload(file) {
+    const response = await uploadApi.uploadBanner(file)
+    return response
   }
 
   function renderFormFields() {
     return (
       <div className="mt-6 space-y-4 px-4">
-        {/* Language Tabs for Text Content */}
-        <Tabs value={activeLanguageTab} onValueChange={setActiveLanguageTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="english" className="gap-2 px-4">
-              🇬🇧 English
-            </TabsTrigger>
-            <TabsTrigger value="hindi" className="gap-2 px-4">
-              🇮🇳 हिंदी
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* English Content Tab */}
-          <TabsContent value="english" className="space-y-4 mt-4">
-            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                Enter the banner text in English below
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="banner-title-en">Banner Title (English) *</Label>
-              <Input
-                id="banner-title-en"
-                placeholder="e.g., PM Kisan Awareness Drive"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="banner-subtitle-en">Subtitle (English)</Label>
-              <Input
-                id="banner-subtitle-en"
-                placeholder="e.g., NOV 2025"
-                value={formData.subtitle}
-                onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-              />
-            </div>
-          </TabsContent>
-          
-          {/* Hindi Content Tab */}
-          <TabsContent value="hindi" className="space-y-4 mt-4">
-            <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
-              <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">
-                बैनर का विवरण हिंदी में दर्ज करें
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="banner-title-hi">बैनर शीर्षक (Hindi Title) *</Label>
-              <Input
-                id="banner-title-hi"
-                placeholder="उदा., पीएम किसान जागरूकता अभियान"
-                value={formData.title_hi}
-                onChange={(e) => setFormData(prev => ({ ...prev, title_hi: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="banner-subtitle-hi">उपशीर्षक (Hindi Subtitle)</Label>
-              <Input
-                id="banner-subtitle-hi"
-                placeholder="उदा., नवंबर 2025"
-                value={formData.subtitle_hi}
-                onChange={(e) => setFormData(prev => ({ ...prev, subtitle_hi: e.target.value }))}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Image Upload Section */}
-        <div className="space-y-2">
-          <Label>Banner Image *</Label>
-          <div className="border-2 border-dashed rounded-lg p-4 text-center">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            {previewUrl ? (
-              <div className="space-y-3">
-                <img 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  className="w-full h-40 object-cover rounded-lg"
-                  onError={(e) => {
-                    e.target.src = "https://placehold.co/1200x600/e2e8f0/64748b?text=Image+Error"
-                  }}
-                />
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <IconUpload className="size-4 mr-2" />
-                    Change Image
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedFile(null)
-                      setPreviewUrl(null)
-                      setFormData(prev => ({ ...prev, image_url: "" }))
-                      if (fileInputRef.current) fileInputRef.current.value = ""
-                    }}
-                  >
-                    <IconTrash className="size-4 mr-2" />
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div 
-                className="py-8 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <IconUpload className="size-10 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm font-medium">Click to upload image</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  JPEG, PNG, WebP, GIF (max 10MB)
-                </p>
-              </div>
-            )}
-          </div>
-          
-          {/* Alternative: URL input */}
-          {!selectedFile && (
-            <div className="space-y-2 pt-2">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or enter URL
-                  </span>
-                </div>
-              </div>
-              <Input
-                placeholder="https://example.com/banner-image.jpg"
-                value={formData.image_url}
-                onChange={(e) => {
-                  setFormData(prev => ({ ...prev, image_url: e.target.value }))
-                  setPreviewUrl(e.target.value || null)
-                }}
-              />
-            </div>
-          )}
-        </div>
+        {/* Internationalized Content - English & Hindi */}
+        <LocalizedContentEditor
+          entityLabel="banner content"
+          value={formData}
+          onChange={setFormData}
+          fields={[
+            { key: "title", label: "Banner Title", placeholder: "e.g., PM Kisan Awareness Drive", placeholderHi: "उदा., पीएम किसान जागरूकता अभियान" },
+            { key: "subtitle", label: "Subtitle", placeholder: "e.g., NOV 2025", placeholderHi: "उदा., नवंबर 2025" },
+          ]}
+        />
+
+        {/* Cloudinary Image Upload - Drag & Drop */}
+        <CloudinaryImageUpload
+          value={formData.image_url}
+          onChange={(url) => setFormData(prev => ({ ...prev, image_url: url || "" }))}
+          uploadFn={handleImageUpload}
+          maxSizeMB={10}
+          aspectRatio="aspect-video"
+          placeholder="Drag & drop or click to upload banner image"
+          onUploadProgress={({ error }) => error && toast.error(error)}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="banner-redirect">Redirect URL</Label>
@@ -524,10 +327,10 @@ export function BannersManager() {
               <Button 
                 onClick={handleAddBanner} 
                 className="w-full" 
-                disabled={saving || uploading}
+                disabled={saving}
               >
-                {(saving || uploading) && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-                {uploading ? "Uploading..." : saving ? "Creating..." : "Create Banner"}
+                {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+                {saving ? "Creating..." : "Create Banner"}
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -554,10 +357,10 @@ export function BannersManager() {
             <Button 
               onClick={handleUpdateBanner} 
               className="w-full" 
-              disabled={saving || uploading}
+              disabled={saving}
             >
-              {(saving || uploading) && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-              {uploading ? "Uploading..." : saving ? "Saving..." : "Save Changes"}
+                {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+                {saving ? "Saving..." : "Save Changes"}
             </Button>
           </SheetFooter>
         </SheetContent>

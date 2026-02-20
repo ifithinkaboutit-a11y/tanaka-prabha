@@ -198,7 +198,7 @@ const Onboarding = () => {
       <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
         <Toggle
           label={t("onboarding.land.doYouHaveLand")}
-          value={hasLand}
+          checked={hasLand}
           onChange={(value) => {
             setHasLand(value);
             // Add initial entry if toggled on and no entries exist
@@ -309,7 +309,7 @@ const Onboarding = () => {
       <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
         <Toggle
           label={t("onboarding.livestock.doYouHaveLivestock")}
-          value={hasLivestock}
+          checked={hasLivestock}
           onChange={(value) => {
             setHasLivestock(value);
             // Add initial entry if toggled on and no entries exist

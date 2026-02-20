@@ -39,11 +39,32 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(url, config);
-        const data = await response.json();
+        
+        // Handle non-JSON responses
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new ApiError(
+                    'Invalid JSON response from server',
+                    response.status,
+                    null
+                );
+            }
+        } else {
+            // For non-JSON responses, create a data object
+            const text = await response.text();
+            data = {
+                message: text || 'An error occurred',
+                status: response.status
+            };
+        }
 
         if (!response.ok) {
             throw new ApiError(
-                data.message || 'An error occurred',
+                data.message || data.error || 'An error occurred',
                 response.status,
                 data
             );
@@ -53,6 +74,14 @@ async function apiRequest(endpoint, options = {}) {
     } catch (error) {
         if (error instanceof ApiError) {
             throw error;
+        }
+        // Handle network errors
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new ApiError(
+                'Network error: Unable to connect to server. Please check your connection.',
+                0,
+                null
+            );
         }
         throw new ApiError(
             error.message || 'Network error',
@@ -349,11 +378,31 @@ async function uploadFile(endpoint, file, fieldName = 'image') {
 
     try {
         const response = await fetch(url, config);
-        const data = await response.json();
+        
+        // Handle non-JSON responses
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new ApiError(
+                    'Invalid JSON response from server',
+                    response.status,
+                    null
+                );
+            }
+        } else {
+            const text = await response.text();
+            data = {
+                message: text || 'Upload failed',
+                status: response.status
+            };
+        }
 
         if (!response.ok) {
             throw new ApiError(
-                data.message || 'Upload failed',
+                data.message || data.error || 'Upload failed',
                 response.status,
                 data
             );
@@ -363,6 +412,14 @@ async function uploadFile(endpoint, file, fieldName = 'image') {
     } catch (error) {
         if (error instanceof ApiError) {
             throw error;
+        }
+        // Handle network errors
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new ApiError(
+                'Network error: Unable to connect to server. Please check your connection.',
+                0,
+                null
+            );
         }
         throw new ApiError(
             error.message || 'Upload failed',

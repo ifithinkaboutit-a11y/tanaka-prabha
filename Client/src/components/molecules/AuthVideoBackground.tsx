@@ -5,7 +5,7 @@ import React, { ReactNode } from "react";
 import { View } from "react-native";
 
 interface AuthVideoBackgroundProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export default function AuthVideoBackground({

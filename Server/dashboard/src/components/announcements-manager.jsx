@@ -98,7 +98,7 @@ export function AnnouncementsManager() {
 
     setSending(true)
     try {
-      // In production, this would call the notifications API
+      // Call the notifications API
       const response = await notificationsApi.sendBulk({
         title: formData.title,
         message: formData.message,
@@ -106,19 +106,22 @@ export function AnnouncementsManager() {
         district: formData.district === "all" ? null : formData.district,
       })
 
+      // Handle response structure
+      const sentCount = response.data?.sent_count || response.data?.count || response.sent_count || 0
+
       // Add to local state
       const newAnnouncement = {
         id: Date.now(),
         ...formData,
         sent_to: formData.district === "all" ? "all" : formData.district,
         sent_at: new Date().toISOString(),
-        recipients_count: response.data?.sent_count || Math.floor(Math.random() * 500) + 100,
+        recipients_count: sentCount,
       }
       setAnnouncements(prev => [newAnnouncement, ...prev])
       
       setIsAddOpen(false)
       resetForm()
-      toast.success(`Announcement sent to ${newAnnouncement.recipients_count} users`)
+      toast.success(`Announcement sent to ${sentCount} users`)
     } catch (error) {
       console.error("Error sending announcement:", error)
       toast.error("Failed to send announcement")

@@ -250,10 +250,18 @@ export function ProfessionalsTable() {
       const response = await professionalsApi.getAll()
       // Handle response structure: response.data can be { professionals: [] } or array directly
       const professionals = response.data?.professionals || response.data || []
+      
+      if (!Array.isArray(professionals)) {
+        console.warn("Unexpected response format:", response)
+        setData([])
+        return
+      }
+      
       setData(professionals)
     } catch (error) {
       console.error("Error fetching professionals:", error)
-      toast.error("Failed to load professionals")
+      toast.error(error.message || "Failed to load professionals. Please check your connection.")
+      setData([])
     } finally {
       setLoading(false)
     }

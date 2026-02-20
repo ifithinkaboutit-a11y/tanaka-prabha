@@ -46,7 +46,7 @@ export const sendOTP = async (req, res) => {
         const otpRecord = await OTP.createOTP(formattedNumber);
 
         // Send SMS (mock in development) — run in background so SMTP/email issues don't block the response
-        sendSMS(formattedNumber, otpRecord.otp).catch(() => {});
+        sendSMS(formattedNumber, otpRecord.otp).catch(() => { });
 
         res.status(200).json({
             status: 'success',
@@ -102,17 +102,20 @@ export const verifyOTP = async (req, res) => {
         // Check if user exists, if not create new user
         let user = await User.findByMobile(formattedNumber);
         let isNewUser = false;
-        
+
         if (!user) {
-            // Create new user with just mobile number
+            // Brand new account — create with placeholder name
             user = await User.create({
-                name: 'New User', // Placeholder, can be updated later
+                name: 'New User', // Placeholder; updated during onboarding
                 mobile_number: formattedNumber
             });
             isNewUser = true;
         } else {
-            // Check if user has completed onboarding (has profile data)
-            isNewUser = !user.state || !user.district || user.name === 'New User';
+            // Existing account. Only treat as new if they never completed onboarding.
+            // 'New User' is the placeholder set at creation time — if it's still that,
+            // they never finished. Do NOT use missing state/district as the signal
+            // because many users may have partial profiles.
+            isNewUser = (user.name === 'New User');
         }
 
         // Generate JWT token
@@ -193,7 +196,7 @@ export const resendOTP = async (req, res) => {
         // Generate and send new OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
         // Fire-and-forget send — do not block on SMTP/email
-        sendSMS(formattedNumber, otpRecord.otp).catch(() => {});
+        sendSMS(formattedNumber, otpRecord.otp).catch(() => { });
 
         res.status(200).json({
             status: 'success',
@@ -232,8 +235,8 @@ export const verifyToken = async (req, res) => {
             });
         }
 
-        // Check if user has completed onboarding
-        const isNewUser = !user.state || !user.district || user.name === 'New User';
+        // Only treat as new user if they never completed onboarding (placeholder name still set)
+        const isNewUser = (user.name === 'New User');
 
         res.status(200).json({
             status: 'success',

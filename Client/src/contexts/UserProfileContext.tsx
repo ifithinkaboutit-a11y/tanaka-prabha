@@ -1,10 +1,12 @@
 // src/contexts/UserProfileContext.tsx
-import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { userApi, UserProfile, UserProfileUpdate } from "../services/apiService";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Alert } from "react-native";
+import { tokenManager, userApi, UserProfile, UserProfileUpdate } from "../services/apiService";
 
 interface UserProfileContextType {
   profile: UserProfile | null;
   loading: boolean;
+  saving: boolean;
   error: string | null;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfileUpdate>) => Promise<void>;
@@ -13,9 +15,7 @@ interface UserProfileContextType {
   updateLivestockDetails: (data: any) => Promise<void>;
 }
 
-const UserProfileContext = createContext<UserProfileContextType | undefined>(
-  undefined,
-);
+const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 export const useUserProfile = () => {
   const context = useContext(UserProfileContext);
@@ -29,62 +29,94 @@ interface UserProfileProviderProps {
   children: ReactNode;
 }
 
-export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
-  children,
-}) => {
+export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshProfile = async () => {
+  // Track in-flight fetch to avoid double-loads
+  const fetchingRef = useRef(false);
+
+  const refreshProfile = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
-      setLoading(true);
       setError(null);
       const response = await userApi.getProfile();
       if (response.data?.user) {
         setProfile(response.data.user);
+        console.log("✅ [UserProfileContext] Profile loaded from backend");
       }
     } catch (err) {
-      console.error("Error fetching profile:", err);
-      setError("Failed to load profile");
+      console.warn("⚠️ [UserProfileContext] Backend unavailable, using cached data:", err);
+      setError("Could not connect to server");
+      // Profile remains whatever it was (cached from mount or previous load)
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Don't auto-fetch on mount — wait until explicitly called
-  // Profile will be fetched when navigating to screens that need it
+  // On mount: load cached user data from AsyncStorage immediately, then
+  // fire off a backend refresh in parallel so the UI isn't blocked.
   useEffect(() => {
-    // Only attempt to load profile if a token exists
-    const loadIfAuthenticated = async () => {
+    const init = async () => {
       try {
-        const { tokenManager } = require("../services/apiService");
         const token = await tokenManager.getToken();
-        if (token) {
-          await refreshProfile();
-        } else {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Show cached user data immediately (from tokenManager)
+        const cachedUser = await tokenManager.getUser();
+        if (cachedUser) {
+          // Build a minimal UserProfile from the AuthContext cache
+          // so the form pre-populates instantly without waiting for the network
+          setProfile((prev) =>
+            prev ?? {
+              id: cachedUser.id,
+              name: cachedUser.name || "",
+              mobileNumber: cachedUser.mobile_number || "",
+              village: cachedUser.village,
+              district: cachedUser.district,
+              state: cachedUser.state,
+              gender: cachedUser.gender,
+            }
+          );
+          // Don't keep the spinner up just for the cached fallback
           setLoading(false);
         }
+
+        // Step 2: Fetch full profile from backend in background
+        await refreshProfile();
       } catch {
         setLoading(false);
       }
     };
-    loadIfAuthenticated();
-  }, []);
+    init();
+  }, [refreshProfile]);
 
-  const updateProfile = async (updates: Partial<UserProfileUpdate>) => {
+  // ── Update helpers ──────────────────────────────────────────────────────────
+
+  const updateProfile = useCallback(async (updates: Partial<UserProfileUpdate>) => {
+    setSaving(true);
     try {
       const response = await userApi.updateProfile(updates);
       if (response.data?.user) {
         setProfile(response.data.user);
+        console.log("✅ [UserProfileContext] Profile saved to backend");
       }
     } catch (err) {
-      console.error("Error updating profile:", err);
+      console.error("❌ [UserProfileContext] Save failed:", err);
       throw err;
+    } finally {
+      setSaving(false);
     }
-  };
+  }, []);
 
-  const updatePersonalDetails = async (data: any) => {
+  const updatePersonalDetails = useCallback(async (data: any) => {
     await updateProfile({
       name: data.name,
       age: data.age,
@@ -107,11 +139,9 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
       pin_code: data.pinCode,
       state: data.state,
     });
-    // Refresh profile after update to ensure UI reflects latest data
-    await refreshProfile();
-  };
+  }, [updateProfile]);
 
-  const updateLandDetails = async (data: any) => {
+  const updateLandDetails = useCallback(async (data: any) => {
     await updateProfile({
       land_details: {
         total_land_area: data.totalLandArea,
@@ -120,11 +150,9 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
         zaid_crop: data.zaidCrop,
       },
     });
-    // Refresh profile after update to ensure UI reflects latest data
-    await refreshProfile();
-  };
+  }, [updateProfile]);
 
-  const updateLivestockDetails = async (data: any) => {
+  const updateLivestockDetails = useCallback(async (data: any) => {
     await updateProfile({
       livestock_details: {
         cow: data.cow,
@@ -135,15 +163,14 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
         others: data.others,
       },
     });
-    // Refresh profile after update to ensure UI reflects latest data
-    await refreshProfile();
-  };
+  }, [updateProfile]);
 
   return (
     <UserProfileContext.Provider
       value={{
         profile,
         loading,
+        saving,
         error,
         refreshProfile,
         updateProfile,

@@ -286,7 +286,7 @@ export const getCurrentUserProfile = async (req, res) => {
     try {
         // req.user is set by authMiddleware from JWT payload
         const userId = req.user.userId;
-        
+
         const user = await User.findById(userId);
 
         if (!user) {
@@ -341,7 +341,7 @@ export const updateCurrentUserProfile = async (req, res) => {
 
         // Don't allow changing mobile number through profile update
         delete userData.mobile_number;
-        
+
         // Extract land_details and livestock_details before passing to User.update
         // These belong to separate tables, not the users table
         const { land_details, livestock_details, ...userOnlyData } = userData;
@@ -369,7 +369,7 @@ export const updateCurrentUserProfile = async (req, res) => {
         }
 
         // Fetch the updated land and livestock details for the response
-        const [landDetails, livestockDetails] = await Promise.all([
+        const [updatedLandDetails, updatedLivestockDetails] = await Promise.all([
             LandDetails.findByUserId(userId),
             LivestockDetails.findByUserId(userId)
         ]);
@@ -380,8 +380,8 @@ export const updateCurrentUserProfile = async (req, res) => {
             data: {
                 user: {
                     ...user,
-                    land_details: landDetails || null,
-                    livestock_details: livestockDetails || null
+                    land_details: updatedLandDetails || null,
+                    livestock_details: updatedLivestockDetails || null
                 }
             }
         });

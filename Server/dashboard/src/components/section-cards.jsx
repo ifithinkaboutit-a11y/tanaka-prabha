@@ -182,12 +182,13 @@ export function SectionCards() {
       try {
         const response = await analyticsApi.getDashboardStats()
         
-        if (response.status === 'success') {
+        if (response.status === 'success' || response.data) {
+          const data = response.data || response
           setStats({
-            totalFarmers: response.data.totalFarmers || 0,
-            totalLandCoverage: response.data.totalLandCoverage || 0,
-            livestockCount: response.data.livestockCount || 0,
-            activeSchemes: response.data.activeSchemes || 0,
+            totalFarmers: data.totalFarmers || 0,
+            totalLandCoverage: data.totalLandCoverage || 0,
+            livestockCount: data.livestockCount || 0,
+            activeSchemes: data.activeSchemes || 0,
             loading: false,
             animateIn: true,
           })
@@ -197,7 +198,15 @@ export function SectionCards() {
         }
       } catch (error) {
         console.error("Error fetching stats:", error)
-        setStats(prev => ({ ...prev, loading: false }))
+        // Set default values on error
+        setStats({
+          totalFarmers: 0,
+          totalLandCoverage: 0,
+          livestockCount: 0,
+          activeSchemes: 0,
+          loading: false,
+          animateIn: false,
+        })
       }
     }
 

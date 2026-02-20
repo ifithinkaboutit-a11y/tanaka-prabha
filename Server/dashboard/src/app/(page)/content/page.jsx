@@ -41,14 +41,14 @@ export default function ContentPage() {
                   Content Management
                 </h1>
                 <p className="text-muted-foreground text-sm md:text-base">
-                  Manage schemes, banners, and other content for the platform.
+                  Manage schemes, programs, banners, and announcements. Add content in English and हिंदी.
                 </p>
               </div>
               
               {/* Rule 2: 2x gap between header and tabs (mt-8) */}
               <Tabs defaultValue="schemes" className="w-full mt-8">
-                <TabsList>
-                  <TabsTrigger value="schemes">Schemes</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+                  <TabsTrigger value="schemes">Schemes & Programs</TabsTrigger>
                   <TabsTrigger value="banners">Banners</TabsTrigger>
                   <TabsTrigger value="announcements">Announcements</TabsTrigger>
                 </TabsList>

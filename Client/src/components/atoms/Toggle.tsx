@@ -1,6 +1,6 @@
 // src/components/atoms/Toggle.tsx
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 interface ToggleProps {
   label?: string;
@@ -25,56 +25,30 @@ export default function Toggle({
   };
 
   return (
-    <View style={s.row}>
-      {label ? <Text style={s.label}>{label}</Text> : null}
+    <View className="flex-row items-center justify-between py-2">
+      {label ? (
+        <Text className="text-[#212121] text-base flex-1">{label}</Text>
+      ) : null}
 
       <Pressable
         onPress={handleToggle}
-        style={[
-          s.track,
-          { backgroundColor: value ? "#386641" : "#D9D9D9" },
-          disabled && { opacity: 0.5 },
-        ]}
+        className="w-13 h-8 rounded-2xl p-1 justify-center"
+        style={{
+          backgroundColor: value ? "#386641" : "#D9D9D9",
+          opacity: disabled ? 0.5 : 1,
+        }}
       >
         <View
-          style={[
-            s.thumb,
-            { alignSelf: value ? "flex-end" : "flex-start" },
-          ]}
+          className="w-6 h-6 rounded-full bg-white elevation-2"
+          style={{
+            alignSelf: value ? "flex-end" : "flex-start",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 2,
+          }}
         />
       </Pressable>
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  label: {
-    color: "#212121",
-    fontSize: 16,
-    flex: 1,
-  },
-  track: {
-    width: 52,
-    height: 32,
-    borderRadius: 16,
-    padding: 4,
-    justifyContent: "center",
-  },
-  thumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-});

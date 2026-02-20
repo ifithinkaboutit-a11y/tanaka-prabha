@@ -73,13 +73,23 @@ export function FarmerDensityMap() {
         const response = await analyticsApi.getFarmerLocations()
         // Handle response structure: response.data can be { locations: [] } or array directly
         const data = response.data?.locations || response.data || []
+        
+        if (!Array.isArray(data)) {
+          console.warn("Unexpected response format:", response)
+          setLocations([])
+          setStats({ totalLocations: 0, districts: 0 })
+          return
+        }
 
         // Transform data for heatmap - [lat, lng, intensity]
-        const heatmapData = data.map(user => [
-          parseFloat(user.latitude),
-          parseFloat(user.longitude),
-          1 // intensity
-        ]).filter(coords => !isNaN(coords[0]) && !isNaN(coords[1]))
+        const heatmapData = data
+          .filter(user => user.latitude && user.longitude)
+          .map(user => [
+            parseFloat(user.latitude),
+            parseFloat(user.longitude),
+            1 // intensity
+          ])
+          .filter(coords => !isNaN(coords[0]) && !isNaN(coords[1]))
 
         // Count unique districts
         const uniqueDistricts = new Set(data.map(u => u.district).filter(Boolean))
@@ -91,6 +101,8 @@ export function FarmerDensityMap() {
         })
       } catch (error) {
         console.error("Error fetching farmer locations:", error)
+        setLocations([])
+        setStats({ totalLocations: 0, districts: 0 })
       } finally {
         setLoading(false)
       }

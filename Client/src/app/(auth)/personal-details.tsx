@@ -57,7 +57,6 @@ const AuthPersonalDetailsScreen = () => {
   const stateOptions = getLocalizedOptions(indianStates, currentLanguage);
   const genderSelectOptions = getLocalizedOptions(genderOptions, currentLanguage);
 
-  // Get districts filtered by selected state
   const districtOptions = useMemo(() => {
     if (!personalDetails.state) return [];
     return indianDistricts
@@ -70,7 +69,7 @@ const AuthPersonalDetailsScreen = () => {
 
   const validateField = (field: keyof FieldErrors, value: string) => {
     let error: string | undefined;
-    
+
     switch (field) {
       case "name":
         if (!value.trim()) {
@@ -124,7 +123,7 @@ const AuthPersonalDetailsScreen = () => {
         }
         break;
     }
-    
+
     setErrors((prev) => ({ ...prev, [field]: error }));
     return !error;
   };
@@ -143,21 +142,12 @@ const AuthPersonalDetailsScreen = () => {
   };
 
   const handleNext = () => {
-    // Mark all fields as touched
     setTouched({
-      name: true,
-      age: true,
-      gender: true,
-      aadhaar: true,
-      fathersName: true,
-      mothersName: true,
-      village: true,
-      district: true,
-      state: true,
-      pinCode: true,
+      name: true, age: true, gender: true, aadhaar: true,
+      fathersName: true, mothersName: true, village: true,
+      district: true, state: true, pinCode: true,
     });
 
-    // Validate required fields manually
     let hasErrors = false;
     const newErrors: FieldErrors = {};
 
@@ -181,7 +171,7 @@ const AuthPersonalDetailsScreen = () => {
       newErrors.state = t("validation.stateRequired") || "State is required";
       hasErrors = true;
     }
-    
+
     if (hasErrors) {
       setErrors(newErrors);
       Alert.alert(
@@ -191,12 +181,10 @@ const AuthPersonalDetailsScreen = () => {
       return;
     }
 
-    // Navigate to land details
     router.push("/(auth)/land-details");
   };
 
   const handleSkip = () => {
-    // Skip to land details
     router.push("/(auth)/land-details");
   };
 
@@ -211,16 +199,6 @@ const AuthPersonalDetailsScreen = () => {
     );
   };
 
-  const getInputStyle = (field: keyof FieldErrors) => ({
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: errors[field] && touched[field] ? "#EF4444" : "#E5E7EB",
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: "#1F2937",
-  });
-
   const { height: screenHeight } = Dimensions.get("window");
   const videoHeight = screenHeight * 0.28;
 
@@ -230,129 +208,101 @@ const AuthPersonalDetailsScreen = () => {
     player.play();
   });
 
+  // Reusable field wrapper
+  const FieldWrapper = ({ children }: { children: React.ReactNode }) => (
+    <View className="mb-5">{children}</View>
+  );
+
+  const FieldLabel = ({ text }: { text: string }) => (
+    <AppText variant="bodySm" className="text-gray-700 font-semibold mb-2">
+      {text}
+    </AppText>
+  );
+
+  const FieldError = ({ message }: { message?: string }) =>
+    message ? (
+      <AppText variant="bodySm" className="text-red-500 mt-1">
+        {message}
+      </AppText>
+    ) : null;
+
+  const inputStyle = (field: keyof FieldErrors) => ({
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: errors[field] && touched[field] ? "#EF4444" : "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#1F2937",
+  });
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <View className="flex-1 bg-[#F8FAFC]">
       {/* Video Background Header */}
-      <View style={{ height: videoHeight, position: "relative" }}>
+      <View style={{ height: videoHeight }} className="relative">
         <VideoView
           player={player}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100%",
-            height: "100%",
-          }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
           contentFit="cover"
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Progress bar */}
+        {/* Progress Bar — 33% complete */}
         <View
-          style={{
-            position: "absolute",
-            top: 50,
-            left: 20,
-            right: 20,
-            height: 6,
-            backgroundColor: "rgba(255,255,255,0.3)",
-            borderRadius: 3,
-          }}
+          className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
+          style={{ top: 50 }}
         >
-          <View
-            style={{
-              width: "33%",
-              height: "100%",
-              backgroundColor: "#F59E0B",
-              borderRadius: 3,
-            }}
-          />
+          <View className="h-full bg-amber-400 rounded-full" style={{ width: "33%" }} />
         </View>
       </View>
 
       {/* Content Card */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          marginTop: -20,
-          paddingTop: 24,
-        }}
-      >
+      <View className="flex-1 bg-white rounded-t-3xl -mt-5 pt-6">
         {/* Title Section */}
-        <View style={{ alignItems: "center", paddingHorizontal: 20, marginBottom: 16 }}>
-          <AppText
-            variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", fontSize: 22, textAlign: "center" }}
-          >
+        <View className="items-center px-5 mb-4">
+          <AppText variant="h3" className="font-bold text-gray-800 text-[22px] text-center">
             {t("onboarding.personalTitle")}
           </AppText>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#6B7280", marginTop: 6, textAlign: "center" }}
-          >
+          <AppText variant="bodySm" className="text-gray-500 mt-1.5 text-center">
             {t("onboarding.personalSubtitle")}
           </AppText>
         </View>
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+          className="flex-1"
         >
           <ScrollView
-            style={{ flex: 1 }}
+            className="flex-1"
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
             {/* Full Name */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.fullName")} *
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={`${t("onboarding.fullName")} *`} />
               <TextInput
-                style={getInputStyle("name")}
+                style={inputStyle("name")}
                 value={personalDetails.name}
                 onChangeText={(text) => handleFieldChange("name", text)}
                 onBlur={() => handleFieldBlur("name")}
                 placeholder={t("onboarding.enterFullName")}
                 placeholderTextColor="#9CA3AF"
               />
-              {errors.name && touched.name && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.name}
-                </AppText>
-              )}
-            </View>
+              <FieldError message={touched.name ? errors.name : undefined} />
+            </FieldWrapper>
 
             {/* Age and Gender Row */}
-            <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
+            <View className="flex-row gap-3 mb-5">
               {/* Age */}
-              <View style={{ flex: 1 }}>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-                >
-                  {t("onboarding.age")} *
-                </AppText>
+              <View className="flex-1">
+                <FieldLabel text={`${t("onboarding.age")} *`} />
                 <TextInput
-                  style={getInputStyle("age")}
+                  style={inputStyle("age")}
                   value={personalDetails.age > 0 ? String(personalDetails.age) : ""}
                   onChangeText={(text) => {
                     const num = parseInt(text) || 0;
                     updatePersonalDetails({ age: num });
-                    if (touched.age) {
-                      validateField("age", text);
-                    }
+                    if (touched.age) validateField("age", text);
                   }}
                   onBlur={() => handleFieldBlur("age")}
                   placeholder={t("onboarding.enterAge")}
@@ -360,64 +310,38 @@ const AuthPersonalDetailsScreen = () => {
                   keyboardType="numeric"
                   maxLength={3}
                 />
-                {errors.age && touched.age && (
-                  <AppText
-                    variant="bodySm"
-                    style={{ color: "#EF4444", marginTop: 4 }}
-                  >
-                    {errors.age}
-                  </AppText>
-                )}
+                <FieldError message={touched.age ? errors.age : undefined} />
               </View>
 
               {/* Gender */}
-              <View style={{ flex: 1 }}>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
+              <View className="flex-1">
+                <FieldLabel text={`${t("onboarding.gender")} *`} />
+                <View
+                  style={{
+                    borderWidth: errors.gender && touched.gender ? 1 : 0,
+                    borderColor: "#EF4444",
+                    borderRadius: 12,
+                  }}
                 >
-                  {t("onboarding.gender")} *
-                </AppText>
-                <View style={{ 
-                  borderWidth: errors.gender && touched.gender ? 1 : 0,
-                  borderColor: "#EF4444",
-                  borderRadius: 12 
-                }}>
                   <Select
                     value={personalDetails.gender}
-                    onChange={(value) => {
-                      handleFieldChange("gender", value);
-                    }}
+                    onChange={(value) => handleFieldChange("gender", value)}
                     options={genderSelectOptions}
                     placeholder={t("onboarding.selectGender")}
                   />
                 </View>
-                {errors.gender && touched.gender && (
-                  <AppText
-                    variant="bodySm"
-                    style={{ color: "#EF4444", marginTop: 4 }}
-                  >
-                    {errors.gender}
-                  </AppText>
-                )}
+                <FieldError message={touched.gender ? errors.gender : undefined} />
               </View>
             </View>
 
             {/* Aadhaar Number */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.aadhaar")}
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.aadhaar")} />
               <TextInput
-                style={getInputStyle("aadhaar")}
+                style={inputStyle("aadhaar")}
                 value={personalDetails.aadhaar}
                 onChangeText={(text) => {
-                  // Format as XXXX XXXX XXXX
                   const cleaned = text.replace(/\D/g, "").slice(0, 12);
-                  const formatted = cleaned.replace(/(\d{4})(?=\d)/g, "$1 ");
                   handleFieldChange("aadhaar", cleaned);
                 }}
                 onBlur={() => handleFieldBlur("aadhaar")}
@@ -426,94 +350,73 @@ const AuthPersonalDetailsScreen = () => {
                 keyboardType="numeric"
                 maxLength={14}
               />
-              {errors.aadhaar && touched.aadhaar && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.aadhaar}
-                </AppText>
-              )}
-            </View>
+              <FieldError message={touched.aadhaar ? errors.aadhaar : undefined} />
+            </FieldWrapper>
 
             {/* Father's Name */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.fathersName")} *
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={`${t("onboarding.fathersName")} *`} />
               <TextInput
-                style={getInputStyle("fathersName")}
+                style={inputStyle("fathersName")}
                 value={personalDetails.fathersName}
                 onChangeText={(text) => handleFieldChange("fathersName", text)}
                 onBlur={() => handleFieldBlur("fathersName")}
                 placeholder={t("onboarding.enterFathersName")}
                 placeholderTextColor="#9CA3AF"
               />
-              {errors.fathersName && touched.fathersName && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.fathersName}
-                </AppText>
-              )}
-            </View>
+              <FieldError message={touched.fathersName ? errors.fathersName : undefined} />
+            </FieldWrapper>
 
             {/* Mother's Name */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.mothersName")}
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.mothersName")} />
               <TextInput
-                style={getInputStyle("mothersName")}
+                style={inputStyle("mothersName")}
                 value={personalDetails.mothersName}
                 onChangeText={(text) => handleFieldChange("mothersName", text)}
                 onBlur={() => handleFieldBlur("mothersName")}
                 placeholder={t("onboarding.enterMothersName")}
                 placeholderTextColor="#9CA3AF"
               />
-              {errors.mothersName && touched.mothersName && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.mothersName}
-                </AppText>
-              )}
-            </View>
+              <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
+            </FieldWrapper>
 
             {/* Village */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.village")}
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.village")} />
               <TextInput
-                style={getInputStyle("village")}
+                style={inputStyle("village")}
                 value={personalDetails.village}
                 onChangeText={(text) => handleFieldChange("village", text)}
                 onBlur={() => handleFieldBlur("village")}
                 placeholder={t("onboarding.enterVillage")}
                 placeholderTextColor="#9CA3AF"
               />
-            </View>
+            </FieldWrapper>
+
+            {/* State */}
+            <FieldWrapper>
+              <FieldLabel text={`${t("onboarding.state")} *`} />
+              <View
+                style={{
+                  borderWidth: errors.state && touched.state ? 1 : 0,
+                  borderColor: "#EF4444",
+                  borderRadius: 12,
+                }}
+              >
+                <Select
+                  value={personalDetails.state}
+                  onChange={(value) => handleFieldChange("state", value)}
+                  options={stateOptions}
+                  placeholder={t("onboarding.selectState")}
+                />
+              </View>
+              <FieldError message={touched.state ? errors.state : undefined} />
+            </FieldWrapper>
 
             {/* District */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.district")}
-              </AppText>
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.district")} />
               {districtOptions.length > 0 ? (
                 <Select
                   value={personalDetails.district}
@@ -523,55 +426,26 @@ const AuthPersonalDetailsScreen = () => {
                 />
               ) : (
                 <TextInput
-                  style={getInputStyle("district")}
+                  style={inputStyle("district")}
                   value={personalDetails.district}
                   onChangeText={(text) => handleFieldChange("district", text)}
                   onBlur={() => handleFieldBlur("district")}
-                  placeholder={personalDetails.state ? t("onboarding.enterDistrict") : t("onboarding.selectStateFirst")}
+                  placeholder={
+                    personalDetails.state
+                      ? t("onboarding.enterDistrict")
+                      : t("onboarding.selectStateFirst")
+                  }
                   placeholderTextColor="#9CA3AF"
                   editable={!!personalDetails.state}
                 />
               )}
-            </View>
-
-            {/* State */}
-            <View style={{ marginBottom: 20 }}>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.state")} *
-              </AppText>
-              <View style={{ borderWidth: errors.state && touched.state ? 1 : 0, borderColor: "#EF4444", borderRadius: 12 }}>
-                <Select
-                  value={personalDetails.state}
-                  onChange={(value) => {
-                    handleFieldChange("state", value);
-                  }}
-                  options={stateOptions}
-                  placeholder={t("onboarding.selectState")}
-                />
-              </View>
-              {errors.state && touched.state && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.state}
-                </AppText>
-              )}
-            </View>
+            </FieldWrapper>
 
             {/* Pin Code */}
-            <View>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-              >
-                {t("onboarding.pinCode")}
-              </AppText>
+            <KeyboardAvoidingView>
+              <FieldLabel text={t("onboarding.pinCode")} />
               <TextInput
-                style={getInputStyle("pinCode")}
+                style={inputStyle("pinCode")}
                 value={personalDetails.pinCode}
                 onChangeText={(text) => handleFieldChange("pinCode", text)}
                 onBlur={() => handleFieldBlur("pinCode")}
@@ -580,67 +454,29 @@ const AuthPersonalDetailsScreen = () => {
                 keyboardType="numeric"
                 maxLength={6}
               />
-              {errors.pinCode && touched.pinCode && (
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#EF4444", marginTop: 4 }}
-                >
-                  {errors.pinCode}
-                </AppText>
-              )}
-            </View>
+              <FieldError message={touched.pinCode ? errors.pinCode : undefined} />
+            </KeyboardAvoidingView>
           </ScrollView>
         </KeyboardAvoidingView>
 
         {/* Bottom Buttons */}
-        <View
-          style={{
-            padding: 20,
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#E5E7EB",
-            flexDirection: "row",
-            gap: 12,
-          }}
-        >
+        <View className="p-5 bg-white border-t border-gray-200 flex-row gap-3">
           <Pressable
             onPress={handleSkip}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              alignItems: "center",
-            })}
+            className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
           >
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#6B7280", fontWeight: "600" }}
-            >
+            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
               {t("onboarding.skip")}
             </AppText>
           </Pressable>
+
           <Pressable
             onPress={handleNext}
             disabled={!isValid()}
-            style={({ pressed }) => ({
-              flex: 2,
-              paddingVertical: 16,
-              borderRadius: 25,
-              backgroundColor: isValid()
-                ? pressed
-                  ? "#2F5233"
-                  : "#386641"
-                : "#D1D5DB",
-              alignItems: "center",
-            })}
+            className="flex-[2] py-4 rounded-full items-center"
+            style={{ backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
           >
-            <AppText
-              variant="bodyMd"
-              style={{ color: "#FFFFFF", fontWeight: "700" }}
-            >
+            <AppText variant="bodyMd" className="text-white font-bold">
               {t("onboarding.next")}
             </AppText>
           </Pressable>

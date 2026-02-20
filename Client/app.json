@@ -24,7 +24,7 @@
       "package": "com.tanakprabha.app"
     },
     "web": {
-      "output": "static",
+      "bundler": "metro",
       "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
@@ -45,12 +45,7 @@
       ],
       "expo-video",
       [
-        "expo-notifications",
-        // {
-        //   "icon": "./src/assets/images/notification-icon.png",
-        //   "color": "#386641",
-        //   "defaultChannel": "default"
-        // }
+        "expo-notifications"
       ]
     ],
     "experiments": {
@@ -60,8 +55,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
+        "projectId": "44ac0997-c234-4a0c-82d4-c6eaa4052709"
       }
-    }
+    },
+    "owner": "cr_8"
   }
 }

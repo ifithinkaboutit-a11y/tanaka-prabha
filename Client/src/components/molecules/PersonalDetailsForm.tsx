@@ -1,16 +1,24 @@
 // src/components/molecules/PersonalDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import {
   PersonalDetails,
   PersonalDetailsFormProps,
 } from "../../data/interfaces";
 import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import T from "../../i18n";
-import AppText from "../atoms/AppText";
 import Select from "../atoms/Select";
 
+// ─── Options ─────────────────────────────────────────────────────────────────
 const educationOptions = [
   { value: "illiterate", label: "Illiterate", labelHi: "अशिक्षित" },
   { value: "5th", label: "5th Pass", labelHi: "5वीं पास" },
@@ -28,7 +36,7 @@ const genderOptions = [
   { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 
-// Helper component for form inputs
+// ─── FormInput ────────────────────────────────────────────────────────────────
 const FormInput = ({
   label,
   value,
@@ -37,6 +45,7 @@ const FormInput = ({
   keyboardType = "default",
   maxLength,
   required = false,
+  icon,
 }: {
   label: string;
   value: string;
@@ -45,71 +54,149 @@ const FormInput = ({
   keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
   maxLength?: number;
   required?: boolean;
-}) => (
-  <View style={{ marginBottom: 20 }}>
-    <AppText
-      variant="bodySm"
-      style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-    >
-      {label} {required && <AppText style={{ color: "#DC2626" }}>*</AppText>}
-    </AppText>
-    <TextInput
-      style={{
-        backgroundColor: "#F9FAFB",
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-        borderRadius: 12,
-        padding: 14,
-        fontSize: 16,
-        color: "#1F2937",
-      }}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor="#9CA3AF"
-      keyboardType={keyboardType}
-      maxLength={maxLength}
-    />
-  </View>
-);
+  icon?: keyof typeof Ionicons.glyphMap;
+}) => {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={fi.wrap}>
+      <View style={fi.labelRow}>
+        {icon && <Ionicons name={icon} size={13} color="#6B7280" style={{ marginRight: 5 }} />}
+        <Text style={fi.label}>{label}</Text>
+        {required && <Text style={fi.required}> *</Text>}
+      </View>
+      <TextInput
+        style={[fi.input, focused && fi.inputFocused]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#C4C9D4"
+        keyboardType={keyboardType}
+        maxLength={maxLength}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+    </View>
+  );
+};
 
-// Helper component for number inputs in rows
-const NumberInput = ({
+const fi = StyleSheet.create({
+  wrap: { marginBottom: 18 },
+  labelRow: { flexDirection: "row", alignItems: "center", marginBottom: 7 },
+  label: { color: "#374151", fontSize: 13, fontWeight: "600" },
+  required: { color: "#EF4444", fontSize: 13 },
+  input: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 15,
+    color: "#1F2937",
+  },
+  inputFocused: {
+    borderColor: "#2563EB",
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+});
+
+// ─── Counter Input ────────────────────────────────────────────────────────────
+const CounterInput = ({
   label,
   value,
-  onChangeText,
+  onChange,
 }: {
   label: string;
   value: number;
-  onChangeText: (value: number) => void;
+  onChange: (v: number) => void;
 }) => (
-  <View style={{ flex: 1 }}>
-    <AppText
-      variant="bodySm"
-      style={{ color: "#6B7280", marginBottom: 8, fontSize: 13 }}
-    >
-      {label}
-    </AppText>
-    <TextInput
-      style={{
-        backgroundColor: "#F9FAFB",
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-        borderRadius: 12,
-        padding: 12,
-        fontSize: 16,
-        color: "#1F2937",
-        textAlign: "center",
-      }}
-      value={value.toString()}
-      onChangeText={(text) => onChangeText(parseInt(text) || 0)}
-      keyboardType="numeric"
-      placeholder="0"
-      placeholderTextColor="#9CA3AF"
-    />
+  <View style={ci.wrap}>
+    <Text style={ci.label}>{label}</Text>
+    <View style={ci.row}>
+      <Pressable
+        onPress={() => onChange(Math.max(0, value - 1))}
+        style={({ pressed }) => [ci.btn, ci.btnMinus, pressed && { opacity: 0.7 }]}
+      >
+        <Ionicons name="remove" size={16} color="#6B7280" />
+      </Pressable>
+      <TextInput
+        style={ci.input}
+        value={value.toString()}
+        onChangeText={(t) => onChange(parseInt(t) || 0)}
+        keyboardType="numeric"
+        placeholder="0"
+        placeholderTextColor="#C4C9D4"
+        textAlign="center"
+      />
+      <Pressable
+        onPress={() => onChange(value + 1)}
+        style={({ pressed }) => [ci.btn, ci.btnPlus, pressed && { opacity: 0.7 }]}
+      >
+        <Ionicons name="add" size={16} color="#2563EB" />
+      </Pressable>
+    </View>
   </View>
 );
 
+const ci = StyleSheet.create({
+  wrap: { flex: 1 },
+  label: { color: "#6B7280", fontSize: 12, fontWeight: "500", marginBottom: 8 },
+  row: { flexDirection: "row", alignItems: "center", gap: 4 },
+  btn: {
+    width: 34,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+  },
+  btnMinus: { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" },
+  btnPlus: { borderColor: "#BFDBFE", backgroundColor: "#EFF6FF" },
+  input: {
+    flex: 1,
+    height: 40,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
+  },
+});
+
+// ─── Section Header ───────────────────────────────────────────────────────────
+const SectionHeader = ({
+  icon,
+  title,
+  iconBg,
+  iconColor,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  iconBg: string;
+  iconColor: string;
+}) => (
+  <View style={sh.row}>
+    <View style={[sh.iconBox, { backgroundColor: iconBg }]}>
+      <Ionicons name={icon} size={18} color={iconColor} />
+    </View>
+    <Text style={sh.title}>{title}</Text>
+  </View>
+);
+
+const sh = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 20, gap: 12 },
+  iconBox: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  title: { fontSize: 17, fontWeight: "700", color: "#111827" },
+});
+
+// ─── Main Form ────────────────────────────────────────────────────────────────
 export default function PersonalDetailsForm({
   initialData,
   onSave,
@@ -117,7 +204,6 @@ export default function PersonalDetailsForm({
 }: PersonalDetailsFormProps) {
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
 
-  // Get state and district options
   const stateOptions = useMemo(() => getStateOptions(), []);
   const districtOptions = useMemo(
     () => (formData.state ? getDistrictOptions(formData.state) : []),
@@ -125,462 +211,319 @@ export default function PersonalDetailsForm({
   );
 
   const handleSave = () => {
-    // Basic validation
     if (!formData.name.trim()) {
-      Alert.alert("Error", "Name is required");
+      Alert.alert("Validation Error", "Name is required to save your profile.");
       return;
     }
     onSave(formData);
   };
 
-  const updateField = (
-    field: keyof PersonalDetails,
-    value: string | number
-  ) => {
+  const update = (field: keyof PersonalDetails, value: string | number) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
 
   return (
-    <ScrollView 
-      style={{ flex: 1 }} 
+    <ScrollView
+      style={s.scroll}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={s.scrollContent}
     >
-      {/* Personal Information Section */}
-      <View
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#F0FDF4",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="person" size={20} color="#386641" />
-          </View>
-          <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("personalDetails.personalInformation") || "Personal Information"}
-          </AppText>
-        </View>
+      {/* ── Personal Information ── */}
+      <View style={s.card}>
+        <SectionHeader icon="person" title={String(T.translate("personalDetails.personalInformation") || "Personal Information")} iconBg="#EFF6FF" iconColor="#2563EB" />
 
         <FormInput
-          label={String(T.translate("personalDetails.name") || "Name")}
+          label={String(T.translate("personalDetails.name") || "Full Name")}
           value={formData.name}
-          onChangeText={(value) => updateField("name", value)}
-          placeholder="Enter your name"
+          onChangeText={(v) => update("name", v)}
+          placeholder="Enter your full name"
+          icon="person-outline"
           required
         />
 
-        <View style={{ marginBottom: 20 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.age") || "Age"}
-          </AppText>
-          <TextInput
-            style={{
-              backgroundColor: "#F9FAFB",
-              borderWidth: 1,
-              borderColor: "#E5E7EB",
-              borderRadius: 12,
-              padding: 14,
-              fontSize: 16,
-              color: "#1F2937",
-              width: 100,
-            }}
-            value={formData.age > 0 ? formData.age.toString() : ''}
-            onChangeText={(text) => updateField("age", parseInt(text) || 0)}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
+        {/* Age + Gender row */}
+        <View style={s.twoCol}>
+          <View style={{ flex: 1 }}>
+            <View style={fi.labelRow}>
+              <Ionicons name="calendar-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+              <Text style={fi.label}>{String(T.translate("personalDetails.age") || "Age")}</Text>
+            </View>
+            <TextInput
+              style={fi.input}
+              value={formData.age > 0 ? formData.age.toString() : ""}
+              onChangeText={(t) => update("age", parseInt(t) || 0)}
+              keyboardType="numeric"
+              placeholder="Years"
+              placeholderTextColor="#C4C9D4"
+            />
+          </View>
 
-        <View style={{ marginBottom: 0 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.gender") || "Gender"}
-          </AppText>
-          <Select
-            value={formData.gender}
-            onChange={(value) => updateField("gender", value)}
-            options={genderOptions}
-            placeholder="Select gender"
-          />
+          <View style={{ flex: 1 }}>
+            <Text style={[fi.label, { marginBottom: 7 }]}>{String(T.translate("personalDetails.gender") || "Gender")}</Text>
+            <Select
+              value={formData.gender}
+              onChange={(v) => update("gender", v)}
+              options={genderOptions}
+              placeholder="Select..."
+            />
+          </View>
         </View>
       </View>
 
-      {/* Family Information Section */}
-      <View
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#EFF6FF",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="people" size={20} color="#3B82F6" />
-          </View>
-          <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("personalDetails.familyInformation")}
-          </AppText>
-        </View>
+      {/* ── Family Information ── */}
+      <View style={s.card}>
+        <SectionHeader icon="people" title={String(T.translate("personalDetails.familyInformation"))} iconBg="#EFF6FF" iconColor="#3B82F6" />
 
         <FormInput
           label={String(T.translate("personalDetails.fathersName"))}
           value={formData.fathersName}
-          onChangeText={(value) => updateField("fathersName", value)}
+          onChangeText={(v) => update("fathersName", v)}
           placeholder="Enter father's name"
+          icon="man-outline"
           required
         />
 
         <FormInput
           label={String(T.translate("personalDetails.mothersName"))}
           value={formData.mothersName}
-          onChangeText={(value) => updateField("mothersName", value)}
+          onChangeText={(v) => update("mothersName", v)}
           placeholder="Enter mother's name"
+          icon="woman-outline"
         />
 
-        <View style={{ marginBottom: 20 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.educationalQualification")}
-          </AppText>
+        <View style={fi.wrap}>
+          <Text style={[fi.label, { marginBottom: 7 }]}>{String(T.translate("personalDetails.educationalQualification"))}</Text>
           <Select
             value={formData.educationalQualification}
-            onChange={(value) => updateField("educationalQualification", value)}
+            onChange={(v) => update("educationalQualification", v)}
             options={educationOptions}
             placeholder="Select education level"
           />
         </View>
       </View>
 
-      {/* Family Members Section */}
-      <View
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#F0FDF4",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="home" size={20} color="#16A34A" />
-          </View>
-          <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("personalDetails.familyMembers")}
-          </AppText>
+      {/* ── Family Members ── */}
+      <View style={s.card}>
+        <SectionHeader icon="home" title={String(T.translate("personalDetails.familyMembers"))} iconBg="#F0FDF4" iconColor="#16A34A" />
+
+        {/* Sons */}
+        <Text style={s.subGroupLabel}>{String(T.translate("personalDetails.sonsLabel"))}</Text>
+        <View style={[s.twoCol, { marginBottom: 18 }]}>
+          <CounterInput
+            label={String(T.translate("personalDetails.married"))}
+            value={formData.sonsMarried}
+            onChange={(v) => update("sonsMarried", v)}
+          />
+          <CounterInput
+            label={String(T.translate("personalDetails.unmarried"))}
+            value={formData.sonsUnmarried}
+            onChange={(v) => update("sonsUnmarried", v)}
+          />
         </View>
 
-        {/* Sons Row */}
-        <View style={{ marginBottom: 16 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 12 }}
-          >
-            {T.translate("personalDetails.sonsLabel")}
-          </AppText>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <NumberInput
-              label={String(T.translate("personalDetails.married"))}
-              value={formData.sonsMarried}
-              onChangeText={(value) => updateField("sonsMarried", value)}
-            />
-            <NumberInput
-              label={String(T.translate("personalDetails.unmarried"))}
-              value={formData.sonsUnmarried}
-              onChangeText={(value) => updateField("sonsUnmarried", value)}
-            />
-          </View>
+        {/* Daughters */}
+        <Text style={s.subGroupLabel}>{String(T.translate("personalDetails.daughtersLabel"))}</Text>
+        <View style={[s.twoCol, { marginBottom: 18 }]}>
+          <CounterInput
+            label={String(T.translate("personalDetails.married"))}
+            value={formData.daughtersMarried}
+            onChange={(v) => update("daughtersMarried", v)}
+          />
+          <CounterInput
+            label={String(T.translate("personalDetails.unmarried"))}
+            value={formData.daughtersUnmarried}
+            onChange={(v) => update("daughtersUnmarried", v)}
+          />
         </View>
 
-        {/* Daughters Row */}
-        <View style={{ marginBottom: 16 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 12 }}
-          >
-            {T.translate("personalDetails.daughtersLabel")}
-          </AppText>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <NumberInput
-              label={String(T.translate("personalDetails.married"))}
-              value={formData.daughtersMarried}
-              onChangeText={(value) => updateField("daughtersMarried", value)}
-            />
-            <NumberInput
-              label={String(T.translate("personalDetails.unmarried"))}
-              value={formData.daughtersUnmarried}
-              onChangeText={(value) => updateField("daughtersUnmarried", value)}
-            />
-          </View>
-        </View>
-
-        {/* Other Family Members */}
-        <View>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.otherFamilyMembers")}
-          </AppText>
+        {/* Others */}
+        <Text style={s.subGroupLabel}>{String(T.translate("personalDetails.otherFamilyMembers"))}</Text>
+        <View style={s.thinRow}>
           <TextInput
-            style={{
-              backgroundColor: "#F9FAFB",
-              borderWidth: 1,
-              borderColor: "#E5E7EB",
-              borderRadius: 12,
-              padding: 14,
-              fontSize: 16,
-              color: "#1F2937",
-              width: 100,
-            }}
+            style={[fi.input, { width: 100 }]}
             value={formData.otherFamilyMembers.toString()}
-            onChangeText={(text) => updateField("otherFamilyMembers", parseInt(text) || 0)}
+            onChangeText={(t) => update("otherFamilyMembers", parseInt(t) || 0)}
             keyboardType="numeric"
             placeholder="0"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#C4C9D4"
           />
         </View>
       </View>
 
-      {/* Address Information Section */}
-      <View
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#FEF3C7",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="location" size={20} color="#D97706" />
-          </View>
-          <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 18 }}>
-            {T.translate("personalDetails.addressInformation")}
-          </AppText>
-        </View>
+      {/* ── Address Information ── */}
+      <View style={s.card}>
+        <SectionHeader icon="location" title={String(T.translate("personalDetails.addressInformation"))} iconBg="#FFFBEB" iconColor="#D97706" />
 
         <FormInput
           label={String(T.translate("personalDetails.village"))}
           value={formData.village}
-          onChangeText={(value) => updateField("village", value)}
+          onChangeText={(v) => update("village", v)}
           placeholder="Enter village name"
+          icon="home-outline"
         />
 
-        <FormInput
-          label={String(T.translate("personalDetails.gramPanchayat"))}
-          value={formData.gramPanchayat}
-          onChangeText={(value) => updateField("gramPanchayat", value)}
-          placeholder="Enter gram panchayat"
-        />
+        <View style={s.twoCol}>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label={String(T.translate("personalDetails.gramPanchayat"))}
+              value={formData.gramPanchayat}
+              onChangeText={(v) => update("gramPanchayat", v)}
+              placeholder="Gram panchayat"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label={String(T.translate("personalDetails.nyayPanchayat"))}
+              value={formData.nyayPanchayat}
+              onChangeText={(v) => update("nyayPanchayat", v)}
+              placeholder="Nyay panchayat"
+            />
+          </View>
+        </View>
 
-        <FormInput
-          label={String(T.translate("personalDetails.nyayPanchayat"))}
-          value={formData.nyayPanchayat}
-          onChangeText={(value) => updateField("nyayPanchayat", value)}
-          placeholder="Enter nyay panchayat"
-        />
-
-        <FormInput
-          label={String(T.translate("personalDetails.postOffice"))}
-          value={formData.postOffice}
-          onChangeText={(value) => updateField("postOffice", value)}
-          placeholder="Enter post office"
-        />
-
-        <FormInput
-          label={String(T.translate("personalDetails.tehsil"))}
-          value={formData.tehsil}
-          onChangeText={(value) => updateField("tehsil", value)}
-          placeholder="Enter tehsil"
-        />
+        <View style={s.twoCol}>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label={String(T.translate("personalDetails.postOffice"))}
+              value={formData.postOffice}
+              onChangeText={(v) => update("postOffice", v)}
+              placeholder="Post office"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label={String(T.translate("personalDetails.tehsil"))}
+              value={formData.tehsil}
+              onChangeText={(v) => update("tehsil", v)}
+              placeholder="Tehsil"
+            />
+          </View>
+        </View>
 
         <FormInput
           label={String(T.translate("personalDetails.block"))}
           value={formData.block}
-          onChangeText={(value) => updateField("block", value)}
-          placeholder="Enter block"
+          onChangeText={(v) => update("block", v)}
+          placeholder="Enter block name"
         />
 
-        <View style={{ marginBottom: 20 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.state")}
-          </AppText>
+        {/* State */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="map-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.state"))}</Text>
+          </View>
           <Select
             value={formData.state}
-            onChange={(value) => {
-              updateField("state", value);
-              // Reset district when state changes
-              updateField("district", "");
-            }}
+            onChange={(v) => { update("state", v); update("district", ""); }}
             options={stateOptions}
             placeholder="Select state"
           />
         </View>
 
-        <View style={{ marginBottom: 20 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.district")}
-          </AppText>
+        {/* District */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.district"))}</Text>
+          </View>
           <Select
             value={formData.district}
-            onChange={(value) => updateField("district", value)}
+            onChange={(v) => update("district", v)}
             options={districtOptions}
             placeholder={formData.state ? "Select district" : "Select state first"}
             disabled={!formData.state}
           />
         </View>
 
-        <View style={{ marginBottom: 0 }}>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}
-          >
-            {T.translate("personalDetails.pinCode")}
-          </AppText>
+        {/* PIN Code */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
+          </View>
           <TextInput
-            style={{
-              backgroundColor: "#F9FAFB",
-              borderWidth: 1,
-              borderColor: "#E5E7EB",
-              borderRadius: 12,
-              padding: 14,
-              fontSize: 16,
-              color: "#1F2937",
-              width: 150,
-            }}
+            style={[fi.input, { width: 150 }]}
             value={formData.pinCode}
-            onChangeText={(value) => updateField("pinCode", value)}
+            onChangeText={(v) => update("pinCode", v)}
             keyboardType="numeric"
             maxLength={6}
             placeholder="000000"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#C4C9D4"
           />
         </View>
       </View>
 
-      {/* Action Buttons */}
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 12,
-          marginTop: 8,
-        }}
-      >
+      {/* ── Action Buttons ── */}
+      <View style={s.btnRow}>
         <Pressable
           onPress={onCancel}
-          style={({ pressed }) => ({
-            flex: 1,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: pressed ? "#F3F4F6" : "#FFFFFF",
-            borderWidth: 1,
-            borderColor: "#D1D5DB",
-            alignItems: "center",
-          })}
+          style={({ pressed }) => [s.cancelBtn, pressed && { opacity: 0.7 }]}
         >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#6B7280", fontWeight: "600" }}
-          >
-            {T.translate("personalDetails.cancel")}
-          </AppText>
+          <Ionicons name="close-outline" size={18} color="#6B7280" />
+          <Text style={s.cancelBtnText}>{String(T.translate("personalDetails.cancel"))}</Text>
         </Pressable>
         <Pressable
           onPress={handleSave}
-          style={({ pressed }) => ({
-            flex: 2,
-            paddingVertical: 16,
-            borderRadius: 25,
-            backgroundColor: pressed ? "#2F5233" : "#386641",
-            alignItems: "center",
-          })}
+          style={({ pressed }) => [s.saveBtn, pressed && { opacity: 0.85 }]}
         >
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#FFFFFF", fontWeight: "700" }}
-          >
-            {T.translate("personalDetails.save")}
-          </AppText>
+          <Ionicons name="checkmark-outline" size={18} color="#FFFFFF" />
+          <Text style={s.saveBtnText}>{String(T.translate("personalDetails.save"))}</Text>
         </Pressable>
       </View>
     </ScrollView>
   );
 }
+
+const s = StyleSheet.create({
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+
+  twoCol: { flexDirection: "row", gap: 12 },
+  subGroupLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 10,
+  },
+  thinRow: { flexDirection: "row" },
+
+  btnRow: { flexDirection: "row", gap: 12, marginTop: 4, marginBottom: 8 },
+  cancelBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 15,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+  },
+  cancelBtnText: { color: "#6B7280", fontWeight: "600", fontSize: 15 },
+  saveBtn: {
+    flex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 15,
+    borderRadius: 14,
+    backgroundColor: "#2563EB",
+  },
+  saveBtnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
+});

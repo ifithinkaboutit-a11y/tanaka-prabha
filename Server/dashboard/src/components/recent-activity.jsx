@@ -107,16 +107,24 @@ export function RecentActivity() {
       try {
         const response = await analyticsApi.getRecentActivity({ limit: 6 })
         
-        if (response.status === 'success') {
-          const formattedActivities = response.data.activities.map(activity => ({
-            ...activity,
-            icon: ACTIVITY_STYLES[activity.type]?.icon || ACTIVITY_STYLES.default.icon,
-          }))
-          setActivities(formattedActivities)
+        if (response.status === 'success' || response.data) {
+          const activitiesData = response.data?.activities || response.data || []
+          if (Array.isArray(activitiesData)) {
+            const formattedActivities = activitiesData.map(activity => ({
+              ...activity,
+              icon: ACTIVITY_STYLES[activity.type]?.icon || ACTIVITY_STYLES.default.icon,
+            }))
+            setActivities(formattedActivities)
+          } else {
+            setActivities([])
+          }
+        } else {
+          setActivities([])
         }
         setLoading(false)
       } catch (error) {
         console.error("Error fetching activities:", error)
+        setActivities([])
         setLoading(false)
       }
     }

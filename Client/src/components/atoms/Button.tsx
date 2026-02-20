@@ -1,6 +1,7 @@
 // src/components/atoms/Button.tsx
 import { ReactNode } from "react";
-import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import { Pressable, Text } from "react-native";
+import { ViewStyle } from "react-native";
 
 type ButtonProps = {
   children?: ReactNode;
@@ -12,22 +13,22 @@ type ButtonProps = {
   size?: "sm" | "md" | "lg";
 };
 
-const sizeStyles: Record<string, ViewStyle> = {
-  sm: { paddingHorizontal: 8, paddingVertical: 4 },
-  md: { paddingHorizontal: 16, paddingVertical: 12 },
-  lg: { paddingHorizontal: 24, paddingVertical: 16 },
+const sizeClasses: Record<string, string> = {
+  sm: "px-2 py-1",
+  md: "px-4 py-3",
+  lg: "px-6 py-4",
 };
 
-const variantStyles: Record<string, ViewStyle> = {
-  primary: { backgroundColor: "#386641" },
-  secondary: { backgroundColor: "#7F5539" },
-  outline: { borderWidth: 1, borderColor: "#D9D9D9", backgroundColor: "#FFFFFF" },
+const variantClasses: Record<string, string> = {
+  primary: "bg-[#386641]",
+  secondary: "bg-[#7F5539]",
+  outline: "border border-[#D9D9D9] bg-white",
 };
 
-const textColors: Record<string, string> = {
-  primary: "#FFFFFF",
-  secondary: "#FFFFFF",
-  outline: "#212121",
+const textColorClasses: Record<string, string> = {
+  primary: "text-white",
+  secondary: "text-white",
+  outline: "text-[#212121]",
 };
 
 export default function Button({
@@ -39,47 +40,25 @@ export default function Button({
   style,
   size = "md",
 }: ButtonProps) {
-  const content =
-    children ||
-    (label ? (
-      <Text style={[styles.label, { color: textColors[variant] }]}>
-        {label}
-      </Text>
-    ) : null);
+  const content = children || (label ? (
+    <Text className={`text-base font-semibold ${textColorClasses[variant]}`}>
+      {label}
+    </Text>
+  ) : null);
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       disabled={disabled}
-      style={({ pressed }) => [
-        styles.base,
-        sizeStyles[size],
-        variantStyles[variant],
-        disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
-        style,
-      ]}
+      style={style}
+      className={`
+        rounded-xl items-center justify-center flex-row
+        ${sizeClasses[size]}
+        ${variantClasses[variant]}
+        ${disabled ? "opacity-50" : "active:opacity-85"}
+      `}
     >
       {content}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});

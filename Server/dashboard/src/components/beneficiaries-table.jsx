@@ -240,6 +240,12 @@ export function BeneficiariesTable() {
       const response = await usersApi.getAll()
       // Handle response structure: response.data can be { users: [] } or array directly
       const users = response.data?.users || response.data || []
+      
+      if (!Array.isArray(users)) {
+        console.warn("Unexpected response format:", response)
+        setData([])
+        return
+      }
 
       const uniqueDistricts = [...new Set(users.map(u => u.district).filter(Boolean))]
       const uniqueCrops = [...new Set(users.map(u => u.main_crop).filter(Boolean))]
@@ -249,7 +255,8 @@ export function BeneficiariesTable() {
       setCrops(uniqueCrops)
     } catch (error) {
       console.error("Error fetching farmers:", error)
-      toast.error("Failed to load farmers")
+      toast.error(error.message || "Failed to load farmers. Please check your connection.")
+      setData([])
     } finally {
       setLoading(false)
     }
