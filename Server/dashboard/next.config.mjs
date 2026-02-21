@@ -23,7 +23,7 @@ const nextConfig = {
     // Enable modern image formats
     formats: ['image/avif', 'image/webp'],
   },
-  
+
   // Expose environment variables to the client
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
@@ -32,23 +32,22 @@ const nextConfig = {
     NEXT_PUBLIC_MAP_DEFAULT_LNG: process.env.NEXT_PUBLIC_MAP_DEFAULT_LNG || '92.9376',
     NEXT_PUBLIC_MAP_DEFAULT_ZOOM: process.env.NEXT_PUBLIC_MAP_DEFAULT_ZOOM || '7',
   },
-  
+
   // Performance optimizations
   reactStrictMode: true,
-  
+
   // Suppress hydration warnings in development
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 5,
   },
-  
+
   // Production optimizations
-  swcMinify: true,
   compress: true,
-  
+
   // Output configuration
   output: 'standalone',
-  
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['@tabler/icons-react', 'lucide-react'],
