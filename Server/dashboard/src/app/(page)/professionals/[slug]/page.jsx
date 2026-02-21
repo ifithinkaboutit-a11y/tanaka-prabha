@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ArrowLeft, Phone, MapPin, Briefcase, Star, Building2 } from "lucide-react"
 import { BreadcrumbNav } from "@/components/shared/breadcrumb-nav"
 import { StatusBadge } from "@/components/shared/status-badge"
-import { ProfessionalSheet } from "@/components/forms/ProfessionalSheet"
+import { ProfessionalDialog } from "@/components/forms/ProfessionalDialog"
 import { DeleteProfessionalButton } from "@/components/forms/DeleteProfessionalButton"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,7 +40,8 @@ function DetailRow({ label, value, icon: Icon }) {
 }
 
 export default async function ProfessionalDetailPage({ params }) {
-    const professional = await getProfessional(params.slug)
+    const { slug } = await params
+    const professional = await getProfessional(slug)
     if (!professional) notFound()
 
     const status = professional.is_available ? "available" : "unavailable"
@@ -50,7 +51,7 @@ export default async function ProfessionalDetailPage({ params }) {
             <BreadcrumbNav items={[
                 { label: "Dashboard", href: "/" },
                 { label: "Professionals", href: "/professionals" },
-                { label: professional.name || `Professional #${params.slug}` },
+                { label: professional.name || `Professional #${slug}` },
             ]} />
 
             <div className="flex items-center gap-3">
@@ -72,7 +73,7 @@ export default async function ProfessionalDetailPage({ params }) {
                     <CardContent className="flex flex-col items-center text-center pt-6 pb-6 gap-4">
                         <Avatar className="size-20">
                             <AvatarImage src={professional.image_url} />
-                            <AvatarFallback className="text-xl bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                            <AvatarFallback className="text-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                                 {getInitials(professional.name)}
                             </AvatarFallback>
                         </Avatar>
@@ -85,7 +86,7 @@ export default async function ProfessionalDetailPage({ params }) {
                         </div>
                         <StatusBadge status={status} />
                         <div className="flex gap-2 w-full">
-                            <ProfessionalSheet professional={professional} mode="edit" />
+                            <ProfessionalDialog professional={professional} mode="edit" />
                             <DeleteProfessionalButton professionalId={professional.id} professionalName={professional.name} />
                         </div>
                     </CardContent>
@@ -101,7 +102,13 @@ export default async function ProfessionalDetailPage({ params }) {
                         <DetailRow label="Department" value={professional.department} icon={Building2} />
                         <DetailRow label="Category" value={professional.category} icon={Briefcase} />
                         <DetailRow label="District" value={professional.district} icon={MapPin} />
-                        <DetailRow label="Service Area" value={professional.service_area} icon={MapPin} />
+                        <DetailRow label="Service Area" value={
+                            professional.service_area
+                                ? (typeof professional.service_area === 'string'
+                                    ? professional.service_area
+                                    : professional.service_area.area || JSON.stringify(professional.service_area))
+                                : null
+                        } icon={MapPin} />
                         {professional.specializations && (
                             <div className="py-3 border-b">
                                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">Specializations</p>

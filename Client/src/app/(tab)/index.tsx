@@ -11,10 +11,12 @@ import React, { useState, useEffect } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import { useTranslation } from "../../i18n";
+import { useLanguageStore } from "../../stores/languageStore";
 
 export default function Home() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { currentLanguage } = useLanguageStore();
   const { user } = useAuth();
 
   // State for API data
@@ -73,21 +75,25 @@ export default function Home() {
   }));
 
   // Translate banners - use API data with fallback translations
-  const translatedBanners = banners.map((banner, index) => ({
-    id: banner.id,
-    title: banner.title || (index === 0
-      ? t("banners.welcome.title")
-      : index === 1
-        ? t("banners.programs.title")
-        : t("banners.connect.title")),
-    subtitle: banner.subtitle || (index === 0
-      ? t("banners.welcome.subtitle")
-      : index === 1
-        ? t("banners.programs.subtitle")
-        : t("banners.connect.subtitle")),
-    imageUrl: banner.imageUrl,
-    url: banner.redirectUrl,
-  }));
+  const translatedBanners = banners.map((banner, index) => {
+    const displayTitle = currentLanguage === 'hi' && banner.titleHi ? banner.titleHi : banner.title;
+    const displaySubtitle = currentLanguage === 'hi' && banner.subtitleHi ? banner.subtitleHi : banner.subtitle;
+    return {
+      id: banner.id,
+      title: displayTitle || (index === 0
+        ? t("banners.welcome.title")
+        : index === 1
+          ? t("banners.programs.title")
+          : t("banners.connect.title")),
+      subtitle: displaySubtitle || (index === 0
+        ? t("banners.welcome.subtitle")
+        : index === 1
+          ? t("banners.programs.subtitle")
+          : t("banners.connect.subtitle")),
+      imageUrl: banner.imageUrl,
+      url: banner.redirectUrl,
+    };
+  });
 
   // Get user's display name
   const userName = user?.name || t("common.farmer");
@@ -163,7 +169,8 @@ export default function Home() {
         <SchemePreviewList
           schemes={schemes.map((scheme) => ({
             ...scheme,
-            description: scheme.description || "",
+            title: currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title,
+            description: (currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) || "",
             onPress: () =>
               router.push(`/scheme-details?schemeId=${scheme.id}` as any),
           })) as any}

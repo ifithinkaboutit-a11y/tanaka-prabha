@@ -92,6 +92,34 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 // ============================================================
+// Admin API (uses admin JWT token, not dashboard API key)
+// ============================================================
+
+export const adminApi = {
+    changePassword: (currentPassword, newPassword, token) =>
+        fetch(`${API_BASE_URL}/admin/change-password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ currentPassword, newPassword }),
+        }).then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new ApiError(data.error || 'Failed', res.status, data);
+            return data;
+        }),
+
+    updateProfile: (profileData, token) =>
+        fetch(`${API_BASE_URL}/admin/profile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(profileData),
+        }).then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new ApiError(data.error || 'Failed', res.status, data);
+            return data;
+        }),
+};
+
+// ============================================================
 // Authentication API
 // ============================================================
 
@@ -193,6 +221,46 @@ export const schemesApi = {
     toggleStatus: (id) =>
         apiRequest(`/schemes/${id}/toggle`, {
             method: 'PATCH',
+        }),
+};
+
+// ============================================================
+// Events API
+// ============================================================
+
+export const eventsApi = {
+    getAll: (params = {}) => {
+        const queryString = new URLSearchParams(params).toString();
+        return apiRequest(`/events${queryString ? `?${queryString}` : ''}`);
+    },
+
+    getById: (id) =>
+        apiRequest(`/events/${id}`),
+
+    create: (eventData) =>
+        apiRequest('/events', {
+            method: 'POST',
+            body: JSON.stringify(eventData),
+        }),
+
+    update: (id, eventData) =>
+        apiRequest(`/events/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(eventData),
+        }),
+
+    delete: (id) =>
+        apiRequest(`/events/${id}`, {
+            method: 'DELETE',
+        }),
+
+    getParticipants: (id) =>
+        apiRequest(`/events/${id}/participants`),
+
+    markAttendance: (id, data) =>
+        apiRequest(`/events/${id}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify(data),
         }),
 };
 
@@ -507,9 +575,11 @@ export const uploadApi = {
 
 // Export default object with all APIs
 export default {
+    admin: adminApi,
     auth: authApi,
     users: usersApi,
     schemes: schemesApi,
+    events: eventsApi,
     professionals: professionalsApi,
     banners: bannersApi,
     notifications: notificationsApi,

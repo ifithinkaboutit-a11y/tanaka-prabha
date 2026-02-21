@@ -26,11 +26,11 @@ const badgeVariants = cva(
         ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         link: "text-primary underline-offset-4 [a&]:hover:underline",
         // Rule 6: Success variant using HSB shift
-        success: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30",
+        success: "bg-zinc-500/15 text-zinc-700 border-zinc-500/20 dark:bg-zinc-500/20 dark:text-zinc-400 dark:border-zinc-500/30",
         // Rule 6: Warning variant
-        warning: "bg-amber-500/15 text-amber-700 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30",
+        warning: "bg-zinc-500/15 text-zinc-700 border-zinc-500/20 dark:bg-zinc-500/20 dark:text-zinc-400 dark:border-zinc-500/30",
         // Rule 6: Info variant
-        info: "bg-blue-500/15 text-blue-700 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
+        info: "bg-zinc-500/15 text-zinc-700 border-zinc-500/20 dark:bg-zinc-500/20 dark:text-zinc-400 dark:border-zinc-500/30",
         // Rule 8: Premium shimmer variant
         shimmer: "bg-primary text-primary-foreground shimmer-border [a&]:hover:bg-primary/90",
         // Soft variants for subtle badges

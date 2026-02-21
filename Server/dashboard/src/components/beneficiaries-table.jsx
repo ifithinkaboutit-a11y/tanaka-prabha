@@ -42,15 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { BeneficiaryDialog } from "@/components/forms/BeneficiaryDialog"
 import {
   Table,
   TableBody,
@@ -191,11 +183,11 @@ export function BeneficiariesTable() {
         return (
           <Badge
             className={isVerified
-              ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400 font-medium"
-              : "bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400 font-medium"
+              ? "bg-zinc-500/10 text-zinc-600 border border-zinc-500/20 dark:text-zinc-400 font-medium"
+              : "bg-zinc-500/10 text-zinc-600 border border-zinc-500/20 dark:text-zinc-400 font-medium"
             }
           >
-            <span className={`mr-1.5 inline-block size-1.5 rounded-full ${isVerified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            <span className={`mr-1.5 inline-block size-1.5 rounded-full ${isVerified ? 'bg-zinc-500' : 'bg-zinc-500'}`} />
             {isVerified ? 'Verified' : 'Pending'}
           </Badge>
         )
@@ -405,85 +397,7 @@ export function BeneficiariesTable() {
         </Select>
 
         <div className="ml-auto">
-          <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <SheetTrigger asChild>
-              <Button onClick={resetForm}>
-                <IconPlus className="size-4 mr-2" />
-                Add Farmer
-              </Button>
-            </SheetTrigger>
-            <SheetContent className='w-full px-4 overflow-y-auto'>
-              <SheetHeader>
-                <SheetTitle>Add New Farmer</SheetTitle>
-                <SheetDescription>
-                  Register a new beneficiary in the system.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter farmer name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    placeholder="Enter mobile number"
-                    value={formData.mobile_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mobile_number: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="village">Village</Label>
-                  <Input
-                    id="village"
-                    placeholder="Enter village name"
-                    value={formData.village}
-                    onChange={(e) => setFormData(prev => ({ ...prev, village: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="block">Block</Label>
-                  <Input
-                    id="block"
-                    placeholder="Enter block name"
-                    value={formData.block}
-                    onChange={(e) => setFormData(prev => ({ ...prev, block: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="district">District</Label>
-                  <Select
-                    value={formData.district}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Kamrup">Kamrup</SelectItem>
-                      <SelectItem value="Jorhat">Jorhat</SelectItem>
-                      <SelectItem value="Dibrugarh">Dibrugarh</SelectItem>
-                      <SelectItem value="Sivasagar">Sivasagar</SelectItem>
-                      <SelectItem value="Tezpur">Tezpur</SelectItem>
-                      <SelectItem value="Nagaon">Nagaon</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <SheetFooter className="mt-6">
-                <Button onClick={handleAddFarmer} className="w-full" disabled={saving}>
-                  {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-                  Save Farmer
-                </Button>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
+          <BeneficiaryDialog onSuccess={fetchFarmers} />
         </div>
       </div>
 

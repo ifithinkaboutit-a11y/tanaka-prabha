@@ -295,6 +295,43 @@ const Profile = () => {
             {profile.landDetails.zaidCrop && (
               <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={profile.landDetails.zaidCrop} />
             )}
+
+            {/* Locate on Map Widget */}
+            <View style={{
+              backgroundColor: '#F0FDF4',
+              borderRadius: 16,
+              padding: 16,
+              marginTop: 12,
+              borderWidth: 1,
+              borderColor: '#DCFCE7',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <View style={{ flex: 1, marginRight: 12 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#166534', marginBottom: 4 }}>
+                  Land Location
+                </Text>
+                <Text style={{ fontSize: 13, color: '#15803D' }} numberOfLines={2}>
+                  {profile.landDetails.locationAddress || "Pin your exact farm location"}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => router.push("/(auth)/location-picker?isForLand=true&fromProfile=true" as any)}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: '#BBF7D0'
+                }}
+              >
+                <Text style={{ color: '#16A34A', fontSize: 13, fontWeight: '600' }}>
+                  {profile.landDetails.latitude ? "Edit Map" : "Locate on map"}
+                </Text>
+              </Pressable>
+            </View>
           </>
         ) : (
           <View style={s.emptySection}>
@@ -415,7 +452,7 @@ const Profile = () => {
         >
           <View style={s.settingLeft}>
             <View style={[s.settingIconBg, { backgroundColor: "#FEF2F2", marginRight: 12 }]}>
-              <Ionicons name="log-out-outline" size={18} color="#DC2626" style={{ marginLeft: 3}}/>
+              <Ionicons name="log-out-outline" size={18} color="#DC2626" style={{ marginLeft: 3 }} />
             </View>
             <Text style={[s.settingLabel, { color: "#DC2626" }]}>{t("profile.logout")}</Text>
           </View>

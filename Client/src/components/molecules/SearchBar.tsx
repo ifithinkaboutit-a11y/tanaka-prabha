@@ -2,6 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
 
 type SearchBarProps = {
   placeholder?: string;
@@ -14,10 +15,15 @@ export default function SearchBar({
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = () => {
-    if (onSearch && searchQuery.trim()) {
-      onSearch(searchQuery.trim());
+    if (searchQuery.trim()) {
+      if (onSearch) {
+        onSearch(searchQuery.trim());
+      } else {
+        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}` as any);
+      }
     }
   };
 

@@ -59,8 +59,7 @@ class User {
                 post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
                 ST_X(location::geometry) as longitude,
-                location_address, location_accuracy, location_set_at, location_method,
-                is_new_user, created_at, updated_at
+                created_at, updated_at
             FROM public.users
             WHERE id = $1
         `;
@@ -81,8 +80,7 @@ class User {
                 post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
                 ST_X(location::geometry) as longitude,
-                location_address, location_accuracy, location_set_at, location_method,
-                is_new_user, created_at, updated_at
+                created_at, updated_at
             FROM public.users
             WHERE mobile_number = $1
         `;
@@ -96,11 +94,14 @@ class User {
     static async findAll(limit = 50, offset = 0) {
         const text = `
             SELECT 
-                id, name, age, gender, photo_url, mobile_number,
-                village, district, state,
+                id, name, age, gender, photo_url, mobile_number, aadhaar_number,
+                fathers_name, mothers_name, educational_qualification,
+                sons_married, sons_unmarried, daughters_married, daughters_unmarried,
+                other_family_members, village, gram_panchayat, nyay_panchayat,
+                post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
                 ST_X(location::geometry) as longitude,
-                created_at
+                created_at, updated_at
             FROM public.users
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
@@ -180,9 +181,14 @@ class User {
     static async search(searchTerm, limit = 50) {
         const text = `
             SELECT 
-                id, name, mobile_number, village, district, state,
+                id, name, age, gender, photo_url, mobile_number, aadhaar_number,
+                fathers_name, mothers_name, educational_qualification,
+                sons_married, sons_unmarried, daughters_married, daughters_unmarried,
+                other_family_members, village, gram_panchayat, nyay_panchayat,
+                post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
-                ST_X(location::geometry) as longitude
+                ST_X(location::geometry) as longitude,
+                created_at, updated_at
             FROM public.users
             WHERE 
                 name ILIKE $1 OR

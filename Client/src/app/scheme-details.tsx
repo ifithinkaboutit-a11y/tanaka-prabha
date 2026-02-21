@@ -6,8 +6,10 @@ import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
+import ExpandableText from "../components/atoms/ExpandableText";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
+import { useLanguageStore } from "../stores/languageStore";
 
 export const options = {
   headerShown: false,
@@ -22,6 +24,7 @@ const SchemeDetailsScreen = () => {
   >("overview");
   const [scheme, setScheme] = useState<Scheme | null>(null);
   const [loading, setLoading] = useState(true);
+  const { currentLanguage } = useLanguageStore();
 
   // Fetch scheme on mount
   useEffect(() => {
@@ -68,6 +71,11 @@ const SchemeDetailsScreen = () => {
   };
 
   const renderTabContent = () => {
+    const overviewText = currentLanguage === 'hi' && scheme.overviewHi ? scheme.overviewHi : scheme.overview;
+    const processText = currentLanguage === 'hi' && scheme.processHi ? scheme.processHi : scheme.process;
+    const keyObjectives = currentLanguage === 'hi' && scheme.keyObjectivesHi ? scheme.keyObjectivesHi : scheme.keyObjectives;
+    const eligibility = currentLanguage === 'hi' && scheme.eligibilityHi ? scheme.eligibilityHi : (scheme as any).eligibility;
+
     switch (activeTab) {
       case "overview":
         return (
@@ -76,7 +84,7 @@ const SchemeDetailsScreen = () => {
               variant="bodyLg"
               style={{ color: "#212121", marginBottom: 24, lineHeight: 24 }}
             >
-              {scheme.overview}
+              {overviewText}
             </AppText>
 
             {/* Key Objectives */}
@@ -84,7 +92,7 @@ const SchemeDetailsScreen = () => {
               {t("programReader.keyObjectives")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {scheme.keyObjectives?.map((objective: string, index: number) => (
+              {keyObjectives?.map((objective: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
                   <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
                     •
@@ -104,7 +112,7 @@ const SchemeDetailsScreen = () => {
               {t("schemesPage.eligibility")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {(scheme as any).eligibility?.map((criterion: string, index: number) => (
+              {eligibility?.map((criterion: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
                   <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
                     •
@@ -120,7 +128,7 @@ const SchemeDetailsScreen = () => {
       case "process":
         return (
           <AppText variant="bodyLg" style={{ color: "#212121", lineHeight: 24 }}>
-            {scheme.process}
+            {processText}
           </AppText>
         );
       default:
@@ -171,14 +179,13 @@ const SchemeDetailsScreen = () => {
         {/* Scheme Title & Description */}
         <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
           <AppText variant="h2" style={{ color: "#111827", marginBottom: 12, fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
-            {scheme.title}
+            {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
           </AppText>
-          <AppText variant="bodyMd" style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}>
-            {scheme.description}{" "}
-            <AppText variant="bodyMd" style={{ color: "#2563EB", fontWeight: "600" }}>
-              Read more
-            </AppText>
-          </AppText>
+          <ExpandableText
+            text={currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description}
+            style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}
+            wordLimit={100}
+          />
         </View>
 
         {/* Segmented Tab Buttons */}

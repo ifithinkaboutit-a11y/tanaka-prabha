@@ -54,6 +54,7 @@ const AuthLivestockDetailsScreen = () => {
     hasLand,
     landEntries,
     locationData,
+    landLocationData,
     resetOnboarding,
   } = useOnboardingStore();
 
@@ -204,6 +205,12 @@ const AuthLivestockDetailsScreen = () => {
           rabi_crop: crops.filter((c) => ["wheat", "mustard", "gram", "barley"].includes(c)).join(", "),
           zaid_crop: crops.filter((c) => ["vegetables", "fruits", "fodder"].includes(c)).join(", "),
         };
+
+        if (landLocationData && landLocationData.method === 'gps' && landLocationData.lat && landLocationData.lng) {
+          profileData.land_details.latitude = landLocationData.lat;
+          profileData.land_details.longitude = landLocationData.lng;
+          profileData.land_details.location_address = landLocationData.address;
+        }
       }
 
       if (hasLivestock && livestockEntries.length > 0) {

@@ -20,7 +20,10 @@ class Professional {
 
         const values = [
             name, role, department, category, image_url, phone_number,
-            district, service_area, specializations, is_available !== false
+            district,
+            service_area ? (typeof service_area === 'string' ? service_area : JSON.stringify(service_area)) : null,
+            specializations ? (typeof specializations === 'string' ? specializations : JSON.stringify(specializations)) : null,
+            is_available !== false
         ];
 
         const result = await query(text, values);
@@ -134,9 +137,15 @@ class Professional {
         const values = [];
         let paramCount = 1;
 
+        const jsonbColumns = ['service_area', 'specializations'];
+
         Object.keys(professionalData).forEach(key => {
             fields.push(`${key} = $${paramCount}`);
-            values.push(professionalData[key]);
+            let val = professionalData[key];
+            if (jsonbColumns.includes(key) && val != null && typeof val !== 'string') {
+                val = JSON.stringify(val);
+            }
+            values.push(val);
             paramCount++;
         });
 

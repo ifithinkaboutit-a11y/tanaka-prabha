@@ -88,7 +88,7 @@ export default function UserHeatMap({ points: initialPoints }) {
             maxZoom={INDIA_MAX_ZOOM}
             className="h-[480px] w-full rounded-xl z-0"
             scrollWheelZoom={false}
-            style={{ background: "#1a1a2e" }}
+            style={{ background: "#18181b" }}
         >
             <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
             <HeatLayer points={points} />

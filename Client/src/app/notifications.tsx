@@ -197,17 +197,29 @@ export default function NotificationsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      <Stack.Screen
-        options={{
-          title: t("notifications.title") || "Notifications",
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: '#F9FAFB' },
-          headerTitleStyle: { color: '#1F2937' },
-          headerTintColor: '#1F2937'
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+      {/* Custom Header */}
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingTop: 48,
+        paddingBottom: 16,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#E5E7EB",
+        backgroundColor: "#FFFFFF",
+      }}>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <AppText
+          variant="h3"
+          style={{ color: "#1F2937", flex: 1, fontWeight: "700", fontSize: 18 }}
+          numberOfLines={1}
+        >
+          {t("notifications.title") || "Notifications"}
+        </AppText>
       </View>
 
       <ScrollView

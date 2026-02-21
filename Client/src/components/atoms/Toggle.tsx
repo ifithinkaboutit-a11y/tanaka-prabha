@@ -4,7 +4,8 @@ import { Pressable, Text, View } from "react-native";
 
 interface ToggleProps {
   label?: string;
-  value: boolean;
+  value?: boolean;
+  checked?: boolean;
   onChange?: (value: boolean) => void;
   onValueChange?: (value: boolean) => void;
   disabled?: boolean;
@@ -13,13 +14,16 @@ interface ToggleProps {
 export default function Toggle({
   label,
   value,
+  checked,
   onChange,
   onValueChange,
   disabled = false,
 }: ToggleProps) {
+  const currentValue = checked ?? value ?? false;
+
   const handleToggle = () => {
     if (disabled) return;
-    const newValue = !value;
+    const newValue = !currentValue;
     onValueChange?.(newValue);
     onChange?.(newValue);
   };
@@ -34,18 +38,23 @@ export default function Toggle({
         onPress={handleToggle}
         className="w-13 h-8 rounded-2xl p-1 justify-center"
         style={{
-          backgroundColor: value ? "#386641" : "#D9D9D9",
+          backgroundColor: currentValue ? "#386641" : "#FFFFFF",
+          borderColor: currentValue ? "#386641" : "#E5E7EB",
+          borderWidth: 1,
           opacity: disabled ? 0.5 : 1,
         }}
       >
         <View
-          className="w-6 h-6 rounded-full bg-white elevation-2"
+          className="w-6 h-6 rounded-full elevation-2"
           style={{
-            alignSelf: value ? "flex-end" : "flex-start",
+            backgroundColor: currentValue ? "#FFFFFF" : "#FFFFFF",
+            alignSelf: currentValue ? "flex-end" : "flex-start",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.15,
             shadowRadius: 2,
+            borderWidth: currentValue ? 0 : 1,
+            borderColor: "#E5E7EB",
           }}
         />
       </Pressable>

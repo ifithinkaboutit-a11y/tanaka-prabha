@@ -4,11 +4,11 @@ export const INDIA_MIN_ZOOM = 4;
 export const INDIA_MAX_ZOOM = 12;
 
 export const HEAT_GRADIENT = {
-    0.1: '#3b82f6', // blue — sparse
-    0.4: '#22c55e', // green — moderate
-    0.6: '#eab308', // yellow — dense
-    0.8: '#f97316', // orange — very dense
-    1.0: '#ef4444', // red — hotspot
+    0.1: '#3f3f46', // zinc-700
+    0.4: '#52525b', // zinc-600
+    0.6: '#71717a', // zinc-500
+    0.8: '#a1a1aa', // zinc-400
+    1.0: '#e4e4e7', // zinc-200
 };
 
 export const HEAT_OPTIONS = {

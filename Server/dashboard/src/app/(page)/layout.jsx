@@ -2,7 +2,6 @@
 export const dynamic = 'force-dynamic'
 
 import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
 import {
     SidebarInset,
     SidebarProvider,
@@ -12,17 +11,18 @@ export default function DashboardLayout({ children }) {
     return (
         <SidebarProvider
             style={{
-                "--sidebar-width": "calc(var(--spacing) * 72)",
-                "--header-height": "calc(var(--spacing) * 12)",
+                "--sidebar-width": "calc(var(--spacing) * 80)",
+                "--header-height": "calc(var(--spacing) * 20)",
             }}
         >
-            <AppSidebar variant="inset" />
-            <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col">
-                    {children}
-                </div>
-            </SidebarInset>
+            <div className="relative flex h-dvh w-full">
+                <AppSidebar />
+                <SidebarInset className="flex flex-col">
+                    <div className="flex flex-1 flex-col">
+                        {children}
+                    </div>
+                </SidebarInset>
+            </div>
         </SidebarProvider>
     )
 }

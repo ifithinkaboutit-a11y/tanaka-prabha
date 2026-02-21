@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
   // Base styles with 4-layer system (Rule 4)
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-2xl border py-6 transition-all duration-200 ease-out",
+  "bg-card text-card-foreground flex flex-col gap-2 border py-6 transition-all duration-200 ease-out",
   {
     variants: {
       variant: {

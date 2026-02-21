@@ -61,14 +61,14 @@ function LoginForm() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #14532d 0%, #166534 30%, #15803d 60%, #16a34a 100%)",
+          background: "linear-gradient(135deg, #18181b 0%, #27272a 30%, #3f3f46 60%, #52525b 100%)",
         }}
       >
         {/* Background decorative circles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white/5" />
           <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-white/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.03]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/3" />
           {/* Grid pattern */}
           <div
             className="absolute inset-0 opacity-[0.07]"
@@ -104,7 +104,7 @@ function LoginForm() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-green-100 text-lg leading-relaxed mb-10"
+            className="text-zinc-100 text-lg leading-relaxed mb-10"
           >
             Admin dashboard for farmer welfare management. Manage beneficiaries, professionals, and content all in one place.
           </motion.p>
@@ -123,7 +123,7 @@ function LoginForm() {
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
                 <span className="text-xl">{item.icon}</span>
-                <span className="text-sm text-green-50 font-medium">{item.text}</span>
+                <span className="text-sm text-zinc-50 font-medium">{item.text}</span>
               </div>
             ))}
           </motion.div>
@@ -134,7 +134,7 @@ function LoginForm() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="absolute bottom-8 flex items-center gap-2 text-green-200 text-xs"
+          className="absolute bottom-8 flex items-center gap-2 text-zinc-200 text-xs"
         >
           <ShieldCheck className="size-4" />
           Secured Admin Access — Authorized Personnel Only
@@ -150,7 +150,7 @@ function LoginForm() {
       >
         {/* Mobile logo */}
         <div className="flex lg:hidden items-center gap-2 mb-8">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-green-600">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-zinc-600">
             <Leaf className="size-5 text-white" />
           </div>
           <span className="text-xl font-bold">Tanak Prabha</span>
@@ -224,7 +224,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full cursor-pointer bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold transition-all"
+                className="w-full cursor-pointer bg-zinc-600 hover:bg-zinc-700 active:bg-zinc-800 text-white font-semibold transition-all"
                 size="lg"
               >
                 {loading ? (
@@ -252,7 +252,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin w-8 h-8 text-green-600" />
+        <Loader2 className="animate-spin w-8 h-8 text-zinc-600" />
       </div>
     }>
       <LoginForm />

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
 const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
   "https://tanak-prabha.onrender.com/api";
 
 // Log API URL on startup for debugging
@@ -314,6 +315,9 @@ function convertApiUserToUserProfile(apiUser: ApiUserProfile): UserProfile {
         rabiCrop: apiUser.land_details.rabi_crop,
         kharifCrop: apiUser.land_details.kharif_crop,
         zaidCrop: apiUser.land_details.zaid_crop,
+        latitude: apiUser.land_details.latitude,
+        longitude: apiUser.land_details.longitude,
+        locationAddress: apiUser.land_details.location_address,
       }
       : undefined,
     livestockDetails: apiUser.livestock_details
@@ -383,6 +387,9 @@ export interface ApiLandDetails {
   rabi_crop?: string;
   kharif_crop?: string;
   zaid_crop?: string;
+  latitude?: number;
+  longitude?: number;
+  location_address?: string;
 }
 
 export interface ApiLivestockDetails {
@@ -459,6 +466,9 @@ export interface UserProfile {
     rabiCrop?: string;
     kharifCrop?: string;
     zaidCrop?: string;
+    latitude?: number;
+    longitude?: number;
+    locationAddress?: string;
   };
   livestockDetails?: {
     cow?: number;
@@ -538,6 +548,8 @@ export interface ApiBanner {
   id: string;
   title: string;
   subtitle?: string;
+  title_hi?: string;
+  subtitle_hi?: string;
   image_url: string;
   redirect_url?: string;
   sort_order?: number;
@@ -549,6 +561,8 @@ export interface Banner {
   id: string;
   title: string;
   subtitle?: string;
+  titleHi?: string;
+  subtitleHi?: string;
   imageUrl: string;
   redirectUrl?: string;
   sortOrder?: number;
@@ -564,6 +578,12 @@ export interface ApiScheme {
   id: string;
   title: string;
   description?: string;
+  title_hi?: string;
+  description_hi?: string;
+  overview_hi?: string;
+  process_hi?: string;
+  eligibility_hi?: string;
+  key_objectives_hi?: string[];
   category: string;
   image_url?: string;
   hero_image_url?: string;
@@ -582,6 +602,12 @@ export interface Scheme {
   id: string;
   title: string;
   description?: string;
+  titleHi?: string;
+  descriptionHi?: string;
+  overviewHi?: string;
+  processHi?: string;
+  eligibilityHi?: string;
+  keyObjectivesHi?: string[];
   category: string;
   imageUrl?: string;
   heroImageUrl?: string;
@@ -621,6 +647,54 @@ export const bannersApi = {
     return response.data?.banner
       ? convertKeysToCamelCase<Banner>(response.data.banner)
       : null;
+  },
+};
+
+// ============================================================
+// Events API
+// ============================================================
+
+export interface ApiEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  location_name: string;
+  location_address?: string;
+  guidelines_and_rules?: string;
+  requirements?: string;
+  hero_image_url?: string;
+  status: string;
+}
+
+export const eventsApi = {
+  getAll: async (): Promise<ApiEvent[]> => {
+    try {
+      const response = await fetchWithAuth<{ events: ApiEvent[] }>("/events");
+      return response.data?.events || [];
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
+  },
+
+  getById: async (id: string): Promise<ApiEvent | null> => {
+    try {
+      const response = await fetchWithAuth<{ event: ApiEvent }>(`/events/${id}`);
+      return response.data?.event || null;
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      return null;
+    }
+  },
+
+  register: async (id: string, mobile_number: string, name?: string): Promise<any> => {
+    return await fetchWithAuth(`/events/${id}/register`, {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, name }),
+    });
   },
 };
 
@@ -1198,6 +1272,7 @@ export default {
   user: userApi,
   banners: bannersApi,
   schemes: schemesApi,
+  events: eventsApi,
   professionals: professionalsApi,
   notifications: notificationsApi,
   appointments: appointmentsApi,

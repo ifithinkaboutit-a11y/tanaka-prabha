@@ -41,7 +41,7 @@ function StatBadge({ icon: Icon, value, label, colorScheme = "default" }) {
   const colors = {
     default: "bg-muted text-foreground",
     primary: "bg-primary/10 text-primary",
-    success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    success: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
   }
 
   return (

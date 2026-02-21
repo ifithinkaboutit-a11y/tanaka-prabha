@@ -43,17 +43,17 @@ export default function MapComponent({ locations = [] }) {
           maxZoom: 17,
           max: 1.0,
           gradient: {
-            0.0: "#3b82f6",
-            0.25: "#22c55e",
-            0.5: "#eab308",
-            0.75: "#f97316",
-            1.0: "#ef4444"
+            0.0: "#3f3f46",
+            0.25: "#52525b",
+            0.5: "#71717a",
+            0.75: "#a1a1aa",
+            1.0: "#e4e4e7"
           }
         }).addTo(map)
 
         // Fit bounds to show all points if we have enough data
         if (locations.length > 1) {
-          const validLocations = locations.filter(loc => 
+          const validLocations = locations.filter(loc =>
             loc[0] && loc[1] && !isNaN(loc[0]) && !isNaN(loc[1])
           )
           if (validLocations.length > 0) {
@@ -74,8 +74,8 @@ export default function MapComponent({ locations = [] }) {
   }, [locations])
 
   return (
-    <div 
-      ref={mapRef} 
+    <div
+      ref={mapRef}
       className="h-full w-full"
       style={{ minHeight: "400px" }}
     />

@@ -16,14 +16,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import {
     Select,
     SelectContent,
@@ -43,20 +43,20 @@ import { toast } from "sonner"
 
 function getTypeIcon(type) {
     switch (type) {
-        case "alert": return <AlertTriangle className="size-4 text-red-500" />
-        case "announcement": return <Megaphone className="size-4 text-blue-500" />
-        case "info": return <Info className="size-4 text-green-500" />
-        case "reminder": return <Bell className="size-4 text-amber-500" />
+        case "alert": return <AlertTriangle className="size-4 text-zinc-500" />
+        case "announcement": return <Megaphone className="size-4 text-zinc-500" />
+        case "info": return <Info className="size-4 text-zinc-500" />
+        case "reminder": return <Bell className="size-4 text-zinc-500" />
         default: return <Bell className="size-4 text-muted-foreground" />
     }
 }
 
 function getTypeBadgeClass(type) {
     switch (type) {
-        case "alert": return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400"
-        case "announcement": return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400"
-        case "info": return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400"
-        case "reminder": return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400"
+        case "alert": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
+        case "announcement": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
+        case "info": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
+        case "reminder": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
         default: return ""
     }
 }
@@ -231,7 +231,7 @@ export default function NotificationsPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardDescription>Announcements</CardDescription>
-                            <CardTitle className="text-2xl text-blue-600">{stats.announcements}</CardTitle>
+                            <CardTitle className="text-2xl text-zinc-600">{stats.announcements}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardDescription>Alerts</CardDescription>
-                            <CardTitle className="text-2xl text-red-600">{stats.alerts}</CardTitle>
+                            <CardTitle className="text-2xl text-zinc-600">{stats.alerts}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardDescription>Information</CardDescription>
-                            <CardTitle className="text-2xl text-green-600">{stats.info}</CardTitle>
+                            <CardTitle className="text-2xl text-zinc-600">{stats.info}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -290,20 +290,20 @@ export default function NotificationsPage() {
                     </Select>
 
                     <div className="ml-auto">
-                        <Sheet open={isComposeOpen} onOpenChange={setIsComposeOpen}>
-                            <SheetTrigger asChild>
+                        <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+                            <DialogTrigger asChild>
                                 <Button>
                                     <Send className="size-4 mr-2" />
                                     New Broadcast
                                 </Button>
-                            </SheetTrigger>
-                            <SheetContent className="px-4 w-full overflow-y-auto">
-                                <SheetHeader>
-                                    <SheetTitle>Compose Broadcast</SheetTitle>
-                                    <SheetDescription>
+                            </DialogTrigger>
+                            <DialogContent className="px-4 w-full sm:max-w-md overflow-y-auto max-h-[85vh]">
+                                <DialogHeader>
+                                    <DialogTitle>Compose Broadcast</DialogTitle>
+                                    <DialogDescription>
                                         Send a notification to all registered farmers or a specific district.
-                                    </SheetDescription>
-                                </SheetHeader>
+                                    </DialogDescription>
+                                </DialogHeader>
                                 <div className="mt-6 space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="broadcast-title">Title</Label>
@@ -363,7 +363,7 @@ export default function NotificationsPage() {
                                         </Select>
                                     </div>
                                 </div>
-                                <SheetFooter className="mt-6">
+                                <DialogFooter className="mt-6">
                                     <Button onClick={handleSendBroadcast} className="w-full" disabled={sending}>
                                         {sending ? (
                                             "Sending..."
@@ -374,9 +374,9 @@ export default function NotificationsPage() {
                                             </>
                                         )}
                                     </Button>
-                                </SheetFooter>
-                            </SheetContent>
-                        </Sheet>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 

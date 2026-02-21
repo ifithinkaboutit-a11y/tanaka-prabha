@@ -42,15 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { ProfessionalDialog } from "@/components/forms/ProfessionalDialog"
 import {
   Table,
   TableBody,
@@ -121,7 +113,7 @@ export function ProfessionalsTable() {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={row.original.avatar} />
-            <AvatarFallback className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+            <AvatarFallback className="bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
               {getInitials(row.original.name)}
             </AvatarFallback>
           </Avatar>
@@ -147,9 +139,9 @@ export function ProfessionalsTable() {
       cell: ({ row }) => {
         const type = row.original.type || "doctor"
         const colors = {
-          doctor: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
-          veterinary: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
-          agricultural: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400",
+          doctor: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
+          veterinary: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
+          agricultural: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
         }
         return (
           <Badge variant="outline" className={`capitalize ${colors[type] || ""}`}>
@@ -202,7 +194,7 @@ export function ProfessionalsTable() {
           <Badge
             variant="outline"
             className={isAvailable
-              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400"
+              ? "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
               : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400"
             }
           >
@@ -382,133 +374,7 @@ export function ProfessionalsTable() {
         </Select>
 
         <div className="ml-auto">
-          <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <SheetTrigger asChild>
-              <Button onClick={resetForm}>
-                <IconPlus className="size-4 mr-2" />
-                Add Professional
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="w-full px-4 overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Add New Professional</SheetTitle>
-                <SheetDescription>
-                  Register a new doctor or expert in the system.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="prof-name">Full Name</Label>
-                  <Input
-                    id="prof-name"
-                    placeholder="Dr. John Doe"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-type">Type</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-                  >
-                    <SelectTrigger id="prof-type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="doctor">Doctor</SelectItem>
-                      <SelectItem value="veterinary">Veterinary</SelectItem>
-                      <SelectItem value="agricultural">Agricultural Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-specialization">Specialization</Label>
-                  <Input
-                    id="prof-specialization"
-                    placeholder="e.g., Cardiologist, Dairy Farming"
-                    value={formData.specialization}
-                    onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-qualification">Qualification</Label>
-                  <Input
-                    id="prof-qualification"
-                    placeholder="e.g., MBBS, BVSc"
-                    value={formData.qualification}
-                    onChange={(e) => setFormData(prev => ({ ...prev, qualification: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-phone">Phone Number</Label>
-                  <Input
-                    id="prof-phone"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-email">Email</Label>
-                  <Input
-                    id="prof-email"
-                    type="email"
-                    placeholder="doctor@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prof-district">District</Label>
-                  <Select
-                    value={formData.district}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
-                  >
-                    <SelectTrigger id="prof-district">
-                      <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
-                      <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
-                      <SelectItem value="Assam">Assam</SelectItem>
-                      <SelectItem value="Bihar">Bihar</SelectItem>
-                      <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
-                      <SelectItem value="Goa">Goa</SelectItem>
-                      <SelectItem value="Gujarat">Gujarat</SelectItem>
-                      <SelectItem value="Haryana">Haryana</SelectItem>
-                      <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
-                      <SelectItem value="Jharkhand">Jharkhand</SelectItem>
-                      <SelectItem value="Karnataka">Karnataka</SelectItem>
-                      <SelectItem value="Kerala">Kerala</SelectItem>
-                      <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
-                      <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                      <SelectItem value="Manipur">Manipur</SelectItem>
-                      <SelectItem value="Meghalaya">Meghalaya</SelectItem>
-                      <SelectItem value="Mizoram">Mizoram</SelectItem>
-                      <SelectItem value="Nagaland">Nagaland</SelectItem>
-                      <SelectItem value="Odisha">Odisha</SelectItem>
-                      <SelectItem value="Punjab">Punjab</SelectItem>
-                      <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                      <SelectItem value="Sikkim">Sikkim</SelectItem>
-                      <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                      <SelectItem value="Telangana">Telangana</SelectItem>
-                      <SelectItem value="Tripura">Tripura</SelectItem>
-                      <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
-                      <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
-                      <SelectItem value="West Bengal">West Bengal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <SheetFooter className="mt-6">
-                <Button onClick={handleAddProfessional} className="w-full" disabled={saving}>
-                  {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-                  Add Professional
-                </Button>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
+          <ProfessionalDialog onSuccess={fetchProfessionals} mode="add" />
         </div>
       </div>
 

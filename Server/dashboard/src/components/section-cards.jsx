@@ -15,12 +15,12 @@ const STAT_CONFIG = [
     label: "Total Farmers",
     sublabel: "Registered",
     icon: IconUsers,
-    gradient: "from-emerald-500 to-green-600",
-    softBg: "bg-emerald-50 dark:bg-emerald-950/40",
-    iconBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    glow: "hover:shadow-emerald-500/20",
-    bar: "bg-gradient-to-r from-emerald-400 to-green-500",
+    gradient: "from-zinc-500 to-zinc-600",
+    softBg: "bg-zinc-50 dark:bg-zinc-950/40",
+    iconBg: "bg-zinc-500/15 dark:bg-zinc-500/20",
+    iconColor: "text-zinc-600 dark:text-zinc-400",
+    glow: "hover:shadow-zinc-500/20",
+    bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
     format: (v) => v.toLocaleString("en-IN"),
   },
   {
@@ -29,12 +29,12 @@ const STAT_CONFIG = [
     sublabel: "Cultivable acres",
     suffix: "ac",
     icon: IconPlant,
-    gradient: "from-green-500 to-teal-600",
-    softBg: "bg-green-50 dark:bg-green-950/40",
-    iconBg: "bg-green-500/15 dark:bg-green-500/20",
-    iconColor: "text-green-600 dark:text-green-400",
-    glow: "hover:shadow-green-500/20",
-    bar: "bg-gradient-to-r from-green-400 to-teal-500",
+    gradient: "from-zinc-500 to-zinc-600",
+    softBg: "bg-zinc-50 dark:bg-zinc-950/40",
+    iconBg: "bg-zinc-500/15 dark:bg-zinc-500/20",
+    iconColor: "text-zinc-600 dark:text-zinc-400",
+    glow: "hover:shadow-zinc-500/20",
+    bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
     format: (v) => v.toLocaleString("en-IN"),
   },
   {
@@ -42,12 +42,12 @@ const STAT_CONFIG = [
     label: "Livestock",
     sublabel: "Total animals",
     icon: IconPaw,
-    gradient: "from-amber-500 to-orange-500",
-    softBg: "bg-amber-50 dark:bg-amber-950/40",
-    iconBg: "bg-amber-500/15 dark:bg-amber-500/20",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    glow: "hover:shadow-amber-500/20",
-    bar: "bg-gradient-to-r from-amber-400 to-orange-500",
+    gradient: "from-zinc-500 to-zinc-500",
+    softBg: "bg-zinc-50 dark:bg-zinc-950/40",
+    iconBg: "bg-zinc-500/15 dark:bg-zinc-500/20",
+    iconColor: "text-zinc-600 dark:text-zinc-400",
+    glow: "hover:shadow-zinc-500/20",
+    bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
     format: (v) => v.toLocaleString("en-IN"),
   },
   {
@@ -55,12 +55,12 @@ const STAT_CONFIG = [
     label: "Active Schemes",
     sublabel: "Gov. programs",
     icon: IconFileCheck,
-    gradient: "from-sky-500 to-blue-600",
-    softBg: "bg-sky-50 dark:bg-sky-950/40",
-    iconBg: "bg-sky-500/15 dark:bg-sky-500/20",
-    iconColor: "text-sky-600 dark:text-sky-400",
-    glow: "hover:shadow-sky-500/20",
-    bar: "bg-gradient-to-r from-sky-400 to-blue-500",
+    gradient: "from-zinc-500 to-zinc-600",
+    softBg: "bg-zinc-50 dark:bg-zinc-950/40",
+    iconBg: "bg-zinc-500/15 dark:bg-zinc-500/20",
+    iconColor: "text-zinc-600 dark:text-zinc-400",
+    glow: "hover:shadow-zinc-500/20",
+    bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
     format: (v) => v.toLocaleString("en-IN"),
   },
 ]
@@ -121,8 +121,8 @@ function StatCard({ config, value, index }) {
 
       {/* Footer trend */}
       <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-        <IconArrowUpRight className="size-3.5 text-emerald-500" />
-        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Live data</span>
+        <IconArrowUpRight className="size-3.5 text-zinc-500" />
+        <span className="text-zinc-600 dark:text-zinc-400 font-medium">Live data</span>
       </div>
     </div>
   )

@@ -5,16 +5,16 @@ class LandDetails {
      * Create land details for a user
      */
     static async create(landData) {
-        const { user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop } = landData;
+        const { user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address } = landData;
 
         const text = `
             INSERT INTO public.land_details (
-                user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop
-            ) VALUES ($1, $2, $3, $4, $5)
+                user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
 
-        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop];
+        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address];
         const result = await query(text, values);
         return result.rows[0];
     }
@@ -35,7 +35,7 @@ class LandDetails {
      * Update land details
      */
     static async update(user_id, landData) {
-        const { total_land_area, rabi_crop, kharif_crop, zaid_crop } = landData;
+        const { total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address } = landData;
 
         const text = `
             UPDATE public.land_details
@@ -44,12 +44,15 @@ class LandDetails {
                 rabi_crop = COALESCE($3, rabi_crop),
                 kharif_crop = COALESCE($4, kharif_crop),
                 zaid_crop = COALESCE($5, zaid_crop),
+                latitude = COALESCE($6, latitude),
+                longitude = COALESCE($7, longitude),
+                location_address = COALESCE($8, location_address),
                 updated_at = timezone('utc', now())
             WHERE user_id = $1
             RETURNING *
         `;
 
-        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop];
+        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address];
         const result = await query(text, values);
         return result.rows[0];
     }

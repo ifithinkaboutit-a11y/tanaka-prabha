@@ -65,7 +65,7 @@ export function TopRegionsPanel() {
                                         {(region.count || 0).toLocaleString()}
                                     </span>
                                     {region.change !== undefined && (
-                                        <span className={`flex items-center gap-0.5 text-xs ${isUp ? "text-green-600" : "text-red-500"}`}>
+                                        <span className={`flex items-center gap-0.5 text-xs ${isUp ? "text-zinc-600" : "text-zinc-500"}`}>
                                             {isUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
                                             {Math.abs(region.change)}%
                                         </span>

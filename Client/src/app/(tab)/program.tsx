@@ -5,8 +5,9 @@ import React, { useMemo, useState, useEffect } from "react";
 import { ScrollView, View, ActivityIndicator, RefreshControl } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import ProgramSection from "../../components/molecules/ProgramSection";
+import EventSection from "../../components/molecules/EventSection";
 import SearchBar from "../../components/molecules/SearchBar";
-import { schemesApi, Scheme } from "@/services/apiService";
+import { schemesApi, eventsApi, Scheme, ApiEvent } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 
 const Program = () => {
@@ -14,6 +15,7 @@ const Program = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [events, setEvents] = useState<ApiEvent[]>([]);
   const [trainingPrograms, setTrainingPrograms] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -21,6 +23,7 @@ const Program = () => {
   const fetchData = async () => {
     try {
       const allSchemes = await schemesApi.getAll({ limit: 50 });
+      const allEvents = await eventsApi.getAll();
 
       // Separate training programs from regular schemes
       const training = allSchemes.filter((s) => s.category === "Training");
@@ -28,6 +31,7 @@ const Program = () => {
 
       setSchemes(otherSchemes);
       setTrainingPrograms(training);
+      setEvents(allEvents);
     } catch (error) {
       console.error("Error fetching programs:", error);
     }
@@ -70,10 +74,27 @@ const Program = () => {
     );
   }, [searchQuery, trainingPrograms]);
 
+  const filteredEvents = useMemo(() => {
+    if (!searchQuery.trim()) return events;
+    return events.filter(
+      (ev) =>
+        ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (ev.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ev.location_name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [searchQuery, events]);
+
   const handleProgramPress = (program: any) => {
     router.push({
       pathname: "/program-details",
       params: { programId: program.id },
+    });
+  };
+
+  const handleEventPress = (ev: ApiEvent) => {
+    router.push({
+      pathname: "/event-details" as any,
+      params: { eventId: ev.id },
     });
   };
 
@@ -153,6 +174,13 @@ const Program = () => {
           />
         </View>
       </View>
+
+      {/* Upcoming Events Section */}
+      <EventSection
+        title="Upcoming Events"
+        events={filteredEvents}
+        onEventPress={handleEventPress}
+      />
 
       {/* Government Schemes Section */}
       <ProgramSection

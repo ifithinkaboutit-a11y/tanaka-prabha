@@ -29,14 +29,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,13 +86,13 @@ export function SchemesGrid() {
     try {
       const response = await schemesApi.getAll()
       const schemes = response.data?.schemes || response.data || []
-      
+
       if (!Array.isArray(schemes)) {
         console.warn("Unexpected response format:", response)
         setSchemes([])
         return
       }
-      
+
       setSchemes(schemes)
     } catch (error) {
       console.error("Error fetching schemes:", error)
@@ -164,7 +164,7 @@ export function SchemesGrid() {
   async function toggleSchemeStatus(id) {
     try {
       const response = await schemesApi.toggleStatus(id)
-      setSchemes(prev => prev.map(s => 
+      setSchemes(prev => prev.map(s =>
         s.id === id ? { ...s, is_active: response.data?.scheme?.is_active ?? response.data.is_active } : s
       ))
       toast.success(`Scheme ${response.data?.scheme?.is_active ?? response.data.is_active ? "activated" : "deactivated"}`)
@@ -221,20 +221,20 @@ export function SchemesGrid() {
             Manage schemes and programs. Add content in English and हिंदी.
           </p>
         </div>
-        <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <SheetTrigger asChild>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <IconPlus className="size-4 mr-2" />
               Add Scheme
             </Button>
-          </SheetTrigger>
-          <SheetContent className="w-full max-w-xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Add New Scheme / Program</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Scheme / Program</DialogTitle>
+              <DialogDescription>
                 Create a scheme or program. Add content in English and Hindi.
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="mt-6">
               <SchemeForm
                 formData={formData}
@@ -243,18 +243,18 @@ export function SchemesGrid() {
                 submitLabel="Add Scheme"
               />
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
 
-        {/* Edit Scheme Sheet */}
-        <Sheet open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingScheme(null); resetForm(); } }}>
-          <SheetContent className="sm:max-w-xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Edit Scheme / Program</SheetTitle>
-              <SheetDescription>
+        {/* Edit Scheme Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingScheme(null); resetForm(); } }}>
+          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Scheme / Program</DialogTitle>
+              <DialogDescription>
                 Update scheme or program details. Edit content in English and Hindi.
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="mt-6">
               <SchemeForm
                 formData={formData}
@@ -263,8 +263,8 @@ export function SchemesGrid() {
                 submitLabel="Update Scheme"
               />
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {schemes.length === 0 ? (
@@ -287,16 +287,16 @@ export function SchemesGrid() {
             <Card key={scheme.id} className={!scheme.is_active ? "opacity-60" : ""}>
               <CardHeader className="p-0 relative">
                 {scheme.image_url ? (
-                  <img 
-                    src={scheme.image_url} 
+                  <img
+                    src={scheme.image_url}
                     alt={scheme.title}
-                    className="w-full h-40 object-cover rounded-t-lg"
+                    className="top-0 left-0 object-cover h-full w-full p-4"
                     onError={(e) => {
                       e.target.src = "https://placehold.co/600x200/e2e8f0/64748b?text=Scheme"
                     }}
                   />
                 ) : (
-                  <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
+                  <div className="w-full h-40 bg-linear-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
                     <IconPhoto className="size-10 text-primary/40" />
                   </div>
                 )}
@@ -306,10 +306,10 @@ export function SchemesGrid() {
                       {scheme.category}
                     </Badge>
                   )}
-                  <Badge 
-                    variant="outline" 
-                    className={scheme.is_active 
-                      ? "bg-green-500/90 text-white border-green-600" 
+                  <Badge
+                    variant="outline"
+                    className={scheme.is_active
+                      ? "bg-zinc-500/90 text-white border-zinc-600"
                       : "bg-gray-500/90 text-white border-gray-600"
                     }
                   >
@@ -354,7 +354,7 @@ export function SchemesGrid() {
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => setDeleteId(scheme.id)}
                     >
@@ -379,7 +379,7 @@ export function SchemesGrid() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteScheme}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

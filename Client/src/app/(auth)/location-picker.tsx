@@ -2,8 +2,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { userApi } from "../../services/apiService";
+import { useAuth } from "../../contexts/AuthContext";
 import {
     Alert,
     Animated,
@@ -51,8 +53,18 @@ interface SearchResult {
 export default function LocationPickerScreen() {
     const router = useRouter();
     const navigation = useNavigation();
-    const { locationData, setLocationData, personalDetails, updatePersonalDetails } =
-        useOnboardingStore();
+    const { isForLand, fromProfile } = useLocalSearchParams<{ isForLand?: string, fromProfile?: string }>();
+    const isLandFlow = isForLand === "true";
+    const isProfileMode = fromProfile === "true";
+
+    const {
+        locationData,
+        landLocationData,
+        setLocationData,
+        setLandLocationData,
+        personalDetails,
+        updatePersonalDetails,
+    } = useOnboardingStore();
 
     // ── State ──────────────────────────────────────────────────────────────────
     const [permissionState, setPermissionState] = useState<PermissionState>("loading");
@@ -65,6 +77,7 @@ export default function LocationPickerScreen() {
     const [geocodeLoading, setGeocodeLoading] = useState(false);
     const [geocodeError, setGeocodeError] = useState(false);
     const [saving, setSaving] = useState(false);
+    const { user } = useAuth();
 
     // Search
     const [searchText, setSearchText] = useState("");
@@ -79,7 +92,8 @@ export default function LocationPickerScreen() {
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ── Back-navigation guard ──────────────────────────────────────────────────
-    usePreventRemove(locationData !== null, ({ data }) => {
+    const relevantLocationData = isLandFlow ? landLocationData : locationData;
+    usePreventRemove(!isProfileMode && relevantLocationData !== null, ({ data }) => {
         Alert.alert(
             "Change location?",
             "Going back will clear your confirmed pin.",
@@ -89,7 +103,11 @@ export default function LocationPickerScreen() {
                     text: "Go back",
                     style: "destructive",
                     onPress: () => {
-                        setLocationData(null);
+                        if (isLandFlow) {
+                            setLandLocationData(null);
+                        } else {
+                            setLocationData(null);
+                        }
                         navigation.dispatch(data.action);
                     },
                 },
@@ -208,31 +226,67 @@ export default function LocationPickerScreen() {
         if (!pinCoords) return;
         setSaving(true);
 
-        setLocationData({
+        const newLocInfo = {
             lat: pinCoords.latitude,
             lng: pinCoords.longitude,
             address: address || "Unknown location",
             accuracy: gpsAccuracy,
             setAt: new Date().toISOString(),
-            method: "gps",
-        });
+            method: "gps" as const,
+        };
 
-        try {
-            const results = await Location.reverseGeocodeAsync({
-                latitude: pinCoords.latitude,
-                longitude: pinCoords.longitude,
-            });
-            if (results.length > 0) {
-                const r = results[0];
-                const current = personalDetails;
-                updatePersonalDetails({
-                    state: current.state || r.region || "",
-                    district: current.district || r.subregion || "",
-                    pinCode: current.pinCode || r.postalCode || "",
-                    village: current.village || r.city || r.name || "",
-                });
+        if (isProfileMode) {
+            try {
+                if (isLandFlow) {
+                    await userApi.updateProfile({
+                        land_details: {
+                            latitude: newLocInfo.lat,
+                            longitude: newLocInfo.lng,
+                            location_address: newLocInfo.address
+                        }
+                    });
+                } else {
+                    await userApi.updateProfile({
+                        latitude: newLocInfo.lat,
+                        longitude: newLocInfo.lng,
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to update location from profile:", error);
             }
-        } catch { /* geocode failed at confirm time — fields stay as-is */ }
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.push("/(tab)/profile" as any);
+            }
+            setSaving(false);
+            return;
+        }
+
+        if (isLandFlow) {
+            setLandLocationData(newLocInfo);
+        } else {
+            setLocationData(newLocInfo);
+        }
+
+        if (!isLandFlow) {
+            try {
+                const results = await Location.reverseGeocodeAsync({
+                    latitude: pinCoords.latitude,
+                    longitude: pinCoords.longitude,
+                });
+                if (results.length > 0) {
+                    const r = results[0];
+                    const current = personalDetails;
+                    updatePersonalDetails({
+                        state: current.state || r.region || "",
+                        district: current.district || r.subregion || "",
+                        pinCode: current.pinCode || r.postalCode || "",
+                        village: current.village || r.city || r.name || "",
+                    });
+                }
+            } catch { /* geocode failed at confirm time — fields stay as-is */ }
+        }
 
         setSaving(false);
         router.push("/(auth)/land-details" as any);
@@ -240,10 +294,24 @@ export default function LocationPickerScreen() {
 
     // ── Skip ───────────────────────────────────────────────────────────────────
     const handleSkip = () => {
-        setLocationData({
+        if (isProfileMode) {
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.push("/(tab)/profile" as any);
+            }
+            return;
+        }
+
+        const nullData = {
             lat: 0, lng: 0, address: "", accuracy: 0,
-            setAt: new Date().toISOString(), method: "skipped"
-        });
+            setAt: new Date().toISOString(), method: "skipped" as const
+        };
+        if (isLandFlow) {
+            setLandLocationData(nullData);
+        } else {
+            setLocationData(nullData);
+        }
         router.push("/(auth)/land-details" as any);
     };
 
@@ -262,7 +330,7 @@ export default function LocationPickerScreen() {
                     </View>
                     <AppText variant="h3" style={styles.deniedTitle}>Location Access Needed</AppText>
                     <AppText variant="bodySm" style={styles.deniedBody}>
-                        To place your farm on the map, Tanak Prabha needs location permission.
+                        To place your {isLandFlow ? "farm land" : "home"} on the map, Tanak Prabha needs location permission.
                         Your location is only used to build the farming heatmap.
                     </AppText>
                     <Pressable style={styles.settingsBtn} onPress={() => Linking.openSettings()}>
@@ -360,7 +428,7 @@ export default function LocationPickerScreen() {
                 <View style={styles.fallbackBanner} pointerEvents="none">
                     <Ionicons name="warning-outline" size={14} color="#92400E" />
                     <AppText variant="bodySm" style={styles.fallbackText}>
-                        GPS unavailable — search or drag map to your farm
+                        GPS unavailable — search or drag map to your {isLandFlow ? "land" : "location"}
                     </AppText>
                 </View>
             )}
@@ -393,7 +461,9 @@ export default function LocationPickerScreen() {
             <View style={styles.bottomSheet}>
                 <View style={styles.sheetHandle} />
 
-                <AppText variant="bodySm" style={styles.sheetLabel}>YOUR FARM LOCATION</AppText>
+                <AppText variant="bodySm" style={styles.sheetLabel}>
+                    YOUR {isLandFlow ? "LAND" : "HOME"} LOCATION
+                </AppText>
 
                 {geocodeLoading ? (
                     <AppText variant="bodySm" style={styles.sheetHint}>Resolving address…</AppText>

@@ -15,6 +15,7 @@ import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
+import { useLanguageStore } from "../../stores/languageStore";
 
 // Scheme Card Component
 const SchemeCard = ({
@@ -26,8 +27,10 @@ const SchemeCard = ({
   onPress: () => void;
   width?: number;
 }) => {
+  const { currentLanguage } = useLanguageStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
+  const displayTitle = currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title;
 
   return (
     <Pressable
@@ -109,7 +112,7 @@ const SchemeCard = ({
             style={{ fontWeight: "800", color: "#111827", fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
             numberOfLines={2}
           >
-            {scheme.title}
+            {displayTitle}
           </AppText>
         </View>
       </View>
@@ -198,6 +201,7 @@ const CategoryItem = ({
 export default function Schemes() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { currentLanguage } = useLanguageStore();
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -399,7 +403,7 @@ export default function Schemes() {
                 }}
                 numberOfLines={2}
               >
-                {featuredScheme.title}
+                {currentLanguage === 'hi' && featuredScheme.titleHi ? featuredScheme.titleHi : featuredScheme.title}
               </AppText>
               <AppText
                 variant="bodySm"

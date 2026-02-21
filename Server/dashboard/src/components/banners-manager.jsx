@@ -31,14 +31,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,13 +92,13 @@ export function BannersManager() {
     try {
       const response = await bannersApi.getAll()
       const banners = response.data?.banners || response.data || []
-      
+
       if (!Array.isArray(banners)) {
         console.warn("Unexpected response format:", response)
         setBanners([])
         return
       }
-      
+
       setBanners(banners)
     } catch (error) {
       console.error("Error fetching banners:", error)
@@ -184,7 +184,7 @@ export function BannersManager() {
   async function toggleBannerStatus(id) {
     try {
       const response = await bannersApi.toggleStatus(id)
-      setBanners(prev => prev.map(b => 
+      setBanners(prev => prev.map(b =>
         b.id === id ? { ...b, is_active: response.data.banner?.is_active ?? !b.is_active } : b
       ))
       toast.success("Banner status updated")
@@ -308,63 +308,63 @@ export function BannersManager() {
             Manage promotional banners displayed on the home screen
           </p>
         </div>
-        <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <SheetTrigger asChild>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <IconPlus className="size-4 mr-2" />
               Add Banner
             </Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-md overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Add New Banner</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md overflow-y-auto max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle>Add New Banner</DialogTitle>
+              <DialogDescription>
                 Create a new promotional banner for the home screen.
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             {renderFormFields()}
-            <SheetFooter className="mt-6">
-              <Button 
-                onClick={handleAddBanner} 
-                className="w-full" 
+            <DialogFooter className="mt-6">
+              <Button
+                onClick={handleAddBanner}
+                className="w-full"
                 disabled={saving}
               >
                 {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
                 {saving ? "Creating..." : "Create Banner"}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Edit Sheet */}
-      <Sheet open={isEditOpen} onOpenChange={(open) => {
+      {/* Edit Banner Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={(open) => {
         setIsEditOpen(open)
         if (!open) {
           setEditingBanner(null)
           resetForm()
         }
       }}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Edit Banner</SheetTitle>
-            <SheetDescription>
+        <DialogContent className="sm:max-w-md overflow-y-auto max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Banner</DialogTitle>
+            <DialogDescription>
               Update the banner details.
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
           {renderFormFields()}
-          <SheetFooter className="mt-6">
-            <Button 
-              onClick={handleUpdateBanner} 
-              className="w-full" 
+          <DialogFooter className="mt-6">
+            <Button
+              onClick={handleUpdateBanner}
+              className="w-full"
               disabled={saving}
             >
-                {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-                {saving ? "Saving..." : "Save Changes"}
+              {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {banners.length === 0 ? (
         <Card className="border-dashed">
@@ -385,10 +385,10 @@ export function BannersManager() {
           {banners.map((banner, index) => (
             <Card key={banner.id} className={!banner.is_active ? "opacity-60" : ""}>
               <CardHeader className="p-0 relative">
-                <img 
-                  src={banner.image_url} 
+                <img
+                  src={banner.image_url}
                   alt={banner.title}
-                  className="w-full h-40 object-cover rounded-t-lg"
+                  className="top-0 left-0 object-cover h-full w-full p-4"
                   onError={(e) => {
                     e.target.src = "https://placehold.co/1200x600/e2e8f0/64748b?text=Banner"
                   }}
@@ -400,10 +400,10 @@ export function BannersManager() {
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
-                  <Badge 
-                    variant="outline" 
-                    className={banner.is_active 
-                      ? "bg-green-500/90 text-white border-green-600" 
+                  <Badge
+                    variant="outline"
+                    className={banner.is_active
+                      ? "bg-zinc-500/90 text-white border-zinc-600"
                       : "bg-gray-500/90 text-white border-gray-600"
                     }
                   >
@@ -446,7 +446,7 @@ export function BannersManager() {
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => setDeleteId(banner.id)}
                     >
@@ -471,7 +471,7 @@ export function BannersManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteBanner}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

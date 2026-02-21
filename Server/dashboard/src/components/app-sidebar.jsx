@@ -1,138 +1,148 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Bell,
-  Stethoscope,
-  Settings,
-  Sprout,
-  ChevronRight,
-} from "lucide-react"
-
-import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
+import {
+  Bell,
+  Calendar,
+  FileText,
+  LayoutDashboard,
+  Settings,
+  Sprout,
+  Stethoscope,
+  Users,
+} from "lucide-react"
+import DashboardNavigation from "./nav-main"
+import { NavUser } from "./nav-user"
+import { NotificationsPopover } from "./nav-notifications"
 
-const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Beneficiaries", url: "/beneficiaries", icon: Users },
-  { title: "Content (CMS)", url: "/content", icon: FileText },
-  { title: "Notifications", url: "/notifications", icon: Bell },
-  { title: "Professionals", url: "/professionals", icon: Stethoscope },
-  { title: "Settings", url: "/settings", icon: Settings },
+const dashboardRoutes = [
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    icon: <LayoutDashboard className="size-4" />,
+    link: "/",
+  },
+  {
+    id: "events",
+    title: "Events",
+    icon: <Calendar className="size-4" />,
+    link: "/events",
+  },
+  {
+    id: "beneficiaries",
+    title: "Beneficiaries",
+    icon: <Users className="size-4" />,
+    link: "/beneficiaries",
+  },
+  {
+    id: "content",
+    title: "Content (CMS)",
+    icon: <FileText className="size-4" />,
+    link: "/content",
+    subs: [
+      {
+        title: "Schemes & Programs",
+        link: "/content",
+      },
+      {
+        title: "Banners",
+        link: "/content#banners",
+      },
+    ],
+  },
+  {
+    id: "notifications",
+    title: "Notifications",
+    icon: <Bell className="size-4" />,
+    link: "/notifications",
+  },
+  {
+    id: "professionals",
+    title: "Professionals",
+    icon: <Stethoscope className="size-4" />,
+    link: "/professionals",
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    icon: <Settings className="size-4" />,
+    link: "/settings",
+  },
 ]
 
-function NavLink({ item, isActive }) {
-  const Icon = item.icon
+const sampleNotifications = [
+  {
+    id: "1",
+    avatar: "",
+    fallback: "TP",
+    text: "New farmer registered.",
+    time: "10m ago",
+  },
+  {
+    id: "2",
+    avatar: "",
+    fallback: "SY",
+    text: "Scheme content updated.",
+    time: "1h ago",
+  },
+  {
+    id: "3",
+    avatar: "",
+    fallback: "AK",
+    text: "Professional marked available.",
+    time: "2h ago",
+  },
+]
+
+export function AppSidebar(props) {
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
+
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        tooltip={item.title}
+    <Sidebar variant="floating" collapsible="icon" {...props}>
+      <SidebarHeader
         className={cn(
-          "group/nav relative h-10 rounded-xl px-3 transition-all duration-200",
-          "text-sidebar-foreground/70 hover:text-sidebar-foreground",
-          "hover:bg-sidebar-accent",
-          isActive && [
-            "bg-sidebar-primary/20 text-sidebar-primary",
-            "hover:bg-sidebar-primary/25 hover:text-sidebar-primary",
-            "font-medium",
-          ]
+          "flex md:pt-3.5",
+          isCollapsed
+            ? "flex-row items-center justify-between gap-y-4 md:flex-col md:items-start md:justify-start"
+            : "flex-row items-center justify-between"
         )}
       >
-        <Link href={item.url} className="flex items-center gap-3">
-          {/* Active indicator bar */}
-          {isActive && (
-            <span
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sidebar-primary"
-            />
+        <a href="/" className="flex items-center gap-2">
+          <div className="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 shadow-sm">
+            <Sprout className="size-4 text-white" />
+          </div>
+          {!isCollapsed && (
+            <span className="font-semibold text-foreground">
+              Tanak Prabha
+            </span>
           )}
-          <Icon
-            className={cn(
-              "size-4 transition-transform duration-200 group-hover/nav:scale-110",
-              isActive ? "text-sidebar-primary" : "text-sidebar-foreground/50"
-            )}
-          />
-          <span>{item.title}</span>
-          {isActive && (
-            <ChevronRight className="ml-auto size-3 text-sidebar-primary/60" />
+        </a>
+
+        <div
+          className={cn(
+            "flex items-center gap-2 transition-opacity duration-300",
+            isCollapsed ? "flex-row md:flex-col-reverse" : "flex-row"
           )}
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
-
-export function AppSidebar({ ...props }) {
-  const pathname = usePathname()
-
-  return (
-    <Sidebar collapsible="icon" {...props}>
-      {/* Logo / Brand */}
-      <SidebarHeader className="px-4 py-5">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              asChild
-              className="hover:bg-transparent cursor-default"
-            >
-              <div className="flex items-center gap-3">
-                {/* Leaf icon in a glowing green circle */}
-                <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary shadow-lg shadow-sidebar-primary/30">
-                  <Sprout className="size-5 text-white" />
-                  {/* Subtle glow ring */}
-                  <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
-                </div>
-                <div className="grid leading-tight">
-                  <span className="truncate font-semibold text-sidebar-foreground tracking-tight">
-                    Tanak Prabha
-                  </span>
-                  <span className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest">
-                    Admin Console
-                  </span>
-                </div>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        >
+          <NotificationsPopover notifications={sampleNotifications} />
+          <SidebarTrigger />
+        </div>
       </SidebarHeader>
 
-      {/* Navigation */}
-      <SidebarContent className="px-2">
-        {/* Divider label */}
-        <div className="px-3 pb-2 pt-1">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30">
-            Main Menu
-          </span>
-        </div>
-        <SidebarMenu className="gap-0.5">
-          {navItems.map((item) => {
-            const isActive =
-              item.url === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.url)
-            return <NavLink key={item.title} item={item} isActive={isActive} />
-          })}
-        </SidebarMenu>
+      <SidebarContent className="gap-4 px-2 py-4">
+        <DashboardNavigation routes={dashboardRoutes} />
       </SidebarContent>
 
-      {/* User section */}
-      <SidebarFooter className="px-2 pb-4">
-        {/* Subtle separator */}
-        <div className="mx-2 mb-3 h-px bg-sidebar-border" />
+      <SidebarFooter className="px-2">
         <NavUser />
       </SidebarFooter>
     </Sidebar>

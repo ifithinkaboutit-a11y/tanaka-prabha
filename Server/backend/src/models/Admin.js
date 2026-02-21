@@ -29,6 +29,28 @@ class Admin {
         const result = await query(text, [email, passwordHash]);
         return result.rows[0];
     }
+
+    static async updatePassword(id, passwordHash) {
+        const text = `
+            UPDATE public.admins
+            SET password_hash = $2, updated_at = timezone('utc', now())
+            WHERE id = $1
+            RETURNING id, email, updated_at
+        `;
+        const result = await query(text, [id, passwordHash]);
+        return result.rows[0];
+    }
+
+    static async updateEmail(id, email) {
+        const text = `
+            UPDATE public.admins
+            SET email = $2, updated_at = timezone('utc', now())
+            WHERE id = $1
+            RETURNING id, email, updated_at
+        `;
+        const result = await query(text, [id, email]);
+        return result.rows[0];
+    }
 }
 
 export default Admin;

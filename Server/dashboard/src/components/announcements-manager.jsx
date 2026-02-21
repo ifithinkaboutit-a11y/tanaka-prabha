@@ -22,14 +22,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -142,11 +142,11 @@ export function AnnouncementsManager() {
   function getTypeColor(type) {
     switch (type) {
       case "alert":
-        return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400"
+        return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
       case "announcement":
-        return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400"
+        return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
       case "info":
-        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400"
+        return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
       default:
         return ""
     }
@@ -194,20 +194,20 @@ export function AnnouncementsManager() {
             Send notifications and alerts to farmers
           </p>
         </div>
-        <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <SheetTrigger asChild>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <IconSend className="size-4 mr-2" />
               Send Announcement
             </Button>
-          </SheetTrigger>
-          <SheetContent className="px-4 w-full">
-            <SheetHeader>
-              <SheetTitle>New Announcement</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="px-4 w-full sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>New Announcement</DialogTitle>
+              <DialogDescription>
                 Send a notification to registered farmers.
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="mt-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="announcement-title">Title</Label>
@@ -265,7 +265,7 @@ export function AnnouncementsManager() {
                 </Select>
               </div>
             </div>
-            <SheetFooter className="mt-6">
+            <DialogFooter className="mt-6">
               <Button onClick={handleSendAnnouncement} className="w-full" disabled={sending}>
                 {sending ? (
                   <>Sending...</>
@@ -276,9 +276,9 @@ export function AnnouncementsManager() {
                   </>
                 )}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Announcements List */}

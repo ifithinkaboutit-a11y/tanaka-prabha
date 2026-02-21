@@ -47,6 +47,7 @@ const AuthLandDetailsScreen = () => {
     hasLand,
     setHasLand,
     landEntries,
+    landLocationData,
     addLandEntry,
     removeLandEntry,
     updateLandEntry,
@@ -369,6 +370,26 @@ const AuthLandDetailsScreen = () => {
                     {t("onboarding.addAnotherLand")}
                   </AppText>
                 </Pressable>
+
+                {/* Locate on Map Button */}
+                <View className="bg-green-50 rounded-2xl p-5 mb-4 border border-green-100 flex-row justify-between items-center">
+                  <View className="flex-1 mr-4">
+                    <AppText variant="bodyMd" className="font-bold text-gray-800 mb-1">
+                      Land Location
+                    </AppText>
+                    <AppText variant="bodySm" className="text-gray-500">
+                      {landLocationData ? landLocationData.address : "Pin your exact farm location"}
+                    </AppText>
+                  </View>
+                  <Pressable
+                    onPress={() => router.push("/(auth)/location-picker?isForLand=true" as any)}
+                    className="bg-white rounded-xl px-4 py-2 border border-gray-200"
+                  >
+                    <AppText className="text-green-700 font-semibold">
+                      {landLocationData ? "Edit Map" : "Locate on Map"}
+                    </AppText>
+                  </Pressable>
+                </View>
               </>
             )}
           </ScrollView>

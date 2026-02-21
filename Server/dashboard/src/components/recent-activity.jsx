@@ -26,13 +26,13 @@ import { cn } from "@/lib/utils"
 // Activity type styling following HSB Generative Hack (Rule 6)
 const ACTIVITY_STYLES = {
   registration: {
-    bg: "bg-emerald-100 dark:bg-emerald-900/40",
-    text: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-zinc-100 dark:bg-zinc-900/40",
+    text: "text-zinc-700 dark:text-zinc-400",
     icon: IconUserPlus,
   },
   scheme: {
-    bg: "bg-blue-100 dark:bg-blue-900/40",
-    text: "text-blue-700 dark:text-blue-400",
+    bg: "bg-zinc-100 dark:bg-zinc-900/40",
+    text: "text-zinc-700 dark:text-zinc-400",
     icon: IconFileCheck,
   },
   default: {

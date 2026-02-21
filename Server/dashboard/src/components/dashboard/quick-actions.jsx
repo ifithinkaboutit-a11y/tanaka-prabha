@@ -6,9 +6,9 @@ import { UserPlus, FilePlus, Stethoscope } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const actions = [
-    { label: "Add Beneficiary", href: "/beneficiaries", icon: UserPlus, color: "text-emerald-600" },
-    { label: "New Content", href: "/content", icon: FilePlus, color: "text-blue-600" },
-    { label: "Add Professional", href: "/professionals", icon: Stethoscope, color: "text-purple-600" },
+    { label: "Add Beneficiary", href: "/beneficiaries", icon: UserPlus, color: "text-zinc-600" },
+    { label: "New Content", href: "/content", icon: FilePlus, color: "text-zinc-600" },
+    { label: "Add Professional", href: "/professionals", icon: Stethoscope, color: "text-zinc-600" },
 ]
 
 export function QuickActions() {

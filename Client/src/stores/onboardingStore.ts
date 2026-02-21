@@ -52,7 +52,7 @@ interface OnboardingState {
   // Land details with toggle
   hasLand: boolean;
   landEntries: LandEntry[];
-
+  landLocationData: LocationData | null;
   // Livestock details with toggle
   hasLivestock: boolean;
   livestockEntries: LivestockEntry[];
@@ -63,11 +63,14 @@ interface OnboardingState {
   prevStep: () => void;
 
   // Personal details actions
+  setMobileNumber: (num: string) => void;
+  setRole: (role: string) => void;
   updatePersonalDetails: (data: Partial<PersonalDetails>) => void;
   setPersonalCompleted: (completed: boolean) => void;
 
   // Location action
   setLocationData: (data: LocationData | null) => void;
+  setLandLocationData: (data: LocationData | null) => void;
 
   // Land actions
   setHasLand: (hasLand: boolean) => void;
@@ -121,16 +124,21 @@ export const useOnboardingStore = create<OnboardingState>()(
       isLandCompleted: false,
       isLivestockCompleted: false,
 
-      personalDetails: initialPersonalDetails,
-
-      // No partialize used — all state auto-persists via AsyncStorage
+      personalDetails: { ...initialPersonalDetails },
       locationData: null,
+      landLocationData: null,
 
+      // Land Details
       hasLand: true,
       landEntries: [],
 
+      // Livestock Details
       hasLivestock: true,
       livestockEntries: [],
+
+      // Actions
+      setMobileNumber: (num) => set((state) => ({ personalDetails: { ...state.personalDetails, mobileNumber: num } })),
+      setRole: (role) => set((state) => ({ personalDetails: { ...state.personalDetails, role: role } })),
       setCurrentStep: (step) => set({ currentStep: step }),
 
       nextStep: () => {
@@ -147,17 +155,18 @@ export const useOnboardingStore = create<OnboardingState>()(
         }
       },
 
-      updatePersonalDetails: (data) => {
-        const { personalDetails } = get();
-        set({ personalDetails: { ...personalDetails, ...data } });
-      },
-
+      // Personal Details Actions
+      updatePersonalDetails: (data) =>
+        set((state) => ({
+          personalDetails: { ...state.personalDetails, ...data },
+        })),
       setPersonalCompleted: (completed) =>
         set({ isPersonalCompleted: completed }),
 
       setLocationData: (data) => set({ locationData: data }),
+      setLandLocationData: (data) => set({ landLocationData: data }),
 
-      setHasLand: (hasLand) => set({ hasLand }),
+      setHasLand: (has) => set({ hasLand: has }),
 
       addLandEntry: (entry) => {
         const { landEntries } = get();

@@ -55,8 +55,8 @@ export function LocalizedContentEditor({
       </TabsList>
 
       <TabsContent value="english" className="space-y-4 mt-4">
-        <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-          <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
             Enter {entityLabel} in English
           </p>
         </div>
@@ -85,8 +85,8 @@ export function LocalizedContentEditor({
       </TabsContent>
 
       <TabsContent value="hindi" className="space-y-4 mt-4">
-        <div className="p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-          <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
             {entityLabel} हिंदी में दर्ज करें
           </p>
         </div>
@@ -120,7 +120,7 @@ export function LocalizedContentEditor({
 }
 
 function CompletionBadge({ percent }) {
-  const color = percent === 100 ? "bg-green-500" : percent > 0 ? "bg-amber-500" : "bg-muted"
+  const color = percent === 100 ? "bg-zinc-500" : percent > 0 ? "bg-zinc-500" : "bg-muted"
   return (
     <span className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-white ${color}`}>
       {percent}%
