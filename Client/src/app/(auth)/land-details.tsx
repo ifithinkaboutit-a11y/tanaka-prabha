@@ -209,7 +209,7 @@ const AuthLandDetailsScreen = () => {
   return (
     <View className="flex-1 bg-[#F8FAFC]">
       {/* Video Background Header */}
-      <View style={{ height: videoHeight }} className="relative">
+      <View style={{ height: videoHeight, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }} className="relative">
         <VideoView
           player={player}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
@@ -222,12 +222,12 @@ const AuthLandDetailsScreen = () => {
           className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
           style={{ top: 50 }}
         >
-          <View className="h-full bg-amber-400 rounded-full" style={{ width: "66%" }} />
+          <View className="h-full bg-amber-400 rounded-full" style={{ width: "75%" }} />
         </View>
       </View>
 
       {/* Content Card */}
-      <View className="flex-1 bg-white rounded-t-3xl -mt-5 pt-6">
+      <View className="flex-1 bg-white" style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, paddingTop: 24 }}>
         {/* Title Section */}
         <View className="items-center px-5 mb-4">
           <AppText variant="h3" className="font-bold text-gray-800 text-[22px] text-center">

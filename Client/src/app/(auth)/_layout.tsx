@@ -16,6 +16,7 @@ export default function AuthLayout() {
       <Stack.Screen name="phone-input" />
       <Stack.Screen name="otp-input" />
       <Stack.Screen name="personal-details" />
+      <Stack.Screen name="location-picker" />
       <Stack.Screen name="land-details" />
       <Stack.Screen name="livestock-details" />
       <Stack.Screen name="onboarding" />

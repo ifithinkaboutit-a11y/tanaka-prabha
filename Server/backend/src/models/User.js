@@ -59,7 +59,8 @@ class User {
                 post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
                 ST_X(location::geometry) as longitude,
-                created_at, updated_at
+                location_address, location_accuracy, location_set_at, location_method,
+                is_new_user, created_at, updated_at
             FROM public.users
             WHERE id = $1
         `;
@@ -80,7 +81,8 @@ class User {
                 post_office, tehsil, block, district, pin_code, state,
                 ST_Y(location::geometry) as latitude,
                 ST_X(location::geometry) as longitude,
-                created_at, updated_at
+                location_address, location_accuracy, location_set_at, location_method,
+                is_new_user, created_at, updated_at
             FROM public.users
             WHERE mobile_number = $1
         `;

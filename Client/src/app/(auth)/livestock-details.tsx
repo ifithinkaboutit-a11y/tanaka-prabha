@@ -53,6 +53,7 @@ const AuthLivestockDetailsScreen = () => {
     personalDetails,
     hasLand,
     landEntries,
+    locationData,
     resetOnboarding,
   } = useOnboardingStore();
 
@@ -164,6 +165,16 @@ const AuthLivestockDetailsScreen = () => {
         pin_code: personalDetails.pinCode,
         state: personalDetails.state,
       };
+
+      // Attach confirmed GPS location if user pinned their farm.
+      // Sends as flat latitude/longitude — the existing User.update() on the server
+      // already converts these into a PostGIS GEOGRAPHY point correctly.
+      // The full nested location object (address, accuracy, method) will be re-enabled
+      // once the server migration (002_add_location_picker_columns.sql) is deployed.
+      if (locationData && locationData.method === 'gps' && locationData.lat && locationData.lng) {
+        profileData.latitude = locationData.lat;
+        profileData.longitude = locationData.lng;
+      }
 
       if (hasLand && landEntries.length > 0) {
         let totalArea = 0;
@@ -298,7 +309,7 @@ const AuthLivestockDetailsScreen = () => {
   return (
     <View className="flex-1 bg-[#F8FAFC]">
       {/* Video Background Header */}
-      <View style={{ height: videoHeight }} className="relative">
+      <View style={{ height: videoHeight, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }} className="relative">
         <VideoView
           player={player}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
@@ -316,7 +327,7 @@ const AuthLivestockDetailsScreen = () => {
       </View>
 
       {/* Content Card */}
-      <View className="flex-1 bg-white rounded-t-3xl -mt-5 pt-6">
+      <View className="flex-1 bg-white" style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, paddingTop: 24 }}>
         {/* Title Section */}
         <View className="items-center px-5 mb-4">
           <AppText

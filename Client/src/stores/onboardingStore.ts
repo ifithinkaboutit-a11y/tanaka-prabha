@@ -3,8 +3,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
-    PersonalDetails
+  PersonalDetails
 } from "../data/interfaces";
+
+// ---------- Location ----------
+export interface LocationData {
+  lat: number;
+  lng: number;
+  /** Human-readable address from reverse geocode. May be 'Unknown location' if geocoding failed. */
+  address: string;
+  /** GPS accuracy in metres at time of capture */
+  accuracy: number;
+  /** UTC ISO-8601 timestamp of when pin was confirmed */
+  setAt: string;
+  /** How location was captured. 'gps' = confirmed pin, 'skipped' = user skipped */
+  method: 'gps' | 'skipped';
+}
 
 export interface LandEntry {
   id: string;
@@ -32,6 +46,9 @@ interface OnboardingState {
   // Personal details
   personalDetails: PersonalDetails;
 
+  // Location — captured on location-picker screen
+  locationData: LocationData | null;
+
   // Land details with toggle
   hasLand: boolean;
   landEntries: LandEntry[];
@@ -48,6 +65,9 @@ interface OnboardingState {
   // Personal details actions
   updatePersonalDetails: (data: Partial<PersonalDetails>) => void;
   setPersonalCompleted: (completed: boolean) => void;
+
+  // Location action
+  setLocationData: (data: LocationData | null) => void;
 
   // Land actions
   setHasLand: (hasLand: boolean) => void;
@@ -103,6 +123,9 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       personalDetails: initialPersonalDetails,
 
+      // No partialize used — all state auto-persists via AsyncStorage
+      locationData: null,
+
       hasLand: true,
       landEntries: [],
 
@@ -131,6 +154,8 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setPersonalCompleted: (completed) =>
         set({ isPersonalCompleted: completed }),
+
+      setLocationData: (data) => set({ locationData: data }),
 
       setHasLand: (hasLand) => set({ hasLand }),
 
@@ -197,6 +222,7 @@ export const useOnboardingStore = create<OnboardingState>()(
           isLandCompleted: false,
           isLivestockCompleted: false,
           personalDetails: initialPersonalDetails,
+          locationData: null,
           hasLand: true,
           landEntries: [],
           hasLivestock: true,

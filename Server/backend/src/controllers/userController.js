@@ -342,6 +342,30 @@ export const updateCurrentUserProfile = async (req, res) => {
         // Don't allow changing mobile number through profile update
         delete userData.mobile_number;
 
+        // ── Location picker integration ──────────────────────────────────────
+        // App sends: { location: { lat, lng, address, accuracy, setAt, method } }
+        // DB stores: latitude + longitude → GEOGRAPHY(POINT) via existing update logic,
+        //            plus location_address, location_accuracy, location_set_at, location_method
+        if (userData.location && typeof userData.location === 'object') {
+            const loc = userData.location;
+
+            // Always persist the metadata (useful for analytics on skipped entries too)
+            userData.location_address = loc.address ?? '';
+            userData.location_accuracy = loc.accuracy ?? null;
+            userData.location_set_at = loc.setAt ?? null;
+            userData.location_method = loc.method ?? null;
+
+            // Only update the map point for GPS-confirmed pins.
+            // 'skipped' entries preserve any previously-confirmed point.
+            if (loc.method === 'gps' && loc.lat && loc.lng) {
+                userData.latitude = loc.lat;
+                userData.longitude = loc.lng;
+            }
+
+            // Remove nested object — User.update() expects flat columns
+            delete userData.location;
+        }
+
         // Extract land_details and livestock_details before passing to User.update
         // These belong to separate tables, not the users table
         const { land_details, livestock_details, ...userOnlyData } = userData;

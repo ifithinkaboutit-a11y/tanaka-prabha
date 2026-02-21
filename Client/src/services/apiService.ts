@@ -11,7 +11,7 @@ console.log("🔗 API Base URL:", API_BASE_URL);
 if (!process.env.EXPO_PUBLIC_API_URL) {
   console.warn(
     "⚠️ EXPO_PUBLIC_API_URL is not set! Using hardcoded fallback. " +
-      "Set it in eas.json env or .env file."
+    "Set it in eas.json env or .env file."
   );
 }
 
@@ -310,22 +310,22 @@ function convertApiUserToUserProfile(apiUser: ApiUserProfile): UserProfile {
     location: apiUser.location,
     landDetails: apiUser.land_details
       ? {
-          totalLandArea: apiUser.land_details.total_land_area,
-          rabiCrop: apiUser.land_details.rabi_crop,
-          kharifCrop: apiUser.land_details.kharif_crop,
-          zaidCrop: apiUser.land_details.zaid_crop,
-        }
+        totalLandArea: apiUser.land_details.total_land_area,
+        rabiCrop: apiUser.land_details.rabi_crop,
+        kharifCrop: apiUser.land_details.kharif_crop,
+        zaidCrop: apiUser.land_details.zaid_crop,
+      }
       : undefined,
     livestockDetails: apiUser.livestock_details
       ? {
-          cow: apiUser.livestock_details.cow,
-          buffalo: apiUser.livestock_details.buffalo,
-          goat: apiUser.livestock_details.goat,
-          sheep: apiUser.livestock_details.sheep,
-          pig: apiUser.livestock_details.pig,
-          poultry: apiUser.livestock_details.poultry,
-          others: apiUser.livestock_details.others,
-        }
+        cow: apiUser.livestock_details.cow,
+        buffalo: apiUser.livestock_details.buffalo,
+        goat: apiUser.livestock_details.goat,
+        sheep: apiUser.livestock_details.sheep,
+        pig: apiUser.livestock_details.pig,
+        poultry: apiUser.livestock_details.poultry,
+        others: apiUser.livestock_details.others,
+      }
       : undefined,
     isNewUser: apiUser.is_new_user,
   };
@@ -495,6 +495,15 @@ export interface UserProfileUpdate {
   district?: string;
   pin_code?: string;
   state?: string;
+  /** GPS-confirmed location from the location picker screen */
+  location?: {
+    lat: number;
+    lng: number;
+    address: string;
+    accuracy: number;
+    setAt: string;
+    method: 'gps' | 'skipped';
+  };
   land_details?: ApiLandDetails;
   livestock_details?: ApiLivestockDetails;
 }

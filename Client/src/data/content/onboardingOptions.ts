@@ -6,24 +6,24 @@ export interface SelectOption {
   value: string;
 }
 
-export const indianStates: SelectOption[] = [
+// ── Helper: sort alphabetically, keeping "other" at the bottom ───────────────
+const sortOptions = (opts: SelectOption[]): SelectOption[] => {
+  const others = opts.filter((o) => o.value === "other");
+  const rest = opts.filter((o) => o.value !== "other")
+    .sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" }));
+  return [...rest, ...others];
+};
+
+export const indianStates: SelectOption[] = sortOptions([
   { value: "andhra_pradesh", label: "Andhra Pradesh", labelHi: "आंध्र प्रदेश" },
-  {
-    value: "arunachal_pradesh",
-    label: "Arunachal Pradesh",
-    labelHi: "अरुणाचल प्रदेश",
-  },
+  { value: "arunachal_pradesh", label: "Arunachal Pradesh", labelHi: "अरुणाचल प्रदेश" },
   { value: "assam", label: "Assam", labelHi: "असम" },
   { value: "bihar", label: "Bihar", labelHi: "बिहार" },
   { value: "chhattisgarh", label: "Chhattisgarh", labelHi: "छत्तीसगढ़" },
   { value: "goa", label: "Goa", labelHi: "गोवा" },
   { value: "gujarat", label: "Gujarat", labelHi: "गुजरात" },
   { value: "haryana", label: "Haryana", labelHi: "हरियाणा" },
-  {
-    value: "himachal_pradesh",
-    label: "Himachal Pradesh",
-    labelHi: "हिमाचल प्रदेश",
-  },
+  { value: "himachal_pradesh", label: "Himachal Pradesh", labelHi: "हिमाचल प्रदेश" },
   { value: "jharkhand", label: "Jharkhand", labelHi: "झारखंड" },
   { value: "karnataka", label: "Karnataka", labelHi: "कर्नाटक" },
   { value: "kerala", label: "Kerala", labelHi: "केरल" },
@@ -43,56 +43,61 @@ export const indianStates: SelectOption[] = [
   { value: "uttar_pradesh", label: "Uttar Pradesh", labelHi: "उत्तर प्रदेश" },
   { value: "uttarakhand", label: "Uttarakhand", labelHi: "उत्तराखंड" },
   { value: "west_bengal", label: "West Bengal", labelHi: "पश्चिम बंगाल" },
-];
+]);
 
-export const cropTypes: SelectOption[] = [
-  { value: "wheat", label: "Wheat", labelHi: "गेहूं" },
-  { value: "rice", label: "Rice", labelHi: "चावल" },
-  { value: "maize", label: "Maize", labelHi: "मक्का" },
-  { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
+export const cropTypes: SelectOption[] = sortOptions([
   { value: "cotton", label: "Cotton", labelHi: "कपास" },
-  { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
-  { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
-  { value: "mustard", label: "Mustard", labelHi: "सरसों" },
-  { value: "potato", label: "Potato", labelHi: "आलू" },
-  { value: "onion", label: "Onion", labelHi: "प्याज" },
-  { value: "tomato", label: "Tomato", labelHi: "टमाटर" },
-  { value: "pulses", label: "Pulses", labelHi: "दालें" },
-  { value: "vegetables", label: "Vegetables", labelHi: "सब्जियां" },
   { value: "fruits", label: "Fruits", labelHi: "फल" },
+  { value: "gram", label: "Gram", labelHi: "चना" },
+  { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
+  { value: "maize", label: "Maize", labelHi: "मक्का" },
+  { value: "mustard", label: "Mustard", labelHi: "सरसों" },
+  { value: "onion", label: "Onion", labelHi: "प्याज" },
+  { value: "potato", label: "Potato", labelHi: "आलू" },
+  { value: "pulses", label: "Pulses", labelHi: "दालें" },
+  { value: "rice", label: "Rice", labelHi: "चावल" },
+  { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
+  { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
+  { value: "tomato", label: "Tomato", labelHi: "टमाटर" },
+  { value: "vegetables", label: "Vegetables", labelHi: "सब्जियां" },
+  { value: "wheat", label: "Wheat", labelHi: "गेहूं" },
   { value: "other", label: "Other", labelHi: "अन्य" },
-];
+]);
 
 export const landUnits: SelectOption[] = [
-  { value: "bigha", label: "Bigha", labelHi: "बीघा" },
   { value: "acre", label: "Acre", labelHi: "एकड़" },
+  { value: "bigha", label: "Bigha", labelHi: "बीघा" },
   { value: "hectare", label: "Hectare", labelHi: "हेक्टेयर" },
 ];
 
 export const genderOptions: SelectOption[] = [
-  { value: "male", label: "Male", labelHi: "पुरुष" },
   { value: "female", label: "Female", labelHi: "महिला" },
+  { value: "male", label: "Male", labelHi: "पुरुष" },
   { value: "other", label: "Other", labelHi: "अन्य" },
 ];
 
-export const animalTypes: SelectOption[] = [
-  { value: "cow", label: "Cow", labelHi: "गाय" },
+export const animalTypes: SelectOption[] = sortOptions([
   { value: "buffalo", label: "Buffalo", labelHi: "भैंस" },
+  { value: "cow", label: "Cow", labelHi: "गाय" },
   { value: "goat", label: "Goat", labelHi: "बकरी" },
-  { value: "sheep", label: "Sheep", labelHi: "भेड़" },
+  { value: "horse", label: "Horse", labelHi: "घोड़ा" },
   { value: "pig", label: "Pig", labelHi: "सुअर" },
   { value: "poultry", label: "Poultry/Hen", labelHi: "मुर्गी" },
-  { value: "horse", label: "Horse", labelHi: "घोड़ा" },
+  { value: "sheep", label: "Sheep", labelHi: "भेड़" },
   { value: "other", label: "Other", labelHi: "अन्य" },
-];
+]);
 
-// Helper function to get localized options
+// Helper: get localized options, sorted by localized label (Other always last)
 export const getLocalizedOptions = (
   options: SelectOption[],
   language: string,
 ): { label: string; value: string }[] => {
-  return options.map((opt) => ({
+  const mapped = options.map((opt) => ({
     value: opt.value,
     label: language === "hi" ? opt.labelHi : opt.label,
   }));
+  const others = mapped.filter((o) => o.value === "other");
+  const rest = mapped.filter((o) => o.value !== "other")
+    .sort((a, b) => a.label.localeCompare(b.label, language === "hi" ? "hi" : "en", { sensitivity: "base" }));
+  return [...rest, ...others];
 };

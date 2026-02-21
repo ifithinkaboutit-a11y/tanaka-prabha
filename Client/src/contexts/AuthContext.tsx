@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const inAuthGroup = segments[0] === "(auth)";
 
     // Onboarding-only screens that login users must never see
-    const onboardingScreens = ["personal-details", "land-details", "livestock-details", "onboarding"];
+    const onboardingScreens = ["personal-details", "location-picker", "land-details", "livestock-details", "onboarding"];
     const onCurrentOnboardingScreen = inAuthGroup && onboardingScreens.includes(segments[1] as string);
 
     if (!isAuthenticated && !inAuthGroup) {
