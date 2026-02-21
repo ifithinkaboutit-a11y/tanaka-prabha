@@ -96,7 +96,7 @@ export const getRecentActivity = async (req, res) => {
                 time: scheme.created_at
             }))
         ].sort((a, b) => new Date(b.time) - new Date(a.time))
-         .slice(0, parseInt(limit));
+            .slice(0, parseInt(limit));
 
         res.status(200).json({
             status: 'success',
@@ -201,9 +201,9 @@ export const getGrowthTrends = async (req, res) => {
         res.status(200).json({
             status: 'success',
             message: 'Growth trends retrieved successfully',
-            data: { 
+            data: {
                 trends: trendsResult.rows,
-                period: days 
+                period: days
             }
         });
     } catch (error) {
@@ -244,6 +244,77 @@ export const getFarmerLocations = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Failed to fetch farmer locations',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Get user heatmap data — district counts mapped to lat/lng
+ */
+
+// Assam district coordinates lookup
+const DISTRICT_COORDS = {
+    'Baksa': [26.6525, 91.2038], 'Barpeta': [26.3250, 91.1167], 'Biswanath': [26.7269, 93.1669],
+    'Bongaigaon': [26.4765, 90.5535], 'Cachar': [24.7979, 92.8676], 'Charaideo': [26.9859, 94.8077],
+    'Chirang': [26.4847, 90.4714], 'Darrang': [26.4469, 91.9785], 'Dhemaji': [27.4718, 94.5717],
+    'Dhubri': [26.0180, 89.9759], 'Dibrugarh': [27.4782, 94.9146], 'Dima Hasao': [25.1167, 93.0167],
+    'Goalpara': [26.1739, 90.6228], 'Golaghat': [26.5203, 93.9759], 'Hailakandi': [24.6758, 92.5588],
+    'Hojai': [26.0000, 92.8500], 'Jorhat': [26.7500, 94.2167], 'Kamrup': [26.1434, 91.7362],
+    'Kamrup Metropolitan': [26.1445, 91.7362], 'Karbi Anglong': [26.1000, 93.6000],
+    'Karimganj': [24.8677, 92.3540], 'Kokrajhar': [26.4008, 90.2715], 'Lakhimpur': [27.2342, 94.1007],
+    'Majuli': [26.9500, 94.1667], 'Morigaon': [26.2624, 92.3468], 'Nagaon': [26.3451, 92.6847],
+    'Nalbari': [26.4470, 91.4406], 'Sivasagar': [26.9831, 94.6358], 'Sonitpur': [26.6352, 92.7979],
+    'South Salmara-Mankachar': [25.7333, 89.8667], 'Tinsukia': [27.4893, 95.3579],
+    'Udalguri': [26.7522, 92.0906], 'West Karbi Anglong': [25.9625, 92.8000],
+    'Delhi': [28.6139, 77.2090], 'Mumbai': [19.0760, 72.8777], 'Kolkata': [22.5726, 88.3639],
+    'Chennai': [13.0827, 80.2707], 'Bangalore': [12.9716, 77.5946], 'Hyderabad': [17.3850, 78.4867],
+};
+
+export const getUserHeatmap = async (req, res) => {
+    try {
+        const districtResult = await query(`
+            SELECT district, COUNT(*) as count
+            FROM public.users
+            WHERE district IS NOT NULL AND district != ''
+            GROUP BY district
+            ORDER BY count DESC
+            LIMIT 50
+        `);
+
+        const rows = districtResult.rows;
+        const maxCount = rows.length > 0 ? parseInt(rows[0].count) : 1;
+
+        const points = rows
+            .filter(row => DISTRICT_COORDS[row.district])
+            .map(row => {
+                const [lat, lng] = DISTRICT_COORDS[row.district];
+                const count = parseInt(row.count);
+                return {
+                    lat,
+                    lng,
+                    intensity: Math.round((count / maxCount) * 500),
+                    district: row.district,
+                    count,
+                };
+            });
+
+        const topRegions = rows.slice(0, 8).map((row, i) => ({
+            state: row.district,
+            count: parseInt(row.count),
+            rank: i + 1,
+        }));
+
+        res.status(200).json({
+            status: 'success',
+            message: 'User heatmap data retrieved successfully',
+            data: { points, topRegions, totalUsers: rows.reduce((s, r) => s + parseInt(r.count), 0) }
+        });
+    } catch (error) {
+        console.error('Error fetching user heatmap:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch heatmap data',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

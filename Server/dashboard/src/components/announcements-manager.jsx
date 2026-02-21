@@ -99,7 +99,7 @@ export function AnnouncementsManager() {
     setSending(true)
     try {
       // Call the notifications API
-      const response = await notificationsApi.sendBulk({
+      const response = await notificationsApi.broadcast({
         title: formData.title,
         message: formData.message,
         type: formData.type,
@@ -118,7 +118,7 @@ export function AnnouncementsManager() {
         recipients_count: sentCount,
       }
       setAnnouncements(prev => [newAnnouncement, ...prev])
-      
+
       setIsAddOpen(false)
       resetForm()
       toast.success(`Announcement sent to ${sentCount} users`)
@@ -230,8 +230,8 @@ export function AnnouncementsManager() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="announcement-type">Type</Label>
-                <Select 
-                  value={formData.type} 
+                <Select
+                  value={formData.type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                 >
                   <SelectTrigger>
@@ -246,8 +246,8 @@ export function AnnouncementsManager() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="announcement-district">Target Audience</Label>
-                <Select 
-                  value={formData.district} 
+                <Select
+                  value={formData.district}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
                 >
                   <SelectTrigger>

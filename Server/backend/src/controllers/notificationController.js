@@ -90,7 +90,7 @@ export const sendBulkNotification = async (req, res) => {
         }
 
         const notifications = await Promise.all(
-            user_ids.map(user_id => 
+            user_ids.map(user_id =>
                 Notification.create({ user_id, type, title, message, icon_name, bg_color })
             )
         );
@@ -248,6 +248,45 @@ export const markMyNotificationsAsRead = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Failed to mark notifications as read',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Broadcast notification to all users (or filtered by district)
+ * Used by the admin dashboard's Announcements feature
+ */
+export const broadcastNotification = async (req, res) => {
+    try {
+        const { title, message, type = 'announcement', district, icon_name, bg_color } = req.body;
+
+        if (!title || !type) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'title and type are required'
+            });
+        }
+
+        const notificationData = { type, title, message, icon_name, bg_color };
+
+        let result;
+        if (district && district !== 'all') {
+            result = await Notification.broadcastByDistrict(district, notificationData);
+        } else {
+            result = await Notification.broadcast(notificationData);
+        }
+
+        res.status(201).json({
+            status: 'success',
+            message: `Notification sent to ${result.count} users`,
+            data: { count: result.count, sent_count: result.count }
+        });
+    } catch (error) {
+        console.error('Error broadcasting notification:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to broadcast notification',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

@@ -10,7 +10,7 @@ class Notification {
         } = notificationData;
 
         // Validate notification type
-        const validTypes = ['approval', 'reminder', 'alert'];
+        const validTypes = ['approval', 'reminder', 'alert', 'announcement', 'info', 'update'];
         if (!validTypes.includes(type)) {
             throw new Error(`Invalid notification type. Valid types: ${validTypes.join(', ')}`);
         }

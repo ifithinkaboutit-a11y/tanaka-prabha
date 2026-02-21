@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -78,6 +79,7 @@ function getInitials(name) {
 }
 
 export function BeneficiariesTable() {
+  const router = useRouter()
   const [data, setData] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const [sorting, setSorting] = React.useState([])
@@ -87,16 +89,15 @@ export function BeneficiariesTable() {
   const [cropFilter, setCropFilter] = React.useState("all")
   const [districts, setDistricts] = React.useState([])
   const [crops, setCrops] = React.useState([])
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [isAddOpen, setIsAddOpen] = React.useState(false)
+  const [isEditOpen, setIsEditOpen] = React.useState(false)
+  const [editUser, setEditUser] = React.useState(null)
   const [saving, setSaving] = React.useState(false)
   const [deleteId, setDeleteId] = React.useState(null)
   const [formData, setFormData] = React.useState({
     name: "",
-    mobile: "",
+    mobile_number: "",
     village: "",
     block: "",
     district: "",
@@ -105,7 +106,7 @@ export function BeneficiariesTable() {
   async function handleToggleVerification(id, currentStatus) {
     try {
       await usersApi.update(id, { is_verified: !currentStatus })
-      setData(prev => prev.map(u => 
+      setData(prev => prev.map(u =>
         u.id === id ? { ...u, is_verified: !currentStatus } : u
       ))
       toast.success(`Farmer ${!currentStatus ? "verified" : "unverified"}`)
@@ -122,7 +123,7 @@ export function BeneficiariesTable() {
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={row.original.avatar} />
+            <AvatarImage src={row.original.photo_url} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {getInitials(row.original.name)}
             </AvatarFallback>
@@ -145,15 +146,15 @@ export function BeneficiariesTable() {
       ),
     },
     {
-      accessorKey: "mobile",
+      accessorKey: "mobile_number",
       header: "Mobile Number",
       cell: ({ row }) => (
-        <a 
-          href={`tel:${row.original.mobile}`}
+        <a
+          href={`tel:${row.original.mobile_number}`}
           className="flex items-center gap-1 text-primary hover:underline"
         >
           <IconPhone className="size-3.5" />
-          {row.original.mobile || "—"}
+          {row.original.mobile_number || "—"}
         </a>
       ),
     },
@@ -162,8 +163,8 @@ export function BeneficiariesTable() {
       header: () => <div className="text-right">Land Area</div>,
       cell: ({ row }) => (
         <div className="text-right">
-          {row.original.total_land_area 
-            ? `${row.original.total_land_area} Acres` 
+          {row.original.total_land_area
+            ? `${row.original.total_land_area} Acres`
             : "—"
           }
         </div>
@@ -186,16 +187,16 @@ export function BeneficiariesTable() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.original.is_verified ? "Verified" : "Pending"
+        const isVerified = row.original.is_verified
         return (
-          <Badge 
-            variant="outline" 
-            className={status === "Verified" 
-              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400" 
-              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400"
+          <Badge
+            className={isVerified
+              ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400 font-medium"
+              : "bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400 font-medium"
             }
           >
-            {status}
+            <span className={`mr-1.5 inline-block size-1.5 rounded-full ${isVerified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            {isVerified ? 'Verified' : 'Pending'}
           </Badge>
         )
       },
@@ -211,15 +212,15 @@ export function BeneficiariesTable() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push(`/beneficiaries/${row.original.id}`)}>View Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setEditUser(row.original); setIsEditOpen(true) }}>Edit</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleToggleVerification(row.original.id, row.original.is_verified)}
             >
               {row.original.is_verified ? "Unverify" : "Verify"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-destructive"
               onClick={() => setDeleteId(row.original.id)}
             >
@@ -240,7 +241,7 @@ export function BeneficiariesTable() {
       const response = await usersApi.getAll()
       // Handle response structure: response.data can be { users: [] } or array directly
       const users = response.data?.users || response.data || []
-      
+
       if (!Array.isArray(users)) {
         console.warn("Unexpected response format:", response)
         setData([])
@@ -263,7 +264,7 @@ export function BeneficiariesTable() {
   }
 
   async function handleAddFarmer() {
-    if (!formData.name || !formData.mobile) {
+    if (!formData.name || !formData.mobile_number) {
       toast.error("Please enter name and mobile number")
       return
     }
@@ -303,7 +304,7 @@ export function BeneficiariesTable() {
   function resetForm() {
     setFormData({
       name: "",
-      mobile: "",
+      mobile_number: "",
       village: "",
       block: "",
       district: "",
@@ -346,15 +347,16 @@ export function BeneficiariesTable() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-32" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 flex-1 max-w-xs rounded-xl" />
+          <Skeleton className="h-10 w-36 rounded-xl" />
+          <Skeleton className="h-10 w-36 rounded-xl" />
+          <Skeleton className="h-10 w-32 ml-auto rounded-xl" />
         </div>
-        <div className="rounded-lg border">
-          <div className="space-y-3 p-4">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Skeleton key={i} className="h-14 w-full" />
+        <div className="rounded-2xl border border-border/60 overflow-hidden bg-card">
+          <div className="p-1">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <Skeleton key={i} className="h-16 w-full mb-1 rounded-xl" />
             ))}
           </div>
         </div>
@@ -364,21 +366,22 @@ export function BeneficiariesTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4">
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/60 bg-card p-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search farmers..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-muted/50 border-transparent focus:border-border h-9"
           />
         </div>
 
         <Select value={districtFilter} onValueChange={setDistrictFilter}>
-          <SelectTrigger className="w-[180px]">
-            <IconFilter className="size-4 mr-2" />
-            <SelectValue placeholder="Filter by District" />
+          <SelectTrigger className="w-[160px] h-9 bg-muted/50 border-transparent">
+            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="All Districts" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Districts</SelectItem>
@@ -389,9 +392,9 @@ export function BeneficiariesTable() {
         </Select>
 
         <Select value={cropFilter} onValueChange={setCropFilter}>
-          <SelectTrigger className="w-[180px]">
-            <IconFilter className="size-4 mr-2" />
-            <SelectValue placeholder="Filter by Crop" />
+          <SelectTrigger className="w-[152px] h-9 bg-muted/50 border-transparent">
+            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="All Crops" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Crops</SelectItem>
@@ -419,8 +422,8 @@ export function BeneficiariesTable() {
               <div className="mt-6 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input 
-                    id="name" 
+                  <Input
+                    id="name"
                     placeholder="Enter farmer name"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -428,17 +431,17 @@ export function BeneficiariesTable() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input 
-                    id="mobile" 
+                  <Input
+                    id="mobile"
                     placeholder="Enter mobile number"
-                    value={formData.mobile}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
+                    value={formData.mobile_number}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mobile_number: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="village">Village</Label>
-                  <Input 
-                    id="village" 
+                  <Input
+                    id="village"
                     placeholder="Enter village name"
                     value={formData.village}
                     onChange={(e) => setFormData(prev => ({ ...prev, village: e.target.value }))}
@@ -446,8 +449,8 @@ export function BeneficiariesTable() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="block">Block</Label>
-                  <Input 
-                    id="block" 
+                  <Input
+                    id="block"
                     placeholder="Enter block name"
                     value={formData.block}
                     onChange={(e) => setFormData(prev => ({ ...prev, block: e.target.value }))}
@@ -455,8 +458,8 @@ export function BeneficiariesTable() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="district">District</Label>
-                  <Select 
-                    value={formData.district} 
+                  <Select
+                    value={formData.district}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
                   >
                     <SelectTrigger>
@@ -484,13 +487,13 @@ export function BeneficiariesTable() {
         </div>
       </div>
 
-      <div className="rounded-lg border">
+      <div className="rounded-2xl border border-border/60 overflow-hidden bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/40 hover:bg-muted/40 border-b border-border/60">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70 h-10">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -501,10 +504,14 @@ export function BeneficiariesTable() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+              table.getRowModel().rows.map((row, idx) => (
+                <TableRow
+                  key={row.id}
+                  className="group cursor-pointer border-b border-border/40 transition-colors hover:bg-primary/5"
+                  onClick={() => router.push(`/beneficiaries/${row.original.id}`)}
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-3" onClick={e => e.stopPropagation()}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -512,8 +519,11 @@ export function BeneficiariesTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No farmers found.
+                <TableCell colSpan={columns.length} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <IconSearch className="size-8 opacity-30" />
+                    <span className="text-sm">No farmers found</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -521,49 +531,31 @@ export function BeneficiariesTable() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-          {Math.min(
-            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-            table.getFilteredRowModel().rows.length
-          )}{" "}
-          of {table.getFilteredRowModel().rows.length} farmers
+      <div className="flex items-center justify-between px-1">
+        <div className="text-xs text-muted-foreground">
+          Showing{" "}
+          <span className="font-medium text-foreground">
+            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}–{Math.min(
+              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length
+            )}
+          </span>{" "}
+          of <span className="font-medium text-foreground">{table.getFilteredRowModel().rows.length}</span> farmers
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
             <IconChevronsLeft className="size-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
             <IconChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
+          <div className="px-3 py-1 rounded-lg bg-muted text-xs font-medium">
+            {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+          </div>
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
             <IconChevronRight className="size-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
             <IconChevronsRight className="size-4" />
           </Button>
         </div>
@@ -579,7 +571,7 @@ export function BeneficiariesTable() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteFarmer}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

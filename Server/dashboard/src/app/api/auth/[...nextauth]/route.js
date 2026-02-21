@@ -1,34 +1,12 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-// Admin users - In production, store these in a database
-const adminUsers = [
-  {
-    id: "1",
-    name: "Admin",
-    email: "admin@tanakprabha.gov.in",
-    // Password: admin123
-    password: "admin123",
-    role: "admin",
-    avatar: "/avatars/admin.jpg"
-  },
-  {
-    id: "2", 
-    name: "Super Admin",
-    email: "superadmin@tanakprabha.gov.in",
-    // Password: admin123
-    password: "admin123",
-    role: "superadmin",
-    avatar: "/avatars/superadmin.jpg"
-  }
-]
-
 const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "admin@tanakprabha.gov.in" },
+        email: { label: "Email", type: "email", placeholder: "admin@tanakprabha.org" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
@@ -37,24 +15,31 @@ const authOptions = {
             return null
           }
 
-          const user = adminUsers.find(u => u.email === credentials.email)
-          
-          if (!user) {
-            return null
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+
+          const res = await fetch(`${apiUrl}/admin/login`, {
+            method: 'POST',
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+            headers: { "Content-Type": "application/json" }
+          })
+
+          const data = await res.json()
+
+          if (res.ok && data.admin) {
+            return {
+              id: data.admin.id,
+              name: "Admin",
+              email: data.admin.email,
+              role: "admin",
+              avatar: "/avatars/admin.jpg",
+              token: data.token
+            }
           }
 
-          // Simple password check (use bcrypt in production)
-          if (credentials.password !== user.password) {
-            return null
-          }
-
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            avatar: user.avatar
-          }
+          return null
         } catch (error) {
           console.error("Auth error:", error)
           return null
@@ -75,6 +60,7 @@ const authOptions = {
       if (user) {
         token.role = user.role
         token.avatar = user.avatar
+        token.accessToken = user.token
       }
       return token
     },
@@ -83,6 +69,7 @@ const authOptions = {
         session.user.role = token.role
         session.user.avatar = token.avatar
         session.user.id = token.sub
+        session.accessToken = token.accessToken
       }
       return session
     }

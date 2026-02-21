@@ -19,7 +19,7 @@ class ApiError extends Error {
  */
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     const config = {
         headers: {
             'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(url, config);
-        
+
         // Handle non-JSON responses
         let data;
         const contentType = response.headers.get('content-type');
@@ -310,6 +310,12 @@ export const notificationsApi = {
         apiRequest(`/notifications/${id}`, {
             method: 'DELETE',
         }),
+
+    broadcast: (data) =>
+        apiRequest('/notifications/broadcast', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============================================================
@@ -343,6 +349,9 @@ export const analyticsApi = {
         const queryString = new URLSearchParams(params).toString();
         return apiRequest(`/analytics/farmer-locations${queryString ? `?${queryString}` : ''}`);
     },
+
+    getUserHeatmap: () =>
+        apiRequest('/analytics/user-heatmap'),
 };
 
 // ============================================================
@@ -378,7 +387,7 @@ async function uploadFile(endpoint, file, fieldName = 'image') {
 
     try {
         const response = await fetch(url, config);
-        
+
         // Handle non-JSON responses
         let data;
         const contentType = response.headers.get('content-type');

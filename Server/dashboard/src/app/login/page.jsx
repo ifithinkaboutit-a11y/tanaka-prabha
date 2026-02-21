@@ -1,183 +1,260 @@
-"use client"
+"use client";
 
 import { Suspense, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { IconLoader2, IconLock, IconMail, IconPlant2 } from "@tabler/icons-react"
-
+import { motion } from "framer-motion"
+import { Loader2, Leaf, ShieldCheck, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { toast } from "sonner"
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/"
-  const error = searchParams.get("error")
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState(error ? "Invalid credentials" : "")
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  function validate() {
+    const errs = {}
+    if (!email) errs.email = "Email is required"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address"
+    if (!password) errs.password = "Password is required"
+    return errs
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    setErrors({})
     setLoading(true)
-    setErrorMessage("")
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
-      })
-
+      const result = await signIn("credentials", { email, password, redirect: false, callbackUrl })
       if (result?.error) {
-        setErrorMessage(result.error)
+        toast.error("Invalid credentials. Please check your email and password.")
         setLoading(false)
       } else if (result?.ok) {
+        toast.success("Welcome back!")
         router.push(callbackUrl)
         router.refresh()
       }
-    } catch (err) {
-      setErrorMessage("An error occurred. Please try again.")
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.")
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="w-full">
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-4 shadow-lg">
-            <IconPlant2 className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Tanak Prabha
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Admin Dashboard
-          </p>
+    <div className="flex min-h-screen w-full">
+      {/* Left — Gradient Hero Panel */}
+      <motion.div
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #14532d 0%, #166534 30%, #15803d 60%, #16a34a 100%)",
+        }}
+      >
+        {/* Background decorative circles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white/5" />
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.03]" />
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
         </div>
 
-        {/* Login Card */}
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl text-center">Sign In</CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to access the dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {errorMessage && (
-                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                  <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                    {errorMessage}
-                  </p>
-                </div>
-              )}
+        {/* Hero content */}
+        <div className="relative z-10 text-white text-center max-w-md">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex items-center justify-center gap-3 mb-8"
+          >
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <Leaf className="size-8 text-white" />
+            </div>
+          </motion.div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <IconMail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@tanakprabha.gov.in"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                    disabled={loading}
-                  />
-                </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-4xl font-bold tracking-tight mb-3"
+          >
+            Tanak Prabha
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="text-green-100 text-lg leading-relaxed mb-10"
+          >
+            Admin dashboard for farmer welfare management. Manage beneficiaries, professionals, and content all in one place.
+          </motion.p>
+
+          {/* Feature pills */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex flex-col gap-3 text-left"
+          >
+            {[
+              { icon: "🌾", text: "Manage farmer beneficiaries" },
+              { icon: "👨‍⚕️", text: "Track agricultural professionals" },
+              { icon: "📋", text: "Publish schemes & banners" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-sm text-green-50 font-medium">{item.text}</span>
               </div>
+            ))}
+          </motion.div>
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <IconLock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
+        {/* Bottom badge */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="absolute bottom-8 flex items-center gap-2 text-green-200 text-xs"
+        >
+          <ShieldCheck className="size-4" />
+          Secured Admin Access — Authorized Personnel Only
+        </motion.div>
+      </motion.div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+      {/* Right — Login Form */}
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-16 bg-background"
+      >
+        {/* Mobile logo */}
+        <div className="flex lg:hidden items-center gap-2 mb-8">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-green-600">
+            <Leaf className="size-5 text-white" />
+          </div>
+          <span className="text-xl font-bold">Tanak Prabha</span>
+        </div>
+
+        <div className="w-full max-w-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
+              Welcome back
+            </h2>
+            <p className="text-sm text-muted-foreground mb-8">
+              Sign in to your admin account to continue.
+            </p>
+          </motion.div>
+
+          <motion.form
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="admin@tanakprabha.org"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })) }}
                 disabled={loading}
+                className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: "" })) }}
+                  disabled={loading}
+                  className={`pr-10 ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+            </div>
+
+            {/* Submit */}
+            <motion.div whileTap={{ scale: 0.98 }}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full cursor-pointer bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold transition-all"
+                size="lg"
               >
                 {loading ? (
                   <>
-                    <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 size-4 animate-spin" />
                     Signing in...
                   </>
                 ) : (
-                  "Sign In"
+                  "Sign in"
                 )}
               </Button>
-            </form>
+            </motion.div>
+          </motion.form>
 
-            {/* Demo credentials info */}
-            <div className="mt-6 pt-4 border-t">
-              <p className="text-xs text-center text-muted-foreground mb-2">
-                Demo Credentials
-              </p>
-              <div className="text-xs text-center space-y-1 text-muted-foreground">
-                <p><span className="font-medium">Email:</span> admin@tanakprabha.gov.in</p>
-                <p><span className="font-medium">Password:</span> admin123</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2026 Tanak Prabha. Government of India.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function LoginFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="w-full text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-4 shadow-lg">
-          <IconPlant2 className="w-8 h-8 text-white" />
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Need help? Contact your system administrator.
+          </p>
         </div>
-        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-          <IconLoader2 className="h-5 w-5 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<LoginFallback />}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin w-8 h-8 text-green-600" />
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   )

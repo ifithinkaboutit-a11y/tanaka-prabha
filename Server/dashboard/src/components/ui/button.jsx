@@ -61,11 +61,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
-      /* Vibecode Rule 1: iOS squircle smooth corners */
-      style={{ 
-        WebkitMaskImage: 'paint(smooth-corners)',
-        ...style 
-      }}
+      style={style}
       {...props} />
   );
 }

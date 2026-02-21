@@ -4,6 +4,7 @@ import {
     getMyNotifications,
     createNotification,
     sendBulkNotification,
+    broadcastNotification,
     markAsRead,
     markAllAsRead,
     markMyNotificationsAsRead,
@@ -47,6 +48,13 @@ router.post('/', authMiddleware, createNotification);
  * @access  Protected
  */
 router.post('/bulk', authMiddleware, sendBulkNotification);
+
+/**
+ * @route   POST /api/notifications/broadcast
+ * @desc    Broadcast notification to all users (or filtered by district)
+ * @access  Protected (Admin)
+ */
+router.post('/broadcast', authMiddleware, broadcastNotification);
 
 /**
  * @route   PATCH /api/notifications/:id/read

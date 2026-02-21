@@ -6,7 +6,8 @@ import {
     getLandStatistics,
     getLivestockStatistics,
     getGrowthTrends,
-    getFarmerLocations
+    getFarmerLocations,
+    getUserHeatmap
 } from '../controllers/analyticsController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -60,5 +61,12 @@ router.get('/growth-trends', authMiddleware, getGrowthTrends);
  * @access  Protected
  */
 router.get('/farmer-locations', authMiddleware, getFarmerLocations);
+
+/**
+ * @route   GET /api/analytics/user-heatmap
+ * @desc    Get user heatmap data (district counts mapped to lat/lng)
+ * @access  Protected
+ */
+router.get('/user-heatmap', authMiddleware, getUserHeatmap);
 
 export default router;

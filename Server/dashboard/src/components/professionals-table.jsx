@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -78,17 +79,17 @@ function getInitials(name) {
 }
 
 export function ProfessionalsTable() {
+  const router = useRouter()
   const [data, setData] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [typeFilter, setTypeFilter] = React.useState("all")
   const [isAddOpen, setIsAddOpen] = React.useState(false)
+  const [isEditOpen, setIsEditOpen] = React.useState(false)
+  const [editProfessional, setEditProfessional] = React.useState(null)
   const [saving, setSaving] = React.useState(false)
   const [deleteId, setDeleteId] = React.useState(null)
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [formData, setFormData] = React.useState({
     name: "",
     type: "",
@@ -102,7 +103,7 @@ export function ProfessionalsTable() {
   async function handleToggleAvailability(id, currentStatus) {
     try {
       await professionalsApi.toggleAvailability(id)
-      setData(prev => prev.map(p => 
+      setData(prev => prev.map(p =>
         p.id === id ? { ...p, is_available: !currentStatus } : p
       ))
       toast.success(`Professional marked as ${!currentStatus ? "available" : "unavailable"}`)
@@ -163,7 +164,7 @@ export function ProfessionalsTable() {
       cell: ({ row }) => (
         <div className="space-y-1">
           {row.original.phone && (
-            <a 
+            <a
               href={`tel:${row.original.phone}`}
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
@@ -172,7 +173,7 @@ export function ProfessionalsTable() {
             </a>
           )}
           {row.original.email && (
-            <a 
+            <a
               href={`mailto:${row.original.email}`}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
@@ -198,9 +199,9 @@ export function ProfessionalsTable() {
       cell: ({ row }) => {
         const isAvailable = row.original.is_available !== false
         return (
-          <Badge 
+          <Badge
             variant="outline"
-            className={isAvailable 
+            className={isAvailable
               ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400"
               : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400"
             }
@@ -221,15 +222,15 @@ export function ProfessionalsTable() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push(`/professionals/${row.original.id}`)}>View Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setEditProfessional(row.original); setIsEditOpen(true) }}>Edit</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleToggleAvailability(row.original.id, row.original.is_available)}
             >
               {row.original.is_available ? "Set Unavailable" : "Set Available"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-destructive"
               onClick={() => setDeleteId(row.original.id)}
             >
@@ -250,13 +251,13 @@ export function ProfessionalsTable() {
       const response = await professionalsApi.getAll()
       // Handle response structure: response.data can be { professionals: [] } or array directly
       const professionals = response.data?.professionals || response.data || []
-      
+
       if (!Array.isArray(professionals)) {
         console.warn("Unexpected response format:", response)
         setData([])
         return
       }
-      
+
       setData(professionals)
     } catch (error) {
       console.error("Error fetching professionals:", error)
@@ -407,8 +408,8 @@ export function ProfessionalsTable() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="prof-type">Type</Label>
-                  <Select 
-                    value={formData.type} 
+                  <Select
+                    value={formData.type}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                   >
                     <SelectTrigger id="prof-type">
@@ -460,44 +461,44 @@ export function ProfessionalsTable() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="prof-district">District</Label>
-                  <Select 
-                    value={formData.district} 
+                  <Select
+                    value={formData.district}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
                   >
                     <SelectTrigger id="prof-district">
                       <SelectValue placeholder="Select district" />
                     </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
-                  <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
-                  <SelectItem value="Assam">Assam</SelectItem>
-                  <SelectItem value="Bihar">Bihar</SelectItem>
-                  <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
-                  <SelectItem value="Goa">Goa</SelectItem>
-                  <SelectItem value="Gujarat">Gujarat</SelectItem>
-                  <SelectItem value="Haryana">Haryana</SelectItem>
-                  <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
-                  <SelectItem value="Jharkhand">Jharkhand</SelectItem>
-                  <SelectItem value="Karnataka">Karnataka</SelectItem>
-                  <SelectItem value="Kerala">Kerala</SelectItem>
-                  <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
-                  <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                  <SelectItem value="Manipur">Manipur</SelectItem>
-                  <SelectItem value="Meghalaya">Meghalaya</SelectItem>
-                  <SelectItem value="Mizoram">Mizoram</SelectItem>
-                  <SelectItem value="Nagaland">Nagaland</SelectItem>
-                  <SelectItem value="Odisha">Odisha</SelectItem>
-                  <SelectItem value="Punjab">Punjab</SelectItem>
-                  <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                  <SelectItem value="Sikkim">Sikkim</SelectItem>
-                  <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                  <SelectItem value="Telangana">Telangana</SelectItem>
-                  <SelectItem value="Tripura">Tripura</SelectItem>
-                  <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
-                  <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
-                  <SelectItem value="West Bengal">West Bengal</SelectItem>
-                </SelectContent>
-                </Select>
+                    <SelectContent>
+                      <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                      <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
+                      <SelectItem value="Assam">Assam</SelectItem>
+                      <SelectItem value="Bihar">Bihar</SelectItem>
+                      <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
+                      <SelectItem value="Goa">Goa</SelectItem>
+                      <SelectItem value="Gujarat">Gujarat</SelectItem>
+                      <SelectItem value="Haryana">Haryana</SelectItem>
+                      <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
+                      <SelectItem value="Jharkhand">Jharkhand</SelectItem>
+                      <SelectItem value="Karnataka">Karnataka</SelectItem>
+                      <SelectItem value="Kerala">Kerala</SelectItem>
+                      <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
+                      <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                      <SelectItem value="Manipur">Manipur</SelectItem>
+                      <SelectItem value="Meghalaya">Meghalaya</SelectItem>
+                      <SelectItem value="Mizoram">Mizoram</SelectItem>
+                      <SelectItem value="Nagaland">Nagaland</SelectItem>
+                      <SelectItem value="Odisha">Odisha</SelectItem>
+                      <SelectItem value="Punjab">Punjab</SelectItem>
+                      <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                      <SelectItem value="Sikkim">Sikkim</SelectItem>
+                      <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                      <SelectItem value="Telangana">Telangana</SelectItem>
+                      <SelectItem value="Tripura">Tripura</SelectItem>
+                      <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
+                      <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
+                      <SelectItem value="West Bengal">West Bengal</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <SheetFooter className="mt-6">
@@ -606,7 +607,7 @@ export function ProfessionalsTable() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteProfessional}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
