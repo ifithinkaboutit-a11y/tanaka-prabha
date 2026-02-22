@@ -23,10 +23,29 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "../../i18n";
 import {
   animalTypes,
+  cropTypes,
   getLocalizedOptions,
+  indianStates as stateOptions,
 } from "../../data/content/onboardingOptions";
+import { indianDistricts } from "../../data/indianLocations";
 import { validateLivestockEntry, validateLivestockCount } from "../../utils/validation";
 import { userApi } from "../../services/apiService";
+
+// ── helpers: resolve slug value → human-readable label ──────────────────────
+function resolveStateLabel(value: string): string {
+  const found = stateOptions.find((s) => s.value === value);
+  return found ? found.label : value;
+}
+
+function resolveDistrictLabel(value: string): string {
+  const found = indianDistricts.find((d) => d.value === value);
+  return found ? found.label : value;
+}
+
+function resolveCropLabel(value: string): string {
+  const found = cropTypes.find((c) => c.value === value);
+  return found ? found.label : value;
+}
 
 export const unstable_settings = {
   headerShown: false,
@@ -148,30 +167,33 @@ const AuthLivestockDetailsScreen = () => {
   const saveOnboardingData = async () => {
     try {
       const profileData: any = {
-        fathers_name: personalDetails.fathersName,
-        mothers_name: personalDetails.mothersName,
-        educational_qualification: personalDetails.educationalQualification,
+        // ── Personal info (ALL fields, matching seed script exactly) ──
+        name: personalDetails.name || undefined,
+        age: personalDetails.age || undefined,
+        // gender must be lowercase — DB constraint: 'male' | 'female' | 'other'
+        gender: personalDetails.gender?.toLowerCase() || undefined,
+        aadhaar_number: personalDetails.aadhaar || undefined,
+        fathers_name: personalDetails.fathersName || undefined,
+        mothers_name: personalDetails.mothersName || undefined,
+        educational_qualification: personalDetails.educationalQualification || undefined,
         sons_married: personalDetails.sonsMarried || 0,
         sons_unmarried: personalDetails.sonsUnmarried || 0,
         daughters_married: personalDetails.daughtersMarried || 0,
         daughters_unmarried: personalDetails.daughtersUnmarried || 0,
         other_family_members: personalDetails.otherFamilyMembers || 0,
-        village: personalDetails.village,
-        gram_panchayat: personalDetails.gramPanchayat,
-        nyay_panchayat: personalDetails.nyayPanchayat,
-        post_office: personalDetails.postOffice,
-        tehsil: personalDetails.tehsil,
-        block: personalDetails.block,
-        district: personalDetails.district,
-        pin_code: personalDetails.pinCode,
-        state: personalDetails.state,
+        village: personalDetails.village || undefined,
+        gram_panchayat: personalDetails.gramPanchayat || undefined,
+        nyay_panchayat: personalDetails.nyayPanchayat || undefined,
+        post_office: personalDetails.postOffice || undefined,
+        tehsil: personalDetails.tehsil || undefined,
+        block: personalDetails.block || undefined,
+        pin_code: personalDetails.pinCode || undefined,
+        // Resolve slug values → human-readable labels to match seed format
+        state: personalDetails.state ? resolveStateLabel(personalDetails.state) : undefined,
+        district: personalDetails.district ? resolveDistrictLabel(personalDetails.district) : undefined,
       };
 
-      // Attach confirmed GPS location if user pinned their farm.
-      // Sends as flat latitude/longitude — the existing User.update() on the server
-      // already converts these into a PostGIS GEOGRAPHY point correctly.
-      // The full nested location object (address, accuracy, method) will be re-enabled
-      // once the server migration (002_add_location_picker_columns.sql) is deployed.
+      // Attach confirmed GPS location from the location picker
       if (locationData && locationData.method === 'gps' && locationData.lat && locationData.lng) {
         profileData.latitude = locationData.lat;
         profileData.longitude = locationData.lng;
@@ -179,31 +201,46 @@ const AuthLivestockDetailsScreen = () => {
 
       if (hasLand && landEntries.length > 0) {
         let totalArea = 0;
-        const crops: string[] = [];
+        const allCropLabels: string[] = [];
 
         landEntries.forEach((entry) => {
-          let areaInAcres = entry.area;
-          if (entry.unit === "bigha") {
-            areaInAcres = entry.area * 0.62;
+          // Convert to Bigha (the unit used in seed data)
+          let areaInBigha = entry.area;
+          if (entry.unit === "acre") {
+            areaInBigha = entry.area * 1.613; // 1 acre ≈ 1.613 bigha
           } else if (entry.unit === "hectare") {
-            areaInAcres = entry.area * 2.47;
+            areaInBigha = entry.area * 3.987; // 1 hectare ≈ 3.987 bigha
           }
-          totalArea += areaInAcres;
+          totalArea += areaInBigha;
 
+          // Resolve crop slugs to labels
           if (entry.crops) {
             entry.crops.forEach((crop) => {
-              if (!crops.includes(crop)) {
-                crops.push(crop);
+              const label = resolveCropLabel(crop);
+              if (!allCropLabels.includes(label)) {
+                allCropLabels.push(label);
               }
             });
           }
         });
 
+        // Season classification — case-insensitive match on label
+        const rabiKeywords = ["wheat", "mustard", "gram", "barley", "pea", "lentil"];
+        const kharifKeywords = ["rice", "maize", "cotton", "soybean", "groundnut", "sugarcane", "onion", "potato", "tomato", "pulses"];
+        const zaidKeywords = ["vegetables", "fruits", "watermelon", "fodder", "moong"];
+
+        const rabiCrops = allCropLabels.filter((l) => rabiKeywords.some((k) => l.toLowerCase().includes(k)));
+        const kharifCrops = allCropLabels.filter((l) => kharifKeywords.some((k) => l.toLowerCase().includes(k)));
+        const zaidCrops = allCropLabels.filter((l) => zaidKeywords.some((k) => l.toLowerCase().includes(k)));
+        // Any unclassified go to zaid
+        const classified = [...rabiCrops, ...kharifCrops, ...zaidCrops];
+        const otherCrops = allCropLabels.filter((l) => !classified.includes(l));
+
         profileData.land_details = {
           total_land_area: Math.round(totalArea * 100) / 100,
-          kharif_crop: crops.filter((c) => ["rice", "maize", "cotton", "soybean"].includes(c)).join(", "),
-          rabi_crop: crops.filter((c) => ["wheat", "mustard", "gram", "barley"].includes(c)).join(", "),
-          zaid_crop: crops.filter((c) => ["vegetables", "fruits", "fodder"].includes(c)).join(", "),
+          rabi_crop: rabiCrops.join(", ") || otherCrops.join(", ") || undefined,
+          kharif_crop: kharifCrops.join(", ") || undefined,
+          zaid_crop: zaidCrops.length > 0 ? zaidCrops.join(", ") : undefined,
         };
 
         if (landLocationData && landLocationData.method === 'gps' && landLocationData.lat && landLocationData.lng) {
