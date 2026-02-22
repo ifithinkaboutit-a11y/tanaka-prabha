@@ -88,14 +88,20 @@ export default function ProgramSection({
         <Pressable
           onPress={onViewAll}
           style={({ pressed }) => ({
+            display: "flex",
             flexDirection: "row",
+            justifyContent: "center",
+            gap: 4,
             alignItems: "center",
             opacity: pressed ? 0.7 : 1,
           })}
+                      className="flex flex-row items-center justify-center"
         >
           <AppText
             variant="bodySm"
             style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
+            className="flex flex-row items-center justify-center"
+
           >
             {t("programs.viewAll")}
           </AppText>

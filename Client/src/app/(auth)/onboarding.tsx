@@ -61,7 +61,7 @@ const Onboarding = () => {
       case 0:
         // Personal step - require name and state at minimum
         return (
-          personalDetails.fathersName.trim() !== "" &&
+          personalDetails.name.trim() !== "" &&
           personalDetails.state !== ""
         );
       case 1:
@@ -145,6 +145,13 @@ const Onboarding = () => {
         <FormInput
           label={t("onboarding.personal.fullName")}
           placeholder={t("onboarding.personal.fullNamePlaceholder")}
+          value={personalDetails.name}
+          onChangeText={(text) => updatePersonalDetails({ name: text })}
+        />
+
+        <FormInput
+          label={t("personalDetails.fathersName") || "Father's Name"}
+          placeholder="Enter father's name"
           value={personalDetails.fathersName}
           onChangeText={(text) => updatePersonalDetails({ fathersName: text })}
         />

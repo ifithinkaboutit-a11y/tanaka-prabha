@@ -1,8 +1,9 @@
 // src/components/molecules/SchemePreviewList.tsx
 import React from "react";
 import { View } from "react-native";
-import { useTranslation } from "../../i18n";
+import AppText from "../atoms/AppText";
 import SchemePreviewCard from "../atoms/SchemePreviewCard";
+import { Ionicons } from "@expo/vector-icons";
 
 type Scheme = {
   id: string;
@@ -20,44 +21,21 @@ type SchemePreviewListProps = {
 export default function SchemePreviewList({
   schemes,
 }: SchemePreviewListProps) {
-  const { t } = useTranslation();
-
-  const defaultSchemes: Scheme[] = [
-    {
-      id: "1",
-      title: t("schemes.pmjdy.title"),
-      description: t("schemes.pmjdy.description"),
-      category: t("schemes.pmjdy.category"),
-      imageUrl: "https://via.placeholder.com/64x64/386641/FFFFFF?text=PMJDY",
-    },
-    {
-      id: "2",
-      title: t("schemes.aby.title"),
-      description: t("schemes.aby.description"),
-      category: t("schemes.aby.category"),
-      imageUrl: "https://via.placeholder.com/64x64/4CAF50/FFFFFF?text=ABY",
-    },
-    {
-      id: "3",
-      title: t("schemes.pmay.title"),
-      description: t("schemes.pmay.description"),
-      category: t("schemes.pmay.category"),
-      imageUrl: "https://via.placeholder.com/64x64/FF9800/FFFFFF?text=PMAY",
-    },
-    {
-      id: "4",
-      title: t("schemes.sbm.title"),
-      description: t("schemes.sbm.description"),
-      category: t("schemes.sbm.category"),
-      imageUrl: "https://via.placeholder.com/64x64/9C27B0/FFFFFF?text=SBM",
-    },
-  ];
-
-  const displaySchemes = schemes || defaultSchemes;
+  // No schemes from API — show empty state instead of static fallback
+  if (!schemes || schemes.length === 0) {
+    return (
+      <View style={{ alignItems: "center", paddingVertical: 24, gap: 8 }}>
+        <Ionicons name="folder-open-outline" size={40} color="#D1D5DB" />
+        <AppText variant="bodySm" style={{ color: "#9CA3AF", textAlign: "center" }}>
+          No schemes available right now
+        </AppText>
+      </View>
+    );
+  }
 
   return (
     <View style={{ marginTop: 16 }}>
-      {displaySchemes.map((scheme) => (
+      {schemes.map((scheme) => (
         <SchemePreviewCard
           key={scheme.id}
           title={scheme.title}

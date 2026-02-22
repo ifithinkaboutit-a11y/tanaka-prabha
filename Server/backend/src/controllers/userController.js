@@ -3,7 +3,7 @@ import LandDetails from '../models/LandDetails.js';
 import LivestockDetails from '../models/LivestockDetails.js';
 
 /**
- * Get all users with pagination
+ * Get all users with pagination, including land and livestock details
  */
 export const getAllUsers = async (req, res) => {
     try {
@@ -16,15 +16,30 @@ export const getAllUsers = async (req, res) => {
             users = await User.findAll(parseInt(limit), parseInt(offset));
         }
 
+        // Enrich each user with land and livestock details
+        const enrichedUsers = await Promise.all(
+            users.map(async (user) => {
+                const [landDetails, livestockDetails] = await Promise.all([
+                    LandDetails.findByUserId(user.id),
+                    LivestockDetails.findByUserId(user.id),
+                ]);
+                return {
+                    ...user,
+                    land_details: landDetails || null,
+                    livestock_details: livestockDetails || null,
+                };
+            })
+        );
+
         res.status(200).json({
             status: 'success',
             message: 'Users retrieved successfully',
             data: {
-                users,
+                users: enrichedUsers,
                 pagination: {
                     limit: parseInt(limit),
                     offset: parseInt(offset),
-                    count: users.length
+                    count: enrichedUsers.length
                 }
             }
         });

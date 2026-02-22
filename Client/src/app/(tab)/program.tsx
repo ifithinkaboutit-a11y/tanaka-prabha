@@ -1,5 +1,4 @@
 // src/app/(tab)/Program.tsx
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState, useEffect } from "react";
 import { ScrollView, View, ActivityIndicator, RefreshControl } from "react-native";

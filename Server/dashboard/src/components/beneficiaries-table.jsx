@@ -129,7 +129,7 @@ export function BeneficiariesTable() {
     },
     {
       accessorKey: "district",
-      header: "District/Village",
+      header: "District/Block",
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.district || "—"}</div>
@@ -151,27 +151,63 @@ export function BeneficiariesTable() {
       ),
     },
     {
-      accessorKey: "total_land_area",
+      id: "total_land_area",
       header: () => <div className="text-right">Land Area</div>,
-      cell: ({ row }) => (
-        <div className="text-right">
-          {row.original.total_land_area
-            ? `${row.original.total_land_area} Acres`
-            : "—"
-          }
-        </div>
-      ),
+      cell: ({ row }) => {
+        const land = row.original.land_details
+        return (
+          <div className="text-right">
+            {land?.total_land_area
+              ? <span className="font-semibold">{land.total_land_area} <span className="text-xs text-muted-foreground font-normal">Bigha</span></span>
+              : <span className="text-muted-foreground">—</span>
+            }
+          </div>
+        )
+      },
     },
     {
-      accessorKey: "main_crop",
-      header: "Main Crop",
+      id: "crops",
+      header: "Crops Grown",
       cell: ({ row }) => {
-        const crop = row.original.main_crop
-        if (!crop) return "—"
+        const land = row.original.land_details
+        if (!land) return <span className="text-muted-foreground">—</span>
+
+        const crops = [
+          land.rabi_crop && { label: land.rabi_crop, season: "Rabi", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+          land.kharif_crop && { label: land.kharif_crop, season: "Kharif", color: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300" },
+          land.zaid_crop && { label: land.zaid_crop, season: "Zaid", color: "bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300" },
+        ].filter(Boolean)
+
+        if (crops.length === 0) return <span className="text-muted-foreground">—</span>
+
         return (
-          <Badge variant="outline" className="text-xs">
-            {crop}
-          </Badge>
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
+            {crops.map((crop, i) => (
+              <span key={i} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${crop.color}`}>
+                {crop.label}
+              </span>
+            ))}
+          </div>
+        )
+      },
+    },
+    {
+      id: "livestock",
+      header: () => <div className="text-right">Livestock</div>,
+      cell: ({ row }) => {
+        const ls = row.original.livestock_details
+        if (!ls) return <div className="text-right text-muted-foreground">—</div>
+
+        const total = (ls.cow || 0) + (ls.buffalo || 0) + (ls.goat || 0) +
+          (ls.sheep || 0) + (ls.pig || 0) + (ls.poultry || 0) + (ls.others || 0)
+
+        if (total === 0) return <div className="text-right text-muted-foreground">—</div>
+
+        return (
+          <div className="text-right">
+            <span className="font-semibold">{total}</span>
+            <span className="text-xs text-muted-foreground ml-1">animals</span>
+          </div>
         )
       },
     },
@@ -183,11 +219,11 @@ export function BeneficiariesTable() {
         return (
           <Badge
             className={isVerified
-              ? "bg-zinc-500/10 text-zinc-600 border border-zinc-500/20 dark:text-zinc-400 font-medium"
-              : "bg-zinc-500/10 text-zinc-600 border border-zinc-500/20 dark:text-zinc-400 font-medium"
+              ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 dark:text-emerald-400 font-medium"
+              : "bg-amber-500/10 text-amber-700 border border-amber-500/20 dark:text-amber-400 font-medium"
             }
           >
-            <span className={`mr-1.5 inline-block size-1.5 rounded-full ${isVerified ? 'bg-zinc-500' : 'bg-zinc-500'}`} />
+            <span className={`mr-1.5 inline-block size-1.5 rounded-full ${isVerified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             {isVerified ? 'Verified' : 'Pending'}
           </Badge>
         )
@@ -241,11 +277,17 @@ export function BeneficiariesTable() {
       }
 
       const uniqueDistricts = [...new Set(users.map(u => u.district).filter(Boolean))]
-      const uniqueCrops = [...new Set(users.map(u => u.main_crop).filter(Boolean))]
+      // Extract all unique crops from land_details (rabi, kharif, zaid)
+      const allCrops = new Set()
+      users.forEach(u => {
+        if (u.land_details?.rabi_crop) allCrops.add(u.land_details.rabi_crop)
+        if (u.land_details?.kharif_crop) allCrops.add(u.land_details.kharif_crop)
+        if (u.land_details?.zaid_crop) allCrops.add(u.land_details.zaid_crop)
+      })
 
       setData(users)
       setDistricts(uniqueDistricts)
-      setCrops(uniqueCrops)
+      setCrops([...allCrops])
     } catch (error) {
       console.error("Error fetching farmers:", error)
       toast.error(error.message || "Failed to load farmers. Please check your connection.")
@@ -311,7 +353,10 @@ export function BeneficiariesTable() {
     }
 
     if (cropFilter !== "all") {
-      result = result.filter(item => item.main_crop === cropFilter)
+      result = result.filter(item => {
+        const ld = item.land_details
+        return ld && (ld.rabi_crop === cropFilter || ld.kharif_crop === cropFilter || ld.zaid_crop === cropFilter)
+      })
     }
 
     return result

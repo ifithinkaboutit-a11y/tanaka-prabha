@@ -1,4 +1,3 @@
-// src/app/connect-detail.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect, useCallback } from "react";
@@ -178,7 +177,7 @@ const ConnectDetailScreen = () => {
       setShowBookingModal(false);
       Alert.alert(
         t("connect.booking.success"),
-        (t as any)("connect.booking.successMessage", {
+        t("connect.booking.successMessage", {
           date: date.toLocaleDateString(),
           time,
           name: professional.name,
@@ -197,43 +196,39 @@ const ConnectDetailScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      {/* Sticky Top Header Area */}
-      <View style={{
-        backgroundColor: "#FFFFFF",
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.04,
-        shadowRadius: 12,
-        elevation: 4,
-        zIndex: 10,
-      }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingTop: 52,
-            paddingBottom: 16,
-          }}
-        >
-          <Pressable onPress={() => router.back()} style={({ pressed }) => ({
-            marginRight: 16,
-            padding: 8,
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingTop: 48,
+          paddingBottom: 16,
+          backgroundColor: "#386641",
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => ({
+            width: 40,
+            height: 40,
             borderRadius: 20,
-            backgroundColor: pressed ? "#F3F4F6" : "transparent"
-          })}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
-          </Pressable>
-          <AppText
-            variant="h3"
-            style={{ flex: 1, fontWeight: "800", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
-            numberOfLines={1}
-          >
-            {t("connect.expertProfile")}
-          </AppText>
-        </View>
+            backgroundColor: "rgba(255,255,255,0.2)",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </Pressable>
+        <AppText
+          variant="h3"
+          style={{ flex: 1, fontWeight: "700", color: "#FFFFFF", fontSize: 18 }}
+          numberOfLines={1}
+        >
+          {t("connect.expertProfile")}
+        </AppText>
       </View>
 
       <ScrollView
@@ -257,13 +252,11 @@ const ConnectDetailScreen = () => {
             borderRadius: 24,
             padding: 24,
             alignItems: "center",
-            borderWidth: 1,
-            borderColor: "rgba(0,0,0,0.03)",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
+            shadowOpacity: 0.08,
             shadowRadius: 12,
-            elevation: 2,
+            elevation: 4,
           }}
         >
           {/* Profile Image with Status */}
@@ -317,11 +310,10 @@ const ConnectDetailScreen = () => {
             variant="h2"
             style={{
               fontWeight: "800",
-              color: "#111827",
+              color: "#1F2937",
               textAlign: "center",
               marginTop: 8,
               fontSize: 22,
-              letterSpacing: -0.2
             }}
           >
             {professional.name}
@@ -436,13 +428,11 @@ const ConnectDetailScreen = () => {
             backgroundColor: "#FFFFFF",
             borderRadius: 20,
             padding: 20,
-            borderWidth: 1,
-            borderColor: "rgba(0,0,0,0.03)",
             shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.03,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
             shadowRadius: 8,
-            elevation: 2,
+            elevation: 3,
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>

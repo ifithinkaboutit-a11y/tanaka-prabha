@@ -98,7 +98,7 @@ export default function Connect() {
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: "#F8FAFC" }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -116,18 +116,18 @@ export default function Connect() {
           </AppText>
 
           {/* Services Grid */}
-        <View className="flex-row flex-wrap gap-3">
+          <View className="flex-row flex-wrap gap-3">
             {connectServices.map((service) => (
               <Pressable
                 key={service.id}
                 onPress={() => handleServicePress(service.id)}
-              className="active:opacity-90 active:scale-[0.98]"
-              style={{ flex: 1, minWidth: "45%" }}
+                className="active:opacity-90 active:scale-[0.98]"
+                style={{ flex: 1, minWidth: "45%" }}
               >
-              <View className="bg-white rounded-[20px] items-center justify-center py-6 px-4 shadow-sm elevation-3">
+                <View className="bg-white rounded-[20px] items-center justify-center py-6 px-4 shadow-sm elevation-3">
                   <View
-                  className="w-18 h-18 rounded-full items-center justify-center mb-3"
-                  style={{ backgroundColor: SERVICE_COLORS[service.id] || service.iconBgColor }}
+                    className="w-18 h-18 rounded-full items-center justify-center mb-3"
+                    style={{ backgroundColor: SERVICE_COLORS[service.id] || service.iconBgColor }}
                   >
                     <Ionicons
                       name={service.icon}
@@ -135,7 +135,7 @@ export default function Connect() {
                       color={SERVICE_ICON_COLORS[service.id] || "#386641"}
                     />
                   </View>
-                <AppText variant="bodySm" className="text-center font-semibold text-gray-700 text-sm">
+                  <AppText variant="bodySm" className="text-center font-semibold text-gray-700 text-sm">
                     {t(service.titleKey)}
                   </AppText>
                 </View>
@@ -169,10 +169,13 @@ export default function Connect() {
             <Pressable
               onPress={handleViewAllConnections}
               style={({ pressed }) => ({
-                flexDirection: "row",
+                display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
+                gap: 4,
                 opacity: pressed ? 0.7 : 1,
               })}
+              className="flex items-center justify-center flex-row"
             >
               <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "600", fontSize: 13 }}>
                 {t("connect.viewAll")}
@@ -289,32 +292,36 @@ export default function Connect() {
               justifyContent: "center",
               opacity: pressed ? 0.9 : 1,
               transform: [{ scale: pressed ? 0.95 : 1 }],
-              position: "relative",
-              height: 144,
-              width: 144,
+              height: 160,
+              width: 160,
+              alignSelf: "center",
             })}
           >
-            {/* Outer Ring */}
-            <View style={{ position: "absolute", width: 144, height: 144, borderRadius: 72, backgroundColor: "rgba(220,38,38,0.15)" }} />
-            {/* Inner Ring */}
-            <View style={{ position: "absolute", width: 128, height: 128, borderRadius: 64, backgroundColor: "rgba(220,38,38,0.25)" }} />
-            {/* Main Button */}
-            <View
-              style={{
-                width: 112,
-                height: 112,
-                borderRadius: 56,
-                backgroundColor: "#DC2626",
-                alignItems: "center",
-                justifyContent: "center",
-                shadowColor: "#DC2626",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.4,
-                shadowRadius: 16,
-                elevation: 8,
-              }}
-            >
-              <Ionicons name="call" size={48} color="white" />
+            <View className="flex items-center justify-center p-8">
+              {/* Outermost Ring */}
+              <View style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(220,38,38,0.08)", borderWidth: 1, borderColor: "rgba(220,38,38,0.12)" }} />
+              {/* Outer Ring */}
+              <View style={{ position: "absolute", width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(220,38,38,0.15)", borderWidth: 1, borderColor: "rgba(220,38,38,0.2)" }} />
+              {/* Inner Ring */}
+              <View style={{ position: "absolute", width: 120, height: 120, borderRadius: 62.5, backgroundColor: "rgba(220,38,38,0.25)" }} />
+              {/* Main Button */}
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  backgroundColor: "#DC2626",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  shadowColor: "#DC2626",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.45,
+                  shadowRadius: 14,
+                  elevation: 10,
+                }}
+              >
+                <Ionicons name="call" size={46} color="white" />
+              </View>
             </View>
           </Pressable>
 

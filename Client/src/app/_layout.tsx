@@ -8,6 +8,7 @@ import { Platform } from "react-native";
 import { AuthProvider } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
+import { useNotifications } from "../hooks/useNotifications";
 import "../i18n"; // Initialize i18n
 
 // Debug: log API URL at startup (remove after confirming production works)
@@ -19,6 +20,8 @@ if (Platform.OS !== "web") {
 }
 
 export default function RootLayout() {
+  // Initialize push notification registration and listeners
+  useNotifications();
   useEffect(() => {
     async function prepare() {
       try {
@@ -95,6 +98,10 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="connect-detail"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="event-details"
               options={{ headerShown: false }}
             />
           </Stack>

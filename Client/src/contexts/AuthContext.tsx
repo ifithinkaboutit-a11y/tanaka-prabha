@@ -246,19 +246,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log("📝 Syncing onboarding data to backend:", JSON.stringify(profilePayload).slice(0, 300));
         await userApi.updateProfile(profilePayload);
+
+        // ─── Immediately update local auth user with onboarding data ───
+        // This prevents "New User" from flashing on the home/profile screens
+        if (user) {
+          const updatedUser = {
+            ...user,
+            is_new_user: false,
+            name: pd.name || user.name,
+            age: pd.age || user.age,
+            gender: pd.gender || user.gender,
+            village: pd.village || user.village,
+            district: pd.district || user.district,
+            state: pd.state || user.state,
+          };
+          setUser(updatedUser);
+          tokenManager.setUser(updatedUser);
+        }
+
+        // ─── Refresh from backend to get the canonical data ───
+        try {
+          const freshUser = await verifyToken();
+          if (freshUser) {
+            const completeUser = { ...freshUser, is_new_user: false };
+            setUser(completeUser);
+            tokenManager.setUser(completeUser);
+          }
+        } catch (refreshErr) {
+          console.warn("Could not refresh user after onboarding:", refreshErr);
+          // Non-fatal — optimistic local data is already set above
+        }
       }
     } catch (error) {
       console.error("Failed to sync onboarding data:", error);
-      // Continue anyway — data is saved locally, can be synced later
+      // Still mark onboarding as done — data is saved locally, can be synced later
+      if (user) {
+        const updatedUser = { ...user, is_new_user: false };
+        setUser(updatedUser);
+        tokenManager.setUser(updatedUser);
+      }
     }
 
     setNeedsOnboarding(false);
-    // Update user locally to reflect onboarding is complete
-    if (user) {
-      const updatedUser = { ...user, is_new_user: false };
-      setUser(updatedUser);
-      tokenManager.setUser(updatedUser);
-    }
     router.replace("/(tab)/" as any);
   }, [user, router]);
 

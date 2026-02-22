@@ -35,12 +35,21 @@ export interface User {
   id: string;
   name: string;
   mobile_number: string;
+  age?: number;
   village?: string;
   district?: string;
   state?: string;
   gender?: string;
   date_of_birth?: string;
+  fathers_name?: string;
+  mothers_name?: string;
+  educational_qualification?: string;
+  block?: string;
+  tehsil?: string;
+  pin_code?: string;
+  photo_url?: string;
   is_new_user?: boolean;
+  is_verified?: boolean;
 }
 
 export interface AuthData {
@@ -351,7 +360,7 @@ export const userApi = {
         },
       };
     }
-    return response as ApiResponse<{ user: UserProfile }>;
+    return response as unknown as ApiResponse<{ user: UserProfile }>;
   },
 
   /**
@@ -372,7 +381,7 @@ export const userApi = {
         },
       };
     }
-    return response as ApiResponse<{ user: UserProfile }>;
+    return response as unknown as ApiResponse<{ user: UserProfile }>;
   },
 };
 

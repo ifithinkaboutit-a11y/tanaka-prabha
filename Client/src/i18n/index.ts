@@ -26,13 +26,22 @@ export const useTranslation = () => {
   const currentLanguage = useLanguageStore((s) => s.currentLanguage);
   const setLanguage = useLanguageStore((s) => s.setLanguage);
 
-  const t = (key: string): string => {
+  const t = (key: string, params?: Record<string, string | number>): string => {
     const keys = key.split(".");
     let value: any = translationData[currentLanguage];
     for (const k of keys) {
       value = value?.[k];
     }
-    return typeof value === "string" ? value : key;
+
+    let result = typeof value === "string" ? value : key;
+
+    if (params && typeof result === "string") {
+      Object.entries(params).forEach(([k, v]) => {
+        result = result.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+      });
+    }
+
+    return result;
   };
 
   return { t, currentLanguage, setLanguage };
