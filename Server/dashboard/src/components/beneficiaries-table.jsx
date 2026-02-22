@@ -18,7 +18,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
@@ -81,7 +80,10 @@ export function BeneficiariesTable() {
   const [cropFilter, setCropFilter] = React.useState("all")
   const [districts, setDistricts] = React.useState([])
   const [crops, setCrops] = React.useState([])
-  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
+  // Server-side pagination state
+  const [pageIndex, setPageIndex] = React.useState(0)
+  const [pageSize] = React.useState(50)
+  const [totalCount, setTotalCount] = React.useState(0)
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [editUser, setEditUser] = React.useState(null)
@@ -261,13 +263,14 @@ export function BeneficiariesTable() {
   ], [])
 
   React.useEffect(() => {
-    fetchFarmers()
-  }, [])
+    fetchFarmers(pageIndex)
+  }, [pageIndex])
 
-  async function fetchFarmers() {
+  async function fetchFarmers(page = 0) {
+    setLoading(true)
     try {
-      const response = await usersApi.getAll()
-      // Handle response structure: response.data can be { users: [] } or array directly
+      const offset = page * pageSize
+      const response = await usersApi.getAll({ limit: pageSize, offset })
       const users = response.data?.users || response.data || []
 
       if (!Array.isArray(users)) {
@@ -276,8 +279,11 @@ export function BeneficiariesTable() {
         return
       }
 
+      // Pagination total from server
+      const total = response.data?.pagination?.total || users.length
+      setTotalCount(total)
+
       const uniqueDistricts = [...new Set(users.map(u => u.district).filter(Boolean))]
-      // Extract all unique crops from land_details (rabi, kharif, zaid)
       const allCrops = new Set()
       users.forEach(u => {
         if (u.land_details?.rabi_crop) allCrops.add(u.land_details.rabi_crop)
@@ -369,17 +375,21 @@ export function BeneficiariesTable() {
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    // Server-side pagination — table doesn't paginate itself
+    manualPagination: true,
+    pageCount: Math.ceil(totalCount / pageSize),
   })
+
+  const totalPages = Math.ceil(totalCount / pageSize)
+  const canPrevPage = pageIndex > 0
+  const canNextPage = pageIndex < totalPages - 1
 
   if (loading) {
     return (
@@ -494,27 +504,24 @@ export function BeneficiariesTable() {
         <div className="text-xs text-muted-foreground">
           Showing{" "}
           <span className="font-medium text-foreground">
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}–{Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}
+            {pageIndex * pageSize + 1}–{Math.min((pageIndex + 1) * pageSize, totalCount)}
           </span>{" "}
-          of <span className="font-medium text-foreground">{table.getFilteredRowModel().rows.length}</span> farmers
+          of <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span> farmers
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setPageIndex(0)} disabled={!canPrevPage}>
             <IconChevronsLeft className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setPageIndex(p => p - 1)} disabled={!canPrevPage}>
             <IconChevronLeft className="size-4" />
           </Button>
           <div className="px-3 py-1 rounded-lg bg-muted text-xs font-medium">
-            {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            {pageIndex + 1} / {totalPages || 1}
           </div>
-          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setPageIndex(p => p + 1)} disabled={!canNextPage}>
             <IconChevronRight className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+          <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setPageIndex(totalPages - 1)} disabled={!canNextPage}>
             <IconChevronsRight className="size-4" />
           </Button>
         </div>

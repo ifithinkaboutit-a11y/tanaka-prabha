@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import LandDetails from '../models/LandDetails.js';
 import LivestockDetails from '../models/LivestockDetails.js';
+import { query } from '../config/db.js';
 
 /**
  * Get all users with pagination, including land and livestock details
@@ -8,38 +9,75 @@ import LivestockDetails from '../models/LivestockDetails.js';
 export const getAllUsers = async (req, res) => {
     try {
         const { limit = 50, offset = 0, search } = req.query;
+        const lim = parseInt(limit);
+        const off = parseInt(offset);
 
-        let users;
+        let usersResult;
+        let countResult;
+
         if (search) {
-            users = await User.search(search, parseInt(limit));
+            const like = `%${search}%`;
+            usersResult = await query(`
+                SELECT
+                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number, u.aadhaar_number,
+                    u.fathers_name, u.mothers_name, u.educational_qualification,
+                    u.sons_married, u.sons_unmarried, u.daughters_married, u.daughters_unmarried,
+                    u.other_family_members, u.village, u.gram_panchayat, u.nyay_panchayat,
+                    u.post_office, u.tehsil, u.block, u.district, u.pin_code, u.state,
+                    ST_Y(u.location::geometry) as latitude,
+                    ST_X(u.location::geometry) as longitude,
+                    u.created_at, u.updated_at,
+                    row_to_json(ld.*) as land_details,
+                    row_to_json(ls.*) as livestock_details
+                FROM public.users u
+                LEFT JOIN public.land_details ld ON ld.user_id = u.id
+                LEFT JOIN public.livestock_details ls ON ls.user_id = u.id
+                WHERE u.name ILIKE $1 OR u.village ILIKE $1 OR u.district ILIKE $1 OR u.mobile_number ILIKE $1
+                ORDER BY u.created_at DESC
+                LIMIT $2 OFFSET $3
+            `, [like, lim, off]);
+            countResult = await query(
+                `SELECT COUNT(*) as total FROM public.users
+                 WHERE name ILIKE $1 OR village ILIKE $1 OR district ILIKE $1 OR mobile_number ILIKE $1`,
+                [like]
+            );
         } else {
-            users = await User.findAll(parseInt(limit), parseInt(offset));
+            usersResult = await query(`
+                SELECT
+                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number, u.aadhaar_number,
+                    u.fathers_name, u.mothers_name, u.educational_qualification,
+                    u.sons_married, u.sons_unmarried, u.daughters_married, u.daughters_unmarried,
+                    u.other_family_members, u.village, u.gram_panchayat, u.nyay_panchayat,
+                    u.post_office, u.tehsil, u.block, u.district, u.pin_code, u.state,
+                    ST_Y(u.location::geometry) as latitude,
+                    ST_X(u.location::geometry) as longitude,
+                    u.created_at, u.updated_at,
+                    row_to_json(ld.*) as land_details,
+                    row_to_json(ls.*) as livestock_details
+                FROM public.users u
+                LEFT JOIN public.land_details ld ON ld.user_id = u.id
+                LEFT JOIN public.livestock_details ls ON ls.user_id = u.id
+                ORDER BY u.created_at DESC
+                LIMIT $1 OFFSET $2
+            `, [lim, off]);
+            countResult = await query('SELECT COUNT(*) as total FROM public.users');
         }
 
-        // Enrich each user with land and livestock details
-        const enrichedUsers = await Promise.all(
-            users.map(async (user) => {
-                const [landDetails, livestockDetails] = await Promise.all([
-                    LandDetails.findByUserId(user.id),
-                    LivestockDetails.findByUserId(user.id),
-                ]);
-                return {
-                    ...user,
-                    land_details: landDetails || null,
-                    livestock_details: livestockDetails || null,
-                };
-            })
-        );
+        const users = usersResult.rows;
+        const totalCount = parseInt(countResult.rows[0]?.total || 0);
 
         res.status(200).json({
             status: 'success',
             message: 'Users retrieved successfully',
             data: {
-                users: enrichedUsers,
+                users,
                 pagination: {
-                    limit: parseInt(limit),
-                    offset: parseInt(offset),
-                    count: enrichedUsers.length
+                    limit: lim,
+                    offset: off,
+                    count: users.length,
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / lim),
+                    currentPage: Math.floor(off / lim) + 1
                 }
             }
         });
@@ -241,7 +279,7 @@ export const deleteUser = async (req, res) => {
  */
 export const getUsersByLocation = async (req, res) => {
     try {
-        const { minLng, minLat, maxLng, maxLat } = req.query;
+        const { minLng, minLat, maxLng, maxLat, limit = 50, offset = 0 } = req.query;
 
         if (!minLng || !minLat || !maxLng || !maxLat) {
             return res.status(400).json({
@@ -254,7 +292,9 @@ export const getUsersByLocation = async (req, res) => {
             minLng: parseFloat(minLng),
             minLat: parseFloat(minLat),
             maxLng: parseFloat(maxLng),
-            maxLat: parseFloat(maxLat)
+            maxLat: parseFloat(maxLat),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
         });
 
         res.status(200).json({

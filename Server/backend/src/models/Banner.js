@@ -6,10 +6,10 @@ class Banner {
      * Supports multi-language fields (English and Hindi)
      */
     static async create(bannerData) {
-        const { 
-            title, subtitle, 
+        const {
+            title, subtitle,
             title_hi, subtitle_hi,
-            image_url, redirect_url, sort_order, is_active 
+            image_url, redirect_url, sort_order, is_active
         } = bannerData;
 
         const text = `
@@ -47,25 +47,27 @@ class Banner {
     /**
      * Get all active banners (sorted by sort_order)
      */
-    static async findAllActive() {
+    static async findAllActive(limit = 50, offset = 0) {
         const text = `
             SELECT * FROM public.banners
             WHERE is_active = true
             ORDER BY sort_order ASC, created_at DESC
+            LIMIT $1 OFFSET $2
         `;
-        const result = await query(text);
+        const result = await query(text, [limit, offset]);
         return result.rows;
     }
 
     /**
      * Get all banners (including inactive)
      */
-    static async findAll() {
+    static async findAll(limit = 50, offset = 0) {
         const text = `
             SELECT * FROM public.banners
             ORDER BY sort_order ASC, created_at DESC
+            LIMIT $1 OFFSET $2
         `;
-        const result = await query(text);
+        const result = await query(text, [limit, offset]);
         return result.rows;
     }
 
@@ -79,7 +81,7 @@ class Banner {
             'title', 'subtitle', 'title_hi', 'subtitle_hi',
             'image_url', 'redirect_url', 'sort_order', 'is_active', 'scheme_id'
         ];
-        
+
         const fields = [];
         const values = [];
         let paramCount = 1;
@@ -114,35 +116,35 @@ class Banner {
             // If Hindi columns don't exist yet, retry without them
             if (error.code === '42703' && (error.message.includes('title_hi') || error.message.includes('subtitle_hi'))) {
                 console.warn('Hindi columns not found in banners table. Updating without Hindi fields...');
-                
+
                 // Filter out Hindi fields and retry
                 const fallbackFields = [];
                 const fallbackValues = [];
                 let fallbackParamCount = 1;
-                
+
                 Object.keys(bannerData).forEach(key => {
-                    if (allowedFields.includes(key) && 
-                        bannerData[key] !== undefined && 
+                    if (allowedFields.includes(key) &&
+                        bannerData[key] !== undefined &&
                         !key.endsWith('_hi')) {
                         fallbackFields.push(`${key} = $${fallbackParamCount}`);
                         fallbackValues.push(bannerData[key]);
                         fallbackParamCount++;
                     }
                 });
-                
+
                 if (fallbackFields.length === 0) {
                     return Banner.findById(id);
                 }
-                
+
                 fallbackValues.push(id);
-                
+
                 const fallbackText = `
                     UPDATE public.banners
                     SET ${fallbackFields.join(', ')}
                     WHERE id = $${fallbackParamCount}
                     RETURNING *
                 `;
-                
+
                 const fallbackResult = await query(fallbackText, fallbackValues);
                 return fallbackResult.rows[0];
             }

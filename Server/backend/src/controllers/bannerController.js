@@ -5,13 +5,13 @@ import Banner from '../models/Banner.js';
  */
 export const getAllBanners = async (req, res) => {
     try {
-        const { active_only } = req.query;
+        const { active_only, limit = 50, offset = 0 } = req.query;
 
         let banners;
         if (active_only === 'true') {
-            banners = await Banner.findAllActive();
+            banners = await Banner.findAllActive(parseInt(limit), parseInt(offset));
         } else {
-            banners = await Banner.findAll();
+            banners = await Banner.findAll(parseInt(limit), parseInt(offset));
         }
 
         res.status(200).json({
@@ -201,7 +201,7 @@ export const reorderBanners = async (req, res) => {
         }
 
         // Update each banner's sort order
-        const updates = banners.map(({ id, sort_order }) => 
+        const updates = banners.map(({ id, sort_order }) =>
             Banner.update(id, { sort_order })
         );
 

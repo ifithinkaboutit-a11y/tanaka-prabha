@@ -117,32 +117,63 @@ export default function LocationPickerScreen() {
 
     // ── GPS acquisition ────────────────────────────────────────────────────────
     useEffect(() => {
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout | null = null;
+
         (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                setPermissionState("denied");
-                setInitialRegion(INDIA_FALLBACK_REGION);
-                return;
-            }
-            setPermissionState("granted");
             try {
-                const loc = await Promise.race<Location.LocationObject>([
-                    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-                    new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error("gps_timeout")), GPS_TIMEOUT_MS)
-                    ),
-                ]);
-                const { latitude, longitude, accuracy } = loc.coords;
-                setGpsAccuracy(accuracy ?? 50);
-                setInitialRegion({ latitude, longitude, latitudeDelta: 0.008, longitudeDelta: 0.008 });
-                setPinCoords({ latitude, longitude });
-                geocodeCoords(latitude, longitude);
-            } catch {
-                setGpsFallbackUsed(true);
-                setInitialRegion(INDIA_FALLBACK_REGION);
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (!isMounted) return;
+
+                if (status !== "granted") {
+                    setPermissionState("denied");
+                    setInitialRegion(INDIA_FALLBACK_REGION);
+                    return;
+                }
+                setPermissionState("granted");
+
+                try {
+                    const positionPromise = Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                    const timeoutPromise = new Promise<never>((_, reject) => {
+                        timeoutId = setTimeout(() => reject(new Error("gps_timeout")), GPS_TIMEOUT_MS);
+                    });
+
+                    const loc = await Promise.race<Location.LocationObject>([
+                        positionPromise,
+                        timeoutPromise,
+                    ]);
+
+                    if (timeoutId) clearTimeout(timeoutId);
+
+                    if (isMounted) {
+                        const { latitude, longitude, accuracy } = loc.coords;
+                        setGpsAccuracy(accuracy ?? 50);
+                        setInitialRegion({ latitude, longitude, latitudeDelta: 0.008, longitudeDelta: 0.008 });
+                        setPinCoords({ latitude, longitude });
+                        geocodeCoords(latitude, longitude);
+                    }
+                } catch {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (isMounted) {
+                        setGpsFallbackUsed(true);
+                        setInitialRegion(INDIA_FALLBACK_REGION);
+                    }
+                }
+            } catch (error) {
+                // Failsafe catch to prevent unhandled promise rejections if permissions check throws
+                if (timeoutId) clearTimeout(timeoutId);
+                if (isMounted) {
+                    setPermissionState("denied");
+                    setInitialRegion(INDIA_FALLBACK_REGION);
+                }
             }
         })();
-    }, []);
+
+        return () => {
+            isMounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [geocodeCoords]);
 
     // ── Geocoding ──────────────────────────────────────────────────────────────
     const geocodeCoords = useCallback(async (lat: number, lng: number) => {
@@ -211,11 +242,17 @@ export default function LocationPickerScreen() {
     }, [geocodeCoords]);
 
     // ── Map callbacks ──────────────────────────────────────────────────────────
+    const isMapMoving = useRef(false);
+
     const onRegionChange = useCallback(() => {
-        Animated.spring(pinAnim, { toValue: -12, useNativeDriver: true, tension: 120, friction: 8 }).start();
+        if (!isMapMoving.current) {
+            isMapMoving.current = true;
+            Animated.spring(pinAnim, { toValue: -12, useNativeDriver: true, tension: 120, friction: 8 }).start();
+        }
     }, [pinAnim]);
 
     const onRegionChangeComplete = useCallback((region: { latitude: number; longitude: number }) => {
+        isMapMoving.current = false;
         Animated.spring(pinAnim, { toValue: 0, useNativeDriver: true, friction: 4, tension: 40 }).start();
         setPinCoords({ latitude: region.latitude, longitude: region.longitude });
         geocodeCoords(region.latitude, region.longitude);

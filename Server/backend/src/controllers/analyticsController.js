@@ -61,23 +61,23 @@ export const getDashboardStats = async (req, res) => {
  */
 export const getRecentActivity = async (req, res) => {
     try {
-        const { limit = 10 } = req.query;
+        const { limit = 10, offset = 0 } = req.query;
 
         // Get recent user registrations
         const recentUsersResult = await query(`
             SELECT id, name, village, district, created_at, 'registration' as type
             FROM public.users
             ORDER BY created_at DESC
-            LIMIT $1
-        `, [parseInt(limit)]);
+            LIMIT $1 OFFSET $2
+        `, [parseInt(limit), parseInt(offset)]);
 
         // Get recent scheme updates
         const recentSchemesResult = await query(`
             SELECT id, title, created_at, 'scheme' as type
             FROM public.schemes
             ORDER BY created_at DESC
-            LIMIT $1
-        `, [Math.floor(parseInt(limit) / 2)]);
+            LIMIT $1 OFFSET $2
+        `, [Math.floor(parseInt(limit) / 2), Math.floor(parseInt(offset) / 2)]);
 
         // Combine and sort activities
         const activities = [
@@ -221,7 +221,7 @@ export const getGrowthTrends = async (req, res) => {
  */
 export const getFarmerLocations = async (req, res) => {
     try {
-        const { limit = 1000 } = req.query;
+        const { limit = 1000, offset = 0 } = req.query;
 
         const locationsResult = await query(`
             SELECT 
@@ -231,8 +231,8 @@ export const getFarmerLocations = async (req, res) => {
             FROM public.users
             WHERE location IS NOT NULL
             ORDER BY created_at DESC
-            LIMIT $1
-        `, [parseInt(limit)]);
+            LIMIT $1 OFFSET $2
+        `, [parseInt(limit), parseInt(offset)]);
 
         res.status(200).json({
             status: 'success',
@@ -273,6 +273,18 @@ const DISTRICT_COORDS = {
 
 export const getUserHeatmap = async (req, res) => {
     try {
+        // 1. Get individual user GPS points from PostGIS (real geographic heatmap)
+        const rawPointsResult = await query(`
+            SELECT
+                ST_Y(location::geometry) as lat,
+                ST_X(location::geometry) as lng,
+                district
+            FROM public.users
+            WHERE location IS NOT NULL
+            LIMIT 5000
+        `);
+
+        // 2. District aggregation for top-regions leaderboard
         const districtResult = await query(`
             SELECT district, COUNT(*) as count
             FROM public.users
@@ -282,33 +294,43 @@ export const getUserHeatmap = async (req, res) => {
             LIMIT 50
         `);
 
-        const rows = districtResult.rows;
-        const maxCount = rows.length > 0 ? parseInt(rows[0].count) : 1;
+        const districtRows = districtResult.rows;
+        const maxCount = districtRows.length > 0 ? parseInt(districtRows[0].count) : 1;
 
-        const points = rows
-            .filter(row => DISTRICT_COORDS[row.district])
-            .map(row => {
-                const [lat, lng] = DISTRICT_COORDS[row.district];
-                const count = parseInt(row.count);
-                return {
-                    lat,
-                    lng,
-                    intensity: Math.round((count / maxCount) * 500),
-                    district: row.district,
-                    count,
-                };
-            });
+        // Build heatmap points from actual GPS locations
+        let points = rawPointsResult.rows
+            .filter(row => row.lat && row.lng && !isNaN(parseFloat(row.lat)) && !isNaN(parseFloat(row.lng)))
+            .map(row => ({
+                lat: parseFloat(row.lat),
+                lng: parseFloat(row.lng),
+                intensity: 150,
+                district: row.district,
+                count: 1,
+            }));
 
-        const topRegions = rows.slice(0, 8).map((row, i) => ({
+        // Fallback: district coord lookup if no GPS data exists
+        if (points.length === 0) {
+            points = districtRows
+                .filter(row => DISTRICT_COORDS[row.district])
+                .map(row => {
+                    const [lat, lng] = DISTRICT_COORDS[row.district];
+                    const count = parseInt(row.count);
+                    return { lat, lng, intensity: Math.round((count / maxCount) * 500), district: row.district, count };
+                });
+        }
+
+        const topRegions = districtRows.slice(0, 8).map((row, i) => ({
             state: row.district,
             count: parseInt(row.count),
             rank: i + 1,
         }));
 
+        const totalUsers = districtRows.reduce((s, r) => s + parseInt(r.count), 0);
+
         res.status(200).json({
             status: 'success',
             message: 'User heatmap data retrieved successfully',
-            data: { points, topRegions, totalUsers: rows.reduce((s, r) => s + parseInt(r.count), 0) }
+            data: { points, topRegions, totalUsers }
         });
     } catch (error) {
         console.error('Error fetching user heatmap:', error);

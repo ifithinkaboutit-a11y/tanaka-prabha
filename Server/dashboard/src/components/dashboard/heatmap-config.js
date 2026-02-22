@@ -4,17 +4,18 @@ export const INDIA_MIN_ZOOM = 4;
 export const INDIA_MAX_ZOOM = 12;
 
 export const HEAT_GRADIENT = {
-    0.1: '#3f3f46', // zinc-700
-    0.4: '#52525b', // zinc-600
-    0.6: '#71717a', // zinc-500
-    0.8: '#a1a1aa', // zinc-400
-    1.0: '#e4e4e7', // zinc-200
+    0.1: '#16a34a', // green-600
+    0.3: '#65a30d', // lime-600
+    0.5: '#ca8a04', // yellow-600
+    0.7: '#ea580c', // orange-600
+    1.0: '#dc2626', // red-600
 };
 
 export const HEAT_OPTIONS = {
-    radius: 35,
-    blur: 25,
+    radius: 30,
+    blur: 20,
     maxZoom: 10,
+    minOpacity: 0.4,
     gradient: HEAT_GRADIENT,
 };
 

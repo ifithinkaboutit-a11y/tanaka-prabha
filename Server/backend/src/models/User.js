@@ -169,9 +169,10 @@ class User {
                 location::geometry,
                 ST_MakeEnvelope($1, $2, $3, $4, 4326)
             )
+            LIMIT $5 OFFSET $6
         `;
-        const { minLng, minLat, maxLng, maxLat } = bounds;
-        const result = await query(text, [minLng, minLat, maxLng, maxLat]);
+        const { minLng, minLat, maxLng, maxLat, limit = 50, offset = 0 } = bounds;
+        const result = await query(text, [minLng, minLat, maxLng, maxLat, limit, offset]);
         return result.rows;
     }
 
