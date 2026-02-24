@@ -54,6 +54,8 @@ interface AuthContextType {
   isLoading: boolean;
   user: User | null;
   needsOnboarding: boolean;
+  isAdmin: boolean;
+  loginAsAdmin: () => void;
   signIn: (phoneNumber: string, otp: string, isLoginMode?: boolean) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
@@ -67,6 +69,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   needsOnboarding: false,
+  isAdmin: false,
+  loginAsAdmin: () => { },
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
@@ -83,6 +87,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -150,6 +155,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
+    if (isAdmin) {
+      if (segments[0] !== "(admin)") {
+        router.replace("/(admin)/dashboard" as any);
+      }
+      return;
+    }
+
     const inAuthGroup = segments[0] === "(auth)";
 
     // Onboarding-only screens that login users must never see
@@ -164,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // This also blocks login users from landing on onboarding screens
       router.replace("/(tab)/" as any);
     }
-  }, [isAuthenticated, segments, isLoading, needsOnboarding]);
+  }, [isAuthenticated, isAdmin, segments, isLoading, needsOnboarding]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
@@ -178,6 +190,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     []
   );
+
+  const loginAsAdmin = useCallback(() => {
+    setIsAdmin(true);
+    setIsAuthenticated(true);
+    setNeedsOnboarding(false);
+    setUser({
+      id: "admin-id",
+      name: "Admin User",
+      role: "admin",
+    } as any);
+    router.replace("/(admin)/dashboard" as any);
+  }, [router]);
 
   // Sign in function - now returns isNewUser flag
   const signIn = useCallback(
@@ -291,11 +315,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.replace("/(tab)/" as any);
   }, [user, router]);
 
-  // Sign out function
   const signOut = useCallback(async () => {
     try {
       await signOutUser();
       setIsAuthenticated(false);
+      setIsAdmin(false);
       setUser(null);
       setNeedsOnboarding(false);
       router.replace("/(auth)/welcome");
@@ -325,6 +349,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         user,
         needsOnboarding,
+        isAdmin,
+        loginAsAdmin,
         signIn,
         signOut,
         sendOTP,

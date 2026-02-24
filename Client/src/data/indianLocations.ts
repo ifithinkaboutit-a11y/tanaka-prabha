@@ -132,7 +132,7 @@ export const indianDistricts: DistrictOption[] = [
   { value: "sultanpur", label: "Sultanpur", labelHi: "सुल्तानपुर", stateValue: "uttar_pradesh" },
   { value: "unnao", label: "Unnao", labelHi: "उन्नाव", stateValue: "uttar_pradesh" },
   { value: "varanasi", label: "Varanasi", labelHi: "वाराणसी", stateValue: "uttar_pradesh" },
-  
+
   // Bihar
   { value: "araria", label: "Araria", labelHi: "अररिया", stateValue: "bihar" },
   { value: "arwal", label: "Arwal", labelHi: "अरवल", stateValue: "bihar" },
@@ -404,5 +404,20 @@ export const getDistrictsByState = (stateValue: string): DistrictOption[] => {
 
 // Export as simple options without Hindi labels for Select component
 export const getStateOptions = () => indianStates.map(s => ({ value: s.value, label: s.label }));
-export const getDistrictOptions = (stateValue: string) => 
+export const getDistrictOptions = (stateValue: string) =>
   getDistrictsByState(stateValue).map(d => ({ value: d.value, label: d.label }));
+
+export const getTehsilOptions = (districtValue: string) => [
+  { value: `${districtValue}_tehsil_1`, label: `${districtValue.charAt(0).toUpperCase() + districtValue.slice(1).replace(/_/g, ' ')} Tehsil 1` },
+  { value: `${districtValue}_tehsil_2`, label: `${districtValue.charAt(0).toUpperCase() + districtValue.slice(1).replace(/_/g, ' ')} Tehsil 2` },
+];
+
+export const getBlockOptions = (tehsilValue: string) => [
+  { value: `${tehsilValue}_block_1`, label: `${tehsilValue.charAt(0).toUpperCase() + tehsilValue.slice(1).replace(/_/g, ' ')} Block 1` },
+  { value: `${tehsilValue}_block_2`, label: `${tehsilValue.charAt(0).toUpperCase() + tehsilValue.slice(1).replace(/_/g, ' ')} Block 2` },
+];
+
+export const getVillageOptions = (blockValue: string) => [
+  { value: `${blockValue}_village_1`, label: `${blockValue.charAt(0).toUpperCase() + blockValue.slice(1).replace(/_/g, ' ')} Village 1` },
+  { value: `${blockValue}_village_2`, label: `${blockValue.charAt(0).toUpperCase() + blockValue.slice(1).replace(/_/g, ' ')} Village 2` },
+];

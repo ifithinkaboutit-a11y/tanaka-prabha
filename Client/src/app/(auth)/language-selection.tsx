@@ -10,7 +10,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function LanguageSelection() {
   const router = useRouter();
-  const { currentLanguage, setLanguage, translate } = useLanguageStore();
+  const { currentLanguage, setLanguage, setHasLaunched, translate } = useLanguageStore();
   const [selectedLanguage, setSelectedLanguage] = useState<string>(
     currentLanguage || "hi",
   );
@@ -21,6 +21,7 @@ export default function LanguageSelection() {
 
   const handleContinue = async () => {
     await setLanguage(selectedLanguage);
+    await setHasLaunched(true);
     // Small delay to ensure language is persisted
     setTimeout(() => {
       router.push("/(auth)/welcome" as any);

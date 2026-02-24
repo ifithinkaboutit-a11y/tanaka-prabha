@@ -46,18 +46,43 @@ export default function QuickActionGrid({
   actions = defaultActions,
 }: QuickActionGridProps) {
   return (
-    <View className="flex-row flex-wrap gap-3">
+    <View
+      style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
+    >
       {actions.map((action, index) => (
         <Pressable
           key={index}
           onPress={action.onPress}
-          className="bg-white rounded-[20px] py-5 px-4 items-center justify-center border border-gray-100 shadow-sm elevation-3 active:opacity-80 active:scale-[0.98]"
-          style={{ width: "47%" }}
+          style={({ pressed }) => ({
+            width: "47%",
+            backgroundColor: "#FFFFFF",
+            borderRadius: 20,
+            paddingVertical: 20,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#F3F4F6",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 12,
+            elevation: 3,
+            opacity: pressed ? 0.8 : 1,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
         >
           {/* Icon Circle */}
           <View
-            className="w-18 h-18 rounded-full items-center justify-center mb-3.5"
-            style={{ backgroundColor: action.bgColor || "#F0F9FF" }}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: action.bgColor || "#F0F9FF",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 14,
+            }}
           >
             <Ionicons
               name={action.icon}
@@ -68,8 +93,14 @@ export default function QuickActionGrid({
 
           {/* Title */}
           <AppText
-            variant="bodySm"
-            className="text-center text-[14px] font-semibold text-gray-800 leading-5"
+            variant="bodyMd"
+            style={{
+              textAlign: "center",
+              fontSize: 14,
+              fontWeight: "600",
+              color: "#1F2937",
+              lineHeight: 20,
+            }}
             numberOfLines={2}
           >
             {action.title}

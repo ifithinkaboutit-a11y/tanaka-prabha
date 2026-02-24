@@ -1,7 +1,7 @@
 // src/app/(auth)/welcome.tsx
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
-import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
+import { Image } from "react-native";
 import { useTranslation } from "@/i18n";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -24,7 +24,11 @@ export default function Welcome() {
   return (
     <View style={s.root}>
       <View style={s.videoBg}>
-        <AuthVideoBackground />
+        <Image
+          source={{ uri: "https://images.unsplash.com/photo-1592982537447-6f23f8b0068a?q=80&w=1000&auto=format&fit=crop" }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
       </View>
       <View style={s.card}>
         {/* Title */}
@@ -59,6 +63,11 @@ export default function Welcome() {
             {t("auth.alreadyHaveAccount") || "Already have an account? "}
             <Text style={s.hintLink}>{t("auth.login") || "Log In"}</Text>
           </Text>
+        </TouchableOpacity>
+
+        {/* Admin Login Link */}
+        <TouchableOpacity onPress={() => router.push("/(auth)/admin-login" as any)} style={{ marginTop: 24, alignItems: "center" }}>
+          <Text style={{ color: "#9E9E9E", fontSize: 13, textDecorationLine: "underline" }}>Admin Portal</Text>
         </TouchableOpacity>
       </View>
     </View>

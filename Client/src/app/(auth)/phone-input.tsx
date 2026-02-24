@@ -13,6 +13,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -86,112 +87,114 @@ const PhoneInput = () => {
       style={s.root}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Video Background */}
-      <View style={s.videoBg}>
-        <AuthVideoBackground />
-      </View>
-
-      {/* Input Card */}
-      <View style={s.card}>
-        {/* Mode indicator chip */}
-        <View style={[s.modeChip, isLogin ? s.modeChipLogin : s.modeChipSignup]}>
-          <Ionicons
-            name={isLogin ? "log-in-outline" : "person-add-outline"}
-            size={13}
-            color={isLogin ? "#1D4ED8" : "#7C3AED"}
-          />
-          <Text style={[s.modeChipText, { color: isLogin ? "#1D4ED8" : "#7C3AED" }]}>
-            {isLogin ? "Log In" : "Create Account"}
-          </Text>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
+        {/* Video Background */}
+        <View style={s.videoBg}>
+          <AuthVideoBackground />
         </View>
 
-        {/* Title */}
-        <AppText variant="h2" style={s.title}>
-          {isLogin
-            ? (t("auth.loginTitle") || "Welcome Back")
-            : (t("auth.enterPhone") || "Get Started")}
-        </AppText>
-
-        {/* Subtitle */}
-        <Text style={s.subtitle}>
-          {isLogin
-            ? (t("auth.loginSubtitle") || "Enter your registered mobile number to log in")
-            : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
-        </Text>
-
-        {/* Phone Input */}
-        <Text style={s.inputLabel}>{t("auth.mobileNumber")}</Text>
-        <View style={[s.inputRow, isFocused && s.inputRowFocused, validationError ? s.inputRowError : null]}>
-          <View style={s.countryCode}>
-            <Text style={s.flag}>🇮🇳</Text>
-            <Text style={s.countryCodeText}>+91</Text>
-          </View>
-          <View style={s.divider} />
-          <TextInput
-            style={s.phoneInput}
-            placeholder="Enter 10-digit number"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={handlePhoneChange}
-            maxLength={10}
-            editable={!loading}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-          {phoneNumber.length === 10 && (
-            <View style={s.checkIcon}>
-              <Ionicons name="checkmark-circle" size={20} color="#386641" />
-            </View>
-          )}
-        </View>
-
-        {/* Character counter */}
-        <View style={s.helperRow}>
-          {validationError ? (
-            <View style={s.errorRow}>
-              <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
-              <Text style={s.errorText}>{validationError}</Text>
-            </View>
-          ) : (
-            <Text style={s.charCount}>{phoneNumber.length}/10 digits</Text>
-          )}
-        </View>
-
-        {/* Get OTP Button */}
-        <Button
-          variant="primary"
-          onPress={handleSendOTP}
-          disabled={!isReady}
-          style={s.otpBtn}
-        >
-          {loading ? (
-            <View style={s.loadingRow}>
-              <ActivityIndicator color="white" size="small" />
-              <Text style={[s.btnText, { marginLeft: 8 }]}>Sending OTP...</Text>
-            </View>
-          ) : (
-            <View style={s.btnRow}>
-              <Text style={s.btnText}>{t("auth.getOtp")}</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
-            </View>
-          )}
-        </Button>
-
-        {/* Switch mode */}
-        <TouchableOpacity onPress={handleSwitchMode} style={s.switchRow}>
-          <Text style={s.switchText}>
-            {isLogin
-              ? (t("auth.noAccount") || "Don't have an account? ")
-              : (t("auth.alreadyRegistered") || "Already have an account? ")}
-            <Text style={s.switchLink}>
-              {isLogin
-                ? (t("auth.signUp") || "Sign Up")
-                : (t("auth.login") || "Log In")}
+        {/* Input Card */}
+        <View style={s.card}>
+          {/* Mode indicator chip */}
+          <View style={[s.modeChip, isLogin ? s.modeChipLogin : s.modeChipSignup]}>
+            <Ionicons
+              name={isLogin ? "log-in-outline" : "person-add-outline"}
+              size={13}
+              color={isLogin ? "#1D4ED8" : "#7C3AED"}
+            />
+            <Text style={[s.modeChipText, { color: isLogin ? "#1D4ED8" : "#7C3AED" }]}>
+              {isLogin ? "Log In" : "Create Account"}
             </Text>
+          </View>
+
+          {/* Title */}
+          <AppText variant="h2" style={s.title}>
+            {isLogin
+              ? (t("auth.loginTitle") || "Welcome Back")
+              : (t("auth.enterPhone") || "Get Started")}
+          </AppText>
+
+          {/* Subtitle */}
+          <Text style={s.subtitle}>
+            {isLogin
+              ? (t("auth.loginSubtitle") || "Enter your registered mobile number to log in")
+              : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
           </Text>
-        </TouchableOpacity>
-      </View>
+
+          {/* Phone Input */}
+          <Text style={s.inputLabel}>{t("auth.mobileNumber")}</Text>
+          <View style={[s.inputRow, isFocused && s.inputRowFocused, validationError ? s.inputRowError : null]}>
+            <View style={s.countryCode}>
+              <Text style={s.flag}>🇮🇳</Text>
+              <Text style={s.countryCodeText}>+91</Text>
+            </View>
+            <View style={s.divider} />
+            <TextInput
+              style={s.phoneInput}
+              placeholder="Enter 10-digit number"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={handlePhoneChange}
+              maxLength={10}
+              editable={!loading}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+            {phoneNumber.length === 10 && (
+              <View style={s.checkIcon}>
+                <Ionicons name="checkmark-circle" size={20} color="#386641" />
+              </View>
+            )}
+          </View>
+
+          {/* Character counter */}
+          <View style={s.helperRow}>
+            {validationError ? (
+              <View style={s.errorRow}>
+                <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+                <Text style={s.errorText}>{validationError}</Text>
+              </View>
+            ) : (
+              <Text style={s.charCount}>{phoneNumber.length}/10 digits</Text>
+            )}
+          </View>
+
+          {/* Get OTP Button */}
+          <Button
+            variant="primary"
+            onPress={handleSendOTP}
+            disabled={!isReady}
+            style={s.otpBtn}
+          >
+            {loading ? (
+              <View style={s.loadingRow}>
+                <ActivityIndicator color="white" size="small" />
+                <Text style={[s.btnText, { marginLeft: 8 }]}>Sending OTP...</Text>
+              </View>
+            ) : (
+              <View style={s.btnRow}>
+                <Text style={s.btnText}>{t("auth.getOtp")}</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              </View>
+            )}
+          </Button>
+
+          {/* Switch mode */}
+          <TouchableOpacity onPress={handleSwitchMode} style={s.switchRow}>
+            <Text style={s.switchText}>
+              {isLogin
+                ? (t("auth.noAccount") || "Don't have an account? ")
+                : (t("auth.alreadyRegistered") || "Already have an account? ")}
+              <Text style={s.switchLink}>
+                {isLogin
+                  ? (t("auth.signUp") || "Sign Up")
+                  : (t("auth.login") || "Log In")}
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

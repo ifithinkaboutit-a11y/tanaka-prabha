@@ -7,8 +7,10 @@ import hi from "../i18n/hi.json";
 
 interface LanguageState {
   currentLanguage: string;
+  hasLaunched: boolean;
   translations: Record<string, any>;
   setLanguage: (language: string) => void;
+  setHasLaunched: (launched: boolean) => void;
   translate: (key: string) => string;
 }
 
@@ -21,9 +23,13 @@ export const useLanguageStore = create<LanguageState>()(
   persist(
     (set, get) => ({
       currentLanguage: "hi", // Default to Hindi
+      hasLaunched: false,
       translations,
       setLanguage: (language: string) => {
         set({ currentLanguage: language });
+      },
+      setHasLaunched: (launched: boolean) => {
+        set({ hasLaunched: launched });
       },
       translate: (key: string) => {
         const { currentLanguage } = get();

@@ -14,7 +14,7 @@ import {
   PersonalDetails,
   PersonalDetailsFormProps,
 } from "../../data/interfaces";
-import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
+import { getStateOptions, getDistrictOptions, getTehsilOptions, getBlockOptions, getVillageOptions } from "../../data/indianLocations";
 import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
@@ -211,6 +211,21 @@ export default function PersonalDetailsForm({
     [formData.state]
   );
 
+  const tehsilOptions = useMemo(
+    () => (formData.district ? getTehsilOptions(formData.district) : []),
+    [formData.district]
+  );
+
+  const blockOptions = useMemo(
+    () => (formData.tehsil ? getBlockOptions(formData.tehsil) : []),
+    [formData.tehsil]
+  );
+
+  const villageOptions = useMemo(
+    () => (formData.block ? getVillageOptions(formData.block) : []),
+    [formData.block]
+  );
+
   const handleSave = () => {
     if (!formData.name.trim()) {
       Alert.alert("Validation Error", "Name is required to save your profile.");
@@ -354,13 +369,19 @@ export default function PersonalDetailsForm({
       <View style={s.card}>
         <SectionHeader icon="location" title={String(T.translate("personalDetails.addressInformation"))} iconBg="#FFFBEB" iconColor="#D97706" />
 
-        <FormInput
-          label={String(T.translate("personalDetails.village"))}
-          value={formData.village}
-          onChangeText={(v) => update("village", v)}
-          placeholder="Enter village name"
-          icon="home-outline"
-        />
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
+          </View>
+          <Select
+            value={formData.village}
+            onChange={(v) => update("village", v)}
+            options={villageOptions}
+            placeholder={formData.block ? "Select village" : "Select block first"}
+            disabled={!formData.block}
+          />
+        </View>
 
         <View style={s.twoCol}>
           <View style={{ flex: 1 }}>
@@ -391,21 +412,31 @@ export default function PersonalDetailsForm({
             />
           </View>
           <View style={{ flex: 1 }}>
-            <FormInput
-              label={String(T.translate("personalDetails.tehsil"))}
+            <View style={fi.labelRow}>
+              <Text style={fi.label}>{String(T.translate("personalDetails.tehsil") || "Tehsil")}</Text>
+            </View>
+            <Select
               value={formData.tehsil}
-              onChangeText={(v) => update("tehsil", v)}
-              placeholder="Tehsil"
+              onChange={(v) => { update("tehsil", v); update("block", ""); update("village", ""); }}
+              options={tehsilOptions}
+              placeholder={formData.district ? "Select tehsil" : "Select district first"}
+              disabled={!formData.district}
             />
           </View>
         </View>
 
-        <FormInput
-          label={String(T.translate("personalDetails.block"))}
-          value={formData.block}
-          onChangeText={(v) => update("block", v)}
-          placeholder="Enter block name"
-        />
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block")}</Text>
+          </View>
+          <Select
+            value={formData.block}
+            onChange={(v) => { update("block", v); update("village", ""); }}
+            options={blockOptions}
+            placeholder={formData.tehsil ? "Select block" : "Select tehsil first"}
+            disabled={!formData.tehsil}
+          />
+        </View>
 
         {/* State */}
         <View style={fi.wrap}>
@@ -415,7 +446,7 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.state}
-            onChange={(v) => { update("state", v); update("district", ""); }}
+            onChange={(v) => { update("state", v); update("district", ""); update("tehsil", ""); update("block", ""); update("village", ""); }}
             options={stateOptions}
             placeholder="Select state"
           />
@@ -429,7 +460,7 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.district}
-            onChange={(v) => update("district", v)}
+            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); }}
             options={districtOptions}
             placeholder={formData.state ? "Select district" : "Select state first"}
             disabled={!formData.state}
