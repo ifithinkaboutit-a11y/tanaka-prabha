@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
+import ProgramSection from "../../components/molecules/ProgramSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
 import { schemesApi, Scheme } from "@/services/apiService";
@@ -209,7 +210,7 @@ export default function Schemes() {
 
   const fetchSchemes = async () => {
     try {
-      const data = await schemesApi.getAll({ limit: 10 });
+      const data = await schemesApi.getAll({ limit: 50 });
       setSchemes(data);
     } catch (error) {
       console.error("Error fetching schemes:", error);
@@ -534,6 +535,8 @@ export default function Schemes() {
           />
         ))}
       </View>
+
+      {/* Removed All Government Schemes section to match the FinalScreen12 UI */}
 
       {/* Bottom Spacing */}
       <View style={{ height: 24 }} />

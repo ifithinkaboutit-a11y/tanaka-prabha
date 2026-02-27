@@ -79,8 +79,8 @@ export default function GreetingHeader({
         <Pressable
           onPress={onNotificationPress}
           style={({ pressed }) => ({
-            width: 44,
-            height: 44,
+            width: 64,
+            height: 64,
             borderRadius: 22,
             backgroundColor: pressed ? "#E5E7EB" : "#F3F4F6",
             alignItems: "center",
@@ -90,16 +90,16 @@ export default function GreetingHeader({
             position: "relative",
           })}
         >
-          <Ionicons name="notifications-outline" size={22} color="#1F2937" />
+          <Ionicons name="notifications-outline" size={35} color="#1F2937" />
           {hasNotifications && (
             <View
               style={{
                 position: "absolute",
-                top: 10,
-                right: 12,
-                width: 9,
-                height: 9,
-                borderRadius: 4.5,
+                top: 16,
+                right: 22,
+                width: 12,
+                height: 12,
+                borderRadius: 90,
                 backgroundColor: "#EF4444",
                 borderWidth: 1.5,
                 borderColor: "#F3F4F6",

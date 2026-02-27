@@ -45,67 +45,62 @@ const defaultActions: QuickActionItem[] = [
 export default function QuickActionGrid({
   actions = defaultActions,
 }: QuickActionGridProps) {
-  return (
-    <View
-      style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
-    >
-      {actions.map((action, index) => (
-        <Pressable
-          key={index}
-          onPress={action.onPress}
-          style={({ pressed }) => ({
-            width: "47%",
-            backgroundColor: "#FFFFFF",
-            borderRadius: 20,
-            paddingVertical: 20,
-            paddingHorizontal: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: "#F3F4F6",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 12,
-            elevation: 3,
-            opacity: pressed ? 0.8 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
-        >
-          {/* Icon Circle */}
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: action.bgColor || "#F0F9FF",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 14,
-            }}
-          >
-            <Ionicons
-              name={action.icon}
-              size={36}
-              color={action.iconColor || "#386641"}
-            />
-          </View>
+  const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
-          {/* Title */}
-          <AppText
-            variant="bodyMd"
-            style={{
-              textAlign: "center",
-              fontSize: 14,
-              fontWeight: "600",
-              color: "#1F2937",
-              lineHeight: 20,
-            }}
-            numberOfLines={2}
-          >
-            {action.title}
-          </AppText>
-        </Pressable>
+  return (
+    <View className="flex-col gap-4">
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} className="flex-row gap-2 mx-auto max-w-[80%] flex items-center justify-center">
+          {row.map((action, colIndex) => (
+            <Pressable
+              key={colIndex}
+              onPress={action.onPress}
+              style={({ pressed }) => ({
+                flex: 1,
+                opacity: pressed ? 0.85 : 1,
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              })}
+              className="w-44 h-40"
+            >
+              <View
+                className="flex-1 bg-white rounded-2xl items-center justify-center p-4 border border-gray-100 elevation-4"
+                style={{
+                  shadowColor: action.iconColor ?? "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 12,
+                }}
+              >
+                {/* Icon Circle */}
+                <View
+                  className="w-14 h-14 rounded-full items-center justify-center mb-3 elevation-4"
+                  style={{
+                    backgroundColor: action.bgColor ?? "#F3F4F6",
+                    shadowColor: action.iconColor,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                  }}
+                >
+                  <Ionicons
+                    name={action.icon}
+                    size={26}
+                    color={action.iconColor ?? "#386641"}
+                  />
+                </View>
+
+                {/* Title */}
+                <AppText
+                  variant="bodyMd"
+                  className="text-center text-gray-800 font-bold text-[13px] leading-[18px] align-center"
+                  numberOfLines={3}
+                >
+                  {action.title}
+                </AppText>
+              </View>
+            </Pressable>
+          ))}
+        </View>
       ))}
     </View>
   );

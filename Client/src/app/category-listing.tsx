@@ -113,20 +113,11 @@ const CategoryListing = () => {
       : category;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       {/* Sticky Top Header Area */}
       <View style={{
         backgroundColor: "#FFFFFF",
         paddingBottom: 16,
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.04,
-        shadowRadius: 12,
-        elevation: 4,
-        marginBottom: 8,
-        zIndex: 10,
       }}>
         {/* Navigation Header */}
         <View style={{
@@ -146,7 +137,7 @@ const CategoryListing = () => {
           </Pressable>
           <AppText
             variant="h3"
-            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 20, letterSpacing: -0.2 }}
+            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 18, letterSpacing: -0.2 }}
             numberOfLines={1}
           >
             {displayTitle}
@@ -158,57 +149,34 @@ const CategoryListing = () => {
           <View style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#F1F5F9",
-            borderRadius: 16,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 12,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderWidth: 1,
-            borderColor: "rgba(0,0,0,0.03)"
+            borderColor: "#E5E7EB",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+            elevation: 1,
           }}>
             <Ionicons name="search" size={20} color="#9CA3AF" />
             <TextInput
-              style={{ flex: 1, marginLeft: 10, fontSize: 16, color: "#111827", fontWeight: "500" }}
-              placeholder={t("schemesPage.searchPlaceholder")}
+              style={{ flex: 1, marginLeft: 10, fontSize: 15, color: "#111827", fontWeight: "400" }}
+              placeholder={t("schemesPage.searchPlaceholder") || "Search for schemes"}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
+            <Ionicons name="mic" size={20} color="#4B5563" />
           </View>
-        </View>
-
-        {/* Sort and Filter Controls */}
-        <View style={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}>
-          <TouchableOpacity
-            onPress={() => setSortBy(sortBy === "name" ? "date" : "name")}
-            style={{ flexDirection: "row", alignItems: "center" }}
-          >
-            <Ionicons name="swap-vertical" size={16} color="#4B5563" />
-            <AppText variant="bodySm" style={{ color: "#4B5563", marginLeft: 6, fontWeight: "600" }}>
-              {t("schemesPage.sortBy")}: {sortBy === "name" ? "A-Z" : "Newest"}
-            </AppText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowFilters(!showFilters)}
-            style={{ flexDirection: "row", alignItems: "center" }}
-          >
-            <Ionicons name="options" size={16} color="#4B5563" />
-            <AppText variant="bodySm" style={{ color: "#4B5563", marginLeft: 6, fontWeight: "600" }}>
-              {t("schemesPage.filters")}
-            </AppText>
-          </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView style={{ flex: 1 }}>
         {/* Schemes List */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
           {filteredSchemes.map((scheme) => (
             <SchemePreviewCard
               key={scheme.id}
@@ -227,14 +195,55 @@ const CategoryListing = () => {
                 variant="bodyMd"
                 style={{ color: "#616161", marginTop: 16, textAlign: "center" }}
               >
-                {t("schemesPage.noSchemesFound")}
+                {t("schemesPage.noSchemesFound") || "No schemes found"}
               </AppText>
             </View>
           )}
         </View>
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Fixed Bottom Bar for Sort and Filter */}
+      <View style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'row',
+        paddingVertical: 16,
+        paddingBottom: 32, // for safe area
+        borderTopWidth: 1,
+        borderColor: '#E5E7EB',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 10,
+      }}>
+        <TouchableOpacity
+          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderColor: '#E5E7EB' }}
+          onPress={() => setSortBy(sortBy === "name" ? "date" : "name")}
+        >
+          <Ionicons name="filter-outline" size={20} color="#4B5563" style={{ transform: [{ rotate: '180deg' }] }} />
+          <AppText variant="bodyMd" style={{ color: "#4B5563", marginLeft: 8, fontWeight: "600" }}>
+            Sort By {sortBy === "name" ? "(A-Z)" : "(Date)"}
+          </AppText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Ionicons name="options-outline" size={20} color="#4B5563" />
+          <AppText variant="bodyMd" style={{ color: "#4B5563", marginLeft: 8, fontWeight: "600" }}>
+            Filters
+          </AppText>
+        </TouchableOpacity>
+      </View>
+
+      {/* Mocked Filter Dropdown just changing the search query logic could happen here, keeping simple for UI */}
     </View>
   );
 };

@@ -55,7 +55,7 @@ interface AuthContextType {
   user: User | null;
   needsOnboarding: boolean;
   isAdmin: boolean;
-  loginAsAdmin: () => void;
+  loginAsAdmin: (token: string, userData: User) => Promise<void>;
   signIn: (phoneNumber: string, otp: string, isLoginMode?: boolean) => Promise<{ user: User; isNewUser: boolean }>;
   signOut: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<string>;
@@ -70,7 +70,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   needsOnboarding: false,
   isAdmin: false,
-  loginAsAdmin: () => { },
+  loginAsAdmin: async () => { },
   signIn: async () => {
     throw new Error("AuthContext not initialized");
   },
@@ -176,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // This also blocks login users from landing on onboarding screens
       router.replace("/(tab)/" as any);
     }
-  }, [isAuthenticated, isAdmin, segments, isLoading, needsOnboarding]);
+  }, [isAuthenticated, isAdmin, segments, isLoading, needsOnboarding, router]);
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
@@ -191,15 +191,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const loginAsAdmin = useCallback(() => {
+  const loginAsAdmin = useCallback(async (token: string, userData: User) => {
     setIsAdmin(true);
     setIsAuthenticated(true);
     setNeedsOnboarding(false);
-    setUser({
-      id: "admin-id",
-      name: "Admin User",
-      role: "admin",
-    } as any);
+    setUser(userData);
+    await tokenManager.setToken(token);
+    await tokenManager.setUser(userData);
     router.replace("/(admin)/dashboard" as any);
   }, [router]);
 
@@ -277,12 +275,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const updatedUser = {
             ...user,
             is_new_user: false,
-            name: pd.name || user.name,
+            isNewUser: false,
+            name: pd.name || user.name || user.name,
             age: pd.age || user.age,
             gender: pd.gender || user.gender,
             village: pd.village || user.village,
             district: pd.district || user.district,
             state: pd.state || user.state,
+            fathers_name: pd.fathersName || user.fathers_name,
+            fathersName: pd.fathersName || user.fathersName,
+            mothers_name: pd.mothersName || user.mothers_name,
+            mothersName: pd.mothersName || user.mothersName,
           };
           setUser(updatedUser);
           tokenManager.setUser(updatedUser);

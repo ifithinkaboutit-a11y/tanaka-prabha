@@ -34,9 +34,6 @@ const ConnectDetailScreen = () => {
     try {
       const data = await professionalsApi.getById(professionalId);
       setProfessional(data);
-      // Fetch booked slots for this professional
-      // In a real app, this would come from the API
-      // For now, we simulate some booked slots
       const appointments = await appointmentsApi.getByProfessional(professionalId);
       setBookedSlots(appointments.map((a: any) => ({ date: a.date, time: a.time })));
     } catch (error) {
@@ -61,20 +58,11 @@ const ConnectDetailScreen = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" }}>
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: "#DCFCE7",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+      <View className="flex-1 items-center justify-center bg-slate-50">
+        <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
           <Ionicons name="person" size={28} color="#386641" />
         </View>
-        <AppText variant="bodySm" style={{ color: "#6B7280", marginTop: 12 }}>
+        <AppText variant="bodySm" className="text-gray-500">
           {t("connect.loading")}
         </AppText>
       </View>
@@ -83,35 +71,18 @@ const ConnectDetailScreen = () => {
 
   if (!professional) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC", padding: 20 }}>
-        <View
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "#FEF2F2",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 16,
-          }}
-        >
+      <View className="flex-1 items-center justify-center bg-slate-50 p-5">
+        <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
           <Ionicons name="alert-circle" size={40} color="#DC2626" />
         </View>
-        <AppText variant="bodyMd" style={{ color: "#6B7280", textAlign: "center" }}>
+        <AppText variant="bodyMd" className="text-gray-500 text-center">
           {t("connect.professionalNotFound")}
         </AppText>
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => ({
-            marginTop: 20,
-            backgroundColor: "#386641",
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 20,
-            opacity: pressed ? 0.9 : 1,
-          })}
+          className="mt-5 bg-[#386641] px-6 py-3 rounded-xl active:opacity-90"
         >
-          <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+          <AppText variant="bodySm" className="text-white font-semibold">
             {t("common.goBack")}
           </AppText>
         </Pressable>
@@ -128,10 +99,7 @@ const ConnectDetailScreen = () => {
     if (professional.phone) {
       const phoneNumber = professional.phone.replace(/\D/g, "");
       Linking.openURL(`tel:${phoneNumber}`).catch(() => {
-        Alert.alert(
-          t("connect.error"),
-          t("connect.cannotMakeCall")
-        );
+        Alert.alert(t("connect.error"), t("connect.cannotMakeCall"));
       });
     } else {
       Alert.alert(t("connect.error"), t("connect.noPhoneNumber"));
@@ -142,17 +110,12 @@ const ConnectDetailScreen = () => {
     setShowConnectModal(false);
     if (professional.phone) {
       const phoneNumber = professional.phone.replace(/\D/g, "");
-      // Add country code if not present (assuming India - 91)
       const formattedNumber = phoneNumber.startsWith("91")
         ? phoneNumber
         : `91${phoneNumber}`;
       Linking.openURL(`whatsapp://send?phone=${formattedNumber}`).catch(() => {
-        // If WhatsApp app is not installed, try web version
         Linking.openURL(`https://wa.me/${formattedNumber}`).catch(() => {
-          Alert.alert(
-            t("connect.error"),
-            t("connect.cannotOpenWhatsApp")
-          );
+          Alert.alert(t("connect.error"), t("connect.cannotOpenWhatsApp"));
         });
       });
     } else {
@@ -167,7 +130,6 @@ const ConnectDetailScreen = () => {
 
   const handleConfirmBooking = async (date: Date, time: string) => {
     try {
-      // Create booking via API
       await appointmentsApi.create({
         professionalId: professional.id,
         date: date.toISOString().split("T")[0],
@@ -184,7 +146,6 @@ const ConnectDetailScreen = () => {
         }),
         [{ text: t("common.ok") }]
       );
-      // Refresh to get updated slots
       fetchProfessional();
     } catch (error) {
       Alert.alert(
@@ -195,36 +156,17 @@ const ConnectDetailScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          backgroundColor: "#386641",
-        }}
-      >
+    <View className="flex-1 bg-slate-50">
+      <View className="flex-row items-center px-5 pt-12 pb-4 bg-[#386641]">
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => ({
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "rgba(255,255,255,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            opacity: pressed ? 0.7 : 1,
-          })}
+          className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3 active:opacity-70"
         >
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </Pressable>
         <AppText
           variant="h3"
-          style={{ flex: 1, fontWeight: "700", color: "#FFFFFF", fontSize: 18 }}
+          className="flex-1 font-bold text-white text-[18px]"
           numberOfLines={1}
         >
           {t("connect.expertProfile")}
@@ -232,7 +174,7 @@ const ConnectDetailScreen = () => {
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -245,176 +187,69 @@ const ConnectDetailScreen = () => {
       >
         {/* Profile Card */}
         <View
-          style={{
-            marginHorizontal: 20,
-            marginTop: 20,
-            backgroundColor: "#FFFFFF",
-            borderRadius: 24,
-            padding: 24,
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            elevation: 4,
-          }}
+          className="mx-5 mt-5 bg-white rounded-[24px] p-6 items-center shadow-lg border border-gray-100"
+          style={{ elevation: 4 }}
         >
-          {/* Profile Image with Status */}
-          <View style={{ position: "relative", marginBottom: 16 }}>
+          <View className="mb-4 relative">
             <Image
               source={{ uri: professional.imageUrl || 'https://via.placeholder.com/150' }}
-              style={{
-                width: 120,
-                height: 140,
-                borderRadius: 20,
-                borderWidth: 4,
-                borderColor: professional.isAvailable ? "#16A34A" : "#D1D5DB",
-              }}
+              className={`w-28 h-[140px] rounded-2xl border-4 ${professional.isAvailable ? 'border-green-600' : 'border-gray-300'}`}
               resizeMode="cover"
             />
-            {/* Availability Badge */}
             <View
-              style={{
-                position: "absolute",
-                bottom: -8,
-                left: "50%",
-                transform: [{ translateX: -40 }],
-                backgroundColor: professional.isAvailable ? "#16A34A" : "#9CA3AF",
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                borderRadius: 12,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
+              className={`absolute -bottom-2.5 left-1/2 -ml-[45px] px-3 py-1 rounded-xl flex-row items-center ${professional.isAvailable ? "bg-green-600" : "bg-gray-400"
+                }`}
             >
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FFFFFF",
-                  marginRight: 6,
-                }}
-              />
-              <AppText
-                variant="bodySm"
-                style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 11 }}
-              >
+              <View className="w-2 h-2 rounded-full bg-white mr-1.5" />
+              <AppText variant="bodySm" className="text-white font-semibold text-[11px]">
                 {professional.isAvailable ? t("connect.available") : t("connect.busy")}
               </AppText>
             </View>
           </View>
 
-          {/* Name */}
-          <AppText
-            variant="h2"
-            style={{
-              fontWeight: "800",
-              color: "#1F2937",
-              textAlign: "center",
-              marginTop: 8,
-              fontSize: 22,
-            }}
-          >
+          <AppText variant="h2" className="font-extrabold text-gray-800 text-center mt-2 text-[22px]">
             {professional.name}
           </AppText>
 
-          {/* Role Badge */}
-          <View
-            style={{
-              backgroundColor: "#DCFCE7",
-              paddingHorizontal: 16,
-              paddingVertical: 6,
-              borderRadius: 16,
-              marginTop: 8,
-            }}
-          >
-            <AppText
-              variant="bodySm"
-              style={{ color: "#166534", fontWeight: "600", fontSize: 13 }}
-            >
+          <View className="bg-green-100 px-4 py-1.5 rounded-2xl mt-2">
+            <AppText variant="bodySm" className="text-green-800 font-semibold text-[13px]">
               {professional.role}
             </AppText>
           </View>
 
-          {/* Department */}
           {professional.department && (
-            <AppText
-              variant="bodySm"
-              style={{ color: "#6B7280", marginTop: 8, textAlign: "center" }}
-            >
+            <AppText variant="bodySm" className="text-gray-500 mt-2 text-center">
               {professional.department}
             </AppText>
           )}
 
-          {/* Location */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+          <View className="flex-row items-center mt-2">
             <Ionicons name="location" size={16} color="#9CA3AF" />
-            <AppText
-              variant="bodySm"
-              style={{ color: "#9CA3AF", marginLeft: 4 }}
-            >
+            <AppText variant="bodySm" className="text-gray-400 ml-1">
               {professional.district}
             </AppText>
           </View>
         </View>
 
         {/* Quick Connect Buttons */}
-        <View
-          style={{
-            flexDirection: "row",
-            marginHorizontal: 20,
-            marginTop: 16,
-            gap: 12,
-          }}
-        >
+        <View className="flex-row mx-5 mt-4 gap-x-3">
           <Pressable
             onPress={handleCall}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: pressed ? "#1D4ED8" : "#2563EB",
-              paddingVertical: 14,
-              borderRadius: 16,
-              shadowColor: "#2563EB",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            })}
+            className="flex-1 flex-row items-center justify-center bg-[#2563EB] py-3.5 rounded-2xl shadow-sm active:bg-blue-700"
+            style={{ elevation: 4 }}
           >
             <Ionicons name="call" size={20} color="#FFFFFF" />
-            <AppText
-              variant="bodySm"
-              style={{ color: "#FFFFFF", fontWeight: "700", marginLeft: 8, fontSize: 14 }}
-            >
+            <AppText variant="bodySm" className="text-white font-bold ml-2 text-[14px]">
               {t("connect.options.call")}
             </AppText>
           </Pressable>
           <Pressable
             onPress={handleChat}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: pressed ? "#059669" : "#10B981",
-              paddingVertical: 14,
-              borderRadius: 16,
-              shadowColor: "#10B981",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            })}
+            className="flex-1 flex-row items-center justify-center bg-[#10B981] py-3.5 rounded-2xl shadow-sm active:bg-emerald-600"
+            style={{ elevation: 4 }}
           >
             <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
-            <AppText
-              variant="bodySm"
-              style={{ color: "#FFFFFF", fontWeight: "700", marginLeft: 8, fontSize: 14 }}
-            >
+            <AppText variant="bodySm" className="text-white font-bold ml-2 text-[14px]">
               {t("connect.options.chat")}
             </AppText>
           </Pressable>
@@ -422,62 +257,39 @@ const ConnectDetailScreen = () => {
 
         {/* Service Area Section */}
         <View
-          style={{
-            marginHorizontal: 20,
-            marginTop: 20,
-            backgroundColor: "#FFFFFF",
-            borderRadius: 20,
-            padding: 20,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 8,
-            elevation: 3,
-          }}
+          className="mx-5 mt-5 bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+          style={{ elevation: 3 }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: "#DBEAFE",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
+          <View className="flex-row items-center mb-4">
+            <View className="w-10 h-10 rounded-xl bg-blue-100 items-center justify-center mr-3">
               <Ionicons name="location" size={20} color="#2563EB" />
             </View>
-            <AppText
-              variant="h3"
-              style={{ fontWeight: "700", color: "#1F2937", fontSize: 16 }}
-            >
+            <AppText variant="h3" className="font-bold text-gray-800 text-[16px]">
               {t("connect.serviceArea")}
             </AppText>
           </View>
 
-          <View style={{ gap: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#386641", marginRight: 12 }} />
-              <AppText variant="bodySm" style={{ color: "#6B7280" }}>
-                <AppText style={{ fontWeight: "600", color: "#374151" }}>{t("connect.district")}:</AppText>{" "}
+          <View className="gap-y-3">
+            <View className="flex-row items-center">
+              <View className="w-1.5 h-1.5 rounded-full bg-[#386641] mr-3" />
+              <AppText variant="bodySm" className="text-gray-500">
+                <AppText className="font-semibold text-gray-700">{t("connect.district")}:</AppText>{" "}
                 {professional.serviceArea?.district || professional.district || 'N/A'}
               </AppText>
             </View>
 
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#386641", marginRight: 12, marginTop: 6 }} />
-              <AppText variant="bodySm" style={{ color: "#6B7280", flex: 1 }}>
-                <AppText style={{ fontWeight: "600", color: "#374151" }}>{t("connect.blocksCovered")}:</AppText>{" "}
+            <View className="flex-row items-start">
+              <View className="w-1.5 h-1.5 rounded-full bg-[#386641] mr-3 mt-1.5" />
+              <AppText variant="bodySm" className="text-gray-500 flex-1">
+                <AppText className="font-semibold text-gray-700">{t("connect.blocksCovered")}:</AppText>{" "}
                 {professional.serviceArea?.blocks?.join(", ") || 'N/A'}
               </AppText>
             </View>
 
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#386641", marginRight: 12 }} />
-              <AppText variant="bodySm" style={{ color: "#6B7280" }}>
-                <AppText style={{ fontWeight: "600", color: "#374151" }}>{t("connect.state")}:</AppText>{" "}
+            <View className="flex-row items-center">
+              <View className="w-1.5 h-1.5 rounded-full bg-[#386641] mr-3" />
+              <AppText variant="bodySm" className="text-gray-500">
+                <AppText className="font-semibold text-gray-700">{t("connect.state")}:</AppText>{" "}
                 {professional.serviceArea?.state || 'N/A'}
               </AppText>
             </View>
@@ -487,56 +299,22 @@ const ConnectDetailScreen = () => {
         {/* Specialization Section */}
         {professional.specializations && professional.specializations.length > 0 && (
           <View
-            style={{
-              marginHorizontal: 20,
-              marginTop: 16,
-              backgroundColor: "#FFFFFF",
-              borderRadius: 20,
-              padding: 20,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 3,
-            }}
+            className="mx-5 mt-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+            style={{ elevation: 3 }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  backgroundColor: "#FEF3C7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 12,
-                }}
-              >
+            <View className="flex-row items-center mb-4">
+              <View className="w-10 h-10 rounded-xl bg-amber-100 items-center justify-center mr-3">
                 <Ionicons name="star" size={20} color="#D97706" />
               </View>
-              <AppText
-                variant="h3"
-                style={{ fontWeight: "700", color: "#1F2937", fontSize: 16 }}
-              >
+              <AppText variant="h3" className="font-bold text-gray-800 text-[16px]">
                 {t("connect.specialization")}
               </AppText>
             </View>
 
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <View className="flex-row flex-wrap gap-2">
               {professional.specializations.map((spec, index) => (
-                <View
-                  key={index}
-                  style={{
-                    backgroundColor: "#F3F4F6",
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 12,
-                  }}
-                >
-                  <AppText
-                    variant="bodySm"
-                    style={{ color: "#374151", fontWeight: "500", fontSize: 13 }}
-                  >
+                <View key={index} className="bg-gray-100 px-3 py-2 rounded-xl">
+                  <AppText variant="bodySm" className="text-gray-700 font-medium text-[13px]">
                     {spec}
                   </AppText>
                 </View>
@@ -548,107 +326,46 @@ const ConnectDetailScreen = () => {
         {/* Contact Info */}
         {professional.phone && (
           <View
-            style={{
-              marginHorizontal: 20,
-              marginTop: 16,
-              backgroundColor: "#FFFFFF",
-              borderRadius: 20,
-              padding: 20,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 3,
-            }}
+            className="mx-5 mt-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+            style={{ elevation: 3 }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  backgroundColor: "#DCFCE7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 12,
-                }}
-              >
+            <View className="flex-row items-center mb-4">
+              <View className="w-10 h-10 rounded-xl bg-green-100 items-center justify-center mr-3">
                 <Ionicons name="call" size={20} color="#16A34A" />
               </View>
-              <AppText
-                variant="h3"
-                style={{ fontWeight: "700", color: "#1F2937", fontSize: 16 }}
-              >
+              <AppText variant="h3" className="font-bold text-gray-800 text-[16px]">
                 {t("connect.contactInfo")}
               </AppText>
             </View>
 
             <Pressable
               onPress={handleCall}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: pressed ? "#F3F4F6" : "#F9FAFB",
-                padding: 14,
-                borderRadius: 12,
-              })}
+              className="flex-row items-center bg-gray-50 p-3 h-14 rounded-xl active:bg-gray-100"
             >
               <Ionicons name="call-outline" size={20} color="#6B7280" />
-              <AppText
-                variant="bodyMd"
-                style={{ color: "#374151", marginLeft: 12, fontWeight: "500" }}
-              >
+              <AppText variant="bodyMd" className="text-gray-700 ml-3 font-medium">
                 {professional.phone}
               </AppText>
-              <View style={{ flex: 1 }} />
+              <View className="flex-1" />
               <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
             </Pressable>
           </View>
         )}
 
-        <View style={{ height: 120 }} />
+        <View className="h-32" />
       </ScrollView>
 
       {/* Bottom Action Button */}
       <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 20,
-          paddingVertical: 16,
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
+        className="absolute bottom-0 left-0 right-0 px-5 pt-4 pb-6 bg-white border-t border-gray-200"
+        style={{ elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 8 }}
       >
         <Pressable
           onPress={handleBookAppointment}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? "#2F5233" : "#386641",
-            paddingVertical: 16,
-            borderRadius: 25,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#386641",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 4,
-          })}
+          className="bg-[#386641] py-4 rounded-full flex-row items-center justify-center active:bg-[#2F5233]"
         >
           <Ionicons name="calendar" size={22} color="#FFFFFF" />
-          <AppText
-            variant="bodyMd"
-            style={{ color: "#FFFFFF", fontWeight: "700", marginLeft: 10, fontSize: 16 }}
-          >
+          <AppText variant="bodyMd" className="text-white font-bold ml-2.5 text-[16px]">
             {t("connect.bookAppointment")}
           </AppText>
         </Pressable>
@@ -662,75 +379,31 @@ const ConnectDetailScreen = () => {
         onRequestClose={() => setShowConnectModal(false)}
       >
         <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+          className="flex-1 bg-black/50"
           onPress={() => setShowConnectModal(false)}
         >
-          <View style={{ flex: 1 }} />
-          <View
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              paddingHorizontal: 24,
-              paddingTop: 24,
-              paddingBottom: 36,
-            }}
-          >
+          <View className="flex-1" />
+          <View className="bg-white rounded-t-[28px] px-6 pt-6 pb-10">
             {/* Handle Bar */}
-            <View
-              style={{
-                width: 40,
-                height: 4,
-                backgroundColor: "#D1D5DB",
-                borderRadius: 2,
-                alignSelf: "center",
-                marginBottom: 20,
-              }}
-            />
+            <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-5" />
 
-            <AppText
-              variant="h3"
-              style={{ fontWeight: "700", color: "#1F2937", marginBottom: 20, fontSize: 18 }}
-            >
+            <AppText variant="h3" className="font-bold text-gray-800 mb-5 text-[18px]">
               {t("connect.howToConnect")}
             </AppText>
 
             {/* Call Option */}
             <Pressable
               onPress={handleCall}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: pressed ? "#DBEAFE" : "#EFF6FF",
-                padding: 16,
-                borderRadius: 16,
-                marginBottom: 12,
-              })}
+              className="flex-row items-center bg-blue-50 p-4 rounded-2xl mb-3 active:bg-blue-100"
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "#2563EB",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 14,
-                }}
-              >
+              <View className="w-12 h-12 rounded-full bg-blue-600 items-center justify-center mr-3">
                 <Ionicons name="call" size={24} color="#FFFFFF" />
               </View>
-              <View style={{ flex: 1 }}>
-                <AppText
-                  variant="bodyMd"
-                  style={{ fontWeight: "700", color: "#1F2937", fontSize: 15 }}
-                >
+              <View className="flex-1">
+                <AppText variant="bodyMd" className="font-bold text-gray-800 text-[15px]">
                   {t("connect.callThem")}
                 </AppText>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#6B7280", marginTop: 2 }}
-                >
+                <AppText variant="bodySm" className="text-gray-500 mt-0.5">
                   {t("connect.callDescription")}
                 </AppText>
               </View>
@@ -740,39 +413,16 @@ const ConnectDetailScreen = () => {
             {/* Chat Option */}
             <Pressable
               onPress={handleChat}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: pressed ? "#D1FAE5" : "#ECFDF5",
-                padding: 16,
-                borderRadius: 16,
-                marginBottom: 12,
-              })}
+              className="flex-row items-center bg-emerald-50 p-4 rounded-2xl mb-3 active:bg-emerald-100"
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "#10B981",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 14,
-                }}
-              >
+              <View className="w-12 h-12 rounded-full bg-emerald-500 items-center justify-center mr-3">
                 <Ionicons name="logo-whatsapp" size={24} color="#FFFFFF" />
               </View>
-              <View style={{ flex: 1 }}>
-                <AppText
-                  variant="bodyMd"
-                  style={{ fontWeight: "700", color: "#1F2937", fontSize: 15 }}
-                >
+              <View className="flex-1">
+                <AppText variant="bodyMd" className="font-bold text-gray-800 text-[15px]">
                   {t("connect.chatWithThem")}
                 </AppText>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#6B7280", marginTop: 2 }}
-                >
+                <AppText variant="bodySm" className="text-gray-500 mt-0.5">
                   {t("connect.chatDescription")}
                 </AppText>
               </View>
@@ -782,38 +432,16 @@ const ConnectDetailScreen = () => {
             {/* Book Appointment Option */}
             <Pressable
               onPress={handleBookAppointment}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: pressed ? "#FEF3C7" : "#FFFBEB",
-                padding: 16,
-                borderRadius: 16,
-              })}
+              className="flex-row items-center bg-amber-50 p-4 rounded-2xl mb-3 active:bg-amber-100"
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "#F59E0B",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 14,
-                }}
-              >
+              <View className="w-12 h-12 rounded-full bg-amber-500 items-center justify-center mr-3">
                 <Ionicons name="calendar" size={24} color="#FFFFFF" />
               </View>
-              <View style={{ flex: 1 }}>
-                <AppText
-                  variant="bodyMd"
-                  style={{ fontWeight: "700", color: "#1F2937", fontSize: 15 }}
-                >
+              <View className="flex-1">
+                <AppText variant="bodyMd" className="font-bold text-gray-800 text-[15px]">
                   {t("connect.bookAppointment")}
                 </AppText>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: "#6B7280", marginTop: 2 }}
-                >
+                <AppText variant="bodySm" className="text-gray-500 mt-0.5">
                   {t("connect.bookDescription")}
                 </AppText>
               </View>

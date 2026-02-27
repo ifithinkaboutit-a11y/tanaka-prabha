@@ -1,0 +1,149 @@
+{
+    "states": [
+        {
+            "name": "Uttar Pradesh",
+            "coordinates": {
+                "lat": 26.8467,
+                "lng": 80.9462
+            },
+            "districts": [
+                {
+                    "name": "Lucknow",
+                    "coordinates": {
+                        "lat": 26.8467,
+                        "lng": 80.9462
+                    },
+                    "tehsils": [
+                        {
+                            "name": "Lucknow",
+                            "blocks": [
+                                {
+                                    "name": "Chinhat",
+                                    "villages": [
+                                        "Gomti Nagar",
+                                        "Indira Nagar",
+                                        "BBD"
+                                    ]
+                                },
+                                {
+                                    "name": "Kakori",
+                                    "villages": [
+                                        "Malli",
+                                        "Kusumbhi",
+                                        "Amethia"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Kanpur Nagar",
+                    "coordinates": {
+                        "lat": 26.4499,
+                        "lng": 80.3319
+                    },
+                    "tehsils": [
+                        {
+                            "name": "Kanpur",
+                            "blocks": [
+                                {
+                                    "name": "Kalyanpur",
+                                    "villages": [
+                                        "Bithoor",
+                                        "Karamatpur",
+                                        "Pindki"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Madhya Pradesh",
+            "coordinates": {
+                "lat": 22.9734,
+                "lng": 78.6569
+            },
+            "districts": [
+                {
+                    "name": "Bhopal",
+                    "coordinates": {
+                        "lat": 23.2599,
+                        "lng": 77.4126
+                    },
+                    "tehsils": [
+                        {
+                            "name": "Huzur",
+                            "blocks": [
+                                {
+                                    "name": "Phanda",
+                                    "villages": [
+                                        "Bairagarh",
+                                        "Khajuri",
+                                        "Kolar"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Indore",
+                    "coordinates": {
+                        "lat": 22.7196,
+                        "lng": 75.8577
+                    },
+                    "tehsils": [
+                        {
+                            "name": "Indore",
+                            "blocks": [
+                                {
+                                    "name": "Sanwer",
+                                    "villages": [
+                                        "Dharampuri",
+                                        "Shipra",
+                                        "Chandravatiganj"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Maharashtra",
+            "coordinates": {
+                "lat": 19.7515,
+                "lng": 75.7139
+            },
+            "districts": [
+                {
+                    "name": "Pune",
+                    "coordinates": {
+                        "lat": 18.5204,
+                        "lng": 73.8567
+                    },
+                    "tehsils": [
+                        {
+                            "name": "Haveli",
+                            "blocks": [
+                                {
+                                    "name": "Pimpri-Chinchwad",
+                                    "villages": [
+                                        "Hinjewadi",
+                                        "Wakad",
+                                        "Baner"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

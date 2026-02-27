@@ -34,21 +34,21 @@ export interface ApiResponse<T = any> {
 export interface User {
   id: string;
   name: string;
-  mobile_number: string;
+  mobileNumber?: string;
   age?: number;
   village?: string;
   district?: string;
   state?: string;
   gender?: string;
   date_of_birth?: string;
-  fathers_name?: string;
-  mothers_name?: string;
-  educational_qualification?: string;
+  fathersName?: string;
+  mothersName?: string;
+  educationalQualification?: string;
   block?: string;
   tehsil?: string;
-  pin_code?: string;
-  photo_url?: string;
-  is_new_user?: boolean;
+  pinCode?: string;
+  photoUrl?: string;
+  isNewUser?: boolean;
   is_verified?: boolean;
 }
 
@@ -705,6 +705,30 @@ export const eventsApi = {
       body: JSON.stringify({ mobile_number, name }),
     });
   },
+
+  create: async (eventData: Partial<ApiEvent>): Promise<ApiResponse<{ event: ApiEvent }>> => {
+    return await fetchWithAuth<{ event: ApiEvent }>("/events", {
+      method: "POST",
+      body: JSON.stringify(eventData),
+    });
+  },
+
+  getAttendees: async (eventId: string): Promise<any[]> => {
+    try {
+      const response = await fetchWithAuth<{ attendees: any[] }>(`/events/${eventId}/attendees`);
+      return response.data?.attendees || [];
+    } catch (error) {
+      console.error("Error fetching attendees:", error);
+      return [];
+    }
+  },
+
+  markAttendance: async (eventId: string, mobile_number: string, status: "present" | "absent"): Promise<any> => {
+    return await fetchWithAuth(`/events/${eventId}/attendance`, {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, status }),
+    });
+  },
 };
 
 // ============================================================
@@ -1276,6 +1300,40 @@ export const appointmentsApi = {
   },
 };
 
+// ============================================================================
+// Analytics API
+// ============================================================================
+
+export interface DashboardStats {
+  totalFarmers: number;
+  totalLandCoverage: number;
+  livestockCount: number;
+  activeSchemes: number;
+  availableProfessionals: number;
+}
+
+export const analyticsApi = {
+  /**
+   * Get dashboard statistics
+   */
+  async getDashboardStats(): Promise<DashboardStats | null> {
+    try {
+      const response = await fetchWithAuth<{
+        totalFarmers: number;
+        totalLandCoverage: number;
+        livestockCount: number;
+        activeSchemes: number;
+        availableProfessionals: number;
+      }>("/analytics/dashboard");
+
+      return response.data || null;
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      return null;
+    }
+  },
+};
+
 export default {
   auth: authApi,
   user: userApi,
@@ -1285,5 +1343,6 @@ export default {
   professionals: professionalsApi,
   notifications: notificationsApi,
   appointments: appointmentsApi,
+  analytics: analyticsApi,
   tokenManager,
 };

@@ -71,14 +71,12 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
     <View style={{
       marginBottom: 12,
       flexDirection: "row",
-      backgroundColor: notification.isRead ? "#FFFFFF" : "#F8FAFC",
-      borderRadius: 16,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 12,
       padding: 16,
-      borderWidth: 1,
-      borderColor: notification.isRead ? "#F1F5F9" : "#E2E8F0",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.03,
+      shadowOpacity: 0.05,
       shadowRadius: 4,
       elevation: 1,
       position: "relative",
@@ -86,71 +84,67 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
       {/* Icon badge */}
       <View
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
+          width: 48,
+          height: 48,
+          borderRadius: 24,
           alignItems: "center",
           justifyContent: "center",
-          marginRight: 14,
-          backgroundColor: `${notification.iconBgColor || getIconColor(notification.type)}15`,
+          marginRight: 16,
+          backgroundColor: notification.iconBgColor || getIconColor(notification.type),
         }}
       >
         <Ionicons
           name={getIconName(notification.type)}
-          size={22}
-          color={notification.iconBgColor || getIconColor(notification.type)}
+          size={24}
+          color="#FFFFFF"
         />
       </View>
 
       {/* Content wrapper */}
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <AppText
             variant="bodyMd"
             style={{
-              fontWeight: notification.isRead ? "600" : "700",
-              color: notification.isRead ? "#374151" : "#111827",
+              fontWeight: "700",
+              color: "#111827",
               flex: 1,
-              marginRight: 10,
+              marginRight: 16,
               fontSize: 15,
-              letterSpacing: -0.1,
             }}
-            numberOfLines={1}
           >
             {notification.titleKey ? t(notification.titleKey) : notification.title}
           </AppText>
-          <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500" }}>
-            {notification.time}
-          </AppText>
+
+          {/* Unread dot indicator */}
+          {!notification.isRead && (
+            <View style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: "#0EA5E9",
+              marginTop: 6
+            }} />
+          )}
         </View>
+
         <AppText
           variant="bodySm"
           style={{
             color: "#6B7280",
             fontSize: 13,
             lineHeight: 18,
+            marginTop: 4,
           }}
           numberOfLines={2}
         >
           {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
         </AppText>
-      </View>
 
-      {/* Unread dot indicator */}
-      {!notification.isRead && (
-        <View style={{
-          width: 10,
-          height: 10,
-          borderRadius: 5,
-          backgroundColor: "#3B82F6",
-          position: "absolute",
-          top: "50%",
-          left: -4,
-          marginTop: -5,
-          borderWidth: 2,
-          borderColor: "#FFFFFF",
-        }} />
-      )}
+        <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500", marginTop: 6 }}>
+          {notification.time}
+        </AppText>
+      </View>
     </View>
   );
 };

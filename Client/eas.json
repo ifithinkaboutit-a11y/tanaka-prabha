@@ -14,7 +14,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://tanak-prabha.onrender.com/api"
+        "EXPO_PUBLIC_API_URL": "http://34.131.190.214:5000/api"
       }
     },
     "production": {
@@ -23,7 +23,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://tanak-prabha.onrender.com/api"
+        "EXPO_PUBLIC_API_URL": "http://34.131.190.214:5000/api"
       }
     }
   },

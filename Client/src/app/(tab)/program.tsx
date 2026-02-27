@@ -13,7 +13,6 @@ const Program = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [trainingPrograms, setTrainingPrograms] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +23,9 @@ const Program = () => {
       const allSchemes = await schemesApi.getAll({ limit: 50 });
       const allEvents = await eventsApi.getAll();
 
-      // Separate training programs from regular schemes
+      // Extract training programs
       const training = allSchemes.filter((s) => s.category === "Training");
-      const otherSchemes = allSchemes.filter((s) => s.category !== "Training");
 
-      setSchemes(otherSchemes);
       setTrainingPrograms(training);
       setEvents(allEvents);
     } catch (error) {
@@ -53,15 +50,6 @@ const Program = () => {
   };
 
   // Filter programs based on search query
-  const filteredSchemes = useMemo(() => {
-    if (!searchQuery.trim()) return schemes;
-    return schemes.filter(
-      (program) =>
-        program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (program.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        program.category.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, schemes]);
 
   const filteredTrainingPrograms = useMemo(() => {
     if (!searchQuery.trim()) return trainingPrograms;
@@ -95,10 +83,6 @@ const Program = () => {
       pathname: "/event-details" as any,
       params: { eventId: ev.id },
     });
-  };
-
-  const handleViewAllSchemes = () => {
-    router.push("/(tab)/schemes" as any);
   };
 
   const handleViewAllTraining = () => {
@@ -179,14 +163,6 @@ const Program = () => {
         title="Upcoming Events"
         events={filteredEvents}
         onEventPress={handleEventPress}
-      />
-
-      {/* Government Schemes Section */}
-      <ProgramSection
-        title={t("programs.governmentSchemes")}
-        programs={filteredSchemes}
-        onViewAll={handleViewAllSchemes}
-        onProgramPress={handleProgramPress}
       />
 
       {/* Training Programs Section */}

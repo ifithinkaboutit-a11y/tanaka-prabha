@@ -3,24 +3,97 @@ import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { ScrollView, StyleSheet, View, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, View, Alert, ActivityIndicator, RefreshControl } from "react-native";
+import apiService, { DashboardStats } from "@/services/apiService";
 
 export default function AdminDashboard() {
     const { signOut } = useAuth();
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
-    const handleCreateEvent = () => Alert.alert("Admin Action", "Navigate to Create Events screen.");
-    const handleMarkAttendance = () => Alert.alert("Admin Action", "Navigate to Mark Attendance screen.");
-    const handleViewAttendance = () => Alert.alert("Admin Action", "Navigate to View Attendance Records.");
+    const fetchStats = async () => {
+        try {
+            const data = await apiService.analytics.getDashboardStats();
+            setStats(data);
+        } catch (error) {
+            console.error("Failed to fetch dashboard stats", error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchStats();
+    };
+
+    const router = useRouter();
+
+    const handleCreateEvent = () => router.push("/(admin)/create-event" as any);
+    const handleMarkAttendance = () => router.push("/(admin)/mark-attendance" as any);
+    const handleViewAttendance = () => router.push("/(admin)/view-attendance" as any);
 
     return (
-        <ScrollView style={s.root} contentContainerStyle={s.content}>
+        <ScrollView
+            style={s.root}
+            contentContainerStyle={s.content}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <View style={s.header}>
                 <AppText variant="h1" style={s.title}>Admin Panel</AppText>
                 <AppText variant="bodySm" style={s.subtitle}>
-                    Manage events and attendance.
+                    Platform Overview
                 </AppText>
             </View>
+
+            {loading ? (
+                <ActivityIndicator size="large" color="#10B981" style={{ marginVertical: 40 }} />
+            ) : (
+                <View style={s.statsGrid}>
+                    <StatCard
+                        title="Total Farmers"
+                        value={stats?.totalFarmers ?? 0}
+                        icon="people"
+                        color="#3B82F6"
+                    />
+                    <StatCard
+                        title="Land Coverage"
+                        value={`${stats?.totalLandCoverage?.toFixed(1) ?? 0} A`}
+                        icon="leaf"
+                        color="#10B981"
+                    />
+                    <StatCard
+                        title="Livestock"
+                        value={stats?.livestockCount ?? 0}
+                        icon="paw"
+                        color="#F59E0B"
+                    />
+                    <StatCard
+                        title="Active Schemes"
+                        value={stats?.activeSchemes ?? 0}
+                        icon="document-text"
+                        color="#8B5CF6"
+                    />
+                    <StatCard
+                        title="Professionals"
+                        value={stats?.availableProfessionals ?? 0}
+                        icon="medkit"
+                        color="#EC4899"
+                    />
+                </View>
+            )}
+
+            <View style={s.divider} />
+
+            <AppText variant="h2" style={s.sectionTitle}>Dashboard Utilities</AppText>
 
             <View style={s.actionsContainer}>
                 <ActionCard
@@ -53,6 +126,20 @@ export default function AdminDashboard() {
     );
 }
 
+function StatCard({ icon, title, value, color }: any) {
+    return (
+        <View style={s.statCard}>
+            <View style={[s.statIconBox, { backgroundColor: color + "1A" }]}>
+                <Ionicons name={icon} size={24} color={color} />
+            </View>
+            <View style={s.statTextContainer}>
+                <AppText variant="h2" style={s.statValue}>{value}</AppText>
+                <AppText variant="bodySm" style={s.statTitle}>{title}</AppText>
+            </View>
+        </View>
+    );
+}
+
 function ActionCard({ icon, title, color, onPress }: any) {
     return (
         <View style={s.card}>
@@ -77,39 +164,90 @@ const s = StyleSheet.create({
     content: {
         padding: 24,
         paddingTop: 80,
+        paddingBottom: 40,
     },
     header: {
-        marginBottom: 40,
+        marginBottom: 24,
     },
     title: {
         fontSize: 28,
         fontWeight: "800",
         color: "#111827",
-        marginBottom: 8,
+        marginBottom: 4,
     },
     subtitle: {
         color: "#6B7280",
         fontSize: 16,
     },
+    statsGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 12,
+        justifyContent: "space-between",
+        marginBottom: 8,
+    },
+    statCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        padding: 16,
+        width: "48%",
+        flexDirection: "column",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    statIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 12,
+    },
+    statTextContainer: {
+        gap: 2,
+    },
+    statValue: {
+        fontSize: 20,
+        fontWeight: "700",
+        color: "#111827",
+    },
+    statTitle: {
+        fontSize: 12,
+        color: "#6B7280",
+    },
+    divider: {
+        height: 1,
+        backgroundColor: "#E5E7EB",
+        marginVertical: 24,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        color: "#111827",
+        marginBottom: 16,
+    },
     actionsContainer: {
-        gap: 16,
+        gap: 12,
     },
     card: {
         backgroundColor: "#FFFFFF",
         borderRadius: 16,
-        padding: 20,
+        padding: 16,
         flexDirection: "row",
         alignItems: "center",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        shadowRadius: 4,
+        elevation: 1,
     },
     iconBox: {
-        width: 60,
-        height: 60,
-        borderRadius: 16,
+        width: 50,
+        height: 50,
+        borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 16,

@@ -70,10 +70,12 @@ export default function SearchBar({
         returnKeyType="search"
       />
 
-      {searchQuery.length > 0 && (
+      {searchQuery.length > 0 ? (
         <Pressable onPress={() => setSearchQuery("")}>
-          <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+          <Ionicons name="close-circle" size={30} color="#9CA3AF" />
         </Pressable>
+      ) : (
+        <></>
       )}
     </View>
   );

@@ -17,20 +17,42 @@ import {
 } from "react-native";
 
 export default function AdminLogin() {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { loginAsAdmin } = useAuth();
 
-    const handleLogin = () => {
-        if (username === "admin" && password === "admin123") {
-            setLoading(true);
-            setTimeout(() => {
-                loginAsAdmin();
-            }, 800);
-        } else {
-            Alert.alert("Error", "Invalid admin credentials");
+    const handleLogin = async () => {
+        if (!email || !password) return;
+
+        setLoading(true);
+        try {
+            const baseUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
+            const response = await fetch(`${baseUrl}/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const adminData = {
+                    id: data.admin.id,
+                    name: data.admin.email, // backend doesn't return name currently
+                    role: 'admin',
+                    email: data.admin.email
+                };
+                await loginAsAdmin(data.token, adminData as any);
+            } else {
+                Alert.alert("Login Failed", data.error || data.message || "Invalid credentials");
+            }
+        } catch (error) {
+            Alert.alert("Error", "Network error. Please try again.");
+            console.error("Admin login error:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -48,11 +70,12 @@ export default function AdminLogin() {
 
                 <TextInput
                     style={s.input}
-                    placeholder="Username"
+                    placeholder="Email Address"
                     placeholderTextColor="#9CA3AF"
-                    value={username}
-                    onChangeText={setUsername}
+                    value={email}
+                    onChangeText={setEmail}
                     autoCapitalize="none"
+                    keyboardType="email-address"
                 />
 
                 <TextInput
@@ -67,7 +90,7 @@ export default function AdminLogin() {
                 <Button
                     variant="primary"
                     onPress={handleLogin}
-                    disabled={!username || !password || loading}
+                    disabled={!email || !password || loading}
                     style={s.btn}
                 >
                     {loading ? (

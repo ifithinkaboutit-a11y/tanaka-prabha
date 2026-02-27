@@ -23,7 +23,7 @@ import {
   genderOptions,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
-import { indianDistricts } from "../../data/indianLocations";
+import { indianDistricts, getTehsilOptions, getBlockOptions, getVillageOptions } from "../../data/indianLocations";
 import {
   validatePersonalDetails,
   validateName,
@@ -43,6 +43,8 @@ interface FieldErrors {
   mothersName?: string;
   village?: string;
   district?: string;
+  tehsil?: string;
+  block?: string;
   state?: string;
   pinCode?: string;
 }
@@ -66,6 +68,21 @@ const AuthPersonalDetailsScreen = () => {
         label: currentLanguage === "hi" ? d.labelHi : d.label,
       }));
   }, [personalDetails.state, currentLanguage]);
+
+  const tehsilOptions = useMemo(() => {
+    if (!personalDetails.state || !personalDetails.district) return [];
+    return getTehsilOptions(personalDetails.state, personalDetails.district);
+  }, [personalDetails.state, personalDetails.district]);
+
+  const blockOptions = useMemo(() => {
+    if (!personalDetails.state || !personalDetails.district || !personalDetails.tehsil) return [];
+    return getBlockOptions(personalDetails.state, personalDetails.district, personalDetails.tehsil);
+  }, [personalDetails.state, personalDetails.district, personalDetails.tehsil]);
+
+  const villageOptions = useMemo(() => {
+    if (!personalDetails.state || !personalDetails.district || !personalDetails.tehsil || !personalDetails.block) return [];
+    return getVillageOptions(personalDetails.state, personalDetails.district, personalDetails.tehsil, personalDetails.block);
+  }, [personalDetails.state, personalDetails.district, personalDetails.tehsil, personalDetails.block]);
 
   const validateField = (field: keyof FieldErrors, value: string) => {
     let error: string | undefined;
@@ -382,18 +399,7 @@ const AuthPersonalDetailsScreen = () => {
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
 
-            {/* Village */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.village")} />
-              <TextInput
-                style={inputStyle("village")}
-                value={personalDetails.village}
-                onChangeText={(text) => handleFieldChange("village", text)}
-                onBlur={() => handleFieldBlur("village")}
-                placeholder={t("onboarding.enterVillage")}
-                placeholderTextColor="#9CA3AF"
-              />
-            </FieldWrapper>
+
 
             {/* State */}
             <FieldWrapper>
@@ -421,7 +427,11 @@ const AuthPersonalDetailsScreen = () => {
               {districtOptions.length > 0 ? (
                 <Select
                   value={personalDetails.district}
-                  onChange={(value) => handleFieldChange("district", value)}
+                  onChange={(value) => {
+                    handleFieldChange("district", value);
+                    // Reset downstream fields
+                    updatePersonalDetails({ tehsil: "", block: "", village: "" });
+                  }}
                   options={districtOptions}
                   placeholder={t("onboarding.selectDistrict")}
                 />
@@ -438,6 +448,91 @@ const AuthPersonalDetailsScreen = () => {
                   }
                   placeholderTextColor="#9CA3AF"
                   editable={!!personalDetails.state}
+                />
+              )}
+            </FieldWrapper>
+
+            {/* Tehsil */}
+            <FieldWrapper>
+              <FieldLabel text="Tehsil" />
+              {tehsilOptions.length > 0 ? (
+                <Select
+                  value={personalDetails.tehsil}
+                  onChange={(value) => {
+                    handleFieldChange("tehsil", value);
+                    updatePersonalDetails({ block: "", village: "" });
+                  }}
+                  options={tehsilOptions}
+                  placeholder="Select Tehsil"
+                />
+              ) : (
+                <TextInput
+                  style={inputStyle("tehsil")}
+                  value={personalDetails.tehsil}
+                  onChangeText={(text) => handleFieldChange("tehsil", text)}
+                  placeholder={
+                    personalDetails.district
+                      ? "Enter Tehsil"
+                      : "Select District First"
+                  }
+                  placeholderTextColor="#9CA3AF"
+                  editable={!!personalDetails.district}
+                />
+              )}
+            </FieldWrapper>
+
+            {/* Block */}
+            <FieldWrapper>
+              <FieldLabel text="Block" />
+              {blockOptions.length > 0 ? (
+                <Select
+                  value={personalDetails.block}
+                  onChange={(value) => {
+                    handleFieldChange("block", value);
+                    updatePersonalDetails({ village: "" });
+                  }}
+                  options={blockOptions}
+                  placeholder="Select Block"
+                />
+              ) : (
+                <TextInput
+                  style={inputStyle("block")}
+                  value={personalDetails.block}
+                  onChangeText={(text) => handleFieldChange("block", text)}
+                  placeholder={
+                    personalDetails.tehsil
+                      ? "Enter Block"
+                      : "Select Tehsil First"
+                  }
+                  placeholderTextColor="#9CA3AF"
+                  editable={!!personalDetails.tehsil}
+                />
+              )}
+            </FieldWrapper>
+
+            {/* Village */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.village")} />
+              {villageOptions.length > 0 ? (
+                <Select
+                  value={personalDetails.village}
+                  onChange={(value) => handleFieldChange("village", value)}
+                  options={villageOptions}
+                  placeholder="Select Village"
+                />
+              ) : (
+                <TextInput
+                  style={inputStyle("village")}
+                  value={personalDetails.village}
+                  onChangeText={(text) => handleFieldChange("village", text)}
+                  onBlur={() => handleFieldBlur("village")}
+                  placeholder={
+                    personalDetails.block
+                      ? t("onboarding.enterVillage")
+                      : "Select Block First"
+                  }
+                  placeholderTextColor="#9CA3AF"
+                  editable={!!personalDetails.block}
                 />
               )}
             </FieldWrapper>

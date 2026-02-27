@@ -1,10 +1,5 @@
 import crypto from 'crypto';
-import { sendOTPEmail, initializeTransporter } from './emailService.js';
-
-// Initialize email transporter when module loads
-initializeTransporter().catch(err => {
-    console.warn('⚠️ Email service initialization failed:', err.message);
-});
+import axios from 'axios';
 
 /**
  * Generate a 6-digit OTP
@@ -33,45 +28,39 @@ const isOTPExpired = (expiryTime) => {
 };
 
 /**
- * Mock SMS sending function (MSG91 integration placeholder)
- * In production, replace with actual MSG91 API call
- * Also sends email via Ethereal for development testing
+ * Send SMS/WhatsApp OTP via MSG91
  */
 const sendSMS = async (mobileNumber, otp) => {
-    // TODO: Implement MSG91 integration
-    // For now, just log to console for testing
-    console.log(`📱 SMS to ${mobileNumber}: Your OTP is ${otp}. Valid for 10 minutes.`);
-    
-    // Send email via Ethereal for development testing (fire-and-forget)
-    // Do NOT await here — an SMTP timeout must not delay the OTP HTTP response.
-    sendOTPEmail(mobileNumber, otp)
-      .then((emailResult) => {
-        if (emailResult?.success) {
-          console.log(`📧 Email sent! Preview URL: ${emailResult.previewUrl}`);
+    try {
+        console.log(`📱 Sending MSG91 WhatsApp OTP to ${mobileNumber}`);
+
+        // In development, if MSG91 keys are not set, just mock it
+        if (process.env.NODE_ENV === 'development' && (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID)) {
+            console.log(`Development mode: Mocking OTP ${otp} to ${mobileNumber}`);
+            return {
+                success: true,
+                message: 'OTP sent successfully (mock)',
+                otp: process.env.NODE_ENV === 'development' ? otp : undefined
+            };
         }
-      })
-      .catch((emailError) => {
-        console.warn('⚠️ Email sending failed (async):', emailError.message);
-      });
-    
-    // In production, use MSG91:
-    /*
-    const axios = require('axios');
-    const response = await axios.post('https://api.msg91.com/api/v5/otp', {
-        authkey: process.env.MSG91_AUTH_KEY,
-        mobile: mobileNumber,
-        otp: otp,
-        template_id: process.env.MSG91_TEMPLATE_ID
-    });
-    return response.data;
-    */
-    
-    return {
-        success: true,
-        message: 'OTP sent successfully (mock)',
-        otp: process.env.NODE_ENV === 'development' ? otp : undefined, // Only return OTP in dev mode
-        emailPreviewUrl: emailResult?.previewUrl || null
-    };
+        console.log("OTP ->", otp);
+
+        const response = await axios.post('https://control.msg91.com/api/v5/otp', {
+            template_id: process.env.MSG91_TEMPLATE_ID,
+            mobile: mobileNumber,
+            authkey: process.env.MSG91_AUTH_KEY,
+            otp: otp
+        });
+
+        return {
+            success: true,
+            message: 'OTP sent successfully',
+            data: response.data
+        };
+    } catch (error) {
+        console.error('MSG91 OTP Send Error:', error.response?.data || error.message);
+        throw new Error('Failed to send OTP via MSG91');
+    }
 };
 
 /**
@@ -80,12 +69,12 @@ const sendSMS = async (mobileNumber, otp) => {
 const formatPhoneNumber = (phone) => {
     // Remove all non-digit characters
     let cleaned = phone.replace(/\D/g, '');
-    
+
     // If it starts with country code, keep it, otherwise add +91
     if (cleaned.length === 10) {
         cleaned = '91' + cleaned;
     }
-    
+
     return cleaned;
 };
 
@@ -96,14 +85,14 @@ const isValidIndianPhone = (phone) => {
     // Indian mobile numbers: 10 digits starting with 6-9
     const phoneRegex = /^[6-9]\d{9}$/;
     const cleaned = phone.replace(/\D/g, '');
-    
+
     // Check if it's 10 digits or 12 digits (with country code 91)
     if (cleaned.length === 10) {
         return phoneRegex.test(cleaned);
     } else if (cleaned.length === 12 && cleaned.startsWith('91')) {
         return phoneRegex.test(cleaned.substring(2));
     }
-    
+
     return false;
 };
 

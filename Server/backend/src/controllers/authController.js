@@ -105,11 +105,26 @@ export const verifyOTP = async (req, res) => {
 
         if (!user) {
             // Brand new account — create with placeholder name
-            user = await User.create({
-                name: 'New User', // Placeholder; updated during onboarding
-                mobile_number: formattedNumber
-            });
-            isNewUser = true;
+            try {
+                user = await User.create({
+                    name: 'New User', // Placeholder; updated during onboarding
+                    mobile_number: formattedNumber
+                });
+                isNewUser = true;
+            } catch (createError) {
+                // If a race condition caused a duplicate key error (PostgreSQL code 23505),
+                // another request just created this user. Let's fetch them instead.
+                if (createError.code === '23505') {
+                    console.warn(`[authController] Caught race condition for ${formattedNumber}. User already exists.`);
+                    user = await User.findByMobile(formattedNumber);
+                    if (!user) {
+                        throw new Error("User creation failed due to conflict, but user could not be found afterwards.");
+                    }
+                    isNewUser = (user.name === 'New User');
+                } else {
+                    throw createError;
+                }
+            }
         } else {
             // Existing account. Only treat as new if they never completed onboarding.
             // 'New User' is the placeholder set at creation time — if it's still that,

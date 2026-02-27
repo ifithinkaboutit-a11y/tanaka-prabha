@@ -6,6 +6,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { userApi } from "../../services/apiService";
 import { useAuth } from "../../contexts/AuthContext";
+import { getClosestLocation } from "../../utils/reverseGeocode";
 import {
     Alert,
     Animated,
@@ -115,10 +116,33 @@ export default function LocationPickerScreen() {
         );
     });
 
+    // ── Geocoding ──────────────────────────────────────────────────────────────
+    const geocodeCoords = useCallback(async (lat: number, lng: number) => {
+        const requestId = ++geocodeRequestId.current;
+        setGeocodeLoading(true);
+        setGeocodeError(false);
+        try {
+            const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+            if (requestId !== geocodeRequestId.current) return;
+            if (results.length === 0) { setAddress("Unknown location"); return; }
+            const r = results[0];
+            const parts = [r.name, r.street, r.city ?? r.name, r.subregion, r.region, r.postalCode]
+                .filter(Boolean).join(", ");
+            setAddress(parts || "Unknown location");
+        } catch {
+            if (requestId === geocodeRequestId.current) {
+                setGeocodeError(true);
+                setAddress("");
+            }
+        } finally {
+            if (requestId === geocodeRequestId.current) setGeocodeLoading(false);
+        }
+    }, []);
+
     // ── GPS acquisition ────────────────────────────────────────────────────────
     useEffect(() => {
         let isMounted = true;
-        let timeoutId: NodeJS.Timeout | null = null;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         (async () => {
             try {
@@ -175,28 +199,7 @@ export default function LocationPickerScreen() {
         };
     }, [geocodeCoords]);
 
-    // ── Geocoding ──────────────────────────────────────────────────────────────
-    const geocodeCoords = useCallback(async (lat: number, lng: number) => {
-        const requestId = ++geocodeRequestId.current;
-        setGeocodeLoading(true);
-        setGeocodeError(false);
-        try {
-            const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
-            if (requestId !== geocodeRequestId.current) return;
-            if (results.length === 0) { setAddress("Unknown location"); return; }
-            const r = results[0];
-            const parts = [r.name, r.street, r.city ?? r.name, r.subregion, r.region, r.postalCode]
-                .filter(Boolean).join(", ");
-            setAddress(parts || "Unknown location");
-        } catch {
-            if (requestId === geocodeRequestId.current) {
-                setGeocodeError(true);
-                setAddress("");
-            }
-        } finally {
-            if (requestId === geocodeRequestId.current) setGeocodeLoading(false);
-        }
-    }, []);
+
 
     // ── Address Search (using expo-location forward geocode) ──────────────────
     const handleSearchChange = useCallback((text: string) => {
@@ -284,8 +287,7 @@ export default function LocationPickerScreen() {
                     });
                 } else {
                     await userApi.updateProfile({
-                        latitude: newLocInfo.lat,
-                        longitude: newLocInfo.lng,
+                        location: newLocInfo
                     });
                 }
             } catch (error) {
@@ -312,14 +314,29 @@ export default function LocationPickerScreen() {
                     latitude: pinCoords.latitude,
                     longitude: pinCoords.longitude,
                 });
+
+                // Fetch closest hierarchical data from local sample Indian Locations DB
+                const localMatch = getClosestLocation(pinCoords.latitude, pinCoords.longitude);
+
                 if (results.length > 0) {
                     const r = results[0];
                     const current = personalDetails;
                     updatePersonalDetails({
-                        state: current.state || r.region || "",
-                        district: current.district || r.subregion || "",
+                        state: localMatch.state || current.state || r.region || "",
+                        district: localMatch.district || current.district || r.subregion || "",
+                        tehsil: localMatch.tehsil || current.tehsil || "",
+                        block: localMatch.block || current.block || "",
                         pinCode: current.pinCode || r.postalCode || "",
-                        village: current.village || r.city || r.name || "",
+                        village: localMatch.village || current.village || r.city || r.name || "",
+                    });
+                } else if (localMatch.state) {
+                    const current = personalDetails;
+                    updatePersonalDetails({
+                        state: localMatch.state || current.state || "",
+                        district: localMatch.district || current.district || "",
+                        tehsil: localMatch.tehsil || current.tehsil || "",
+                        block: localMatch.block || current.block || "",
+                        village: localMatch.village || current.village || "",
                     });
                 }
             } catch { /* geocode failed at confirm time — fields stay as-is */ }

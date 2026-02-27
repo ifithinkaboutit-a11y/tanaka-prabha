@@ -16,9 +16,10 @@ import AppText from "../../components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import Avatar from "../../components/atoms/Avatar";
 import { useTranslation } from "../../i18n";
-import { useAuth } from "../../contexts/AuthContext";
 import { useUserProfile } from "../../contexts/UserProfileContext";
 import { useLanguageStore } from "../../stores/languageStore";
+import { useThemeStore } from "../../stores/themeStore";
+import { useAuth } from "../../contexts/AuthContext";
 import TextArea from "@/components/atoms/TextArea";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -100,6 +101,7 @@ const Profile = () => {
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const { currentLanguage, setLanguage } = useLanguageStore();
+  const { theme, setTheme } = useThemeStore();
   const { profile, loading, refreshProfile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -430,7 +432,7 @@ const Profile = () => {
         <Pressable
           onPress={() => setLanguage(currentLanguage === "en" ? "hi" : "en")}
           style={({ pressed }) => [s.settingRow, pressed && { opacity: 0.7 }]}
-          className="flex flex-row justify-between items-center"
+          className="flex flex-row justify-between items-center pb-8"
         >
           <View style={s.settingLeft}>
             <View style={[s.settingIconBg, { backgroundColor: "#EFF6FF", marginRight: 12 }]}>
@@ -684,5 +686,31 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
+  },
+  // Toggle
+  toggleTrack: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    paddingHorizontal: 2,
+  },
+  toggleTrackActive: {
+    backgroundColor: "#16A34A",
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    transform: [{ translateX: 20 }],
   },
 });
