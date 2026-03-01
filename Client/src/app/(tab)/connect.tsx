@@ -1,53 +1,78 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import React from "react";
 import {
   Linking,
   ScrollView,
-  Pressable,
   View,
-  RefreshControl,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
-import { connectServices } from "../../data/content/connectServices";
+import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
-
-const SERVICE_COLORS: Record<string, string> = {
-  "agricultural": "#DCFCE7",
-  "veterinary": "#FEF3C7",
-  "financial": "#FCE7F3",
-  "doctor": "#DBEAFE",
-};
-
-const SERVICE_ICON_COLORS: Record<string, string> = {
-  "agricultural": "#16A34A",
-  "veterinary": "#D97706",
-  "financial": "#DB2777",
-  "doctor": "#2563EB",
-};
 
 export default function Connect() {
   const router = useRouter();
   const { t } = useTranslation();
-
-  const handleServicePress = (serviceId: string) => {
-    router.push({
-      pathname: "/connect-listing",
-      params: { category: serviceId },
-    } as any);
-  };
 
   const handleEmergencyPress = () => {
     const emergencyNumber = "tel:1800180111";
     Linking.openURL(emergencyNumber);
   };
 
+  // Mirror the QuickActionGrid item shape exactly as the home page does
+  const serviceActions = [
+    {
+      title: t("connect.services.trainingGuidance"),
+      icon: "leaf-outline" as keyof typeof Ionicons.glyphMap,
+      iconColor: "#16A34A",
+      bgColor: "#DCFCE7",
+      onPress: () =>
+        router.push({
+          pathname: "/connect-listing",
+          params: { category: "agricultural" },
+        } as any),
+    },
+    {
+      title: t("connect.services.livestockVeterinary"),
+      icon: "paw-outline" as keyof typeof Ionicons.glyphMap,
+      iconColor: "#D97706",
+      bgColor: "#FEF3C7",
+      onPress: () =>
+        router.push({
+          pathname: "/connect-listing",
+          params: { category: "veterinary" },
+        } as any),
+    },
+    {
+      title: t("connect.services.marketBuyers"),
+      icon: "storefront-outline" as keyof typeof Ionicons.glyphMap,
+      iconColor: "#DB2777",
+      bgColor: "#FCE7F3",
+      onPress: () =>
+        router.push({
+          pathname: "/connect-listing",
+          params: { category: "financial" },
+        } as any),
+    },
+    {
+      title: t("connect.services.governmentSchemes"),
+      icon: "business-outline" as keyof typeof Ionicons.glyphMap,
+      iconColor: "#2563EB",
+      bgColor: "#DBEAFE",
+      onPress: () =>
+        router.push({
+          pathname: "/connect-listing",
+          params: { category: "doctor" },
+        } as any),
+    },
+  ];
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: "#F8FAFC" }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header with Gradient */}
+      {/* Header */}
       <View
         style={{
           paddingTop: 48,
@@ -76,70 +101,18 @@ export default function Connect() {
       <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
         <AppText
           variant="h3"
-          style={{ fontWeight: "700", color: "#1F2937", marginBottom: 16, fontSize: 18 }}
+          style={{
+            fontWeight: "700",
+            color: "#1F2937",
+            marginBottom: 16,
+            fontSize: 18,
+          }}
         >
           {t("connect.whatHelpWith")}
         </AppText>
 
-        {/* Services Grid - 2x2 */}
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12 }}>
-          {connectServices.map((service) => (
-            <Pressable
-              key={service.id}
-              onPress={() => handleServicePress(service.id)}
-              style={({ pressed }) => ({
-                width: "47%",
-                opacity: pressed ? 0.9 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              <View
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 24,
-                  paddingHorizontal: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 8,
-                  elevation: 3,
-                }}
-              >
-                <View
-                  style={{
-                    width: 68,
-                    height: 68,
-                    borderRadius: 34,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 12,
-                    backgroundColor: SERVICE_COLORS[service.id] || service.iconBgColor,
-                  }}
-                >
-                  <Ionicons
-                    name={service.icon}
-                    size={34}
-                    color={SERVICE_ICON_COLORS[service.id] || "#386641"}
-                  />
-                </View>
-                <AppText
-                  variant="bodySm"
-                  style={{
-                    textAlign: "center",
-                    fontWeight: "600",
-                    color: "#374151",
-                    fontSize: 13,
-                  }}
-                >
-                  {t(service.titleKey)}
-                </AppText>
-              </View>
-            </Pressable>
-          ))}
-        </View>
+        {/* Services 2×2 Grid — same QuickActionGrid used on the home screen */}
+        <QuickActionGrid actions={serviceActions} />
       </View>
 
       {/* Emergency Help */}
@@ -182,17 +155,10 @@ export default function Connect() {
         >
           {t("connect.emergencySubtitle")}
         </AppText>
-        {/* Emergency Button - Animated Pulse Effect */}
-        <Pressable
-          onPress={handleEmergencyPress}
-          style={({ pressed }) => ({
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.9 : 1,
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-            marginTop: 16,
-            marginBottom: 8,
-          })}
+
+        {/* Emergency Button */}
+        <View
+          style={{ alignItems: "center", justifyContent: "center", marginTop: 16, marginBottom: 8 }}
           className="flex items-center justify-center py-10"
         >
           {/* Outer Ring */}
@@ -219,6 +185,7 @@ export default function Connect() {
           />
           {/* Main Button */}
           <View
+            onTouchEnd={handleEmergencyPress}
             style={{
               width: 140,
               height: 140,
@@ -236,7 +203,8 @@ export default function Connect() {
           >
             <Ionicons name="call" size={56} color="white" />
           </View>
-        </Pressable>
+        </View>
+
         <AppText
           variant="bodySm"
           style={{

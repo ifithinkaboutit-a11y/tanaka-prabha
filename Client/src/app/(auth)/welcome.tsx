@@ -69,8 +69,13 @@ export default function Welcome() {
         </TouchableOpacity>
 
         {/* Admin Login Link */}
-        <TouchableOpacity onPress={() => router.push("/(auth)/admin-login" as any)} style={{ marginTop: 24, alignItems: "center" }}>
-          <Text style={{ color: "#9E9E9E", fontSize: 13, textDecorationLine: "underline" }}>Admin Portal</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/admin-login" as any)}
+          style={{ marginTop: 24, alignItems: "center" }}
+        >
+          <Text style={{ color: "#9E9E9E", fontSize: 13, textDecorationLine: "underline" }}>
+            Admin Portal
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
