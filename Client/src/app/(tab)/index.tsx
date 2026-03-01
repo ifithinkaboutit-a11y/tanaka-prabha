@@ -4,11 +4,12 @@ import QuickActionGrid from "@/components/molecules/QuickActionGrid";
 import SchemePreviewList from "@/components/molecules/SchemePreviewList";
 import SearchBar from "@/components/molecules/SearchBar";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
-import { bannersApi, schemesApi, Banner, Scheme } from "@/services/apiService";
+import { bannersApi, schemesApi, notificationsApi, Banner, Scheme } from "@/services/apiService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, ActivityIndicator } from "react-native";
+import { ScrollView, View } from "react-native";
+import { HomeScreenSkeleton } from "@/components/atoms/Skeleton";
 import AppText from "../../components/atoms/AppText";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
@@ -23,6 +24,7 @@ export default function Home() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch data on mount
   useEffect(() => {
@@ -35,6 +37,9 @@ export default function Home() {
         ]);
         setBanners(bannersData);
         setSchemes(schemesData);
+        // Fetch unread notification count
+        const count = await notificationsApi.getUnreadCount();
+        setUnreadCount(count);
       } catch (error) {
         console.error("Error fetching home data:", error);
       } finally {
@@ -98,6 +103,14 @@ export default function Home() {
   // Get user's display name
   const userName = user?.name || t("common.farmer");
 
+  if (loading) {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+        <HomeScreenSkeleton />
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: "#F8FAFC" }}
@@ -121,6 +134,7 @@ export default function Home() {
           name={userName}
           onNotificationPress={handleNotificationPress}
           onAvatarPress={() => router.push("/(tab)/profile")}
+          hasNotifications={unreadCount > 0}
         />
         <View style={{ marginTop: 4 }}>
           <SearchBar

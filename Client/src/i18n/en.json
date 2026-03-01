@@ -282,7 +282,16 @@
     "error": "Error",
     "goBack": "Go Back",
     "viewAll": "View all",
-    "noData": "No data available"
+    "noData": "No data available",
+    "next": "Next",
+    "finish": "Finish",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "apply": "Apply",
+    "reset": "Reset"
   },
   "banners": {
     "welcome": {
@@ -480,7 +489,11 @@
     "testSent": "Test Notification Sent",
     "testSentDesc": "You should receive a notification shortly.",
     "testError": "Error",
-    "testErrorDesc": "Could not send test notification. Make sure you're on a physical device."
+    "testErrorDesc": "Could not send test notification. Make sure you're on a physical device.",
+    "announcement": "Announcement",
+    "announcement.desc": "New announcement from Tanak Prabha",
+    "broadcastTitle": "Broadcast",
+    "broadcastDesc": "A new message has been sent to all users"
   },
   "events": {
     "title": "Events",
@@ -510,7 +523,9 @@
     "alreadyRegisteredTitle": "Already Applied",
     "alreadyRegisteredMessage": "You have already applied for this event.",
     "registrationFailed": "Could not submit your application. Please try again later.",
-    "participate": "Participate",
+    "participate": "Registered ✓",
+    "participateNow": "Participate Now",
+    "joinNow": "Join Now",
     "viewAll": "View all",
     "noEvents": "No upcoming events",
     "noEventsSubtitle": "Check back later for new events and training programs.",

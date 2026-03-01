@@ -10,6 +10,7 @@ import {
   FlatList,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
+import { ProfessionalCardSkeleton } from "../components/atoms/Skeleton";
 import { connectServices } from "../data/content/connectServices";
 import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../i18n";
@@ -206,13 +207,10 @@ const ConnectListingScreen = () => {
       )}
 
       {loading ? (
-        <View className="items-center pt-16">
-          <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
-            <Ionicons name="search" size={28} color="#386641" />
-          </View>
-          <AppText variant="bodySm" className="text-gray-500 text-[14px]">
-            {t("connect.loading")}
-          </AppText>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", padding: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <ProfessionalCardSkeleton key={i} />
+          ))}
         </View>
       ) : professionals.length === 0 ? (
         <View className="items-center justify-center pt-16">

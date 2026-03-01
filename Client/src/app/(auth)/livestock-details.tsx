@@ -307,8 +307,15 @@ const AuthLivestockDetailsScreen = () => {
 
     setIsSubmitting(true);
     try {
+      // 1. Save all onboarding data to the backend and refresh the local auth user.
+      //    saveOnboardingData() calls userApi.updateProfile() then refreshUser() so
+      //    the dashboard immediately reflects the new name, district, land & livestock.
       await saveOnboardingData();
-      completeOnboarding();
+
+      // 2. Mark onboarding as complete and navigate to the main tabs.
+      //    We do NOT pass `data` here because the API write is already done above.
+      //    completeOnboarding(undefined) just sets needsOnboarding=false and routes.
+      await completeOnboarding();
     } catch (error) {
       Alert.alert(
         t("common.error") || "Error",
@@ -322,14 +329,15 @@ const AuthLivestockDetailsScreen = () => {
   const handleSkip = async () => {
     setIsSubmitting(true);
     try {
+      // Best-effort save — if it fails we still let the user proceed
       await saveOnboardingData();
-      completeOnboarding();
     } catch (error) {
-      console.error("Failed to save on skip:", error);
-      completeOnboarding();
+      console.warn("Could not save onboarding data on skip:", error);
     } finally {
       setIsSubmitting(false);
     }
+    // Navigate regardless — data is persisted in the store and can sync later
+    await completeOnboarding();
   };
 
   const handleBack = () => {

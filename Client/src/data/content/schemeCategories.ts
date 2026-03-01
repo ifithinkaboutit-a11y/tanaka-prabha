@@ -15,7 +15,7 @@ export const schemeCategories: SchemeCategory[] = [
     title: "Financial & Credit Support",
     titleKey: "schemesPage.categoriesList.financialSupport",
     icon: "💰",
-    count: 718,
+    count: 0,
     color: "#FFF9E6",
   },
   {
@@ -23,7 +23,7 @@ export const schemeCategories: SchemeCategory[] = [
     title: "Agricultural Development",
     titleKey: "schemesPage.categoriesList.agriculturalDevelopment",
     icon: "🌾",
-    count: 12,
+    count: 0,
     color: "#FFF3E0",
   },
   {
@@ -31,7 +31,7 @@ export const schemeCategories: SchemeCategory[] = [
     title: "Soil Management",
     titleKey: "schemesPage.categoriesList.soilManagement",
     icon: "🪴",
-    count: 8,
+    count: 0,
     color: "#E3F2FD",
   },
   {
@@ -39,10 +39,11 @@ export const schemeCategories: SchemeCategory[] = [
     title: "Crop Insurance",
     titleKey: "schemesPage.categoriesList.cropInsurance",
     icon: "🛡️",
-    count: 6,
+    count: 0,
     color: "#FCE4EC",
   },
 ];
+
 
 // Map category IDs to scheme categories for filtering
 export const categoryToSchemeCategory: Record<string, string> = {

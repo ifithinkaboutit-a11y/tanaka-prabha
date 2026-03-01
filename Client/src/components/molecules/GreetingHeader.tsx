@@ -16,7 +16,7 @@ export default function GreetingHeader({
   name,
   onNotificationPress,
   onAvatarPress,
-  hasNotifications = true,
+  hasNotifications = false,
 }: GreetingHeaderProps) {
   const { t } = useTranslation();
 
@@ -47,7 +47,7 @@ export default function GreetingHeader({
             shadowRadius: 6,
             elevation: 4,
           }}>
-            <Avatar size="xl" name={name} shape="circle"/>
+            <Avatar size="xl" name={name} shape="circle" />
           </Pressable>
           <View>
             <AppText

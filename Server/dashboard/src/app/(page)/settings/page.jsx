@@ -107,7 +107,7 @@ export default function SettingsPage() {
     signOut({ callbackUrl: "/login" })
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://34.131.190.214:5000/api"
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 py-6 px-4 md:py-8 lg:px-6">

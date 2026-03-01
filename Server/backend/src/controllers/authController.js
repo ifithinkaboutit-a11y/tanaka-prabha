@@ -33,12 +33,12 @@ export const sendOTP = async (req, res) => {
         // Format phone number
         const formattedNumber = formatPhoneNumber(mobile_number);
 
-        // Check rate limiting - max 3 OTPs per hour per number
-        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 60);
-        if (recentAttempts >= 5) {
+        // Check rate limiting - max 10 OTPs per 5 minutes per number
+        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
+        if (recentAttempts >= 10) {
             return res.status(429).json({
                 status: 'error',
-                message: 'Too many OTP requests. Please try again after 1 hour.'
+                message: 'Too many OTP requests. Please try again after 5 minutes.'
             });
         }
 
@@ -210,11 +210,11 @@ export const resendOTP = async (req, res) => {
         }
 
         // Check rate limiting
-        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 60);
-        if (recentAttempts >= 3) {
+        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
+        if (recentAttempts >= 10) {
             return res.status(429).json({
                 status: 'error',
-                message: 'Too many OTP requests. Please try again after 1 hour.'
+                message: 'Too many OTP requests. Please try again after 5 minutes.'
             });
         }
 

@@ -2,8 +2,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
+import { Image, Linking, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
+import { DetailPageSkeleton } from "../components/atoms/Skeleton";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
 import ExpandableText from "../components/atoms/ExpandableText";
@@ -47,8 +48,16 @@ const SchemeDetailsScreen = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#386641" />
+      <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#F3F4F6" }}>
+          <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+          <View style={{ width: 160, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <DetailPageSkeleton />
+        </ScrollView>
       </View>
     );
   }
@@ -182,7 +191,7 @@ const SchemeDetailsScreen = () => {
             {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
           </AppText>
           <ExpandableText
-            text={currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description}
+            text={(currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) ?? ""}
             style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}
             wordLimit={100}
           />

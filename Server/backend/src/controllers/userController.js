@@ -2,6 +2,12 @@ import User from '../models/User.js';
 import LandDetails from '../models/LandDetails.js';
 import LivestockDetails from '../models/LivestockDetails.js';
 import { query } from '../config/db.js';
+import { DISTRICT_COORDS } from '../data/districtCoords.js';
+
+/**
+ * Re-export for analytics controller which imports DISTRICT_COORDS from userController
+ */
+export { DISTRICT_COORDS };
 
 /**
  * Get all users with pagination, including land and livestock details
@@ -32,13 +38,15 @@ export const getAllUsers = async (req, res) => {
                 FROM public.users u
                 LEFT JOIN public.land_details ld ON ld.user_id = u.id
                 LEFT JOIN public.livestock_details ls ON ls.user_id = u.id
-                WHERE u.name ILIKE $1 OR u.village ILIKE $1 OR u.district ILIKE $1 OR u.mobile_number ILIKE $1
+                WHERE u.name != 'New User'
+                  AND (u.name ILIKE $1 OR u.village ILIKE $1 OR u.district ILIKE $1 OR u.mobile_number ILIKE $1)
                 ORDER BY u.created_at DESC
                 LIMIT $2 OFFSET $3
             `, [like, lim, off]);
             countResult = await query(
                 `SELECT COUNT(*) as total FROM public.users
-                 WHERE name ILIKE $1 OR village ILIKE $1 OR district ILIKE $1 OR mobile_number ILIKE $1`,
+                 WHERE name != 'New User'
+                 AND (name ILIKE $1 OR village ILIKE $1 OR district ILIKE $1 OR mobile_number ILIKE $1)`,
                 [like]
             );
         } else {
@@ -51,16 +59,18 @@ export const getAllUsers = async (req, res) => {
                     u.post_office, u.tehsil, u.block, u.district, u.pin_code, u.state,
                     ST_Y(u.location::geometry) as latitude,
                     ST_X(u.location::geometry) as longitude,
+                    u.is_verified, u.is_active,
                     u.created_at, u.updated_at,
                     row_to_json(ld.*) as land_details,
                     row_to_json(ls.*) as livestock_details
                 FROM public.users u
                 LEFT JOIN public.land_details ld ON ld.user_id = u.id
                 LEFT JOIN public.livestock_details ls ON ls.user_id = u.id
+                WHERE u.name != 'New User'
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
             `, [lim, off]);
-            countResult = await query('SELECT COUNT(*) as total FROM public.users');
+            countResult = await query(`SELECT COUNT(*) as total FROM public.users WHERE name != 'New User'`);
         }
 
         const users = usersResult.rows;
@@ -419,6 +429,31 @@ export const updateCurrentUserProfile = async (req, res) => {
 
             // Remove nested object — User.update() expects flat columns
             delete userData.location;
+        }
+
+        // ── District-centroid fallback (Dashboard Sync) ──────────────────────
+        // When a user saves their district but has no GPS location yet,
+        // automatically assign the district's known centroid coordinates.
+        // This is the SAME logic used during seeding, so that real user data
+        // immediately appears on the Frequency Dashboard, Heatmap, and
+        // Farmer-Locations map without requiring GPS location to be set.
+        const districtToUse = userData.district || existingUser.district;
+        const hasGpsLocation = !!(
+            userData.latitude ||
+            existingUser.latitude ||
+            existingUser.longitude
+        );
+
+        if (districtToUse && !hasGpsLocation && !userData.latitude && !userData.longitude) {
+            const coords = DISTRICT_COORDS[districtToUse];
+            if (coords) {
+                // Add a small random jitter (±0.01°, ~1km) so multiple users
+                // from the same district don't stack on an identical point.
+                const jitter = () => (Math.random() - 0.5) * 0.02;
+                userData.latitude = coords[0] + jitter();
+                userData.longitude = coords[1] + jitter();
+                console.log(`📍 [userController] Auto-assigned district centroid for "${districtToUse}" → [${userData.latitude.toFixed(4)}, ${userData.longitude.toFixed(4)}]`);
+            }
         }
 
         // Extract land_details and livestock_details before passing to User.update

@@ -1,11 +1,11 @@
 // src/app/(auth)/welcome.tsx
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
-import { Image } from "react-native";
+import MediaPath from "@/constants/MediaPath";
 import { useTranslation } from "@/i18n";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
+import { ImageBackground, StyleSheet, TouchableOpacity, Text, View } from "react-native";
 
 export default function Welcome() {
   const { t } = useTranslation();
@@ -23,13 +23,16 @@ export default function Welcome() {
 
   return (
     <View style={s.root}>
-      <View style={s.videoBg}>
-        <Image
-          source={{ uri: "https://images.unsplash.com/photo-1592982537447-6f23f8b0068a?q=80&w=1000&auto=format&fit=crop" }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      </View>
+      {/* Full-screen background image */}
+      <ImageBackground
+        source={MediaPath.images.authBgImage}
+        style={s.bgImage}
+        resizeMode="cover"
+      >
+        <View style={s.overlay} />
+      </ImageBackground>
+
+      {/* Bottom card overlay */}
       <View style={s.card}>
         {/* Title */}
         <AppText variant="h2" style={s.title}>
@@ -79,9 +82,12 @@ const s = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
   },
-  videoBg: {
-    flex: 1,
-    height: "85%",
+  bgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
   card: {
     backgroundColor: "#FFFFFF",

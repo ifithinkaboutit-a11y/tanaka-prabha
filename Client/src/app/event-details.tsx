@@ -1,7 +1,8 @@
+// src/app/event-details.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
-import { Alert, Image, Modal, Pressable, ScrollView, View, ActivityIndicator, Switch } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { Alert, Image, Modal, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
@@ -13,6 +14,25 @@ export const options = {
     headerShown: false,
 };
 
+// ─── Status helper ─────────────────────────────────────────────────────────
+const computeStatus = (event: ApiEvent): string => {
+    const now = new Date();
+    const eventDate = event.date ? new Date(event.date) : null;
+    if (!eventDate) return event.status || "upcoming";
+
+    const startStr = `${event.date.split("T")[0]}T${event.start_time || "00:00:00"}`;
+    const endStr = `${event.date.split("T")[0]}T${event.end_time || "23:59:59"}`;
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+
+    if (now < start) return "upcoming";
+    if (now >= start && now <= end) return "ongoing";
+    return "completed";
+};
+
+// ─── Time formatter (strips seconds) ───────────────────────────────────────
+const fmtTime = (t?: string) => (t ? t.substring(0, 5) : "");
+
 const EventDetails = () => {
     const router = useRouter();
     const { t } = useTranslation();
@@ -22,25 +42,24 @@ const EventDetails = () => {
     const [showModal, setShowModal] = useState(false);
     const [registering, setRegistering] = useState(false);
     const [consentGiven, setConsentGiven] = useState(false);
+    const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
-    // Get user details
     const { user } = useAuth();
 
-    useEffect(() => {
-        const fetchEvent = async () => {
-            if (!eventId) return;
-            try {
-                setLoading(true);
-                const data = await eventsApi.getById(eventId);
-                setEvent(data);
-            } catch (error) {
-                console.error("Error fetching event:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchEvent();
+    const fetchEvent = useCallback(async () => {
+        if (!eventId) return;
+        try {
+            setLoading(true);
+            const data = await eventsApi.getById(eventId);
+            setEvent(data);
+        } catch (error) {
+            console.error("Error fetching event:", error);
+        } finally {
+            setLoading(false);
+        }
     }, [eventId]);
+
+    useEffect(() => { fetchEvent(); }, [fetchEvent]);
 
     const handleApplyNow = () => {
         setConsentGiven(false);
@@ -54,16 +73,19 @@ const EventDetails = () => {
         }
         try {
             setRegistering(true);
-            if (!user?.mobile_number) {
+            if (!user?.mobileNumber) {
                 Alert.alert(t("common.error"), t("events.mobileRequired"));
                 return;
             }
             const fullName = user.name || "Unknown User";
-            await eventsApi.register(eventId!, user.mobile_number, fullName);
-            Alert.alert(t("events.successTitle"), t("events.successMessage"));
+            await eventsApi.register(eventId!, user.mobileNumber, fullName);
+            setAlreadyRegistered(true);
             setShowModal(false);
+            Alert.alert(t("events.successTitle"), t("events.successMessage"));
         } catch (error: any) {
             if (error.status === 400 && error.message?.includes('already registered')) {
+                setAlreadyRegistered(true);
+                setShowModal(false);
                 Alert.alert(t("events.alreadyRegisteredTitle"), t("events.alreadyRegisteredMessage"));
             } else {
                 Alert.alert(t("common.error"), t("events.registrationFailed"));
@@ -96,6 +118,19 @@ const EventDetails = () => {
             </View>
         );
     }
+
+    // Compute live status
+    const liveStatus = computeStatus(event);
+    const isActionable = liveStatus === "upcoming" || liveStatus === "ongoing";
+    const isDisabled = liveStatus === "completed" || liveStatus === "cancelled";
+
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+        upcoming: { bg: "#ECFDF5", text: "#059669", label: t("events.status.upcoming") || "Upcoming" },
+        ongoing: { bg: "#FEF3C7", text: "#D97706", label: t("events.status.ongoing") || "Ongoing" },
+        completed: { bg: "#F3F4F6", text: "#6B7280", label: t("events.status.completed") || "Completed" },
+        cancelled: { bg: "#FEF2F2", text: "#EF4444", label: t("events.status.cancelled") || "Cancelled" },
+    };
+    const sc = statusConfig[liveStatus] || statusConfig.upcoming;
 
     const eventDate = event.date ? new Date(event.date) : null;
     const formattedDate = eventDate ? eventDate.toLocaleDateString("en-IN", {
@@ -141,15 +176,15 @@ const EventDetails = () => {
                     {/* Status Badge */}
                     <View style={{
                         alignSelf: "flex-start",
-                        backgroundColor: event.status === "upcoming" ? "#ECFDF5" : event.status === "completed" ? "#F3F4F6" : "#FEF3C7",
+                        backgroundColor: sc.bg,
                         paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20,
                         marginBottom: 12,
                     }}>
                         <AppText variant="bodySm" style={{
-                            color: event.status === "upcoming" ? "#059669" : event.status === "completed" ? "#6B7280" : "#D97706",
+                            color: sc.text,
                             fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5
                         }}>
-                            {t(`events.status.${event.status}`) || event.status}
+                            {sc.label}
                         </AppText>
                     </View>
 
@@ -189,7 +224,7 @@ const EventDetails = () => {
                                     {t("events.time")}
                                 </AppText>
                                 <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>
-                                    {event.start_time} — {event.end_time}
+                                    {fmtTime(event.start_time)} — {fmtTime(event.end_time)}
                                 </AppText>
                             </View>
                         </View>
@@ -257,35 +292,69 @@ const EventDetails = () => {
                 </View>
             </ScrollView>
 
-            {/* ─── Apply Now CTA ─── */}
-            {event.status === 'upcoming' && (
-                <View style={{
-                    backgroundColor: "#FFFFFF",
-                    paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28,
-                    borderTopWidth: 1, borderTopColor: "#E5E7EB",
-                    shadowColor: "#000", shadowOffset: { width: 0, height: -4 },
-                    shadowOpacity: 0.04, shadowRadius: 8, elevation: 8,
-                }}>
-                    <Button
+            {/* ─── CTA Bar ─── */}
+            <View style={{
+                backgroundColor: "#FFFFFF",
+                paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28,
+                borderTopWidth: 1, borderTopColor: "#E5E7EB",
+                shadowColor: "#000", shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.04, shadowRadius: 8, elevation: 8,
+            }}>
+                {alreadyRegistered ? (
+                    /* Already registered */
+                    <View style={{
+                        backgroundColor: "#F0FDF4", borderRadius: 14,
+                        paddingVertical: 16, borderWidth: 1, borderColor: "#86EFAC",
+                    }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                            <Ionicons name="checkmark-circle" size={22} color="#16A34A" />
+                            <AppText variant="bodyMd" style={{ color: "#15803D", fontWeight: "700", marginLeft: 10, fontSize: 16 }}>
+                                {t("events.alreadyRegisteredTitle") || "Registered ✓"}
+                            </AppText>
+                        </View>
+                    </View>
+                ) : isActionable ? (
+                    /* Active — Participate Now */
+                    <Pressable
                         onPress={handleApplyNow}
-                        variant="primary"
-                        size="lg"
-                        style={{
-                            width: "100%",
-                            shadowColor: "#386641",
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 8,
-                            elevation: 4,
-                        }}
+                        style={({ pressed }) => ({
+                            borderRadius: 14, paddingVertical: 16,
+                            backgroundColor: pressed ? "#2D5231" : "#386641",
+                            shadowColor: "#386641", shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+                        })}
                     >
-                        <Ionicons name="paper-plane" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                        <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 }}>
-                            {t("events.applyNow")}
-                        </AppText>
-                    </Button>
-                </View>
-            )}
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                            <Ionicons name="paper-plane" size={20} color="#FFFFFF" />
+                            <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.3, marginLeft: 10 }}>
+                                {liveStatus === "ongoing" ? (t("events.joinNow") || "Join Now") : (t("events.participateNow") || "Participate Now")}
+                            </AppText>
+                        </View>
+                    </Pressable>
+                ) : (
+                    /* Disabled — completed / cancelled */
+                    <View style={{
+                        backgroundColor: liveStatus === "cancelled" ? "#FEF2F2" : "#F3F4F6",
+                        borderRadius: 14, paddingVertical: 16,
+                    }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                            <Ionicons
+                                name={liveStatus === "cancelled" ? "close-circle" : "checkmark-done-circle"}
+                                size={22}
+                                color={liveStatus === "cancelled" ? "#F87171" : "#9CA3AF"}
+                            />
+                            <AppText variant="bodyMd" style={{
+                                color: liveStatus === "cancelled" ? "#EF4444" : "#9CA3AF",
+                                fontWeight: "700", fontSize: 16, marginLeft: 10,
+                            }}>
+                                {liveStatus === "cancelled"
+                                    ? (t("events.status.cancelled") || "Event Cancelled")
+                                    : (t("events.status.completed") || "Event Completed")}
+                            </AppText>
+                        </View>
+                    </View>
+                )}
+            </View>
 
             {/* ─── Application Consent Modal ─── */}
             <Modal visible={showModal} transparent animationType="slide">
@@ -341,7 +410,7 @@ const EventDetails = () => {
                                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                     <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.mobile")}</AppText>
                                     <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>
-                                        {user?.mobile_number || "—"}
+                                        {user?.mobileNumber || "—"}
                                     </AppText>
                                 </View>
                             </View>

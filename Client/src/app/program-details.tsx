@@ -2,8 +2,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Image, Linking, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
+import { Image, Linking, Pressable, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
+import { DetailPageSkeleton } from "../components/atoms/Skeleton";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
 import { schemesApi, Scheme } from "@/services/apiService";
@@ -27,7 +28,7 @@ const ProgramDetails = () => {
   useEffect(() => {
     const fetchProgram = async () => {
       if (!programId) return;
-      
+
       try {
         setLoading(true);
         const data = await schemesApi.getById(programId);
@@ -44,8 +45,16 @@ const ProgramDetails = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#386641" />
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+          <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#386641" />
+          </Pressable>
+          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <DetailPageSkeleton />
+        </ScrollView>
       </View>
     );
   }
@@ -117,83 +126,83 @@ const ProgramDetails = () => {
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-      {/* Navigation Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
-        <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
-          <Ionicons name="arrow-back" size={24} color="#386641" />
-        </Pressable>
-        <AppText
-          variant="h2"
-          style={{ color: "#212121", flex: 1 }}
-          numberOfLines={1}
-        >
-          {program.title}
-        </AppText>
-      </View>
-
-      {/* Hero Image */}
-      {program.heroImageUrl && (
-        <Image
-          source={{ uri: program.heroImageUrl }}
-          style={{ width: "100%", height: 192 }}
-          resizeMode="cover"
-        />
-      )}
-
-      {/* Program Title & Description */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-        <AppText variant="h1" style={{ color: "#212121", marginBottom: 16 }}>
-          {program.title}
-        </AppText>
-        <AppText variant="bodyLg" style={{ color: "#616161", lineHeight: 24 }}>
-          {program.description}
-        </AppText>
-      </View>
-
-      {/* Segmented Content Tabs - Pill Style */}
-      <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#F3F4F6",
-            borderRadius: 25,
-            padding: 4,
-          }}
-        >
-          {[
-            { key: "overview", label: t("programReader.tabs.overview") },
-            { key: "process", label: t("programReader.tabs.process") },
-            { key: "support", label: t("programReader.tabs.support") },
-          ].map((tab) => (
-            <Pressable
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key as any)}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                borderRadius: 22,
-                backgroundColor: activeTab === tab.key ? "#386641" : "transparent",
-              }}
-            >
-              <AppText
-                variant="bodyMd"
-                style={{
-                  textAlign: "center",
-                  color: activeTab === tab.key ? "#FFFFFF" : "#6B7280",
-                  fontWeight: activeTab === tab.key ? "600" : "500",
-                  fontSize: 14,
-                }}
-              >
-                {tab.label}
-              </AppText>
-            </Pressable>
-          ))}
+        {/* Navigation Header */}
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+          <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#386641" />
+          </Pressable>
+          <AppText
+            variant="h2"
+            style={{ color: "#212121", flex: 1 }}
+            numberOfLines={1}
+          >
+            {program.title}
+          </AppText>
         </View>
 
-        {/* Tab Content */}
-        <Card style={{ marginTop: 16, padding: 16 }}>{renderTabContent()}</Card>
-      </View>
+        {/* Hero Image */}
+        {program.heroImageUrl && (
+          <Image
+            source={{ uri: program.heroImageUrl }}
+            style={{ width: "100%", height: 192 }}
+            resizeMode="cover"
+          />
+        )}
+
+        {/* Program Title & Description */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
+          <AppText variant="h1" style={{ color: "#212121", marginBottom: 16 }}>
+            {program.title}
+          </AppText>
+          <AppText variant="bodyLg" style={{ color: "#616161", lineHeight: 24 }}>
+            {program.description}
+          </AppText>
+        </View>
+
+        {/* Segmented Content Tabs - Pill Style */}
+        <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              backgroundColor: "#F3F4F6",
+              borderRadius: 25,
+              padding: 4,
+            }}
+          >
+            {[
+              { key: "overview", label: t("programReader.tabs.overview") },
+              { key: "process", label: t("programReader.tabs.process") },
+              { key: "support", label: t("programReader.tabs.support") },
+            ].map((tab) => (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key as any)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  borderRadius: 22,
+                  backgroundColor: activeTab === tab.key ? "#386641" : "transparent",
+                }}
+              >
+                <AppText
+                  variant="bodyMd"
+                  style={{
+                    textAlign: "center",
+                    color: activeTab === tab.key ? "#FFFFFF" : "#6B7280",
+                    fontWeight: activeTab === tab.key ? "600" : "500",
+                    fontSize: 14,
+                  }}
+                >
+                  {tab.label}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Tab Content */}
+          <Card style={{ marginTop: 16, padding: 16 }}>{renderTabContent()}</Card>
+        </View>
       </ScrollView>
 
       {/* Fixed Apply Now CTA */}

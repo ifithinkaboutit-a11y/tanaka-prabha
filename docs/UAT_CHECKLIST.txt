@@ -1,0 +1,139 @@
+# ============================================================
+# UAT Checklist — Tanak Prabha Pre-Release
+# Generated: 2026-02-28
+# Duration: ~3 hours focused testing
+# ============================================================
+
+## 1. Authentication & Onboarding
+[ ] Login with valid phone number works
+[ ] OTP verification completes successfully
+[ ] Personal details form submits correctly
+[ ] Land details form submits and syncs with dashboard
+[ ] Livestock details form submits and syncs with dashboard
+[ ] User redirected to home after onboarding
+[ ] Skip option works at each step
+
+## 2. Dashboard Data Sync
+[ ] User name appears correctly (not "New User")
+[ ] Location data reflects on dashboard after form submission
+[ ] Land area data reflects on dashboard
+[ ] Livestock data reflects on dashboard
+[ ] India-wide coordinates used (not just Assam)
+
+## 3. Home Screen
+[ ] Greeting shows correct time-of-day message
+[ ] User name displays correctly
+[ ] Notification badge only appears when unread > 0
+[ ] Notification badge disappears after viewing notifications
+[ ] Banner slideshow loads from backend
+[ ] Quick Actions navigate correctly
+[ ] Popular Schemes section loads real data
+[ ] Search bar navigates to search page
+[ ] No dummy/placeholder data visible
+
+## 4. Notifications
+[ ] Notification screen loads from backend
+[ ] No raw i18n keys visible (e.g., "notification.announcement")
+[ ] Proper titles and descriptions shown
+[ ] Grouped by Today/Yesterday/Earlier
+[ ] Pull-to-refresh works
+[ ] Empty state shown when no notifications
+[ ] Notifications marked as read on screen open
+
+## 5. Schemes
+[ ] Schemes load from backend API
+[ ] Featured scheme banner shows real data
+[ ] Recommended schemes show real data
+[ ] Category counts show real numbers (not 718)
+[ ] Category counts show 0 or hidden when no data
+[ ] Category tap navigates to listing
+[ ] View All navigates to full listing
+[ ] Scheme card tap opens details
+[ ] No placeholder images or text
+
+## 6. Category Listing (View All)
+[ ] Schemes load for selected category
+[ ] Search filters results correctly
+[ ] Sort by Name (A-Z) works
+[ ] Sort by Date works
+[ ] No microphone icon in search bar
+[ ] Clear button appears when typing
+[ ] Empty state shown when no results
+[ ] Back navigation works
+
+## 7. Connect Module
+[ ] Connect page shows strict 2×2 grid
+[ ] Grid does NOT shift to 3×1 on any device
+[ ] Category cards have correct icons and colors
+[ ] Category tap navigates to professional listing
+[ ] Professional listing loads from backend (fallback to local)
+[ ] Professional card tap opens detail page
+[ ] Detail page shows name, role, specializations
+[ ] Call button opens phone dialer
+[ ] WhatsApp button opens WhatsApp
+[ ] Book Appointment button navigates to booking
+[ ] My Schedule button in header works
+
+## 8. Appointment Booking
+[ ] Date picker shows 14 days ahead
+[ ] Time slots load from backend
+[ ] Max 3 appointments per day enforced
+[ ] Fully booked dates show proper message
+[ ] Booking confirmation shows success state
+[ ] Navigate to My Schedule works after booking
+
+## 9. My Schedule
+[ ] Upcoming appointments show correctly
+[ ] Past appointments show correctly
+[ ] Tab switching works (Upcoming/Past)
+[ ] Call button works
+[ ] WhatsApp button works
+[ ] Cancel button cancels appointment
+[ ] Empty state shown when no appointments
+
+## 10. Search
+[ ] Search page opens with keyboard focused
+[ ] Typing filters results in real-time
+[ ] Results show correct icons per type
+[ ] Tapping result navigates to detail
+[ ] No microphone icon anywhere
+[ ] Clear button resets search
+[ ] No results state shows properly
+
+## 11. Profile
+[ ] Profile loads user data
+[ ] Edit Personal Details works
+[ ] Edit Land Details works
+[ ] Edit Livestock Details works
+[ ] Language switch works
+[ ] Logout works
+
+## 12. i18n / Translation
+[ ] No raw translation keys visible anywhere
+[ ] English text displays correctly
+[ ] "common.next" shows "Next" not the key
+[ ] Notification screen titles are readable
+[ ] All buttons have readable labels
+
+## 13. General UI
+[ ] No console errors in development
+[ ] No placeholder/dummy data anywhere
+[ ] Consistent spacing and typography
+[ ] Pre-built components used consistently
+[ ] No mic icon in any input field
+[ ] Proper loading states on all screens
+[ ] Pull-to-refresh works where applicable
+
+## 14. Events
+[ ] Events load from backend
+[ ] Event details page shows all info
+[ ] Date, Time, Location display correctly
+[ ] Apply Now / Participate works
+[ ] Completed events show correct badge
+
+# ============================================================
+# Sign-off
+# Tested by: _______________
+# Date: __/__/____
+# Status: [ ] PASS  [ ] FAIL (see BUGS.txt for failures)
+# ============================================================

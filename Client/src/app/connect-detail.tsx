@@ -15,6 +15,7 @@ import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import BookingModal from "../components/molecules/BookingModal";
 import { professionalsApi, Professional, appointmentsApi } from "@/services/apiService";
+import { ProfessionalDetailSkeleton } from "../components/atoms/Skeleton";
 import { useTranslation } from "../i18n";
 
 const ConnectDetailScreen = () => {
@@ -58,13 +59,14 @@ const ConnectDetailScreen = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
-        <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
-          <Ionicons name="person" size={28} color="#386641" />
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row items-center px-5 pt-12 pb-4 bg-[#386641]">
+          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </View>
+          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: "rgba(255,255,255,0.3)" }} />
         </View>
-        <AppText variant="bodySm" className="text-gray-500">
-          {t("connect.loading")}
-        </AppText>
+        <ProfessionalDetailSkeleton />
       </View>
     );
   }

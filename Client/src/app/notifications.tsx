@@ -13,6 +13,7 @@ import AppText from "../components/atoms/AppText";
 import Card from "../components/atoms/Card";
 import { useTranslation } from "../i18n";
 import { notificationsApi, Notification } from "../services/apiService";
+import { NotificationItemSkeleton } from "../components/atoms/Skeleton";
 import { colors } from "../styles/colors";
 
 // Helper to group notifications by date
@@ -44,16 +45,26 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
 const NotificationItem = ({ notification }: { notification: Notification }) => {
   const { t } = useTranslation();
 
+  // Safe translation: if the key is not found, t() returns the key itself.
+  // We detect this by checking if the result looks like a dotted key path.
+  const safeT = (key?: string, fallback?: string): string => {
+    if (!key) return fallback || "";
+    const result = t(key);
+    // If result equals the key (not found), use the fallback or humanise the last segment
+    if (result === key) {
+      if (fallback) return fallback;
+      const lastSegment = key.split(".").pop() || key;
+      return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/([A-Z])/g, " $1");
+    }
+    return result;
+  };
+
   const getIconColor = (type: string) => {
     switch (type) {
-      case "approval":
-        return "#2196F3"; // info
-      case "reminder":
-        return "#E91E63"; // accent/error
-      case "alert":
-        return "#FF5722"; // warning
-      default:
-        return "#757575"; // neutral
+      case "approval": return "#2196F3";
+      case "reminder": return "#E91E63";
+      case "alert": return "#FF5722";
+      default: return "#757575";
     }
   };
 
@@ -65,7 +76,15 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
       case "alert": return "alert-circle";
       default: return "notifications";
     }
-  }
+  };
+
+  const title = notification.titleKey
+    ? safeT(notification.titleKey, notification.title)
+    : (notification.title || "Notification");
+
+  const description = notification.descriptionKey
+    ? safeT(notification.descriptionKey, notification.description)
+    : notification.description;
 
   return (
     <View style={{
@@ -84,20 +103,13 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
       {/* Icon badge */}
       <View
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          alignItems: "center",
-          justifyContent: "center",
+          width: 48, height: 48, borderRadius: 24,
+          alignItems: "center", justifyContent: "center",
           marginRight: 16,
           backgroundColor: notification.iconBgColor || getIconColor(notification.type),
         }}
       >
-        <Ionicons
-          name={getIconName(notification.type)}
-          size={24}
-          color="#FFFFFF"
-        />
+        <Ionicons name={getIconName(notification.type)} size={24} color="#FFFFFF" />
       </View>
 
       {/* Content wrapper */}
@@ -105,41 +117,24 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <AppText
             variant="bodyMd"
-            style={{
-              fontWeight: "700",
-              color: "#111827",
-              flex: 1,
-              marginRight: 16,
-              fontSize: 15,
-            }}
+            style={{ fontWeight: "700", color: "#111827", flex: 1, marginRight: 16, fontSize: 15 }}
           >
-            {notification.titleKey ? t(notification.titleKey) : notification.title}
+            {title}
           </AppText>
-
-          {/* Unread dot indicator */}
           {!notification.isRead && (
-            <View style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: "#0EA5E9",
-              marginTop: 6
-            }} />
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#0EA5E9", marginTop: 6 }} />
           )}
         </View>
 
-        <AppText
-          variant="bodySm"
-          style={{
-            color: "#6B7280",
-            fontSize: 13,
-            lineHeight: 18,
-            marginTop: 4,
-          }}
-          numberOfLines={2}
-        >
-          {notification.descriptionKey ? t(notification.descriptionKey) : notification.description}
-        </AppText>
+        {description ? (
+          <AppText
+            variant="bodySm"
+            style={{ color: "#6B7280", fontSize: 13, lineHeight: 18, marginTop: 4 }}
+            numberOfLines={2}
+          >
+            {description}
+          </AppText>
+        ) : null}
 
         <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500", marginTop: 6 }}>
           {notification.time}
@@ -148,6 +143,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
     </View>
   );
 };
+
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -158,9 +154,17 @@ export default function NotificationsScreen() {
 
   const fetchNotifications = async () => {
     try {
-      // Fallback to getMy if available, or getAll
-      const data = await (notificationsApi as any).getMy();
+      const data = await notificationsApi.getMy();
       setNotifications(data);
+      // Mark all as read when user opens notification screen
+      const hasUnread = data.some((n) => !n.isRead);
+      if (hasUnread) {
+        try {
+          await notificationsApi.markAllAsRead();
+        } catch {
+          // Silent — best effort
+        }
+      }
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -182,9 +186,15 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F9FAFB" }}>
-        <Stack.Screen options={{ title: t("notifications.title") || "Notifications" }} />
-        <ActivityIndicator size="large" color={colors.primary.green} />
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}>
+          <View style={{ width: 40, height: 24, borderRadius: 6, backgroundColor: "#E5E7EB", marginRight: 16 }} />
+          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+        </View>
+        <View style={{ padding: 16, paddingTop: 20 }}>
+          {[0, 1, 2, 3, 4].map((i) => <NotificationItemSkeleton key={i} />)}
+        </View>
       </View>
     );
   }

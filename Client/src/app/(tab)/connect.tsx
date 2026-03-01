@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
-  Image,
   Linking,
   ScrollView,
   Pressable,
@@ -11,54 +10,25 @@ import {
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import { connectServices } from "../../data/content/connectServices";
-import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 
 const SERVICE_COLORS: Record<string, string> = {
-  "crop": "#DCFCE7",
-  "livestock": "#FEF3C7",
-  "soil": "#DBEAFE",
-  "market": "#FCE7F3",
+  "agricultural": "#DCFCE7",
+  "veterinary": "#FEF3C7",
+  "financial": "#FCE7F3",
+  "doctor": "#DBEAFE",
 };
 
 const SERVICE_ICON_COLORS: Record<string, string> = {
-  "crop": "#16A34A",
-  "livestock": "#D97706",
-  "soil": "#2563EB",
-  "market": "#DB2777",
+  "agricultural": "#16A34A",
+  "veterinary": "#D97706",
+  "financial": "#DB2777",
+  "doctor": "#2563EB",
 };
 
 export default function Connect() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [recentProfessionals, setRecentProfessionals] = useState<Professional[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchData = useCallback(async () => {
-    try {
-      // Get a few professionals to show as recent connections
-      const professionals = await professionalsApi.getAll({ limit: 3, available_only: true });
-      setRecentProfessionals(professionals);
-    } catch (error) {
-      console.error("Error fetching professionals:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await fetchData();
-      setLoading(false);
-    };
-    loadData();
-  }, [fetchData]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, [fetchData]);
 
   const handleServicePress = (serviceId: string) => {
     router.push({
@@ -72,25 +42,10 @@ export default function Connect() {
     Linking.openURL(emergencyNumber);
   };
 
-  const handleViewAllConnections = () => {
-    router.push({
-      pathname: "/connect-listing",
-      params: { category: "all" },
-    } as any);
-  };
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: "#F8FAFC" }}
       showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#386641"]}
-          tintColor="#386641"
-        />
-      }
     >
       {/* Header with Gradient */}
       <View
@@ -127,26 +82,25 @@ export default function Connect() {
         </AppText>
 
         {/* Services Grid - 2x2 */}
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 16 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12 }}>
           {connectServices.map((service) => (
             <Pressable
               key={service.id}
               onPress={() => handleServicePress(service.id)}
               style={({ pressed }) => ({
-                aspectRatio: 1, // Ensures perfect square
+                width: "47%",
                 opacity: pressed ? 0.9 : 1,
                 transform: [{ scale: pressed ? 0.98 : 1 }],
               })}
             >
               <View
                 style={{
-                  width: "auto",
-                  flex: 1,
                   backgroundColor: "#FFFFFF",
                   borderRadius: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: 16,
+                  paddingVertical: 24,
+                  paddingHorizontal: 16,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.06,
@@ -156,9 +110,9 @@ export default function Connect() {
               >
                 <View
                   style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 36,
+                    width: 68,
+                    height: 68,
+                    borderRadius: 34,
                     alignItems: "center",
                     justifyContent: "center",
                     marginBottom: 12,
@@ -167,7 +121,7 @@ export default function Connect() {
                 >
                   <Ionicons
                     name={service.icon}
-                    size={36}
+                    size={34}
                     color={SERVICE_ICON_COLORS[service.id] || "#386641"}
                   />
                 </View>
@@ -177,7 +131,7 @@ export default function Connect() {
                     textAlign: "center",
                     fontWeight: "600",
                     color: "#374151",
-                    fontSize: 14,
+                    fontSize: 13,
                   }}
                 >
                   {t(service.titleKey)}

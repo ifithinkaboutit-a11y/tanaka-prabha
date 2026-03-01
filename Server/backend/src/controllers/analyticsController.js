@@ -4,6 +4,7 @@ import Professional from '../models/Professional.js';
 import LandDetails from '../models/LandDetails.js';
 import LivestockDetails from '../models/LivestockDetails.js';
 import { query } from '../config/db.js';
+import { DISTRICT_COORDS } from './userController.js';
 
 /**
  * Get dashboard statistics
@@ -223,6 +224,7 @@ export const getFarmerLocations = async (req, res) => {
     try {
         const { limit = 1000, offset = 0 } = req.query;
 
+        // Primary: users with a proper GPS/PostGIS location point
         const locationsResult = await query(`
             SELECT 
                 id, name, village, district,
@@ -234,10 +236,38 @@ export const getFarmerLocations = async (req, res) => {
             LIMIT $1 OFFSET $2
         `, [parseInt(limit), parseInt(offset)]);
 
+        // Supplemental: users who have a district but no GPS location yet.
+        // Use district-centroid coords so they appear on the map too.
+        const noGpsResult = await query(`
+            SELECT id, name, village, district
+            FROM public.users
+            WHERE location IS NULL
+              AND district IS NOT NULL
+              AND district != ''
+            ORDER BY created_at DESC
+        `);
+
+        const locations = [...locationsResult.rows];
+
+        for (const row of noGpsResult.rows) {
+            const coords = DISTRICT_COORDS[row.district];
+            if (coords) {
+                const jitter = () => (Math.random() - 0.5) * 0.02;
+                locations.push({
+                    id: row.id,
+                    name: row.name,
+                    village: row.village,
+                    district: row.district,
+                    latitude: coords[0] + jitter(),
+                    longitude: coords[1] + jitter(),
+                });
+            }
+        }
+
         res.status(200).json({
             status: 'success',
             message: 'Farmer locations retrieved successfully',
-            data: { locations: locationsResult.rows }
+            data: { locations }
         });
     } catch (error) {
         console.error('Error fetching farmer locations:', error);
@@ -252,24 +282,6 @@ export const getFarmerLocations = async (req, res) => {
 /**
  * Get user heatmap data — district counts mapped to lat/lng
  */
-
-// Assam district coordinates lookup
-const DISTRICT_COORDS = {
-    'Baksa': [26.6525, 91.2038], 'Barpeta': [26.3250, 91.1167], 'Biswanath': [26.7269, 93.1669],
-    'Bongaigaon': [26.4765, 90.5535], 'Cachar': [24.7979, 92.8676], 'Charaideo': [26.9859, 94.8077],
-    'Chirang': [26.4847, 90.4714], 'Darrang': [26.4469, 91.9785], 'Dhemaji': [27.4718, 94.5717],
-    'Dhubri': [26.0180, 89.9759], 'Dibrugarh': [27.4782, 94.9146], 'Dima Hasao': [25.1167, 93.0167],
-    'Goalpara': [26.1739, 90.6228], 'Golaghat': [26.5203, 93.9759], 'Hailakandi': [24.6758, 92.5588],
-    'Hojai': [26.0000, 92.8500], 'Jorhat': [26.7500, 94.2167], 'Kamrup': [26.1434, 91.7362],
-    'Kamrup Metropolitan': [26.1445, 91.7362], 'Karbi Anglong': [26.1000, 93.6000],
-    'Karimganj': [24.8677, 92.3540], 'Kokrajhar': [26.4008, 90.2715], 'Lakhimpur': [27.2342, 94.1007],
-    'Majuli': [26.9500, 94.1667], 'Morigaon': [26.2624, 92.3468], 'Nagaon': [26.3451, 92.6847],
-    'Nalbari': [26.4470, 91.4406], 'Sivasagar': [26.9831, 94.6358], 'Sonitpur': [26.6352, 92.7979],
-    'South Salmara-Mankachar': [25.7333, 89.8667], 'Tinsukia': [27.4893, 95.3579],
-    'Udalguri': [26.7522, 92.0906], 'West Karbi Anglong': [25.9625, 92.8000],
-    'Delhi': [28.6139, 77.2090], 'Mumbai': [19.0760, 72.8777], 'Kolkata': [22.5726, 88.3639],
-    'Chennai': [13.0827, 80.2707], 'Bangalore': [12.9716, 77.5946], 'Hyderabad': [17.3850, 78.4867],
-};
 
 export const getUserHeatmap = async (req, res) => {
     try {
@@ -298,7 +310,7 @@ export const getUserHeatmap = async (req, res) => {
         const maxCount = districtRows.length > 0 ? parseInt(districtRows[0].count) : 1;
 
         // Build heatmap points from actual GPS locations
-        let points = rawPointsResult.rows
+        const gpsPoints = rawPointsResult.rows
             .filter(row => row.lat && row.lng && !isNaN(parseFloat(row.lat)) && !isNaN(parseFloat(row.lng)))
             .map(row => ({
                 lat: parseFloat(row.lat),
@@ -308,16 +320,39 @@ export const getUserHeatmap = async (req, res) => {
                 count: 1,
             }));
 
-        // Fallback: district coord lookup if no GPS data exists
-        if (points.length === 0) {
-            points = districtRows
-                .filter(row => DISTRICT_COORDS[row.district])
-                .map(row => {
-                    const [lat, lng] = DISTRICT_COORDS[row.district];
-                    const count = parseInt(row.count);
-                    return { lat, lng, intensity: Math.round((count / maxCount) * 500), district: row.district, count };
+        // 3. Supplemental: For users who have a district but no GPS location yet,
+        //    add district-centroid points so they show up on the heatmap immediately.
+        //    This mirrors exactly what the seeding script does.
+        const noGpsUsersResult = await query(`
+            SELECT district, COUNT(*) as count
+            FROM public.users
+            WHERE location IS NULL
+              AND district IS NOT NULL
+              AND district != ''
+            GROUP BY district
+            ORDER BY count DESC
+        `);
+
+        const districtFallbackPoints = noGpsUsersResult.rows
+            .filter(row => DISTRICT_COORDS[row.district])
+            .flatMap(row => {
+                const [lat, lng] = DISTRICT_COORDS[row.district];
+                const count = parseInt(row.count);
+                // Expand into individual jittered points so heatmap density looks natural
+                return Array.from({ length: count }, () => {
+                    const jitter = () => (Math.random() - 0.5) * 0.02;
+                    return {
+                        lat: lat + jitter(),
+                        lng: lng + jitter(),
+                        intensity: 120,
+                        district: row.district,
+                        count: 1,
+                    };
                 });
-        }
+            });
+
+        // Merge GPS points and district-fallback points
+        const points = [...gpsPoints, ...districtFallbackPoints];
 
         const topRegions = districtRows.slice(0, 8).map((row, i) => ({
             state: row.district,

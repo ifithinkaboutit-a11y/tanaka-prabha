@@ -169,7 +169,11 @@ const CategoryListing = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            <Ionicons name="mic" size={20} color="#4B5563" />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery("")} style={{ padding: 4 }}>
+                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+              </Pressable>
+            )}
           </View>
         </View>
       </View>

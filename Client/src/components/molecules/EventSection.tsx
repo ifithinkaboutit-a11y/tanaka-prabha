@@ -1,3 +1,4 @@
+// src/components/molecules/EventSection.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 import { ApiEvent } from "@/services/apiService";
@@ -9,6 +10,7 @@ type EventSectionProps = {
     events: ApiEvent[];
     onViewAll?: () => void;
     onEventPress?: (event: ApiEvent) => void;
+    onParticipate?: (event: ApiEvent) => void;
 };
 
 export default function EventSection({
@@ -16,6 +18,7 @@ export default function EventSection({
     events,
     onViewAll,
     onEventPress,
+    onParticipate,
 }: EventSectionProps) {
 
     if (events.length === 0) return null;
@@ -75,13 +78,14 @@ export default function EventSection({
                 )}
             </View>
 
-            {/* Program Cards */}
+            {/* Event Cards */}
             <View>
-                {events.slice(0, 3).map((event) => (
+                {events.slice(0, 5).map((event) => (
                     <EventCard
                         key={event.id}
                         event={event}
                         onPress={() => onEventPress?.(event)}
+                        onParticipate={onParticipate}
                     />
                 ))}
             </View>

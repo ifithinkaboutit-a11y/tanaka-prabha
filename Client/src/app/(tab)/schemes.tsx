@@ -11,10 +11,12 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
+import BannerSlideshow from "@/components/molecules/Banner";
 import ProgramSection from "../../components/molecules/ProgramSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
 import { schemesApi, Scheme } from "@/services/apiService";
+import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
 
@@ -121,15 +123,16 @@ const SchemeCard = ({
   );
 };
 
-// Category Item Component
 const CategoryItem = ({
   category,
   onPress,
   isLast,
+  realCount,
 }: {
   category: typeof schemeCategories[0];
   onPress: () => void;
   isLast: boolean;
+  realCount: number;
 }) => {
   const { t } = useTranslation();
   const [isPressed, setIsPressed] = useState(false);
@@ -150,18 +153,12 @@ const CategoryItem = ({
     >
       <View
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 16,
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: 16,
-          backgroundColor: category.color,
+          width: 56, height: 56, borderRadius: 16,
+          alignItems: "center", justifyContent: "center",
+          marginRight: 16, backgroundColor: category.color,
         }}
       >
-        <AppText variant="h2" style={{ fontSize: 26 }}>
-          {category.icon}
-        </AppText>
+        <AppText variant="h2" style={{ fontSize: 26 }}>{category.icon}</AppText>
       </View>
       <View style={{ flex: 1 }}>
         <AppText
@@ -170,29 +167,18 @@ const CategoryItem = ({
         >
           {t(category.titleKey)}
         </AppText>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View
-            style={{
-              backgroundColor: "#E0E7FF",
-              borderRadius: 10,
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-            }}
-          >
-            <AppText
-              variant="bodySm"
-              style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}
-            >
-              {category.count}
+        {realCount > 0 && (
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ backgroundColor: "#E0E7FF", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+              <AppText variant="bodySm" style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}>
+                {realCount}
+              </AppText>
+            </View>
+            <AppText variant="bodySm" style={{ color: "#6B7280", marginLeft: 6, fontSize: 13 }}>
+              {t("schemesPage.schemesAvailable")}
             </AppText>
           </View>
-          <AppText
-            variant="bodySm"
-            style={{ color: "#6B7280", marginLeft: 6, fontSize: 13 }}
-          >
-            {t("schemesPage.schemesAvailable")}
-          </AppText>
-        </View>
+        )}
       </View>
       <Ionicons name="chevron-forward" size={22} color="#9CA3AF" />
     </Pressable>
@@ -207,15 +193,55 @@ export default function Schemes() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // Real counts per category from backend
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
 
   const fetchSchemes = async () => {
     try {
       const data = await schemesApi.getAll({ limit: 50 });
       setSchemes(data);
+      // Compute real counts per category from returned data
+      const counts: Record<string, number> = {};
+      data.forEach((s) => {
+        if (s.category) {
+          // Map API category name back to category ID
+          const catEntry = Object.entries({
+            "financial-support": "Financial Support",
+            "agricultural-development": "Agricultural Development",
+            "soil-management": "Soil Management",
+            "crop-insurance": "Crop Insurance",
+          }).find(([, v]) => v.toLowerCase() === s.category.toLowerCase());
+          if (catEntry) {
+            counts[catEntry[0]] = (counts[catEntry[0]] || 0) + 1;
+          }
+        }
+      });
+      setCategoryCounts(counts);
     } catch (error) {
       console.error("Error fetching schemes:", error);
     }
   };
+
+  // Translate banners - use API data with fallback translations
+  // const translatedBanners = banners.map((banner, index) => {
+  //   const displayTitle = currentLanguage === 'hi' && banner.titleHi ? banner.titleHi : banner.title;
+  //   const displaySubtitle = currentLanguage === 'hi' && banner.subtitleHi ? banner.subtitleHi : banner.subtitle;
+  //   return {
+  //     id: banner.id,
+  //     title: displayTitle || (index === 0
+  //       ? t("banners.welcome.title")
+  //       : index === 1
+  //         ? t("banners.programs.title")
+  //         : t("banners.connect.title")),
+  //     subtitle: displaySubtitle || (index === 0
+  //       ? t("banners.welcome.subtitle")
+  //       : index === 1
+  //         ? t("banners.programs.subtitle")
+  //         : t("banners.connect.subtitle")),
+  //     imageUrl: banner.imageUrl,
+  //     url: banner.redirectUrl,
+  //   };
+  // });
 
   // Fetch schemes on mount
   useEffect(() => {
@@ -261,12 +287,16 @@ export default function Schemes() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#386641" />
-        <AppText variant="bodyMd" style={{ color: "#6B7280", marginTop: 12 }}>
-          {t("common.loading")}
-        </AppText>
-      </View>
+      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+        <View style={{ padding: 16, paddingTop: 24 }}>
+          <SchemeCardSkeleton />
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}><SchemeCardSkeleton /></View>
+            <View style={{ flex: 1 }}><SchemeCardSkeleton /></View>
+          </View>
+          {[0, 1].map((i) => <SchemeCardSkeleton key={i} />)}
+        </View>
+      </ScrollView>
     );
   }
 
@@ -532,6 +562,7 @@ export default function Schemes() {
             category={category}
             onPress={() => handleCategoryPress(category.id)}
             isLast={index === schemeCategories.length - 1}
+            realCount={categoryCounts[category.id] || 0}
           />
         ))}
       </View>

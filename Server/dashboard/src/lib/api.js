@@ -1,10 +1,10 @@
 /**
  * API Client for Tanak Prabha Backend
- * Base URL defaults to localhost:5000 for development (backend server port)
+ * Base URL defaults to 34.131.190.214:5000 for development (backend server port)
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const DASHBOARD_API_KEY = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY || 'tanak-prabha-dashboard-secret-key-2024';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const DASHBOARD_API_KEY = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY;
 
 class ApiError extends Error {
     constructor(message, status, data) {

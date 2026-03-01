@@ -3,8 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  "https://tanak-prabha.onrender.com/api";
+  process.env.EXPO_PUBLIC_API_URL;
 
 // Log API URL on startup for debugging
 console.log("🔗 API Base URL:", API_BASE_URL);
@@ -946,7 +945,7 @@ export const professionalsApi = {
 export interface ApiNotification {
   id: string;
   user_id: string;
-  type: "approval" | "reminder" | "alert";
+  type: "approval" | "reminder" | "alert" | "announcement" | "info" | "update";
   title: string;
   message?: string;
   is_read: boolean;
@@ -958,7 +957,7 @@ export interface ApiNotification {
 export interface Notification {
   id: string;
   userId: string;
-  type: "approval" | "reminder" | "alert";
+  type: "approval" | "reminder" | "alert" | "announcement" | "info" | "update";
   title: string;
   titleKey?: string;
   description?: string;
@@ -1042,23 +1041,41 @@ export const notificationsApi = {
       method: "DELETE",
     });
   },
+
+  /**
+   * Get unread notification count
+   */
+  async getUnreadCount(): Promise<number> {
+    try {
+      const unread = await this.getMy({ unread_only: true, limit: 100 });
+      return unread.length;
+    } catch {
+      return 0;
+    }
+  },
 };
 
 // Helper functions for notification defaults
-function getDefaultIcon(type: "approval" | "reminder" | "alert"): string {
-  const icons = {
+function getDefaultIcon(type: string): string {
+  const icons: Record<string, string> = {
     approval: "card-outline",
     reminder: "time-outline",
     alert: "rainy-outline",
+    announcement: "megaphone-outline",
+    info: "information-circle-outline",
+    update: "refresh-circle-outline",
   };
   return icons[type] || "notifications-outline";
 }
 
-function getDefaultBgColor(type: "approval" | "reminder" | "alert"): string {
-  const colors = {
+function getDefaultBgColor(type: string): string {
+  const colors: Record<string, string> = {
     approval: "#E3F2FD",
     reminder: "#FCE4EC",
     alert: "#FFF3E0",
+    announcement: "#E8F5E9",
+    info: "#E0F2FE",
+    update: "#F3E8FF",
   };
   return colors[type] || "#E0E0E0";
 }
@@ -1299,6 +1316,8 @@ export const appointmentsApi = {
     }
   },
 };
+
+
 
 // ============================================================================
 // Analytics API
