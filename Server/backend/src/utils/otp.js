@@ -34,16 +34,22 @@ const sendSMS = async (mobileNumber, otp) => {
     try {
         console.log(`📱 Sending MSG91 WhatsApp OTP to ${mobileNumber}`);
 
-        // In development, if MSG91 keys are not set, just mock it
-        if (process.env.NODE_ENV === 'development' && (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID)) {
-            console.log(`Development mode: Mocking OTP ${otp} to ${mobileNumber}`);
-            return {
-                success: true,
-                message: 'OTP sent successfully (mock)',
-                otp: process.env.NODE_ENV === 'development' ? otp : undefined
-            };
+        // In development mode: always log the OTP prominently in the server tail
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\n' + '='.repeat(50));
+            console.log(`🔑  DEV OTP  ➜  ${otp}  (for ${mobileNumber})`);
+            console.log('='.repeat(50) + '\n');
+
+            // If MSG91 keys are missing, mock the send and return early
+            if (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID) {
+                console.log(`[DEV] MSG91 keys not set — skipping real SMS send.`);
+                return {
+                    success: true,
+                    message: 'OTP sent successfully (mock)',
+                    otp
+                };
+            }
         }
-        console.log("OTP ->", otp);
 
         const response = await axios.post('https://control.msg91.com/api/v5/otp', {
             template_id: process.env.MSG91_TEMPLATE_ID,
