@@ -31,78 +31,90 @@ const ProfessionalCard = ({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-2xl p-3 mb-4 shadow-sm w-[48%]"
       style={({ pressed }) => ({
-        elevation: 3,
+        width: "48%",
+        marginBottom: 16,
+        borderRadius: 20,
+        backgroundColor: "#FFFFFF",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
         opacity: pressed ? 0.95 : 1,
         transform: [{ scale: pressed ? 0.98 : 1 }],
+        overflow: "hidden",
       })}
     >
-      <View className="relative mb-3 items-center">
+      {/* Image Section */}
+      <View style={{ position: "relative", height: 140 }}>
         <Image
-          source={{ uri: professional.imageUrl || 'https://via.placeholder.com/150' }}
-          className="w-full h-24 rounded-xl"
+          source={{ uri: professional.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&background=386641&color=fff&size=200` }}
+          style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
+        {/* Availability Badge */}
         <View
-          className={`absolute bottom-2 left-2 right-2 rounded-lg py-1 items-center z-10 ${professional.isAvailable ? "bg-green-600/90" : "bg-gray-400/90"
-            }`}
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: professional.isAvailable ? "#16A34A" : "#6B7280",
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+          }}
         >
-          <AppText
-            variant="bodySm"
-            className="text-white text-[10px] font-semibold"
-            numberOfLines={1}
-          >
+          <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#FFFFFF", marginRight: 4 }} />
+          <AppText variant="bodySm" style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "700" }}>
             {professional.isAvailable ? t("connect.available") : t("connect.busy")}
           </AppText>
         </View>
       </View>
-      <View className="flex-1 justify-center items-center">
+
+      {/* Content */}
+      <View style={{ padding: 12 }}>
         <AppText
           variant="h3"
-          className="font-bold text-gray-800 mb-1 text-center text-[14px]"
+          style={{ fontWeight: "800", color: "#111827", fontSize: 14, marginBottom: 4 }}
           numberOfLines={1}
         >
           {professional.name}
         </AppText>
-        <View className="bg-green-100 px-2 py-1 rounded-xl mb-2 items-center">
-          <AppText
-            variant="bodySm"
-            className="text-green-800 font-semibold text-[10px] text-center"
-            numberOfLines={1}
-          >
+        <View style={{ backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignSelf: "flex-start", marginBottom: 6 }}>
+          <AppText variant="bodySm" style={{ color: "#16A34A", fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
             {professional.role}
           </AppText>
         </View>
-        <View className="flex-row items-center justify-center mb-1">
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <Ionicons name="location-outline" size={12} color="#6B7280" />
-          <AppText
-            variant="bodySm"
-            className="text-gray-500 ml-1 text-[10px]"
-            numberOfLines={1}
-          >
+          <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 11, marginLeft: 3 }} numberOfLines={1}>
             {professional.district}
           </AppText>
         </View>
-      </View>
 
-      <View className="flex-row mt-2 pt-2 border-t border-gray-100 justify-between gap-x-2">
-        <Pressable
-          onPress={onCall}
-          className="flex-1 flex-row items-center justify-center bg-blue-50 py-2 rounded-xl active:bg-blue-100"
-        >
-          <Ionicons name="call" size={14} color="#2563EB" />
-        </Pressable>
-        <Pressable
-          onPress={onWhatsApp}
-          className="flex-1 flex-row items-center justify-center bg-emerald-50 py-2 rounded-xl active:bg-emerald-100"
-        >
-          <Ionicons name="logo-whatsapp" size={14} color="#059669" />
-        </Pressable>
+        {/* Action Buttons */}
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Pressable
+            onPress={onCall}
+            style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#EFF6FF", paddingVertical: 8, borderRadius: 12 }}
+          >
+            <Ionicons name="call" size={15} color="#2563EB" />
+          </Pressable>
+          <Pressable
+            onPress={onWhatsApp}
+            style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#ECFDF5", paddingVertical: 8, borderRadius: 12 }}
+          >
+            <Ionicons name="logo-whatsapp" size={15} color="#059669" />
+          </Pressable>
+        </View>
       </View>
     </Pressable>
   );
 };
+
 
 const ConnectListingScreen = () => {
   const router = useRouter();
@@ -229,8 +241,8 @@ const ConnectListingScreen = () => {
           data={professionals}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          contentContainerClassName="p-4 pb-10"
-          columnWrapperClassName="justify-between"
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

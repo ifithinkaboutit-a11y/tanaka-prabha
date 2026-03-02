@@ -21,6 +21,9 @@ import { useLanguageStore } from "../../stores/languageStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { useAuth } from "../../contexts/AuthContext";
 import TextArea from "@/components/atoms/TextArea";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "react-native";
+import { uploadApi } from "../../services/apiService";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -102,8 +105,39 @@ const Profile = () => {
   const { signOut } = useAuth();
   const { currentLanguage, setLanguage } = useLanguageStore();
   const { theme, setTheme } = useThemeStore();
-  const { profile, loading, refreshProfile } = useUserProfile();
+  const { profile, loading, refreshProfile, updateProfile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
+
+  const handleAvatarUpload = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permission needed", "Grant photo library access to upload a profile picture.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const uri = result.assets[0].uri;
+    setLocalAvatarUri(uri); // instant preview
+    setAvatarUploading(true);
+    try {
+      const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+      await updateProfile({ photo_url: cloudUrl });
+      setLocalAvatarUri(null); // let profile reload handle it
+    } catch (e: any) {
+      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+      setLocalAvatarUri(null);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(t("profile.logout"), t("profile.logoutConfirm"), [
@@ -125,6 +159,23 @@ const Profile = () => {
   };
 
   const maskAadhaar = (a: string) => a.replace(/(\d{4})(\d{4})(\d{4})/, "XXXX XXXX $3");
+
+  // Converts snake_case or lowercase strings to Title Case for display
+  const formatFieldValue = (val?: string | null): string => {
+    if (!val) return "";
+    // If the string contains underscores, it's likely snake_case from the backend
+    if (val.includes("_")) {
+      return val
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
+    }
+    // Capitalize first letter of each word
+    return val
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const totalAnimals =
     (profile?.livestockDetails?.cow || 0) +
@@ -189,9 +240,30 @@ const Profile = () => {
 
         {/* Avatar + Identity */}
         <View style={s.heroCenter}>
-          <View style={s.avatarRing}>
-            <Avatar name={profile.name} size="3xl" shape="circle" bgColor="#FFFFFF" />
-          </View>
+          {/* Tappable avatar with upload overlay */}
+          <Pressable onPress={handleAvatarUpload} style={s.avatarRing} disabled={avatarUploading}>
+            {(localAvatarUri || profile.photoUrl) ? (
+              <Image
+                source={{ uri: localAvatarUri ?? profile.photoUrl }}
+                style={{ width: 86, height: 86, borderRadius: 43 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Avatar name={profile.name} size="3xl" shape="circle" bgColor="#FFFFFF" />
+            )}
+            {/* Camera badge */}
+            {!avatarUploading && (
+              <View style={s.cameraBadge}>
+                <Ionicons name="camera" size={13} color="#FFFFFF" />
+              </View>
+            )}
+            {/* Upload spinner overlay */}
+            {avatarUploading && (
+              <View style={s.avatarLoadingOverlay}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              </View>
+            )}
+          </Pressable>
           <Text style={s.heroName}>{profile.name}</Text>
           <View style={s.heroPill}>
             <Ionicons name="call-outline" size={13} color="rgba(255,255,255,0.9)" />
@@ -201,7 +273,7 @@ const Profile = () => {
             <View style={s.heroPill}>
               <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.9)" />
               <Text style={s.heroPillText} numberOfLines={1}>
-                {[profile.village, profile.district, profile.state].filter(Boolean).join(", ")}
+                {[profile.village, profile.district, profile.state].filter(Boolean).map(formatFieldValue).join(", ")}
               </Text>
             </View>
           )}
@@ -259,15 +331,15 @@ const Profile = () => {
           <InfoRow icon="card-outline" label={t("profile.aadhaar")} value={maskAadhaar(profile.aadhaarNumber)} />
         )}
         {profile.fathersName && (
-          <InfoRow icon="people-outline" label={t("personalDetails.fathersName")} value={profile.fathersName} />
+          <InfoRow icon="people-outline" label={t("personalDetails.fathersName")} value={formatFieldValue(profile.fathersName)} />
         )}
         {profile.educationalQualification && (
-          <InfoRow icon="school-outline" label={t("personalDetails.educationalQualification")} value={profile.educationalQualification} />
+          <InfoRow icon="school-outline" label={t("personalDetails.educationalQualification")} value={formatFieldValue(profile.educationalQualification)} />
         )}
         <InfoRow
           icon="location-outline"
           label={t("profile.address")}
-          value={[profile.village, profile.gramPanchayat, profile.district, profile.state].filter(Boolean).join(", ")}
+          value={[profile.village, profile.gramPanchayat, profile.district, profile.state].filter(Boolean).map(formatFieldValue).join(", ")}
           accent
         />
       </SectionCard>
@@ -297,43 +369,6 @@ const Profile = () => {
             {profile.landDetails.zaidCrop && (
               <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={profile.landDetails.zaidCrop} />
             )}
-
-            {/* Locate on Map Widget */}
-            <View style={{
-              backgroundColor: '#F0FDF4',
-              borderRadius: 16,
-              padding: 16,
-              marginTop: 12,
-              borderWidth: 1,
-              borderColor: '#DCFCE7',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <View style={{ flex: 1, marginRight: 12 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#166534', marginBottom: 4 }}>
-                  Land Location
-                </Text>
-                <Text style={{ fontSize: 13, color: '#15803D' }} numberOfLines={2}>
-                  {profile.landDetails.locationAddress || "Pin your exact farm location"}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => router.push("/(auth)/location-picker?isForLand=true&fromProfile=true" as any)}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: '#BBF7D0'
-                }}
-              >
-                <Text style={{ color: '#16A34A', fontSize: 13, fontWeight: '600' }}>
-                  {profile.landDetails.latitude ? "Edit Map" : "Locate on map"}
-                </Text>
-              </Pressable>
-            </View>
           </>
         ) : (
           <View style={s.emptySection}>
@@ -523,6 +558,27 @@ const s = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
+    overflow: "hidden",
+  },
+  cameraBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#386641",
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 46,
   },
   heroName: { color: "#FFFFFF", fontSize: 22, fontWeight: "700", letterSpacing: -0.2, marginBottom: 8 },
   heroPill: {

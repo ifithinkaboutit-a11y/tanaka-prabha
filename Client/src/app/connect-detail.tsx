@@ -225,9 +225,9 @@ const ConnectDetailScreen = () => {
             </AppText>
           )}
 
-          <View className="flex-row items-center mt-2">
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Ionicons name="location" size={16} color="#9CA3AF" />
-            <AppText variant="bodySm" className="text-gray-400 ml-1">
+            <AppText variant="bodySm" style={{ color: '#6B7280', marginLeft: 6 }}>
               {professional.district}
             </AppText>
           </View>
@@ -342,13 +342,12 @@ const ConnectDetailScreen = () => {
 
             <Pressable
               onPress={handleCall}
-              className="flex-row items-center bg-gray-50 p-3 h-14 rounded-xl active:bg-gray-100"
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', padding: 12, height: 56, borderRadius: 12 }}
             >
               <Ionicons name="call-outline" size={20} color="#6B7280" />
-              <AppText variant="bodyMd" className="text-gray-700 ml-3 font-medium">
+              <AppText variant="bodyMd" style={{ color: '#374151', marginLeft: 10, fontWeight: '500', flex: 1 }}>
                 {professional.phone}
               </AppText>
-              <View className="flex-1" />
               <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
             </Pressable>
           </View>

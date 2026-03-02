@@ -88,12 +88,12 @@ const PhoneInput = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
-        {/* Video Background */}
+        {/* Image Background fills top, card overlaps it  */}
         <View style={s.videoBg}>
           <AuthVideoBackground />
         </View>
 
-        {/* Input Card */}
+        {/* Input Card — negative marginTop pulls it over the image so no gap shows */}
         <View style={s.card}>
           {/* Mode indicator chip */}
           <View style={[s.modeChip, isLogin ? s.modeChipLogin : s.modeChipSignup]}>
@@ -205,10 +205,11 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "#0A0A0A",
+    backgroundColor: "#FFFFFF",
   },
   videoBg: {
-    flex: 1,
+    // Give the image section a defined height; card overlaps via negative marginTop
+    height: 520,
   },
   card: {
     backgroundColor: "#FFFFFF",
@@ -216,9 +217,10 @@ const s = StyleSheet.create({
     borderTopRightRadius: 28,
     padding: 28,
     paddingBottom: 36,
+    marginTop: -10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 12,
   },

@@ -47,7 +47,7 @@ export default function BookingModal({
   const { t } = useTranslation();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -132,10 +132,10 @@ export default function BookingModal({
   const handleDateSelect = (day: number) => {
     const date = new Date(currentYear, currentMonth, day);
     date.setHours(0, 0, 0, 0);
-    
+
     // Can't select past dates
     if (date < today) return;
-    
+
     // Can't select fully booked dates
     if (isDateFullyBooked(date)) {
       Alert.alert(
@@ -188,13 +188,13 @@ export default function BookingModal({
     >
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <Pressable style={{ flex: 1 }} onPress={onClose} />
-        
+
         <View
           style={{
             backgroundColor: "#FFFFFF",
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            maxHeight: "90%",
+            maxHeight: "92%",
           }}
         >
           {/* Header */}
@@ -238,8 +238,8 @@ export default function BookingModal({
           </View>
 
           <ScrollView
-            style={{ maxHeight: 500 }}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 24 }}
           >
             {/* Month Navigation */}
             <View
@@ -355,10 +355,10 @@ export default function BookingModal({
                         backgroundColor: isSelected
                           ? "#386641"
                           : isFullyBooked
-                          ? "#FEE2E2"
-                          : isToday
-                          ? "#DBEAFE"
-                          : "transparent",
+                            ? "#FEE2E2"
+                            : isToday
+                              ? "#DBEAFE"
+                              : "transparent",
                         borderWidth: isToday && !isSelected ? 2 : 0,
                         borderColor: "#2563EB",
                       }}
@@ -369,10 +369,10 @@ export default function BookingModal({
                           color: isSelected
                             ? "#FFFFFF"
                             : isPast
-                            ? "#D1D5DB"
-                            : isFullyBooked
-                            ? "#DC2626"
-                            : "#1F2937",
+                              ? "#D1D5DB"
+                              : isFullyBooked
+                                ? "#DC2626"
+                                : "#1F2937",
                           fontWeight: isSelected || isToday ? "600" : "400",
                           fontSize: 14,
                         }}
@@ -460,6 +460,7 @@ export default function BookingModal({
                     gap: 10,
                   }}
                 >
+                  {/* Time Slots */}
                   {AVAILABLE_TIMES.map((time) => {
                     const isBooked = isTimeBooked(selectedDate, time);
                     const isTimeSelected = selectedTime === time;
@@ -476,14 +477,14 @@ export default function BookingModal({
                           backgroundColor: isTimeSelected
                             ? "#386641"
                             : isBooked
-                            ? "#F3F4F6"
-                            : "#FFFFFF",
+                              ? "#F3F4F6"
+                              : "#FFFFFF",
                           borderWidth: 1,
                           borderColor: isTimeSelected
                             ? "#386641"
                             : isBooked
-                            ? "#E5E7EB"
-                            : "#D1D5DB",
+                              ? "#E5E7EB"
+                              : "#D1D5DB",
                         }}
                       >
                         <AppText
@@ -492,8 +493,8 @@ export default function BookingModal({
                             color: isTimeSelected
                               ? "#FFFFFF"
                               : isBooked
-                              ? "#9CA3AF"
-                              : "#1F2937",
+                                ? "#9CA3AF"
+                                : "#1F2937",
                             fontWeight: isTimeSelected ? "600" : "500",
                             fontSize: 14,
                             textDecorationLine: isBooked ? "line-through" : "none",
@@ -509,12 +510,14 @@ export default function BookingModal({
             )}
           </ScrollView>
 
-          {/* Confirm Button */}
+          {/* Confirm Button — Always visible sticky footer */}
           <View
             style={{
               padding: 20,
+              paddingBottom: 28,
               borderTopWidth: 1,
-              borderTopColor: "#E5E7EB",
+              borderTopColor: "#F3F4F6",
+              backgroundColor: "#FFFFFF",
             }}
           >
             <Pressable
@@ -526,16 +529,44 @@ export default function BookingModal({
                 borderRadius: 25,
                 paddingVertical: 16,
                 alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
                 opacity: pressed ? 0.9 : 1,
               })}
             >
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color={selectedDate && selectedTime ? "#FFFFFF" : "#9CA3AF"}
+                style={{ marginRight: 8 }}
+              />
               <AppText
                 variant="bodyMd"
-                style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 16 }}
+                style={{
+                  color: selectedDate && selectedTime ? "#FFFFFF" : "#9CA3AF",
+                  fontWeight: "700",
+                  fontSize: 16,
+                }}
               >
                 {t("connect.booking.confirm")}
               </AppText>
             </Pressable>
+            {!selectedDate && (
+              <AppText
+                variant="bodySm"
+                style={{ color: "#9CA3AF", textAlign: "center", marginTop: 8, fontSize: 12 }}
+              >
+                {t("connect.booking.selectDate")} {"&"} {t("connect.booking.selectTime")}
+              </AppText>
+            )}
+            {selectedDate && !selectedTime && (
+              <AppText
+                variant="bodySm"
+                style={{ color: "#9CA3AF", textAlign: "center", marginTop: 8, fontSize: 12 }}
+              >
+                {t("connect.booking.selectTime")}
+              </AppText>
+            )}
           </View>
         </View>
       </View>

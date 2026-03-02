@@ -153,6 +153,7 @@
     "searchPlaceholder": "पीएम किसान योजना",
     "governmentSchemes": "सरकारी योजनाएं और सब्सिडी",
     "trainingPrograms": "प्रशिक्षण और जागरूकता कार्यक्रम",
+    "upcomingEvents": "आगामी कार्यक्रम",
     "viewAll": "सभी देखें",
     "noPrograms": "कोई कार्यक्रम उपलब्ध नहीं"
   },
@@ -287,7 +288,16 @@
     "error": "त्रुटि",
     "goBack": "वापस जाएं",
     "viewAll": "सभी देखें",
-    "noData": "कोई डेटा उपलब्ध नहीं"
+    "noData": "कोई डेटा उपलब्ध नहीं",
+    "next": "अगला",
+    "finish": "समाप्त करें",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "sort": "क्रमित करें",
+    "apply": "लागू करें",
+    "reset": "रीसेट"
   },
   "banners": {
     "welcome": {
@@ -394,6 +404,7 @@
     "chatDescription": "व्हाट्सएप पर संदेश भेजें",
     "bookDescription": "अपॉइंटमेंट शेड्यूल करें",
     "error": "त्रुटि",
+    "mySchedule": "मेरा शेड्यूल",
     "cannotMakeCall": "कॉल नहीं हो सका। कृपया पुनः प्रयास करें।",
     "cannotOpenWhatsApp": "व्हाट्सएप नहीं खुल सका। कृपया सुनिश्चित करें कि यह इंस्टॉल है।",
     "noPhoneNumber": "फोन नंबर उपलब्ध नहीं है",
@@ -515,7 +526,9 @@
     "alreadyRegisteredTitle": "पहले से आवेदन किया",
     "alreadyRegisteredMessage": "आपने पहले ही इस कार्यक्रम के लिए आवेदन किया है।",
     "registrationFailed": "आवेदन जमा नहीं हो सका। कृपया बाद में पुनः प्रयास करें।",
-    "participate": "भाग लें",
+    "participate": "पंजीकृत ✓",
+    "participateNow": "अभी भाग लें",
+    "joinNow": "अभी जुड़ें",
     "viewAll": "सभी देखें",
     "noEvents": "कोई आगामी कार्यक्रम नहीं",
     "noEventsSubtitle": "नए कार्यक्रमों और प्रशिक्षण कार्यक्रमों के लिए बाद में जांचें।",

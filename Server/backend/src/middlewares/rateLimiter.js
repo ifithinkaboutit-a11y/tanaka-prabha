@@ -1,18 +1,21 @@
 import rateLimit from 'express-rate-limit';
 
+// ⚠️  TESTING MODE — Rate limiting is effectively disabled.
+// TODO: Restore original limits before deploying to production.
+
 /**
  * Rate limiter for OTP sending endpoints
- * Limit: 10 requests per 15 minutes per IP
+ * [TESTING] Limit raised to 10,000 requests per minute
  */
 const otpLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 15 minutes
-    max: 10, //Limit each IP to 3 requests per windowMs
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 10000, // effectively disabled for testing
     message: {
-    status: 'error',
-    message: 'Too many OTP requests from this IP. Please try again after 15 minutes.'
-},
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+        status: 'error',
+        message: 'Too many OTP requests from this IP. Please try again after 15 minutes.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
     handler: (req, res) => {
         res.status(429).json({
             status: 'error',
@@ -24,11 +27,11 @@ const otpLimiter = rateLimit({
 
 /**
  * Rate limiter for OTP verification endpoints
- * Limit: 10 attempts per 5 minutes per IP
+ * [TESTING] Limit raised to 10,000 attempts per minute
  */
 const verifyOTPLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 5 verification attempts per windowMs
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 10000, // effectively disabled for testing
     message: {
         status: 'error',
         message: 'Too many verification attempts. Please try again after 15 minutes.'
@@ -46,11 +49,11 @@ const verifyOTPLimiter = rateLimit({
 
 /**
  * General API rate limiter
- * Limit: 100 requests per 10 minutes per IP
+ * [TESTING] Limit raised to 10,000 requests per minute
  */
 const apiLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 10000, // effectively disabled for testing
     message: {
         status: 'error',
         message: 'Too many requests from this IP. Please try again later.'
@@ -61,11 +64,11 @@ const apiLimiter = rateLimit({
 
 /**
  * Strict rate limiter for sensitive operations
- * Limit: 10 requests per hour
+ * [TESTING] Limit raised to 10,000 requests per minute
  */
 const strictLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10,
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 10000, // effectively disabled for testing
     message: {
         status: 'error',
         message: 'Too many requests. Please try again after 1 hour.'
@@ -80,3 +83,4 @@ export {
     apiLimiter,
     strictLimiter
 };
+

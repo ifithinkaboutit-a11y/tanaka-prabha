@@ -33,14 +33,15 @@ export const sendOTP = async (req, res) => {
         // Format phone number
         const formattedNumber = formatPhoneNumber(mobile_number);
 
-        // Check rate limiting - max 10 OTPs per 5 minutes per number
-        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
-        if (recentAttempts >= 10) {
-            return res.status(429).json({
-                status: 'error',
-                message: 'Too many OTP requests. Please try again after 5 minutes.'
-            });
-        }
+        // [TESTING] DB-level OTP rate limit disabled — up to 100 OTPs/min allowed.
+        // TODO: Restore before production.
+        // const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
+        // if (recentAttempts >= 10) {
+        //     return res.status(429).json({
+        //         status: 'error',
+        //         message: 'Too many OTP requests. Please try again after 5 minutes.'
+        //     });
+        // }
 
         // Generate and store OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
@@ -197,26 +198,25 @@ export const resendOTP = async (req, res) => {
 
         const formattedNumber = formatPhoneNumber(mobile_number);
 
-        // Check if there's a recent OTP (within last 2 minutes)
-        const existingOTP = await OTP.getOTP(formattedNumber);
-        if (existingOTP) {
-            const timeSinceLastOTP = (Date.now() - new Date(existingOTP.created_at).getTime()) / 1000;
-            if (timeSinceLastOTP < 120) { // 2 minutes
-                return res.status(429).json({
-                    status: 'error',
-                    message: `Please wait ${Math.ceil(120 - timeSinceLastOTP)} seconds before requesting a new OTP`
-                });
-            }
-        }
-
-        // Check rate limiting
-        const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
-        if (recentAttempts >= 10) {
-            return res.status(429).json({
-                status: 'error',
-                message: 'Too many OTP requests. Please try again after 5 minutes.'
-            });
-        }
+        // [TESTING] 2-minute cooldown and DB-level rate limit disabled.
+        // TODO: Restore before production.
+        // const existingOTP = await OTP.getOTP(formattedNumber);
+        // if (existingOTP) {
+        //     const timeSinceLastOTP = (Date.now() - new Date(existingOTP.created_at).getTime()) / 1000;
+        //     if (timeSinceLastOTP < 120) {
+        //         return res.status(429).json({
+        //             status: 'error',
+        //             message: `Please wait ${Math.ceil(120 - timeSinceLastOTP)} seconds before requesting a new OTP`
+        //         });
+        //     }
+        // }
+        // const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);
+        // if (recentAttempts >= 10) {
+        //     return res.status(429).json({
+        //         status: 'error',
+        //         message: 'Too many OTP requests. Please try again after 5 minutes.'
+        //     });
+        // }
 
         // Generate and send new OTP
         const otpRecord = await OTP.createOTP(formattedNumber);

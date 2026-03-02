@@ -148,6 +148,7 @@
     "searchPlaceholder": "PM Kisan Yojna",
     "governmentSchemes": "Government Schemes & Subsidies",
     "trainingPrograms": "Training & Awareness Programs",
+    "upcomingEvents": "Upcoming Events",
     "viewAll": "View all",
     "noPrograms": "No programs available"
   },
@@ -398,6 +399,7 @@
     "chatDescription": "Send message via WhatsApp",
     "bookDescription": "Schedule an appointment",
     "error": "Error",
+    "mySchedule": "My Schedule",
     "cannotMakeCall": "Unable to make call. Please try again.",
     "cannotOpenWhatsApp": "Unable to open WhatsApp. Please make sure it is installed.",
     "noPhoneNumber": "Phone number not available",

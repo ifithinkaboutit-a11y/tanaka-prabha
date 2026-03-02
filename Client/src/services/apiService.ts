@@ -385,6 +385,73 @@ export const userApi = {
 };
 
 // ============================================================
+// Upload API
+// ============================================================
+
+export const uploadApi = {
+  /**
+   * Upload a user avatar photo to Cloudinary via the backend.
+   * @param imageUri - Local file URI from expo-image-picker
+   * @returns Cloudinary URL of the uploaded image
+   */
+  async uploadUserPhoto(imageUri: string): Promise<string> {
+    const token = await tokenManager.getToken();
+    const url = `${API_BASE_URL}/upload/user-photo`;
+
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() ?? 'photo.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    formData.append('photo', { uri: imageUri, name: filename, type } as any);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Do NOT set Content-Type — let fetch set multipart boundary automatically
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') {
+      throw new Error(data.message || 'Failed to upload photo');
+    }
+    return data.data.url as string;
+  },
+
+  /**
+   * Upload a professional profile image to Cloudinary via the backend.
+   * @param imageUri - Local file URI from expo-image-picker
+   * @returns Cloudinary URL of the uploaded image
+   */
+  async uploadProfessionalPhoto(imageUri: string): Promise<string> {
+    const token = await tokenManager.getToken();
+    const url = `${API_BASE_URL}/upload/professional`;
+
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() ?? 'image.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    formData.append('image', { uri: imageUri, name: filename, type } as any);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') {
+      throw new Error(data.message || 'Failed to upload photo');
+    }
+    return data.data.url as string;
+  },
+};
+
+// ============================================================
 // User Profile Types (Extended)
 // ============================================================
 

@@ -1,6 +1,6 @@
 // src/components/molecules/QuickActionGrid.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import AppText from "../atoms/AppText";
 
 type QuickActionItem = {
@@ -45,54 +45,72 @@ const defaultActions: QuickActionItem[] = [
 export default function QuickActionGrid({
   actions = defaultActions,
 }: QuickActionGridProps) {
+  const { width } = useWindowDimensions();
+  // 20px horizontal padding on each side + 10px gap between the two cards
+  const cardSize = Math.floor((width - 40 - 10) / 2);
+  const cardHeight = Math.floor(cardSize * 0.95);
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
   return (
-    <View className="flex-col gap-4">
+    <View style={{ gap: 8 }}>
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} className="flex-row gap-2 mx-auto max-w-[80%] flex items-center justify-center">
+        <View key={rowIndex} style={{ flexDirection: 'row', gap: 8 }}>
           {row.map((action, colIndex) => (
             <Pressable
               key={colIndex}
               onPress={action.onPress}
               style={({ pressed }) => ({
-                flex: 1,
+                width: cardSize,
+                height: cardHeight,
                 opacity: pressed ? 0.85 : 1,
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}
-              className="w-44 h-40"
             >
               <View
-                className="flex-1 bg-white rounded-2xl items-center justify-center p-4 border border-gray-100 elevation-4"
                 style={{
+                  flex: 1,
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 12, // Tightened padding
+                  borderWidth: 1,
+                  borderColor: '#F3F4F6',
                   shadowColor: action.iconColor ?? "#000",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.1,
                   shadowRadius: 12,
+                  elevation: 4,
                 }}
               >
                 {/* Icon Circle */}
                 <View
-                  className="w-14 h-14 rounded-full items-center justify-center mb-3 elevation-4"
                   style={{
+                    width: 52, // Reduced size
+                    height: 52, // Reduced size
+                    borderRadius: 26, // Adjusted borderRadius
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10, // Reduced margin
                     backgroundColor: action.bgColor ?? "#F3F4F6",
                     shadowColor: action.iconColor,
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.25,
                     shadowRadius: 8,
+                    elevation: 4,
                   }}
                 >
                   <Ionicons
                     name={action.icon}
-                    size={26}
+                    size={24} // Reduced size
                     color={action.iconColor ?? "#386641"}
                   />
                 </View>
 
                 {/* Title */}
                 <AppText
-                  variant="bodyMd"
-                  className="text-center text-gray-800 font-bold text-[13px] leading-[18px] align-center"
+                  variant="bodySm" // Changed variant
+                  style={{ textAlign: 'center', color: '#1F2937', fontWeight: '700', fontSize: 12, lineHeight: 17 }} // Adjusted font size and line height
                   numberOfLines={3}
                 >
                   {action.title}

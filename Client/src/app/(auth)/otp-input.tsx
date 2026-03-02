@@ -167,12 +167,12 @@ const OTPInput = () => {
       style={s.root}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Video Background */}
+      {/* Image Background */}
       <View style={s.videoBg}>
         <AuthVideoBackground />
       </View>
 
-      {/* OTP Card */}
+      {/* OTP Card — overlaps image via negative marginTop to hide the gap */}
       <View style={s.card}>
         {/* Icon + Title */}
         <View style={s.iconCircle}>
@@ -293,11 +293,10 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "#0A0A0A",
+    backgroundColor: "#FFFFFF",
   },
   videoBg: {
-    flex: 1,
-    height: "50%",
+    height: 280,
   },
   card: {
     backgroundColor: "#FFFFFF",
@@ -305,9 +304,10 @@ const s = StyleSheet.create({
     borderTopRightRadius: 28,
     padding: 28,
     paddingBottom: 36,
+    marginTop: -32,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 12,
     alignItems: "center",

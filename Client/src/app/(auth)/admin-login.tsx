@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
+    Pressable,
     StyleSheet,
     Text,
     TextInput,
@@ -20,6 +21,7 @@ export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
     const { loginAsAdmin } = useAuth();
 
@@ -78,14 +80,26 @@ export default function AdminLogin() {
                     keyboardType="email-address"
                 />
 
-                <TextInput
-                    style={s.input}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+                <View style={s.passwordRow}>
+                    <TextInput
+                        style={[s.input, { marginBottom: 0, flex: 1, borderWidth: 0 }]}
+                        placeholder="Password"
+                        placeholderTextColor="#9CA3AF"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                    />
+                    <Pressable
+                        onPress={() => setShowPassword(p => !p)}
+                        style={s.eyeBtn}
+                    >
+                        <Ionicons
+                            name={showPassword ? "eye-off-outline" : "eye-outline"}
+                            size={20}
+                            color="#9CA3AF"
+                        />
+                    </Pressable>
+                </View>
 
                 <Button
                     variant="primary"
@@ -161,5 +175,19 @@ const s = StyleSheet.create({
         fontWeight: "700",
         fontSize: 16,
         textAlign: "center",
+    },
+    passwordRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1.5,
+        borderColor: "#E5E7EB",
+        borderRadius: 12,
+        backgroundColor: "#F9FAFB",
+        marginBottom: 16,
+        overflow: "hidden",
+    },
+    eyeBtn: {
+        paddingHorizontal: 14,
+        paddingVertical: 16,
     },
 });

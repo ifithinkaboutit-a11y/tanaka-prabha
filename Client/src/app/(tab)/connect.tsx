@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import {
   Linking,
+  Pressable,
   ScrollView,
   View,
 } from "react-native";
@@ -83,18 +84,44 @@ export default function Connect() {
           borderBottomRightRadius: 28,
         }}
       >
-        <AppText
-          variant="h2"
-          style={{ fontWeight: "800", color: "#FFFFFF", fontSize: 28 }}
-        >
-          {t("connect.title")}
-        </AppText>
-        <AppText
-          variant="bodySm"
-          style={{ color: "rgba(255,255,255,0.85)", marginTop: 4, fontSize: 14 }}
-        >
-          {t("connect.subtitle")}
-        </AppText>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <View style={{ flex: 1 }}>
+            <AppText
+              variant="h2"
+              style={{ fontWeight: "800", color: "#FFFFFF", fontSize: 28 }}
+            >
+              {t("connect.title")}
+            </AppText>
+            <AppText
+              variant="bodySm"
+              style={{ color: "rgba(255,255,255,0.85)", marginTop: 4, fontSize: 14 }}
+            >
+              {t("connect.subtitle")}
+            </AppText>
+          </View>
+          <Pressable
+            onPress={() => router.push("/my-schedule" as any)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: 20,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.3)",
+              marginTop: 4,
+            }}
+          >
+            <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
+            <AppText
+              variant="bodySm"
+              style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 12, marginLeft: 6 }}
+            >
+              {t("connect.mySchedule")}
+            </AppText>
+          </Pressable>
+        </View>
       </View>
 
       {/* What do you need help with? */}
