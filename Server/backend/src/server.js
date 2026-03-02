@@ -55,12 +55,12 @@ const startServer = async () => {
         setInterval(async () => {
             try {
                 const res = await fetch(HEALTH_URL);
-                console.log(`🏓 Keep-alive ping: ${res.status}`);
+                console.log(`[keep-alive] 🏓 ping ${res.status} — ${HEALTH_URL}`);
             } catch (err) {
-                console.warn('🏓 Keep-alive ping failed:', err.message);
+                console.warn(`[keep-alive] 🏓 ping failed: ${err.message}`);
             }
         }, PING_INTERVAL);
-        console.log(`🏓 Keep-alive cron set: pinging ${HEALTH_URL} every 14m`);
+        console.log(`[keep-alive] 🏓 cron started — pinging every 14m`);
 
         // Handle shutdown signals
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

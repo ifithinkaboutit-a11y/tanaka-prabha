@@ -37,9 +37,12 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
-// Logging middleware
+// Logging middleware — skip noisy internal routes
 app.use(morgan('dev', {
+    skip: (req) => {
+        const url = req.originalUrl;
+        return url === '/health' || url.startsWith('/api/logs');
+    },
     stream: {
         write: (message) => console.log(message.trim())
     }
@@ -105,43 +108,103 @@ app.get('/log', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Server Live Tail</title>
         <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
             body {
                 background-color: #0d1117;
                 color: #c9d1d9;
                 font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-                padding: 20px;
-                margin: 0;
+                padding: 16px 20px 20px;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+            h1 {
                 font-size: 14px;
+                color: #8b949e;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #21262d;
             }
-            #logs {
-                white-space: pre-wrap;
-                word-wrap: break-word;
-            }
+            #logs { white-space: pre-wrap; word-wrap: break-word; }
+
+            /* ── Base entry ── */
             .log-entry {
-                margin-bottom: 4px;
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+                margin-bottom: 2px;
+                padding: 2px 8px;
+                border-radius: 4px;
                 border-left: 3px solid transparent;
-                padding-left: 8px;
             }
-            .log-info { border-left-color: #238636; }
-            .log-error { border-left-color: #da3633; color: #ff7b72; }
-            .log-warn { border-left-color: #d29922; color: #d29922; }
-            .timestamp { color: #8b949e; margin-right: 10px; }
-            .level { font-weight: bold; text-transform: uppercase; margin-right: 10px; }
+
+            /* ── Default / info ── */
+            .log-entry.tag-log    { color: #c9d1d9; }
+
+            /* ── OTP — bright amber highlight ── */
+            .log-entry.tag-otp {
+                background: rgba(255, 200, 0, 0.07);
+                border-left-color: #f0c000;
+                color: #ffd60a;
+                font-weight: bold;
+            }
+            .log-entry.tag-otp .badge {
+                background: #f0c000;
+                color: #0d1117;
+                border-radius: 3px;
+                padding: 0 5px;
+                font-size: 11px;
+                font-weight: bold;
+                flex-shrink: 0;
+            }
+
+            /* ── Keep-alive & health — very faded ── */
+            .log-entry.tag-keepalive,
+            .log-entry.tag-health {
+                color: #484f58;
+                font-size: 11px;
+            }
+
+            /* ── Errors ── */
+            .log-entry.tag-error {
+                border-left-color: #da3633;
+                color: #ff7b72;
+            }
+
+            /* ── Warnings ── */
+            .log-entry.tag-warn {
+                border-left-color: #d29922;
+                color: #d29922;
+            }
+
+            /* ── Shared sub-elements ── */
+            .timestamp { color: #484f58; flex-shrink: 0; }
+            .badge {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                flex-shrink: 0;
+                opacity: 0.6;
+            }
+
+            /* ── Status pill ── */
             .status {
                 position: fixed;
-                top: 0;
-                right: 0;
-                padding: 5px 10px;
+                top: 0; right: 0;
+                padding: 4px 12px;
                 background: #1f6feb;
                 color: white;
-                font-size: 12px;
-                border-bottom-left-radius: 5px;
+                font-size: 11px;
+                border-bottom-left-radius: 6px;
+                letter-spacing: 1px;
             }
             .disconnected { background: #da3633; }
         </style>
     </head>
     <body>
         <div id="status" class="status">Connecting...</div>
+        <h1>🖥 Tanak Prabha — Server Live Tail</h1>
         <div id="logs"></div>
         <script nonce="${nonce}">
             const logsDiv = document.getElementById('logs');
@@ -152,47 +215,56 @@ app.get('/log', (req, res) => {
                 eventSource = new EventSource('/api/logs/stream');
 
                 eventSource.onopen = () => {
-                    statusDiv.textContent = 'Live Connected';
+                    statusDiv.textContent = '● LIVE';
                     statusDiv.classList.remove('disconnected');
-                    addLog('system', 'Connected to log stream...');
+                    addLog('system', 'log', 'Connected to log stream...');
                 };
 
                 eventSource.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-                    addLog(data.level, data.message, data.timestamp);
+                    addLog(data.level, data.tag || data.level, data.message, data.timestamp);
                 };
 
                 eventSource.onerror = () => {
-                    statusDiv.textContent = 'Disconnected (Retrying...)';
+                    statusDiv.textContent = '✕ Disconnected (Retrying...)';
                     statusDiv.classList.add('disconnected');
                     eventSource.close();
                     setTimeout(connect, 2000);
                 };
             }
 
-            function addLog(level, message, timestamp = new Date().toISOString()) {
+            function addLog(level, tag, message, timestamp = new Date().toISOString()) {
+                // Drop keep-alive & health from the browser view entirely? No — keep them but faded.
                 const div = document.createElement('div');
-                div.className = \`log-entry log-\${level}\`;
-                
+                div.className = 'log-entry tag-' + (tag || level);
+
                 const timeSpan = document.createElement('span');
                 timeSpan.className = 'timestamp';
-                timeSpan.textContent = timestamp.split('T')[1].split('.')[0]; // HH:MM:SS
-                
-                const levelSpan = document.createElement('span');
-                levelSpan.className = 'level';
-                levelSpan.textContent = level;
+                timeSpan.textContent = timestamp.split('T')[1].split('.')[0];
+
+                const badgeSpan = document.createElement('span');
+                badgeSpan.className = 'badge';
+                if (tag === 'otp') {
+                    badgeSpan.textContent = 'OTP';
+                    badgeSpan.style.background = '#f0c000';
+                    badgeSpan.style.color = '#0d1117';
+                    badgeSpan.style.padding = '0 5px';
+                    badgeSpan.style.borderRadius = '3px';
+                    badgeSpan.style.opacity = '1';
+                } else {
+                    badgeSpan.textContent = tag || level;
+                }
 
                 const msgSpan = document.createElement('span');
                 msgSpan.textContent = message;
 
                 div.appendChild(timeSpan);
-                div.appendChild(levelSpan);
+                div.appendChild(badgeSpan);
                 div.appendChild(msgSpan);
-                
                 logsDiv.appendChild(div);
-                
+
                 // Auto-scroll if near bottom
-                if (document.body.scrollHeight - window.scrollY - window.innerHeight < 100) {
+                if (document.body.scrollHeight - window.scrollY - window.innerHeight < 120) {
                     window.scrollTo(0, document.body.scrollHeight);
                 }
             }

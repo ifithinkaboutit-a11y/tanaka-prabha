@@ -32,17 +32,15 @@ const isOTPExpired = (expiryTime) => {
  */
 const sendSMS = async (mobileNumber, otp) => {
     try {
-        console.log(`📱 Sending MSG91 WhatsApp OTP to ${mobileNumber}`);
+        console.log(`[OTP] 📱 Sending MSG91 WhatsApp OTP to ${mobileNumber}`);
 
-        // In development mode: always log the OTP prominently in the server tail
+        // In development mode: always log the OTP prominently
         if (process.env.NODE_ENV === 'development') {
-            console.log('\n' + '='.repeat(50));
-            console.log(`🔑  DEV OTP  ➜  ${otp}  (for ${mobileNumber})`);
-            console.log('='.repeat(50) + '\n');
+            console.log(`[OTP] 🔑 DEV OTP ➜ ${otp} (for ${mobileNumber})`);
 
             // If MSG91 keys are missing, mock the send and return early
             if (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID) {
-                console.log(`[DEV] MSG91 keys not set — skipping real SMS send.`);
+                console.log(`[OTP] MSG91 keys not set — skipping real SMS send.`);
                 return {
                     success: true,
                     message: 'OTP sent successfully (mock)',
