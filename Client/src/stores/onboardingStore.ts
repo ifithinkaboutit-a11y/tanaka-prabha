@@ -86,6 +86,11 @@ interface OnboardingState {
   removeLivestockEntry: (id: string) => void;
   setLivestockCompleted: (completed: boolean) => void;
 
+  // Profile address override — set by location-picker when purpose==='profile'
+  // personal-details reads this and clears it after consuming
+  profileAddressOverride: Record<string, string> | null;
+  setProfileAddressOverride: (data: Record<string, string> | null) => void;
+
   // Reset
   resetOnboarding: () => void;
 }
@@ -127,6 +132,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       personalDetails: { ...initialPersonalDetails },
       locationData: null,
       landLocationData: null,
+      profileAddressOverride: null,
 
       // Land Details
       hasLand: true,
@@ -165,6 +171,7 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setLocationData: (data) => set({ locationData: data }),
       setLandLocationData: (data) => set({ landLocationData: data }),
+      setProfileAddressOverride: (data) => set({ profileAddressOverride: data }),
 
       setHasLand: (has) => set({ hasLand: has }),
 

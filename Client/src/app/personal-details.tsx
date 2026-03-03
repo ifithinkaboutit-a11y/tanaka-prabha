@@ -1,7 +1,7 @@
 // src/app/personal-details.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -13,6 +13,14 @@ import {
 import PersonalDetailsForm from "../components/molecules/PersonalDetailsForm";
 import { useUserProfile } from "../contexts/UserProfileContext";
 import { useTranslation } from "../i18n";
+import { useOnboardingStore } from "../stores/onboardingStore";
+
+// ── Normalise a human-readable location string to its slug (snake_case) form ──
+// Backend may store "Uttar Pradesh" or "uttar pradesh" – dropdowns need "uttar_pradesh"
+function toSlug(val?: string | null): string {
+  if (!val) return "";
+  return val.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
 
 export const unstable_settings = { headerShown: false };
 
@@ -20,6 +28,21 @@ const PersonalDetailsScreen = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { profile, loading, saving, updatePersonalDetails } = useUserProfile();
+
+  // ── Map address override: written by location-picker, read here ──
+  const profileAddressOverride = useOnboardingStore((s) => s.profileAddressOverride);
+  const setProfileAddressOverride = useOnboardingStore((s) => s.setProfileAddressOverride);
+
+  // Track override locally with state so form key changes reliably on update
+  const [addressOverride, setAddressOverride] = useState<Record<string, string> | null>(null);
+
+  useEffect(() => {
+    if (profileAddressOverride && Object.keys(profileAddressOverride).length > 0) {
+      setAddressOverride(profileAddressOverride);
+      // Clear from store immediately so it doesn't persist across unrelated navigations
+      setProfileAddressOverride(null);
+    }
+  }, [profileAddressOverride, setProfileAddressOverride]);
 
   if (loading && !profile) {
     return (
@@ -30,6 +53,8 @@ const PersonalDetailsScreen = () => {
     );
   }
 
+  // ── Build initialData: normalise backend strings → slugs, apply map overrides ──
+  const ov = addressOverride ?? {};
   const initialData = {
     name: profile?.name || "",
     age: profile?.age || 0,
@@ -43,15 +68,16 @@ const PersonalDetailsScreen = () => {
     daughtersMarried: profile?.daughtersMarried || 0,
     daughtersUnmarried: profile?.daughtersUnmarried || 0,
     otherFamilyMembers: profile?.otherFamilyMembers || 0,
-    village: profile?.village || "",
+    // Location — prefer map override, fall back to normalised profile value
+    state: ov.state ?? toSlug(profile?.state),
+    district: ov.district ?? toSlug(profile?.district),
+    tehsil: ov.tehsil ?? toSlug(profile?.tehsil),
+    block: ov.block ?? toSlug(profile?.block),
+    village: ov.village ?? (profile?.village || ""),
     gramPanchayat: profile?.gramPanchayat || "",
     nyayPanchayat: profile?.nyayPanchayat || "",
     postOffice: profile?.postOffice || "",
-    tehsil: profile?.tehsil || "",
-    block: profile?.block || "",
-    district: profile?.district || "",
-    pinCode: profile?.pinCode || "",
-    state: profile?.state || "",
+    pinCode: ov.pinCode ?? (profile?.pinCode || ""),
   };
 
   const handleSave = async (data: typeof initialData) => {
@@ -64,6 +90,18 @@ const PersonalDetailsScreen = () => {
       console.error("Error saving personal details:", error);
     }
   };
+
+  const handleOpenMap = () => {
+    router.push({
+      pathname: "/location-picker" as any,
+      params: { purpose: "profile" },
+    });
+  };
+
+  // Key changes when override arrives → form re-mounts with new initialData
+  const formKey = addressOverride
+    ? JSON.stringify(addressOverride)
+    : "default";
 
   return (
     <View style={s.root}>
@@ -100,12 +138,24 @@ const PersonalDetailsScreen = () => {
         </View>
       </View>
 
-      {/* Form */}
+      {/* Map auto-fill success banner */}
+      {!!addressOverride && (
+        <View style={s.mapBanner}>
+          <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
+          <Text style={s.mapBannerText}>
+            {t("personalDetails.addressAutoFilled")}
+          </Text>
+        </View>
+      )}
+
+      {/* Form — re-mounts when map override arrives */}
       <View style={s.formContainer}>
         <PersonalDetailsForm
+          key={formKey}
           initialData={initialData}
           onSave={handleSave}
           onCancel={() => router.back()}
+          onOpenMap={handleOpenMap}
         />
       </View>
     </View>
@@ -197,6 +247,18 @@ const s = StyleSheet.create({
     borderRadius: 20,
   },
   savingText: { color: "#FFFFFF", fontSize: 11, fontWeight: "600" },
+
+  mapBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#DCFCE7",
+    borderBottomWidth: 1,
+    borderBottomColor: "#BBF7D0",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  mapBannerText: { color: "#166534", fontSize: 13, fontWeight: "600", flex: 1 },
 
   formContainer: {
     flex: 1,

@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import { Professional, professionalsApi } from "../services/apiService";
-import { getProfessionalById } from "../data/content/connectServices";
 
 export default function ProfessionalDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,16 +24,10 @@ export default function ProfessionalDetail() {
         const load = async () => {
             try {
                 const data = await professionalsApi.getById(id!);
-                if (data) {
-                    setProfessional(data as any);
-                } else {
-                    // Fallback to local static data
-                    const local = getProfessionalById(id!);
-                    if (local) setProfessional(local as any);
-                }
-            } catch {
-                const local = getProfessionalById(id!);
-                if (local) setProfessional(local as any);
+                setProfessional(data as any ?? null);
+            } catch (err) {
+                console.error("Failed to load professional:", err);
+                setProfessional(null);
             } finally {
                 setLoading(false);
             }

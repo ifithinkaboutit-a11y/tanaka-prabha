@@ -105,6 +105,18 @@ export default function RootLayout() {
               name="event-details"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="location-picker"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="book-appointment"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="my-schedule"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </UserProfileProvider>
       </LanguageProvider>

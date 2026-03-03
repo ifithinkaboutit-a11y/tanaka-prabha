@@ -209,20 +209,22 @@ const s = StyleSheet.create({
   },
   videoBg: {
     // Give the image section a defined height; card overlaps via negative marginTop
-    height: 520,
+    height: 600,
   },
   card: {
+    flex: 1,
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 28,
-    paddingBottom: 36,
-    marginTop: -10,
+    paddingBottom: 40,
+    marginTop: -32,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 12,
+    alignItems: "center",
   },
   modeChip: {
     flexDirection: "row",

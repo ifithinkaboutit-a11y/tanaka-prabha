@@ -15,7 +15,7 @@ import BannerSlideshow from "@/components/molecules/Banner";
 import ProgramSection from "../../components/molecules/ProgramSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
-import { schemesApi, Scheme } from "@/services/apiService";
+import { bannersApi, schemesApi, Scheme, Banner } from "@/services/apiService";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
@@ -190,6 +190,7 @@ export default function Schemes() {
   const { t } = useTranslation();
   const { currentLanguage } = useLanguageStore();
   const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,8 +199,12 @@ export default function Schemes() {
 
   const fetchSchemes = async () => {
     try {
-      const data = await schemesApi.getAll({ limit: 50 });
+      const [data, bannersData] = await Promise.all([
+        schemesApi.getAll({ limit: 50 }),
+        bannersApi.getAll(),
+      ]);
       setSchemes(data);
+      setBanners(bannersData);
       // Compute real counts per category from returned data
       const counts: Record<string, number> = {};
       data.forEach((s) => {
@@ -358,94 +363,18 @@ export default function Schemes() {
         </View>
       </View>
 
-      {/* Featured Scheme Banner */}
-      {featuredScheme && (
-        <Pressable
-          onPress={() => handleSchemePress(featuredScheme.id)}
-          style={{ marginHorizontal: 16, marginBottom: 24 }}
-        >
-          <View
-            style={{
-              borderRadius: 24,
-              overflow: "hidden",
-              shadowColor: "#000",
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 5,
-            }}
-          >
-            <Image
-              source={{ uri: featuredScheme.imageUrl || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Featured" }}
-              style={{ width: "100%", height: 200 }}
-              resizeMode="cover"
-            />
-            {/* Gradient Overlay */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "100%",
-                backgroundColor: "rgba(0,0,0,0.2)",
-              }}
-            />
-            {/* Featured Badge */}
-            <View
-              style={{
-                position: "absolute",
-                top: 16,
-                left: 16,
-                backgroundColor: "#EAB308",
-                borderRadius: 20,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons name="star" size={14} color="#FFFFFF" />
-              <AppText
-                variant="bodySm"
-                style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 12, marginLeft: 4 }}
-              >
-                {t("schemesPage.featured")}
-              </AppText>
-            </View>
-            {/* Content */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 20,
-                left: 20,
-                right: 20,
-              }}
-            >
-              <AppText
-                variant="h3"
-                style={{
-                  color: "#FFFFFF",
-                  fontWeight: "700",
-                  fontSize: 20,
-                  marginBottom: 6,
-                  textShadowColor: "rgba(0,0,0,0.3)",
-                  textShadowOffset: { width: 0, height: 1 },
-                  textShadowRadius: 3,
-                }}
-                numberOfLines={2}
-              >
-                {currentLanguage === 'hi' && featuredScheme.titleHi ? featuredScheme.titleHi : featuredScheme.title}
-              </AppText>
-              <AppText
-                variant="bodySm"
-                style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: "500" }}
-              >
-                {featuredScheme.eventDate || featuredScheme.category}
-              </AppText>
-            </View>
-          </View>
-        </Pressable>
-      )}
+      {/* Banner Slideshow — live data from bannersApi */}
+      <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
+        <BannerSlideshow
+          banners={banners.map((b) => ({
+            title: (currentLanguage === 'hi' && b.titleHi ? b.titleHi : b.title) || "",
+            subtitle: (currentLanguage === 'hi' && b.subtitleHi ? b.subtitleHi : b.subtitle) || "",
+            imageUrl: b.imageUrl,
+            url: b.redirectUrl,
+          }))}
+          autoSlideInterval={4000}
+        />
+      </View>
 
       {/* Recommended Schemes */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: "#F8FAFC" }}>
@@ -567,10 +496,21 @@ export default function Schemes() {
         ))}
       </View>
 
-      {/* Removed All Government Schemes section to match the FinalScreen12 UI */}
+      {/* Government Schemes — ProgramSection cards */}
+      <ProgramSection
+        title={t("schemesPage.recommendedSchemes")}
+        programs={schemes.slice(0, 9).map((s) => ({
+          ...s,
+          title: currentLanguage === 'hi' && s.titleHi ? s.titleHi : s.title,
+          description: (currentLanguage === 'hi' && s.descriptionHi ? s.descriptionHi : s.description) || "",
+        }))}
+        onViewAll={handleViewAllSchemes}
+        onProgramPress={(program) => handleSchemePress(program.id)}
+      />
 
       {/* Bottom Spacing */}
       <View style={{ height: 24 }} />
+
     </ScrollView>
   );
 }

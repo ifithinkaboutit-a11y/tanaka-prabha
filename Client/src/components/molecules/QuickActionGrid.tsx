@@ -1,6 +1,6 @@
 // src/components/molecules/QuickActionGrid.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, View } from "react-native";
 import AppText from "../atoms/AppText";
 
 type QuickActionItem = {
@@ -16,65 +16,28 @@ type QuickActionGridProps = {
 };
 
 const defaultActions: QuickActionItem[] = [
-  {
-    title: "Update your profile",
-    icon: "person",
-    iconColor: "#2563EB",
-    bgColor: "#DBEAFE",
-  },
-  {
-    title: "Ongoing Events",
-    icon: "calendar",
-    iconColor: "#7C3AED",
-    bgColor: "#EDE9FE",
-  },
-  {
-    title: "Government Schemes",
-    icon: "document-text",
-    iconColor: "#059669",
-    bgColor: "#D1FAE5",
-  },
-  {
-    title: "Book an Appointment",
-    icon: "call",
-    iconColor: "#DC2626",
-    bgColor: "#FEE2E2",
-  },
+  { title: "Update your profile",  icon: "person",        iconColor: "#2563EB", bgColor: "#DBEAFE" },
+  { title: "Ongoing Events",       icon: "calendar",      iconColor: "#7C3AED", bgColor: "#EDE9FE" },
+  { title: "Government Schemes",   icon: "document-text", iconColor: "#059669", bgColor: "#D1FAE5" },
+  { title: "Book an Appointment",  icon: "call",          iconColor: "#DC2626", bgColor: "#FEE2E2" },
 ];
 
-export default function QuickActionGrid({
-  actions = defaultActions,
-}: QuickActionGridProps) {
-  const { width } = useWindowDimensions();
-  // 20px horizontal padding on each side + 10px gap between the two cards
+export default function QuickActionGrid({ actions = defaultActions }: QuickActionGridProps) {
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
   return (
-    <View style={{ gap: 16 }}>
+    <View className="flex-col gap-4 px-6">
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View key={rowIndex} className="flex-row gap-3">
           {row.map((action, colIndex) => (
             <Pressable
               key={colIndex}
               onPress={action.onPress}
-              style={({ pressed }) => ({
-                width: '48%',
-                aspectRatio: 1,
-                opacity: pressed ? 0.85 : 1,
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-              })}
-              className="min-w-44 min-h-40"
+              className="flex-1 aspect-square active:opacity-85 active:scale-95"
             >
               <View
+                className="flex-1 bg-white rounded-[20px] items-center justify-center p-8 border border-gray-100"
                 style={{
-                  flex: 1,
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: '#F3F4F6',
                   shadowColor: action.iconColor ?? "#000",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.1,
@@ -84,28 +47,20 @@ export default function QuickActionGrid({
               >
                 {/* Icon Circle */}
                 <View
-                  style={{
-                    width: 74,
-                    height: 74,
-                    borderRadius: 32,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                    backgroundColor: action.bgColor ?? "#F3F4F6",
-                  }}
+                  className="w-[74px] h-[74px] rounded-[32px] items-center justify-center mb-4"
+                  style={{ backgroundColor: action.bgColor ?? "#F3F4F6" }}
                 >
                   <Ionicons
                     name={action.icon}
-                    size={42}
+                    size={50}
                     color={action.iconColor ?? "#386641"}
                   />
                 </View>
 
                 {/* Title */}
                 <AppText
-                  variant="bodyLg"
-                  style={{ textAlign: 'center', color: '#1F2937', fontWeight: '700', fontSize: 17, lineHeight: 22 }}
                   numberOfLines={2}
+                  style={{ textAlign: "center", color: "#1F2937", fontWeight: "700", fontSize: 17, lineHeight: 22 }}
                 >
                   {action.title}
                 </AppText>

@@ -197,11 +197,111 @@ const sh = StyleSheet.create({
   title: { fontSize: 17, fontWeight: "700", color: "#111827" },
 });
 
+// ─── Map Card (address auto-fill button) ─────────────────────────────────────
+const mapCard = StyleSheet.create({
+  btn: {
+    backgroundColor: "#14532D",
+    borderRadius: 18,
+    marginBottom: 22,
+    overflow: "hidden",
+    shadowColor: "#052e16",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  btnPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.985 }],
+  },
+  innerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 14,
+    // subtle lighter top strip for depth illusion
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.08)",
+  },
+  iconOuter: {
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  iconRing: {
+    position: "absolute",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: "rgba(134,239,172,0.35)",
+  },
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#16A34A",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#16A34A",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  textWrap: { flex: 1, gap: 4 },
+  chipRow: { flexDirection: "row" },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(134,239,172,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(134,239,172,0.35)",
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    alignSelf: "flex-start",
+    marginBottom: 4,
+  },
+  chipText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#86EFAC",
+    letterSpacing: 0.8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#14532D",
+    letterSpacing: -0.2,
+    marginBottom: 4,
+  },
+  sub: {
+    fontSize: 14,
+    color: "#166534",
+    lineHeight: 17,
+  },
+  chevronWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+});
+
 // ─── Main Form ────────────────────────────────────────────────────────────────
 export default function PersonalDetailsForm({
   initialData,
   onSave,
   onCancel,
+  onOpenMap,
 }: PersonalDetailsFormProps) {
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
 
@@ -368,6 +468,40 @@ export default function PersonalDetailsForm({
       {/* ── Address Information ── */}
       <View style={s.card}>
         <SectionHeader icon="location" title={String(T.translate("personalDetails.addressInformation"))} iconBg="#FFFBEB" iconColor="#D97706" />
+
+        {/* ── Prominent Map Auto-fill Button ── */}
+        {onOpenMap && (
+          <Pressable
+            onPress={onOpenMap}
+            style={({ pressed }) => [mapCard.btn, pressed && mapCard.btnPressed]}
+          >
+            {/* Dark overlay stripe for premium depth */}
+            <View style={mapCard.innerRow}>
+              {/* Left: icon block with pulse ring */}
+              <View style={mapCard.iconOuter}>
+                <View style={mapCard.iconRing} />
+                <View style={mapCard.iconWrap}>
+                  <Ionicons name="map" size={24} color="#FFFFFF" />
+                </View>
+              </View>
+
+              {/* Centre: text */}
+              <View style={mapCard.textWrap}>
+                <Text style={mapCard.title}>
+                  {String(T.translate("personalDetails.updateAddressViaMap"))}
+                </Text>
+                <Text style={mapCard.sub}>
+                  {String(T.translate("personalDetails.pinLocationToAutoFill"))}
+                </Text>
+              </View>
+
+              {/* Right: chevron */}
+              <View style={mapCard.chevronWrap}>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+              </View>
+            </View>
+          </Pressable>
+        )}
 
         <View style={fi.wrap}>
           <View style={fi.labelRow}>

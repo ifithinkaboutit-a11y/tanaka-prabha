@@ -4,6 +4,8 @@ export interface PersonalDetailsFormProps {
   initialData: import("./profile").PersonalDetails;
   onSave: (data: import("./profile").PersonalDetails) => void;
   onCancel: () => void;
+  /** Optional — opens the map picker for address auto-fill */
+  onOpenMap?: () => void;
 }
 
 export interface LandDetailsFormProps {

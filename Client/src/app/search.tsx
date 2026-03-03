@@ -16,12 +16,9 @@ export default function SearchScreen() {
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (initialQuery) {
-      performSearch(initialQuery);
-    }
+    if (initialQuery) performSearch(initialQuery);
   }, [initialQuery, performSearch]);
 
-  // Auto-focus the input
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 300);
     return () => clearTimeout(timer);
@@ -31,36 +28,26 @@ export default function SearchScreen() {
   const showEmpty = hasQuery && totalResults === 0 && !isSearching && !loading;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      {/* Header */}
-      <View style={{
-        paddingTop: 48, paddingBottom: 12, paddingHorizontal: 16,
-        backgroundColor: "#FFFFFF",
-        borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
-      }}>
-        {/* Back + Title row */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+    <View className="flex-1 bg-gray-50">
+
+      {/* ── Header ── */}
+      <View className="pt-12 pb-3 px-4 bg-white border-b border-gray-100">
+
+        {/* Back + Title */}
+        <View className="flex-row items-center mb-3.5">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              marginRight: 12, padding: 6,
-              backgroundColor: "#F3F4F6", borderRadius: 10,
-            }}
+            className="mr-3 p-1.5 bg-gray-100 rounded-xl"
           >
             <Ionicons name="arrow-back" size={20} color="#374151" />
           </Pressable>
-          <AppText variant="h3" style={{ color: "#111827", fontSize: 18, fontWeight: "700" }}>
+          <AppText style={{ color: "#111827", fontSize: 18, fontWeight: "700" }}>
             {t("search.title")}
           </AppText>
         </View>
 
-        {/* Search input */}
-        <View style={{
-          flexDirection: "row", alignItems: "center",
-          backgroundColor: "#F3F4F6", borderRadius: 14,
-          paddingHorizontal: 14, height: 48,
-          borderWidth: 1, borderColor: "#E5E7EB",
-        }}>
+        {/* Search Input */}
+        <View className="flex-row items-center bg-gray-100 rounded-2xl px-3.5 h-12 border border-gray-200">
           <Ionicons name="search-outline" size={20} color="#9CA3AF" />
           <TextInput
             ref={inputRef}
@@ -68,25 +55,15 @@ export default function SearchScreen() {
             onChangeText={performSearch}
             placeholder={t("search.placeholder") || "Search schemes, programs, events..."}
             placeholderTextColor="#9CA3AF"
-            style={{
-              flex: 1, marginLeft: 10, fontSize: 15,
-              color: "#111827", fontWeight: "500",
-            }}
+            style={{ flex: 1, marginLeft: 10, fontSize: 15, color: "#111827", fontWeight: "500" }}
             returnKeyType="search"
             autoCapitalize="none"
             autoCorrect={false}
           />
           {hasQuery && (
             <Pressable
-              onPress={() => {
-                clearSearch();
-                inputRef.current?.focus();
-              }}
-              style={{
-                width: 28, height: 28, borderRadius: 14,
-                backgroundColor: "#E5E7EB",
-                alignItems: "center", justifyContent: "center",
-              }}
+              onPress={() => { clearSearch(); inputRef.current?.focus(); }}
+              className="w-7 h-7 rounded-full bg-gray-200 items-center justify-center"
             >
               <Ionicons name="close" size={16} color="#6B7280" />
             </Pressable>
@@ -98,57 +75,50 @@ export default function SearchScreen() {
 
         {/* Results count */}
         {hasQuery && totalResults > 0 && !isSearching && (
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10, gap: 6 }}>
+          <View className="flex-row items-center mt-2.5 gap-1.5">
             <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-            <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 13, fontWeight: "500" }}>
+            <AppText style={{ color: "#6B7280", fontSize: 13, fontWeight: "500" }}>
               {t("search.resultsCount", { count: totalResults })}
             </AppText>
           </View>
         )}
       </View>
 
-      {/* Search Results */}
+      {/* ── States ── */}
       {loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#16A34A" />
-          <AppText variant="bodySm" style={{ marginTop: 12, color: "#9CA3AF" }}>
+          <AppText style={{ marginTop: 12, color: "#9CA3AF", fontSize: 13 }}>
             {t("common.loading")}
           </AppText>
         </View>
+
       ) : showEmpty ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <View style={{
-            width: 72, height: 72, borderRadius: 36,
-            backgroundColor: "#F3F4F6",
-            alignItems: "center", justifyContent: "center",
-            marginBottom: 16,
-          }}>
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-18 h-18 rounded-full bg-gray-100 items-center justify-center mb-4">
             <Ionicons name="search-outline" size={32} color="#D1D5DB" />
           </View>
-          <AppText variant="h3" style={{ color: "#374151", marginBottom: 6, textAlign: "center", fontWeight: "700" }}>
+          <AppText style={{ color: "#374151", fontSize: 17, fontWeight: "700", textAlign: "center", marginBottom: 6 }}>
             {t("search.noResults")}
           </AppText>
-          <AppText variant="bodySm" style={{ color: "#9CA3AF", textAlign: "center", lineHeight: 20 }}>
+          <AppText style={{ color: "#9CA3AF", fontSize: 13, textAlign: "center", lineHeight: 20 }}>
             {t("search.noResultsHint") || "Try using different keywords or check the spelling"}
           </AppText>
         </View>
+
       ) : !hasQuery ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <View style={{
-            width: 72, height: 72, borderRadius: 36,
-            backgroundColor: "#F0FDF4",
-            alignItems: "center", justifyContent: "center",
-            marginBottom: 16,
-          }}>
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-18 h-18 rounded-full bg-green-50 items-center justify-center mb-4">
             <Ionicons name="search-outline" size={32} color="#16A34A" />
           </View>
-          <AppText variant="h3" style={{ color: "#374151", marginBottom: 6, textAlign: "center", fontWeight: "700" }}>
+          <AppText style={{ color: "#374151", fontSize: 17, fontWeight: "700", textAlign: "center", marginBottom: 6 }}>
             {t("search.startSearching") || "Start searching"}
           </AppText>
-          <AppText variant="bodySm" style={{ color: "#9CA3AF", textAlign: "center", lineHeight: 20 }}>
+          <AppText style={{ color: "#9CA3AF", fontSize: 13, textAlign: "center", lineHeight: 20 }}>
             {t("search.startSearchingHint") || "Search for schemes, training programs, events and more"}
           </AppText>
         </View>
+
       ) : (
         <SearchResults results={searchResults} />
       )}

@@ -13,6 +13,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -50,9 +51,10 @@ const OTPInput = () => {
 
   // Focus first input on mount
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       inputRefs.current[0]?.focus();
     }, 100);
+    return () => clearTimeout(timer); // FIX: clean up focus timer to prevent memory leak
   }, []);
 
   const handleOtpChange = (value: string, index: number) => {
@@ -172,117 +174,117 @@ const OTPInput = () => {
         <AuthVideoBackground />
       </View>
 
-      {/* OTP Card — overlaps image via negative marginTop to hide the gap */}
-      <View style={s.card}>
-        {/* Icon + Title */}
-        <View style={s.iconCircle}>
-          <Ionicons name="shield-checkmark-outline" size={28} color="#386641" />
-        </View>
-
-        <AppText variant="h2" style={s.title}>
-          {t("auth.enterOTP")}
-        </AppText>
-
-        <Text style={s.subtitle}>
-          {t("auth.otpSentTo")}
-        </Text>
-        <Text style={s.phoneDisplay}>{maskedPhone}</Text>
-
-        {/* OTP Input Fields */}
-        <View style={s.otpRow}>
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => { inputRefs.current[index] = ref; }}
-              style={[
-                s.otpBox,
-                digit ? s.otpBoxFilled : null,
-                validationError ? s.otpBoxError : null,
-              ]}
-              value={digit}
-              onChangeText={(value) => {
-                handleOtpChange(value, index);
-                if (validationError) setValidationError(null);
-              }}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-              editable={!loading}
-            />
-          ))}
-        </View>
-
-        {/* Progress dots */}
-        <View style={s.progressRow}>
-          {Array(OTP_LENGTH).fill(0).map((_, i) => (
-            <View
-              key={i}
-              style={[s.progressDot, i < filledCount ? s.progressDotActive : null]}
-            />
-          ))}
-        </View>
-
-        {/* Validation Error */}
-        {validationError ? (
-          <View style={s.errorRow}>
-            <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
-            <Text style={s.errorText}>{validationError}</Text>
+      {/* FIX: ScrollView should only control scroll behavior.
+          Layout/visual styles (borderRadius, padding, shadow, alignItems)
+          must live on a child View, not on ScrollView's style prop. */}
+      <ScrollView
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={s.scrollView}
+        contentContainerStyle={s.scrollContent}
+      >
+        <View style={s.card}>
+          {/* Icon + Title */}
+          <View style={s.iconCircle}>
+            <Ionicons name="shield-checkmark-outline" size={28} color="#386641" />
           </View>
-        ) : (
-          <View style={{ marginBottom: 16 }} />
-        )}
 
-        {/* Verify Button */}
-        <Button
-          variant="primary"
-          onPress={handleVerifyOTP}
-          disabled={loading || filledCount !== OTP_LENGTH}
-          style={s.verifyBtn}
-        >
-          {loading ? (
-            <View style={s.loadingRow}>
-              <ActivityIndicator color="white" size="small" />
-              <Text style={[s.btnText, { marginLeft: 8 }]}>Verifying...</Text>
+          <AppText variant="h2" style={s.title}>
+            {t("auth.enterOTP")}
+          </AppText>
+
+          <Text style={s.subtitle}>
+            {t("auth.otpSentTo")}
+          </Text>
+          <Text style={s.phoneDisplay}>{maskedPhone}</Text>
+
+          {/* OTP Input Fields */}
+          <View style={s.otpRow}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => { inputRefs.current[index] = ref; }}
+                style={[
+                  s.otpBox,
+                  digit ? s.otpBoxFilled : null,
+                  validationError ? s.otpBoxError : null,
+                ]}
+                value={digit}
+                onChangeText={(value) => {
+                  handleOtpChange(value, index);
+                  if (validationError) setValidationError(null);
+                }}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                selectTextOnFocus
+                editable={!loading}
+              />
+            ))}
+          </View>
+
+          {/* Validation Error */}
+          {validationError ? (
+            <View style={s.errorRow}>
+              <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
+              <Text style={s.errorText}>{validationError}</Text>
             </View>
           ) : (
-            <Text style={s.btnText}>{t("auth.verifyOTP")}</Text>
+            <View style={{ marginBottom: 16 }} />
           )}
-        </Button>
 
-        {/* Resend + Change Number */}
-        <View style={s.footerRow}>
-          {canResend ? (
-            <TouchableOpacity onPress={handleResendOTP} style={s.footerBtn}>
-              <Ionicons name="refresh-outline" size={14} color="#386641" />
-              <Text style={s.resendLink}> {t("auth.resendOTP")}</Text>
+          {/* Verify Button */}
+          <Button
+            variant="primary"
+            onPress={handleVerifyOTP}
+            disabled={loading || filledCount !== OTP_LENGTH}
+            style={s.verifyBtn}
+          >
+            {loading ? (
+              <View style={s.loadingRow}>
+                <ActivityIndicator color="white" size="small" />
+                <Text style={[s.btnText, { marginLeft: 8 }]}>Verifying...</Text>
+              </View>
+            ) : (
+              <Text style={s.btnText}>{t("auth.verifyOTP")}</Text>
+            )}
+          </Button>
+
+          {/* Resend + Change Number */}
+          <View style={s.footerRow}>
+            {canResend ? (
+              <TouchableOpacity onPress={handleResendOTP} style={s.footerBtn}>
+                <Ionicons name="refresh-outline" size={14} color="#386641" />
+                <Text style={s.resendLink}> {t("auth.resendOTP")}</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={s.resendTimer}>
+                {t("auth.resendOtpIn")} {countdown}s
+              </Text>
+            )}
+
+            <View style={s.dot} />
+
+            <TouchableOpacity onPress={handleChangeNumber} style={s.footerBtn}>
+              <Ionicons name="arrow-back-outline" size={14} color="#616161" />
+              <Text style={s.changeNumber}> {t("auth.changeNumber")}</Text>
             </TouchableOpacity>
-          ) : (
-            <Text style={s.resendTimer}>
-              {t("auth.resendOtpIn")} {countdown}s
+          </View>
+
+          {/* Mode badge */}
+          <View style={s.modeBadge}>
+            <Ionicons
+              name={isLogin ? "log-in-outline" : "person-add-outline"}
+              size={12}
+              color={isLogin ? "#2563EB" : "#7C3AED"}
+            />
+            <Text style={[s.modeBadgeText, { color: isLogin ? "#2563EB" : "#7C3AED" }]}>
+              {isLogin ? "Logging in to existing account" : "Creating new account"}
             </Text>
-          )}
-
-          <View style={s.dot} />
-
-          <TouchableOpacity onPress={handleChangeNumber} style={s.footerBtn}>
-            <Ionicons name="arrow-back-outline" size={14} color="#616161" />
-            <Text style={s.changeNumber}> {t("auth.changeNumber")}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
-
-        {/* Mode badge */}
-        <View style={s.modeBadge}>
-          <Ionicons
-            name={isLogin ? "log-in-outline" : "person-add-outline"}
-            size={12}
-            color={isLogin ? "#2563EB" : "#7C3AED"}
-          />
-          <Text style={[s.modeBadgeText, { color: isLogin ? "#2563EB" : "#7C3AED" }]}>
-            {isLogin ? "Logging in to existing account" : "Creating new account"}
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -296,21 +298,31 @@ const s = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   videoBg: {
-    height: 280,
+    height: 560,
   },
+  // FIX: ScrollView gets only flex/positional styles
+  scrollView: {
+    flex: 1,
+    marginTop: -32,
+  },
+  // FIX: flexGrow + justifyContent ensure card sits at bottom when content is short
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+  },
+  // FIX: visual/layout styles moved here, onto a real View
   card: {
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 28,
-    paddingBottom: 36,
-    marginTop: -32,
+    paddingBottom: 40,
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 12,
-    alignItems: "center",
   },
   iconCircle: {
     width: 60,
@@ -344,10 +356,10 @@ const s = StyleSheet.create({
     marginBottom: 28,
     letterSpacing: 0.5,
   },
+  // FIX: replaced `gap` with marginHorizontal on otpBox for broader RN compatibility
   otpRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 10,
     marginBottom: 12,
   },
   otpBox: {
@@ -361,6 +373,7 @@ const s = StyleSheet.create({
     borderColor: "#E5E7EB",
     backgroundColor: "#F9FAFB",
     color: "#111827",
+    marginHorizontal: 5, // FIX: replaces `gap: 10` on parent
   },
   otpBoxFilled: {
     borderColor: "#386641",
@@ -371,25 +384,9 @@ const s = StyleSheet.create({
     borderColor: "#EF4444",
     backgroundColor: "rgba(239, 68, 68, 0.05)",
   },
-  progressRow: {
-    flexDirection: "row",
-    gap: 6,
-    marginBottom: 12,
-  },
-  progressDot: {
-    width: 8,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E7EB",
-  },
-  progressDotActive: {
-    backgroundColor: "#386641",
-    width: 16,
-  },
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     marginBottom: 16,
   },
   errorText: {
@@ -397,6 +394,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     flex: 1,
+    marginLeft: 4, // FIX: replaces `gap: 4` on parent
   },
   verifyBtn: {
     width: "100%",
@@ -416,16 +414,17 @@ const s = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.3,
   },
+  // FIX: replaced `gap` with margins on children for broader RN compatibility
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
     marginBottom: 16,
   },
   footerBtn: {
     flexDirection: "row",
     alignItems: "center",
+    marginHorizontal: 6, // FIX: replaces `gap: 12` on parent
   },
   resendLink: {
     color: "#386641",
@@ -435,6 +434,7 @@ const s = StyleSheet.create({
   resendTimer: {
     color: "#9CA3AF",
     fontSize: 13,
+    marginHorizontal: 6, // FIX: consistent spacing alongside footerBtn margins
   },
   dot: {
     width: 4,
@@ -449,7 +449,6 @@ const s = StyleSheet.create({
   modeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 20,
@@ -458,5 +457,6 @@ const s = StyleSheet.create({
   modeBadgeText: {
     fontSize: 11,
     fontWeight: "500",
+    marginLeft: 5, // FIX: replaces `gap: 5` on parent
   },
 });

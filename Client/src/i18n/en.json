@@ -239,7 +239,10 @@
     "pinCode": "PIN Code",
     "state": "State",
     "save": "Save Changes",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "updateAddressViaMap": "Update Address via Map",
+    "pinLocationToAutoFill": "Pin your location to auto-fill village, block, district & state",
+    "addressAutoFilled": "Address auto-filled from map — review & save below"
   },
   "profile": {
     "title": "Profile",

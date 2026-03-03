@@ -53,9 +53,14 @@ interface SearchResult {
 
 export default function LocationPickerScreen() {
     const router = useRouter();
-    const { isForLand, fromProfile } = useLocalSearchParams<{ isForLand?: string, fromProfile?: string }>();
+    const { isForLand, fromProfile, returnTo, purpose } = useLocalSearchParams<{
+        isForLand?: string;
+        fromProfile?: string;
+        returnTo?: string;
+        purpose?: string;
+    }>();
     const isLandFlow = isForLand === "true";
-    const isProfileMode = fromProfile === "true";
+    const isProfileMode = fromProfile === "true" || !!purpose;
 
     const {
         locationData,
@@ -64,6 +69,7 @@ export default function LocationPickerScreen() {
         setLandLocationData,
         personalDetails,
         updatePersonalDetails,
+        setProfileAddressOverride,
     } = useOnboardingStore();
 
     // ── State ──────────────────────────────────────────────────────────────────
@@ -282,6 +288,40 @@ export default function LocationPickerScreen() {
 
         if (isProfileMode) {
             try {
+                if (purpose === "profile") {
+                    // ── Profile address-fill mode: geocode pin → write to store → go back ──
+                    const toSlug = (v?: string | null) =>
+                        v ? v.trim().toLowerCase().replace(/[\s-]+/g, "_") : "";
+
+                    const [results, localMatch] = await Promise.all([
+                        Location.reverseGeocodeAsync({ latitude: pinCoords.latitude, longitude: pinCoords.longitude }),
+                        Promise.resolve(getClosestLocation(pinCoords.latitude, pinCoords.longitude)),
+                    ]);
+
+                    const r = results[0] ?? {};
+
+                    const override: Record<string, string> = {};
+                    const mapState = toSlug(localMatch.state || (r as any).region);
+                    const mapDistrict = toSlug(localMatch.district || (r as any).subregion);
+                    const mapTehsil = toSlug(localMatch.tehsil);
+                    const mapBlock = toSlug(localMatch.block);
+                    const mapVillage = localMatch.village || (r as any).city || (r as any).name || "";
+                    const mapPinCode = (r as any).postalCode || "";
+
+                    if (mapState) override.state = mapState;
+                    if (mapDistrict) override.district = mapDistrict;
+                    if (mapTehsil) override.tehsil = mapTehsil;
+                    if (mapBlock) override.block = mapBlock;
+                    if (mapVillage) override.village = mapVillage;
+                    if (mapPinCode) override.pinCode = mapPinCode;
+
+                    // Write to store BEFORE navigating — personal-details will read it reactively
+                    setProfileAddressOverride(override);
+                    setSaving(false);
+                    router.back();
+                    return;
+                }
+
                 if (isLandFlow) {
                     await userApi.updateProfile({
                         land_details: {
