@@ -12,8 +12,6 @@ import {
   RefreshControl,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
-import Button from "../components/atoms/Button";
-import BookingModal from "../components/molecules/BookingModal";
 import { professionalsApi, Professional, appointmentsApi } from "@/services/apiService";
 import { ProfessionalDetailSkeleton } from "../components/atoms/Skeleton";
 import { useTranslation } from "../i18n";
@@ -23,20 +21,15 @@ const ConnectDetailScreen = () => {
   const { t } = useTranslation();
   const { professionalId } = useLocalSearchParams<{ professionalId: string }>();
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [professional, setProfessional] = useState<Professional | null>(null);
-  const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchProfessional = useCallback(async () => {
     if (!professionalId) return;
-
     try {
       const data = await professionalsApi.getById(professionalId);
       setProfessional(data);
-      const appointments = await appointmentsApi.getByProfessional(professionalId);
-      setBookedSlots(appointments.map((a: any) => ({ date: a.date, time: a.time })));
     } catch (error) {
       console.error("Error fetching professional:", error);
     }
@@ -127,34 +120,15 @@ const ConnectDetailScreen = () => {
 
   const handleBookAppointment = () => {
     setShowConnectModal(false);
-    setShowBookingModal(true);
-  };
-
-  const handleConfirmBooking = async (date: Date, time: string) => {
-    try {
-      await appointmentsApi.create({
-        professionalId: professional.id,
-        date: date.toISOString().split("T")[0],
-        time,
-      });
-
-      setShowBookingModal(false);
-      Alert.alert(
-        t("connect.booking.success"),
-        t("connect.booking.successMessage", {
-          date: date.toLocaleDateString(),
-          time,
-          name: professional.name,
-        }),
-        [{ text: t("common.ok") }]
-      );
-      fetchProfessional();
-    } catch (error) {
-      Alert.alert(
-        t("connect.booking.error"),
-        t("connect.booking.errorMessage")
-      );
-    }
+    // Navigate to the dedicated booking screen which fetches live slots from API
+    // and enforces the 3-per-day limit correctly
+    router.push({
+      pathname: "/book-appointment" as any,
+      params: {
+        professionalId: professional!.id,
+        professionalName: professional!.name,
+      },
+    });
   };
 
   return (
@@ -451,16 +425,6 @@ const ConnectDetailScreen = () => {
           </View>
         </Pressable>
       </Modal>
-
-      {/* Booking Modal */}
-      <BookingModal
-        visible={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
-        onConfirm={handleConfirmBooking}
-        professionalName={professional.name}
-        bookedSlots={bookedSlots}
-        maxAppointmentsPerDay={3}
-      />
     </View>
   );
 };

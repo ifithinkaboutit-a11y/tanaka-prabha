@@ -1,6 +1,5 @@
 // src/app/(auth)/location-picker.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -10,6 +9,7 @@ import { getClosestLocation } from "../../utils/reverseGeocode";
 import {
     Alert,
     Animated,
+    BackHandler,
     Dimensions,
     Keyboard,
     Linking,
@@ -53,7 +53,6 @@ interface SearchResult {
 
 export default function LocationPickerScreen() {
     const router = useRouter();
-    const navigation = useNavigation();
     const { isForLand, fromProfile } = useLocalSearchParams<{ isForLand?: string, fromProfile?: string }>();
     const isLandFlow = isForLand === "true";
     const isProfileMode = fromProfile === "true";
@@ -92,29 +91,35 @@ export default function LocationPickerScreen() {
     const geocodeRequestId = useRef(0);
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // ── Back-navigation guard ──────────────────────────────────────────────────
+    // ── Back-navigation guard (BackHandler — compatible with Expo Router) ───────
     const relevantLocationData = isLandFlow ? landLocationData : locationData;
-    usePreventRemove(!isProfileMode && relevantLocationData !== null, ({ data }) => {
-        Alert.alert(
-            "Change location?",
-            "Going back will clear your confirmed pin.",
-            [
-                { text: "Stay here", style: "cancel" },
-                {
-                    text: "Go back",
-                    style: "destructive",
-                    onPress: () => {
-                        if (isLandFlow) {
-                            setLandLocationData(null);
-                        } else {
-                            setLocationData(null);
-                        }
-                        navigation.dispatch(data.action);
+    useEffect(() => {
+        if (isProfileMode || relevantLocationData === null) return;
+        const onBack = () => {
+            Alert.alert(
+                "Change location?",
+                "Going back will clear your confirmed pin.",
+                [
+                    { text: "Stay here", style: "cancel" },
+                    {
+                        text: "Go back",
+                        style: "destructive",
+                        onPress: () => {
+                            if (isLandFlow) {
+                                setLandLocationData(null);
+                            } else {
+                                setLocationData(null);
+                            }
+                            router.back();
+                        },
                     },
-                },
-            ]
-        );
-    });
+                ]
+            );
+            return true; // prevent default back
+        };
+        const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+        return () => sub.remove();
+    }, [isProfileMode, relevantLocationData, isLandFlow, setLandLocationData, setLocationData, router]);
 
     // ── Geocoding ──────────────────────────────────────────────────────────────
     const geocodeCoords = useCallback(async (lat: number, lng: number) => {
@@ -310,34 +315,63 @@ export default function LocationPickerScreen() {
 
         if (!isLandFlow) {
             try {
-                const results = await Location.reverseGeocodeAsync({
-                    latitude: pinCoords.latitude,
-                    longitude: pinCoords.longitude,
-                });
+                // Run both geocode operations in parallel
+                const [results, localMatch] = await Promise.all([
+                    Location.reverseGeocodeAsync({
+                        latitude: pinCoords.latitude,
+                        longitude: pinCoords.longitude,
+                    }),
+                    Promise.resolve(getClosestLocation(pinCoords.latitude, pinCoords.longitude)),
+                ]);
 
-                // Fetch closest hierarchical data from local sample Indian Locations DB
-                const localMatch = getClosestLocation(pinCoords.latitude, pinCoords.longitude);
+                const current = personalDetails;
 
                 if (results.length > 0) {
                     const r = results[0];
-                    const current = personalDetails;
-                    updatePersonalDetails({
-                        state: localMatch.state || current.state || r.region || "",
-                        district: localMatch.district || current.district || r.subregion || "",
-                        tehsil: localMatch.tehsil || current.tehsil || "",
-                        block: localMatch.block || current.block || "",
-                        pinCode: current.pinCode || r.postalCode || "",
-                        village: localMatch.village || current.village || r.city || r.name || "",
-                    });
+                    // Build an update object — prefer local hierarchical DB match,
+                    // fall back to expo reverse-geocode fields, then keep existing value
+                    const updates: Record<string, string> = {};
+
+                    // State — expo gives r.region (e.g. "Uttar Pradesh")
+                    const newState = localMatch.state || current.state ||
+                        (r.region ?? "");
+                    if (newState) updates.state = newState;
+
+                    // District — expo gives r.subregion
+                    const newDistrict = localMatch.district || current.district ||
+                        (r.subregion ?? "");
+                    if (newDistrict) updates.district = newDistrict;
+
+                    // Tehsil
+                    const newTehsil = localMatch.tehsil || current.tehsil || "";
+                    if (newTehsil) updates.tehsil = newTehsil;
+
+                    // Block
+                    const newBlock = localMatch.block || current.block || "";
+                    if (newBlock) updates.block = newBlock;
+
+                    // Village — expo gives r.city or r.name for small localities
+                    const newVillage = localMatch.village || current.village ||
+                        (r.city ?? r.name ?? "");
+                    if (newVillage) updates.village = newVillage;
+
+                    // PIN code — only fill if not already set
+                    if (!current.pinCode && r.postalCode) {
+                        updates.pinCode = r.postalCode;
+                    }
+
+                    if (Object.keys(updates).length > 0) {
+                        updatePersonalDetails(updates);
+                    }
                 } else if (localMatch.state) {
-                    const current = personalDetails;
-                    updatePersonalDetails({
-                        state: localMatch.state || current.state || "",
-                        district: localMatch.district || current.district || "",
-                        tehsil: localMatch.tehsil || current.tehsil || "",
-                        block: localMatch.block || current.block || "",
-                        village: localMatch.village || current.village || "",
-                    });
+                    // Fallback: only the local DB matched
+                    const updates: Record<string, string> = {};
+                    if (localMatch.state) updates.state = localMatch.state;
+                    if (localMatch.district) updates.district = localMatch.district;
+                    if (localMatch.tehsil) updates.tehsil = localMatch.tehsil;
+                    if (localMatch.block) updates.block = localMatch.block;
+                    if (localMatch.village) updates.village = localMatch.village;
+                    updatePersonalDetails(updates);
                 }
             } catch { /* geocode failed at confirm time — fields stay as-is */ }
         }

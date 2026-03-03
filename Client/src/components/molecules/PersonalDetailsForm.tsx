@@ -212,18 +212,18 @@ export default function PersonalDetailsForm({
   );
 
   const tehsilOptions = useMemo(
-    () => (formData.district ? getTehsilOptions(formData.district) : []),
-    [formData.district]
+    () => (formData.district ? getTehsilOptions(formData.state, formData.district) : []),
+    [formData.state, formData.district]
   );
 
   const blockOptions = useMemo(
-    () => (formData.tehsil ? getBlockOptions(formData.tehsil) : []),
-    [formData.tehsil]
+    () => (formData.tehsil ? getBlockOptions(formData.state, formData.district, formData.tehsil) : []),
+    [formData.state, formData.district, formData.tehsil]
   );
 
   const villageOptions = useMemo(
-    () => (formData.block ? getVillageOptions(formData.block) : []),
-    [formData.block]
+    () => (formData.block ? getVillageOptions(formData.state, formData.district, formData.tehsil, formData.block) : []),
+    [formData.state, formData.district, formData.tehsil, formData.block]
   );
 
   const handleSave = () => {
@@ -371,6 +371,59 @@ export default function PersonalDetailsForm({
 
         <View style={fi.wrap}>
           <View style={fi.labelRow}>
+            <Ionicons name="map-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.state"))}</Text>
+          </View>
+          <Select
+            value={formData.state}
+            onChange={(v) => { update("state", v); update("district", ""); update("tehsil", ""); update("block", ""); update("village", ""); }}
+            options={stateOptions}
+            placeholder="Select state"
+          />
+        </View>
+
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.district"))}</Text>
+          </View>
+          <Select
+            value={formData.district}
+            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); }}
+            options={districtOptions}
+            placeholder={formData.state ? "Select district" : "Select state first"}
+            disabled={!formData.state}
+          />
+        </View>
+
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Text style={fi.label}>{String(T.translate("personalDetails.tehsil") || "Tehsil")}</Text>
+          </View>
+          <Select
+            value={formData.tehsil}
+            onChange={(v) => { update("tehsil", v); update("block", ""); update("village", ""); }}
+            options={tehsilOptions}
+            placeholder={formData.district ? "Select tehsil" : "Select district first"}
+            disabled={!formData.district}
+          />
+        </View>
+
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block")}</Text>
+          </View>
+          <Select
+            value={formData.block}
+            onChange={(v) => { update("block", v); update("village", ""); }}
+            options={blockOptions}
+            placeholder={formData.tehsil ? "Select block" : "Select tehsil first"}
+            disabled={!formData.tehsil}
+          />
+        </View>
+
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
             <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
             <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
           </View>
@@ -413,76 +466,22 @@ export default function PersonalDetailsForm({
           </View>
           <View style={{ flex: 1 }}>
             <View style={fi.labelRow}>
-              <Text style={fi.label}>{String(T.translate("personalDetails.tehsil") || "Tehsil")}</Text>
+              <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+              <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
             </View>
-            <Select
-              value={formData.tehsil}
-              onChange={(v) => { update("tehsil", v); update("block", ""); update("village", ""); }}
-              options={tehsilOptions}
-              placeholder={formData.district ? "Select tehsil" : "Select district first"}
-              disabled={!formData.district}
+            <TextInput
+              style={fi.input}
+              value={formData.pinCode}
+              onChangeText={(v) => update("pinCode", v)}
+              keyboardType="numeric"
+              maxLength={6}
+              placeholder="000000"
+              placeholderTextColor="#C4C9D4"
             />
           </View>
         </View>
 
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block")}</Text>
-          </View>
-          <Select
-            value={formData.block}
-            onChange={(v) => { update("block", v); update("village", ""); }}
-            options={blockOptions}
-            placeholder={formData.tehsil ? "Select block" : "Select tehsil first"}
-            disabled={!formData.tehsil}
-          />
-        </View>
 
-        {/* State */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="map-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.state"))}</Text>
-          </View>
-          <Select
-            value={formData.state}
-            onChange={(v) => { update("state", v); update("district", ""); update("tehsil", ""); update("block", ""); update("village", ""); }}
-            options={stateOptions}
-            placeholder="Select state"
-          />
-        </View>
-
-        {/* District */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.district"))}</Text>
-          </View>
-          <Select
-            value={formData.district}
-            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); }}
-            options={districtOptions}
-            placeholder={formData.state ? "Select district" : "Select state first"}
-            disabled={!formData.state}
-          />
-        </View>
-
-        {/* PIN Code */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
-          </View>
-          <TextInput
-            style={[fi.input, { width: 150 }]}
-            value={formData.pinCode}
-            onChangeText={(v) => update("pinCode", v)}
-            keyboardType="numeric"
-            maxLength={6}
-            placeholder="000000"
-            placeholderTextColor="#C4C9D4"
-          />
-        </View>
       </View>
 
       {/* ── Action Buttons ── */}

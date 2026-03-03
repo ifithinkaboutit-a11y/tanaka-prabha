@@ -167,33 +167,36 @@ class Appointment {
 
     /**
      * Check if a specific time slot is available
+     * NOTE: COUNT(*) returns a bigint in PostgreSQL which node-postgres returns as a
+     * string (e.g. "1"). We cast to INT so the strict === 0 comparison works correctly.
      */
     static async isSlotAvailable(professional_id, date, time) {
         const text = `
-            SELECT COUNT(*) as count
+            SELECT COUNT(*)::INT as count
             FROM public.appointments
             WHERE professional_id = $1
             AND appointment_date = $2
-            AND appointment_time = $3
+            AND TRIM(appointment_time) = TRIM($3)
             AND status != 'cancelled'
         `;
         const result = await query(text, [professional_id, date, time]);
-        return (result.rows[0]?.count || 0) === 0;
+        return (result.rows[0]?.count ?? 0) === 0;
     }
 
     /**
      * Get available time slots for a professional on a date
+     * Trims DB values defensively in case of accidental leading/trailing whitespace.
      */
     static async getAvailableSlots(professional_id, date) {
         const text = `
-            SELECT appointment_time
+            SELECT TRIM(appointment_time) AS appointment_time
             FROM public.appointments
             WHERE professional_id = $1
             AND appointment_date = $2
             AND status != 'cancelled'
         `;
         const result = await query(text, [professional_id, date]);
-        const bookedSlots = result.rows.map(r => r.appointment_time);
+        const bookedSlots = result.rows.map(r => r.appointment_time.trim());
         return this.TIME_SLOTS.filter(slot => !bookedSlots.includes(slot));
     }
 

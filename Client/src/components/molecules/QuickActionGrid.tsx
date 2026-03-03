@@ -47,33 +47,32 @@ export default function QuickActionGrid({
 }: QuickActionGridProps) {
   const { width } = useWindowDimensions();
   // 20px horizontal padding on each side + 10px gap between the two cards
-  const cardSize = Math.floor((width - 40 - 10) / 2);
-  const cardHeight = Math.floor(cardSize * 0.95);
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 16 }}>
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={{ flexDirection: 'row', gap: 8 }}>
+        <View key={rowIndex} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           {row.map((action, colIndex) => (
             <Pressable
               key={colIndex}
               onPress={action.onPress}
               style={({ pressed }) => ({
-                width: cardSize,
-                height: cardHeight,
+                width: '48%',
+                aspectRatio: 1,
                 opacity: pressed ? 0.85 : 1,
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}
+              className="min-w-44 min-h-40"
             >
               <View
                 style={{
                   flex: 1,
                   backgroundColor: '#FFFFFF',
-                  borderRadius: 16,
+                  borderRadius: 20,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: 12, // Tightened padding
+                  padding: 16,
                   borderWidth: 1,
                   borderColor: '#F3F4F6',
                   shadowColor: action.iconColor ?? "#000",
@@ -86,32 +85,27 @@ export default function QuickActionGrid({
                 {/* Icon Circle */}
                 <View
                   style={{
-                    width: 52, // Reduced size
-                    height: 52, // Reduced size
-                    borderRadius: 26, // Adjusted borderRadius
+                    width: 74,
+                    height: 74,
+                    borderRadius: 32,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: 10, // Reduced margin
+                    marginBottom: 16,
                     backgroundColor: action.bgColor ?? "#F3F4F6",
-                    shadowColor: action.iconColor,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 8,
-                    elevation: 4,
                   }}
                 >
                   <Ionicons
                     name={action.icon}
-                    size={24} // Reduced size
+                    size={42}
                     color={action.iconColor ?? "#386641"}
                   />
                 </View>
 
                 {/* Title */}
                 <AppText
-                  variant="bodySm" // Changed variant
-                  style={{ textAlign: 'center', color: '#1F2937', fontWeight: '700', fontSize: 12, lineHeight: 17 }} // Adjusted font size and line height
-                  numberOfLines={3}
+                  variant="bodyLg"
+                  style={{ textAlign: 'center', color: '#1F2937', fontWeight: '700', fontSize: 17, lineHeight: 22 }}
+                  numberOfLines={2}
                 >
                   {action.title}
                 </AppText>

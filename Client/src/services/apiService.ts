@@ -1264,13 +1264,25 @@ export const appointmentsApi = {
 
   /**
    * Check if a professional has reached max appointments for a date
+   * Uses the dedicated backend endpoint for accurate real-time count.
    */
   async isDateFullyBooked(
     professionalId: string,
     date: string
   ): Promise<boolean> {
-    const count = await this.getCountForDate(professionalId, date);
-    return count >= MAX_APPOINTMENTS_PER_DAY;
+    try {
+      // Use the dedicated backend count endpoint for accuracy
+      const response = await fetchWithAuth<{
+        count: number;
+        max_per_day: number;
+        is_fully_booked: boolean;
+      }>(`/appointments/professional/${professionalId}/count/${date}`);
+      return response.data?.is_fully_booked ?? false;
+    } catch {
+      // Fallback: count from the already-fetched appointments list
+      const count = await this.getCountForDate(professionalId, date);
+      return count >= MAX_APPOINTMENTS_PER_DAY;
+    }
   },
 
   /**

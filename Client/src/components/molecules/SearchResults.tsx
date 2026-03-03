@@ -72,77 +72,46 @@ export default function SearchResults({
         onPress={() => handleResultPress(item)}
         style={({ pressed }) => ({
           marginHorizontal: 16,
-          marginBottom: 10,
+          marginBottom: 16,
           backgroundColor: pressed ? "#F9FAFB" : "#FFFFFF",
-          borderRadius: 16,
-          padding: 16,
-          borderWidth: 1,
-          borderColor: "#F1F5F9",
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.03,
-          shadowRadius: 4,
-          elevation: 1,
-          flexDirection: "row",
-          alignItems: "flex-start",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 10,
+          elevation: 3,
+          flexDirection: "column",
         })}
+        className="p-4 m-2 border rounded-xl border-[#F1F5F9] shadow-[0_4px_10px_0_rgba(0,0,0,0.06)]"
       >
-        {/* Type Icon */}
-        <View style={{
-          width: 42, height: 42, borderRadius: 12,
-          backgroundColor: config.bgColor,
-          alignItems: "center", justifyContent: "center",
-          marginRight: 14, marginTop: 2,
-        }}>
-          <Ionicons name={config.icon} size={20} color={config.color} />
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1 }}>
-          {/* Title + Category */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-            <AppText
-              variant="bodyMd"
-              style={{
-                flex: 1, marginRight: 8,
-                fontWeight: "700", color: "#111827",
-                fontSize: 15, lineHeight: 20,
-              }}
-              numberOfLines={2}
-            >
-              {item.title}
-            </AppText>
+        {/* Header: Icon + Type Badge */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+          {/* Large Icon */}
+          <View style={{
+            width: 48, height: 48, borderRadius: 14,
+            backgroundColor: config.bgColor,
+            alignItems: "center", justifyContent: "center",
+            marginRight: 14,
+          }}>
+            <Ionicons name={config.icon} size={24} color={config.color} />
           </View>
 
-          {/* Description */}
-          {item.description ? (
-            <AppText
-              variant="bodySm"
-              style={{ color: "#6B7280", fontSize: 13, lineHeight: 18, marginBottom: 8 }}
-              numberOfLines={2}
-            >
-              {item.description}
-            </AppText>
-          ) : null}
-
-          {/* Type Badge + Category */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             <View style={{
               backgroundColor: config.bgColor,
-              paddingHorizontal: 8, paddingVertical: 3,
+              paddingHorizontal: 10, paddingVertical: 5,
               borderRadius: 8,
             }}>
-              <AppText variant="caption" style={{ color: config.color, fontWeight: "700", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.3 }}>
+              <AppText variant="caption" style={{ color: config.color, fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 {t(config.labelKey)}
               </AppText>
             </View>
             {item.category && item.category !== "Training" && item.category !== "Event" && (
               <View style={{
                 backgroundColor: "#F3F4F6",
-                paddingHorizontal: 8, paddingVertical: 3,
+                paddingHorizontal: 10, paddingVertical: 5,
                 borderRadius: 8,
               }}>
-                <AppText variant="caption" style={{ color: "#6B7280", fontWeight: "600", fontSize: 10 }}>
+                <AppText variant="caption" style={{ color: "#4B5563", fontWeight: "600", fontSize: 11 }}>
                   {item.category}
                 </AppText>
               </View>
@@ -150,9 +119,40 @@ export default function SearchResults({
           </View>
         </View>
 
-        {/* Chevron */}
-        <View style={{ justifyContent: "center", marginLeft: 4, marginTop: 8 }}>
-          <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+        {/* Content */}
+        <View style={{ marginBottom: 16 }}>
+          <AppText
+            variant="h3"
+            style={{
+              fontWeight: "700", color: "#111827",
+              fontSize: 18, lineHeight: 26, marginBottom: 8,
+            }}
+            numberOfLines={2}
+          >
+            {item.title}
+          </AppText>
+
+          {item.description ? (
+            <AppText
+              variant="bodyMd"
+              style={{ color: "#6B7280", fontSize: 14, lineHeight: 22 }}
+              numberOfLines={3}
+            >
+              {item.description}
+            </AppText>
+          ) : null}
+        </View>
+
+        {/* Footer / CTA */}
+        <View style={{
+          flexDirection: "row", justifyContent: "flex-end", alignItems: "center",
+          borderTopWidth: 1, borderTopColor: "#F3F4F6",
+          paddingTop: 14,
+        }}>
+          <AppText variant="bodySm" style={{ color: config.color, fontWeight: "600", fontSize: 13, marginRight: 6 }}>
+            {t("common.viewDetails") || "View Details"}
+          </AppText>
+          <Ionicons name="arrow-forward" size={16} color={config.color} />
         </View>
       </Pressable>
     );
