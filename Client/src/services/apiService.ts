@@ -657,6 +657,7 @@ export interface ApiScheme {
   description_hi?: string;
   overview_hi?: string;
   process_hi?: string;
+  eligibility?: string;
   eligibility_hi?: string;
   key_objectives_hi?: string[];
   category: string;
@@ -681,6 +682,7 @@ export interface Scheme {
   descriptionHi?: string;
   overviewHi?: string;
   processHi?: string;
+  eligibility?: string;
   eligibilityHi?: string;
   keyObjectivesHi?: string[];
   category: string;

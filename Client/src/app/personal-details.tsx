@@ -148,11 +148,11 @@ const PersonalDetailsScreen = () => {
         </View>
       )}
 
-      {/* Form — re-mounts when map override arrives */}
+      {/* Form — passes addressOverride so only address fields update without full remount */}
       <View style={s.formContainer}>
         <PersonalDetailsForm
-          key={formKey}
           initialData={initialData}
+          addressOverride={addressOverride ?? undefined}
           onSave={handleSave}
           onCancel={() => router.back()}
           onOpenMap={handleOpenMap}

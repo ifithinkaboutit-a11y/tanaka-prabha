@@ -89,7 +89,7 @@ const PhoneInput = () => {
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
         {/* Image Background fills top, card overlaps it  */}
-        <View style={s.videoBg}>
+        <View className="h-[55vh]">
           <AuthVideoBackground />
         </View>
 
@@ -206,10 +206,6 @@ const s = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     backgroundColor: "#FFFFFF",
-  },
-  videoBg: {
-    // Give the image section a defined height; card overlaps via negative marginTop
-    height: 600,
   },
   card: {
     flex: 1,

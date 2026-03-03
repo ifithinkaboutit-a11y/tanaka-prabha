@@ -6,6 +6,11 @@ export interface PersonalDetailsFormProps {
   onCancel: () => void;
   /** Optional — opens the map picker for address auto-fill */
   onOpenMap?: () => void;
+  /**
+   * When set, only these address fields are applied to the current form state
+   * without discarding any personal / family data the user has already typed.
+   */
+  addressOverride?: Record<string, string>;
 }
 
 export interface LandDetailsFormProps {

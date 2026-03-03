@@ -83,7 +83,13 @@ const SchemeDetailsScreen = () => {
     const overviewText = currentLanguage === 'hi' && scheme.overviewHi ? scheme.overviewHi : scheme.overview;
     const processText = currentLanguage === 'hi' && scheme.processHi ? scheme.processHi : scheme.process;
     const keyObjectives = currentLanguage === 'hi' && scheme.keyObjectivesHi ? scheme.keyObjectivesHi : scheme.keyObjectives;
-    const eligibility = currentLanguage === 'hi' && scheme.eligibilityHi ? scheme.eligibilityHi : (scheme as any).eligibility;
+    // eligibility comes from the DB as a plain text string — convert to an array of lines
+    const eligibilityRaw = currentLanguage === 'hi' && scheme.eligibilityHi ? scheme.eligibilityHi : scheme.eligibility;
+    const eligibility: string[] = Array.isArray(eligibilityRaw)
+      ? eligibilityRaw
+      : typeof eligibilityRaw === 'string' && eligibilityRaw.trim()
+        ? eligibilityRaw.split(/\n|(?<=\.)\s+(?=[A-Z])/).map(s => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+        : [];
 
     switch (activeTab) {
       case "overview":

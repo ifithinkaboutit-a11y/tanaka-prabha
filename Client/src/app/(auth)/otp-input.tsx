@@ -170,7 +170,7 @@ const OTPInput = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Image Background */}
-      <View style={s.videoBg}>
+      <View className="h-[45vh]">
         <AuthVideoBackground />
       </View>
 
@@ -296,9 +296,6 @@ const s = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     backgroundColor: "#FFFFFF",
-  },
-  videoBg: {
-    height: 560,
   },
   // FIX: ScrollView gets only flex/positional styles
   scrollView: {

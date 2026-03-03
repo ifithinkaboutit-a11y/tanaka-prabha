@@ -1,6 +1,6 @@
 // src/components/molecules/PersonalDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Alert,
   Pressable,
@@ -299,11 +299,32 @@ const mapCard = StyleSheet.create({
 // ─── Main Form ────────────────────────────────────────────────────────────────
 export default function PersonalDetailsForm({
   initialData,
+  addressOverride,
   onSave,
   onCancel,
   onOpenMap,
 }: PersonalDetailsFormProps) {
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
+
+  // Apply map-returned address fields without wiping personal/family data.
+  // We use a ref to skip the very first render (initial mount) so we only
+  // patch when a *new* override arrives after the user returns from the map.
+  const prevOverrideRef = useRef<Record<string, string> | undefined>(undefined);
+  useEffect(() => {
+    if (!addressOverride) return;
+    if (addressOverride === prevOverrideRef.current) return;
+    prevOverrideRef.current = addressOverride;
+
+    setFormData((prev) => ({
+      ...prev,
+      ...(addressOverride.state ? { state: addressOverride.state } : {}),
+      ...(addressOverride.district ? { district: addressOverride.district } : {}),
+      ...(addressOverride.tehsil ? { tehsil: addressOverride.tehsil } : {}),
+      ...(addressOverride.block ? { block: addressOverride.block } : {}),
+      ...(addressOverride.village ? { village: addressOverride.village } : {}),
+      ...(addressOverride.pinCode ? { pinCode: addressOverride.pinCode } : {}),
+    }));
+  }, [addressOverride]);
 
   const stateOptions = useMemo(() => getStateOptions(), []);
   const districtOptions = useMemo(

@@ -26,7 +26,7 @@ export default function Welcome() {
     <View style={s.root}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         {/* Image Background fills top, card overlaps it */}
-        <View style={s.videoBg}>
+        <View className="h-[55vh]">
           <AuthVideoBackground />
         </View>
 
@@ -90,11 +90,6 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-  },
-  videoBg: {
-    // Gives the image section a defined height; card overlaps via negative marginTop
-    // We make it slightly taller than the others since welcome screen has less content
-    height: 600,
   },
   card: {
     flex: 1,
