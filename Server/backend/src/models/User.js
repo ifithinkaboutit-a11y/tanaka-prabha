@@ -146,6 +146,42 @@ class User {
     }
 
     /**
+     * Update user using a provided pg client (for transactions)
+     * Same logic as update() but uses client.query() instead of the pool query helper.
+     */
+    static async updateWithClient(client, id, userData) {
+        const fields = [];
+        const values = [];
+        let paramCount = 1;
+
+        Object.keys(userData).forEach(key => {
+            if (key === 'latitude' || key === 'longitude') return;
+            fields.push(`${key} = $${paramCount}`);
+            values.push(userData[key]);
+            paramCount++;
+        });
+
+        if (userData.latitude && userData.longitude) {
+            fields.push(`location = ST_SetSRID(ST_MakePoint($${paramCount}, $${paramCount + 1}), 4326)`);
+            values.push(userData.longitude, userData.latitude);
+            paramCount += 2;
+        }
+
+        fields.push(`updated_at = timezone('utc', now())`);
+        values.push(id);
+
+        const text = `
+            UPDATE public.users
+            SET ${fields.join(', ')}
+            WHERE id = $${paramCount}
+            RETURNING *
+        `;
+
+        const result = await client.query(text, values);
+        return result.rows[0];
+    }
+
+    /**
      * Delete user
      */
     static async delete(id) {

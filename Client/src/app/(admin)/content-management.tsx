@@ -2,6 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService, { Banner, Scheme } from "@/services/apiService";
+import { cdn } from "@/utils/cloudinaryUtils";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -228,7 +229,7 @@ function BannersTab() {
                     renderItem={({ item }) => (
                         <View style={cms.itemCard}>
                             {item.imageUrl ? (
-                                <Image source={{ uri: item.imageUrl }} style={cms.itemThumb} resizeMode="cover" />
+                                <Image source={{ uri: cdn(item.imageUrl) }} style={cms.itemThumb} resizeMode="cover" />
                             ) : (
                                 <View style={[cms.itemThumb, cms.thumbPlaceholder]}>
                                     <Ionicons name="image-outline" size={24} color="#9CA3AF" />
@@ -370,7 +371,7 @@ function SchemesTab() {
                     renderItem={({ item }) => (
                         <View style={cms.itemCard}>
                             {item.imageUrl ? (
-                                <Image source={{ uri: item.imageUrl }} style={cms.itemThumb} resizeMode="cover" />
+                                <Image source={{ uri: cdn(item.imageUrl) }} style={cms.itemThumb} resizeMode="cover" />
                             ) : (
                                 <View style={[cms.itemThumb, cms.thumbPlaceholder]}>
                                     <Ionicons name="document-text-outline" size={24} color="#9CA3AF" />
@@ -497,7 +498,7 @@ function ProfessionalsTab() {
                     renderItem={({ item }) => (
                         <View style={cms.itemCard}>
                             {item.imageUrl ? (
-                                <Image source={{ uri: item.imageUrl }} style={[cms.itemThumb, { borderRadius: 30 }]} resizeMode="cover" />
+                                <Image source={{ uri: cdn(item.imageUrl) }} style={[cms.itemThumb, { borderRadius: 30 }]} resizeMode="cover" />
                             ) : (
                                 <View style={[cms.itemThumb, cms.thumbPlaceholder, { borderRadius: 30 }]}>
                                     <AppText style={{ color: "#9CA3AF", fontWeight: "700" }}>{item.name?.[0]}</AppText>

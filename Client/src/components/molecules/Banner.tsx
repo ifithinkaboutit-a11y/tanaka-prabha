@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import AppText from "../atoms/AppText";
+import { cdn } from "@/utils/cloudinaryUtils";
 
 type Banner = {
   title: string;
@@ -36,7 +37,7 @@ export default function BannerSlideshow({
 
   useEffect(() => {
     if (banners.length === 0) return;
-    
+
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, autoSlideInterval);
@@ -88,7 +89,7 @@ export default function BannerSlideshow({
           {/* Background Image */}
           {currentBanner?.imageUrl && (
             <Image
-              source={{ uri: currentBanner.imageUrl }}
+              source={{ uri: cdn(currentBanner.imageUrl) }}
               style={{
                 width: "100%",
                 height: "100%",

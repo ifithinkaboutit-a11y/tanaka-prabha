@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Image, Pressable, View } from "react-native";
 import { Scheme } from "@/services/apiService";
 import AppText from "../atoms/AppText";
+import { cdn } from "@/utils/cloudinaryUtils";
 
 type ProgramCardProps = {
   program: Scheme;
@@ -39,7 +40,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
         {/* Large Image */}
         <View style={{ position: "relative" }}>
           <Image
-            source={{ uri: program.imageUrl || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Program" }}
+            source={{ uri: cdn(program.imageUrl) || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Program" }}
             style={{ width: "100%", height: 180 }}
             resizeMode="cover"
           />

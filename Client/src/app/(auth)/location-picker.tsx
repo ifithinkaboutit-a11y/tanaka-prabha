@@ -8,7 +8,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getClosestLocation } from "../../utils/reverseGeocode";
 import {
     Alert,
-    Animated,
     BackHandler,
     Dimensions,
     Keyboard,
@@ -20,7 +19,7 @@ import {
     TextInput,
     View,
 } from "react-native";
-import MapView from "react-native-maps";
+import WebView from "react-native-webview";
 import AppText from "../../components/atoms/AppText";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 
@@ -28,35 +27,123 @@ export const unstable_settings = { headerShown: false };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const INDIA_FALLBACK_REGION = {
-    latitude: 20.5937,
-    longitude: 78.9629,
-    latitudeDelta: 8,
-    longitudeDelta: 8,
-};
-
+const INDIA_FALLBACK = { lat: 20.5937, lng: 78.9629, zoom: 5 };
 const GPS_TIMEOUT_MS = 10_000;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+// ─── Leaflet HTML ─────────────────────────────────────────────────────────────
+// Self-contained HTML page injected into WebView.
+// Uses CDN Leaflet (works offline after first cache), OSM tiles (no API key).
+// Communicates via window.ReactNativeWebView.postMessage / injectedJavaScript.
+
+function buildLeafletHTML(lat: number, lng: number, zoom: number): string {
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  html, body { margin:0; padding:0; height:100%; width:100%; background:#f0f4f0; }
+  #map { height:100%; width:100%; }
+  /* Centre crosshair pin */
+  #pin {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-100%);
+    pointer-events:none; z-index:9999;
+    display:flex; flex-direction:column; align-items:center;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  }
+  #pin-head {
+    width:26px; height:26px; border-radius:50%;
+    background:#386641; border:3px solid #fff;
+  }
+  #pin-stem {
+    width:3px; height:16px; background:#386641; margin-top:-2px;
+  }
+  #pin-dot {
+    width:10px; height:5px; border-radius:50%;
+    background:rgba(0,0,0,0.18); margin-top:2px;
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="pin">
+  <div id="pin-head"></div>
+  <div id="pin-stem"></div>
+  <div id="pin-dot"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map', {
+  center: [${lat}, ${lng}],
+  zoom: ${zoom},
+  zoomControl: true,
+  attributionControl: false
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// Throttle move events so we don't spam RN bridge
+var moveTimer = null;
+function onMapMove() {
+  clearTimeout(moveTimer);
+  moveTimer = setTimeout(function() {
+    var c = map.getCenter();
+    window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
+      JSON.stringify({ type:'move', lat: c.lat, lng: c.lng })
+    );
+  }, 250);
+}
+
+map.on('move', onMapMove);
+
+// Allow RN to fly the map to a coordinate
+window.flyTo = function(lat, lng, zoom) {
+  map.flyTo([lat, lng], zoom || map.getZoom(), { duration: 0.8 });
+};
+
+// Emit initial centre so RN knows starting coords
+onMapMove();
+</script>
+</body>
+</html>`;
+}
+
+// ─── Nominatim reverse geocode (OSM, free, no API key) ───────────────────────
+async function nominatimReverseGeocode(lat: number, lng: number): Promise<string> {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16&addressdetails=1`;
+    const res = await fetch(url, {
+        headers: { "User-Agent": "TanakPrabha/1.0" },
+    });
+    if (!res.ok) throw new Error("Nominatim error");
+    const data = await res.json();
+    // Build a human-readable address from the parts Nominatim returns
+    const a = data.address ?? {};
+    const parts: string[] = [];
+    const village = a.village || a.hamlet || a.suburb || a.town || a.city || a.county;
+    if (village) parts.push(village);
+    if (a.state_district || a.district) parts.push(a.state_district || a.district);
+    if (a.state) parts.push(a.state);
+    if (a.postcode) parts.push(a.postcode);
+    return parts.length > 0 ? parts.join(", ") : (data.display_name ?? "Unknown location");
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PermissionState = "loading" | "granted" | "denied";
-interface PinCoords { latitude: number; longitude: number; }
-interface SearchResult {
-    placeId: string;
-    description: string;
-    lat: number;
-    lng: number;
-}
+interface PinCoords { lat: number; lng: number; }
+interface SearchResult { placeId: string; description: string; lat: number; lng: number; }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function LocationPickerScreen() {
     const router = useRouter();
-    const { isForLand, fromProfile, returnTo, purpose } = useLocalSearchParams<{
+    const { isForLand, fromProfile, purpose } = useLocalSearchParams<{
         isForLand?: string;
         fromProfile?: string;
-        returnTo?: string;
         purpose?: string;
     }>();
     const isLandFlow = isForLand === "true";
@@ -74,7 +161,7 @@ export default function LocationPickerScreen() {
 
     // ── State ──────────────────────────────────────────────────────────────────
     const [permissionState, setPermissionState] = useState<PermissionState>("loading");
-    const [initialRegion, setInitialRegion] = useState<typeof INDIA_FALLBACK_REGION | null>(null);
+    const [initialPos, setInitialPos] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
     const [gpsFallbackUsed, setGpsFallbackUsed] = useState(false);
     const [gpsAccuracy, setGpsAccuracy] = useState<number>(50);
 
@@ -92,12 +179,11 @@ export default function LocationPickerScreen() {
     const [showResults, setShowResults] = useState(false);
 
     // ── Refs ───────────────────────────────────────────────────────────────────
-    const mapRef = useRef<MapView>(null);
-    const pinAnim = useRef(new Animated.Value(0)).current;
+    const webViewRef = useRef<WebView>(null);
     const geocodeRequestId = useRef(0);
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // ── Back-navigation guard (BackHandler — compatible with Expo Router) ───────
+    // ── Back-navigation guard ───────────────────────────────────────────────────
     const relevantLocationData = isLandFlow ? landLocationData : locationData;
     useEffect(() => {
         if (isProfileMode || relevantLocationData === null) return;
@@ -111,35 +197,28 @@ export default function LocationPickerScreen() {
                         text: "Go back",
                         style: "destructive",
                         onPress: () => {
-                            if (isLandFlow) {
-                                setLandLocationData(null);
-                            } else {
-                                setLocationData(null);
-                            }
+                            if (isLandFlow) setLandLocationData(null);
+                            else setLocationData(null);
                             router.back();
                         },
                     },
                 ]
             );
-            return true; // prevent default back
+            return true;
         };
         const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
         return () => sub.remove();
     }, [isProfileMode, relevantLocationData, isLandFlow, setLandLocationData, setLocationData, router]);
 
-    // ── Geocoding ──────────────────────────────────────────────────────────────
+    // ── Reverse geocode via Nominatim ──────────────────────────────────────────
     const geocodeCoords = useCallback(async (lat: number, lng: number) => {
         const requestId = ++geocodeRequestId.current;
         setGeocodeLoading(true);
         setGeocodeError(false);
         try {
-            const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+            const result = await nominatimReverseGeocode(lat, lng);
             if (requestId !== geocodeRequestId.current) return;
-            if (results.length === 0) { setAddress("Unknown location"); return; }
-            const r = results[0];
-            const parts = [r.name, r.street, r.city ?? r.name, r.subregion, r.region, r.postalCode]
-                .filter(Boolean).join(", ");
-            setAddress(parts || "Unknown location");
+            setAddress(result);
         } catch {
             if (requestId === geocodeRequestId.current) {
                 setGeocodeError(true);
@@ -158,18 +237,14 @@ export default function LocationPickerScreen() {
         (async () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
-                // ⚠️ CRITICAL: always re-check isMounted after every async boundary.
-                // The navigation guard in AuthContext can unmount this screen while
-                // the OS permission dialog is open, causing state-on-unmount crashes.
                 if (!isMounted) return;
 
                 if (status !== "granted") {
                     setPermissionState("denied");
-                    setInitialRegion(INDIA_FALLBACK_REGION);
+                    setInitialPos({ ...INDIA_FALLBACK });
                     return;
                 }
 
-                // Guard again before setting granted state
                 if (!isMounted) return;
                 setPermissionState("granted");
 
@@ -179,33 +254,28 @@ export default function LocationPickerScreen() {
                         timeoutId = setTimeout(() => reject(new Error("gps_timeout")), GPS_TIMEOUT_MS);
                     });
 
-                    const loc = await Promise.race<Location.LocationObject>([
-                        positionPromise,
-                        timeoutPromise,
-                    ]);
-
+                    const loc = await Promise.race<Location.LocationObject>([positionPromise, timeoutPromise]);
                     if (timeoutId) clearTimeout(timeoutId);
 
                     if (isMounted) {
                         const { latitude, longitude, accuracy } = loc.coords;
                         setGpsAccuracy(accuracy ?? 50);
-                        setInitialRegion({ latitude, longitude, latitudeDelta: 0.008, longitudeDelta: 0.008 });
-                        setPinCoords({ latitude, longitude });
+                        setInitialPos({ lat: latitude, lng: longitude, zoom: 15 });
+                        setPinCoords({ lat: latitude, lng: longitude });
                         geocodeCoords(latitude, longitude);
                     }
                 } catch {
                     if (timeoutId) clearTimeout(timeoutId);
                     if (isMounted) {
                         setGpsFallbackUsed(true);
-                        setInitialRegion(INDIA_FALLBACK_REGION);
+                        setInitialPos({ ...INDIA_FALLBACK });
                     }
                 }
-            } catch (error) {
-                // Failsafe catch to prevent unhandled promise rejections if permissions check throws
+            } catch {
                 if (timeoutId) clearTimeout(timeoutId);
                 if (isMounted) {
                     setPermissionState("denied");
-                    setInitialRegion(INDIA_FALLBACK_REGION);
+                    setInitialPos({ ...INDIA_FALLBACK });
                 }
             }
         })();
@@ -216,9 +286,24 @@ export default function LocationPickerScreen() {
         };
     }, [geocodeCoords]);
 
+    // ── WebView → RN message handler ───────────────────────────────────────────
+    const handleWebViewMessage = useCallback((event: any) => {
+        try {
+            const msg = JSON.parse(event.nativeEvent.data);
+            if (msg.type === "move") {
+                const { lat, lng } = msg;
+                setPinCoords({ lat, lng });
+                geocodeCoords(lat, lng);
+            }
+        } catch { /* malformed message */ }
+    }, [geocodeCoords]);
 
+    // ── Fly map to coords ──────────────────────────────────────────────────────
+    const flyTo = useCallback((lat: number, lng: number, zoom = 15) => {
+        webViewRef.current?.injectJavaScript(`flyTo(${lat}, ${lng}, ${zoom}); true;`);
+    }, []);
 
-    // ── Address Search (using expo-location forward geocode) ──────────────────
+    // ── Search (Nominatim forward geocode) ─────────────────────────────────────
     const handleSearchChange = useCallback((text: string) => {
         setSearchText(text);
         if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -227,13 +312,14 @@ export default function LocationPickerScreen() {
         searchTimeout.current = setTimeout(async () => {
             setSearchLoading(true);
             try {
-                // Use Expo's geocodeAsync for forward geocoding (no API key needed in Expo Go)
-                const results = await Location.geocodeAsync(text);
-                const mapped: SearchResult[] = results.slice(0, 5).map((r, i) => ({
-                    placeId: `${i}`,
-                    description: text,
-                    lat: r.latitude,
-                    lng: r.longitude,
+                const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&limit=5&countrycodes=in`;
+                const res = await fetch(url, { headers: { "User-Agent": "TanakPrabha/1.0" } });
+                const data: any[] = await res.json();
+                const mapped: SearchResult[] = data.map((r, i) => ({
+                    placeId: r.place_id?.toString() ?? `${i}`,
+                    description: r.display_name,
+                    lat: parseFloat(r.lat),
+                    lng: parseFloat(r.lon),
                 }));
                 setSearchResults(mapped);
                 setShowResults(mapped.length > 0);
@@ -247,36 +333,13 @@ export default function LocationPickerScreen() {
     }, []);
 
     const handleSearchSelect = useCallback((result: SearchResult) => {
-        const region = {
-            latitude: result.lat,
-            longitude: result.lng,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-        };
-        mapRef.current?.animateToRegion(region, 500);
-        setPinCoords({ latitude: result.lat, longitude: result.lng });
+        flyTo(result.lat, result.lng, 15);
+        setPinCoords({ lat: result.lat, lng: result.lng });
         geocodeCoords(result.lat, result.lng);
-        setSearchText(result.description);
+        setSearchText(result.description.split(",")[0]); // show just the first part
         setShowResults(false);
         Keyboard.dismiss();
-    }, [geocodeCoords]);
-
-    // ── Map callbacks ──────────────────────────────────────────────────────────
-    const isMapMoving = useRef(false);
-
-    const onRegionChange = useCallback(() => {
-        if (!isMapMoving.current) {
-            isMapMoving.current = true;
-            Animated.spring(pinAnim, { toValue: -12, useNativeDriver: true, tension: 120, friction: 8 }).start();
-        }
-    }, [pinAnim]);
-
-    const onRegionChangeComplete = useCallback((region: { latitude: number; longitude: number }) => {
-        isMapMoving.current = false;
-        Animated.spring(pinAnim, { toValue: 0, useNativeDriver: true, friction: 4, tension: 40 }).start();
-        setPinCoords({ latitude: region.latitude, longitude: region.longitude });
-        geocodeCoords(region.latitude, region.longitude);
-    }, [pinAnim, geocodeCoords]);
+    }, [flyTo, geocodeCoords]);
 
     // ── Confirm ────────────────────────────────────────────────────────────────
     const handleConfirm = async () => {
@@ -284,8 +347,8 @@ export default function LocationPickerScreen() {
         setSaving(true);
 
         const newLocInfo = {
-            lat: pinCoords.latitude,
-            lng: pinCoords.longitude,
+            lat: pinCoords.lat,
+            lng: pinCoords.lng,
             address: address || "Unknown location",
             accuracy: gpsAccuracy,
             setAt: new Date().toISOString(),
@@ -295,33 +358,32 @@ export default function LocationPickerScreen() {
         if (isProfileMode) {
             try {
                 if (purpose === "profile") {
-                    // ── Profile address-fill mode: geocode pin → write to store → go back ──
-                    const toSlug = (v?: string | null) =>
-                        v ? v.trim().toLowerCase().replace(/[\s-]+/g, "_") : "";
+                    const localMatch = getClosestLocation(pinCoords.lat, pinCoords.lng);
 
-                    const [results, localMatch] = await Promise.all([
-                        Location.reverseGeocodeAsync({ latitude: pinCoords.latitude, longitude: pinCoords.longitude }),
-                        Promise.resolve(getClosestLocation(pinCoords.latitude, pinCoords.longitude)),
-                    ]);
-
-                    const r = results[0] ?? {};
+                    // Also try Nominatim for more granular address parts
+                    let nominatimAddr: any = {};
+                    try {
+                        const url = `https://nominatim.openstreetmap.org/reverse?lat=${pinCoords.lat}&lon=${pinCoords.lng}&format=json&addressdetails=1`;
+                        const res = await fetch(url, { headers: { "User-Agent": "TanakPrabha/1.0" } });
+                        const data = await res.json();
+                        nominatimAddr = data.address ?? {};
+                    } catch { /* non-fatal */ }
 
                     const override: Record<string, string> = {};
-                    const mapState = toSlug(localMatch.state || (r as any).region);
-                    const mapDistrict = toSlug(localMatch.district || (r as any).subregion);
-                    const mapTehsil = toSlug(localMatch.tehsil);
-                    const mapBlock = toSlug(localMatch.block);
-                    const mapVillage = localMatch.village || (r as any).city || (r as any).name || "";
-                    const mapPinCode = (r as any).postalCode || "";
+                    const state = localMatch.state || nominatimAddr.state || "";
+                    const district = localMatch.district || nominatimAddr.state_district || nominatimAddr.county || "";
+                    const tehsil = localMatch.tehsil || nominatimAddr.county || "";
+                    const block = localMatch.block || "";
+                    const village = localMatch.village || nominatimAddr.village || nominatimAddr.town || nominatimAddr.city || "";
+                    const pinCode = nominatimAddr.postcode || "";
 
-                    if (mapState) override.state = mapState;
-                    if (mapDistrict) override.district = mapDistrict;
-                    if (mapTehsil) override.tehsil = mapTehsil;
-                    if (mapBlock) override.block = mapBlock;
-                    if (mapVillage) override.village = mapVillage;
-                    if (mapPinCode) override.pinCode = mapPinCode;
+                    if (state) override.state = state;
+                    if (district) override.district = district;
+                    if (tehsil) override.tehsil = tehsil;
+                    if (block) override.block = block;
+                    if (village) override.village = village;
+                    if (pinCode) override.pinCode = pinCode;
 
-                    // Write to store BEFORE navigating — personal-details will read it reactively
                     setProfileAddressOverride(override);
                     setSaving(false);
                     router.back();
@@ -333,22 +395,17 @@ export default function LocationPickerScreen() {
                         land_details: {
                             latitude: newLocInfo.lat,
                             longitude: newLocInfo.lng,
-                            location_address: newLocInfo.address
-                        }
+                            location_address: newLocInfo.address,
+                        },
                     });
                 } else {
-                    await userApi.updateProfile({
-                        location: newLocInfo
-                    });
+                    await userApi.updateProfile({ location: newLocInfo });
                 }
             } catch (error) {
                 console.error("Failed to update location from profile:", error);
             }
-            if (router.canGoBack()) {
-                router.back();
-            } else {
-                router.push("/(tab)/profile" as any);
-            }
+            if (router.canGoBack()) router.back();
+            else router.push("/(tab)/profile" as any);
             setSaving(false);
             return;
         }
@@ -361,62 +418,40 @@ export default function LocationPickerScreen() {
 
         if (!isLandFlow) {
             try {
-                // Run both geocode operations in parallel
-                const [results, localMatch] = await Promise.all([
-                    Location.reverseGeocodeAsync({
-                        latitude: pinCoords.latitude,
-                        longitude: pinCoords.longitude,
-                    }),
-                    Promise.resolve(getClosestLocation(pinCoords.latitude, pinCoords.longitude)),
-                ]);
+                const localMatch = getClosestLocation(pinCoords.lat, pinCoords.lng);
+
+                // Nominatim gives us structured address fields
+                let nominatimAddr: any = {};
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?lat=${pinCoords.lat}&lon=${pinCoords.lng}&format=json&addressdetails=1`;
+                    const res = await fetch(url, { headers: { "User-Agent": "TanakPrabha/1.0" } });
+                    const data = await res.json();
+                    nominatimAddr = data.address ?? {};
+                } catch { /* non-fatal */ }
 
                 const current = personalDetails;
+                const updates: Record<string, string> = {};
 
-                if (results.length > 0) {
-                    const r = results[0];
-                    // Build an update object — prefer local hierarchical DB match,
-                    // fall back to expo reverse-geocode fields, then keep existing value
-                    const updates: Record<string, string> = {};
+                const newState = localMatch.state || current.state || nominatimAddr.state || "";
+                if (newState) updates.state = newState;
 
-                    // State — expo gives r.region (e.g. "Uttar Pradesh")
-                    const newState = localMatch.state || current.state ||
-                        (r.region ?? "");
-                    if (newState) updates.state = newState;
+                const newDistrict = localMatch.district || current.district || nominatimAddr.state_district || nominatimAddr.county || "";
+                if (newDistrict) updates.district = newDistrict;
 
-                    // District — expo gives r.subregion
-                    const newDistrict = localMatch.district || current.district ||
-                        (r.subregion ?? "");
-                    if (newDistrict) updates.district = newDistrict;
+                const newTehsil = localMatch.tehsil || current.tehsil || "";
+                if (newTehsil) updates.tehsil = newTehsil;
 
-                    // Tehsil
-                    const newTehsil = localMatch.tehsil || current.tehsil || "";
-                    if (newTehsil) updates.tehsil = newTehsil;
+                const newBlock = localMatch.block || current.block || "";
+                if (newBlock) updates.block = newBlock;
 
-                    // Block
-                    const newBlock = localMatch.block || current.block || "";
-                    if (newBlock) updates.block = newBlock;
+                const newVillage = localMatch.village || current.village || nominatimAddr.village || nominatimAddr.town || nominatimAddr.city || "";
+                if (newVillage) updates.village = newVillage;
 
-                    // Village — expo gives r.city or r.name for small localities
-                    const newVillage = localMatch.village || current.village ||
-                        (r.city ?? r.name ?? "");
-                    if (newVillage) updates.village = newVillage;
+                if (!current.pinCode && nominatimAddr.postcode) {
+                    updates.pinCode = nominatimAddr.postcode;
+                }
 
-                    // PIN code — only fill if not already set
-                    if (!current.pinCode && r.postalCode) {
-                        updates.pinCode = r.postalCode;
-                    }
-
-                    if (Object.keys(updates).length > 0) {
-                        updatePersonalDetails(updates);
-                    }
-                } else if (localMatch.state) {
-                    // Fallback: only the local DB matched
-                    const updates: Record<string, string> = {};
-                    if (localMatch.state) updates.state = localMatch.state;
-                    if (localMatch.district) updates.district = localMatch.district;
-                    if (localMatch.tehsil) updates.tehsil = localMatch.tehsil;
-                    if (localMatch.block) updates.block = localMatch.block;
-                    if (localMatch.village) updates.village = localMatch.village;
+                if (Object.keys(updates).length > 0) {
                     updatePersonalDetails(updates);
                 }
             } catch { /* geocode failed at confirm time — fields stay as-is */ }
@@ -429,32 +464,32 @@ export default function LocationPickerScreen() {
     // ── Skip ───────────────────────────────────────────────────────────────────
     const handleSkip = () => {
         if (isProfileMode) {
-            if (router.canGoBack()) {
-                router.back();
-            } else {
-                router.push("/(tab)/profile" as any);
-            }
+            if (router.canGoBack()) router.back();
+            else router.push("/(tab)/profile" as any);
             return;
         }
 
         const nullData = {
             lat: 0, lng: 0, address: "", accuracy: 0,
-            setAt: new Date().toISOString(), method: "skipped" as const
+            setAt: new Date().toISOString(), method: "skipped" as const,
         };
-        if (isLandFlow) {
-            setLandLocationData(nullData);
-        } else {
-            setLocationData(nullData);
-        }
+        if (isLandFlow) setLandLocationData(nullData);
+        else setLocationData(nullData);
         router.push("/(auth)/land-details" as any);
     };
 
-    // ── Permission denied (full-screen) ────────────────────────────────────────
+    // ── My-location button ─────────────────────────────────────────────────────
+    const handleMyLocation = () => {
+        if (initialPos && !gpsFallbackUsed) {
+            flyTo(initialPos.lat, initialPos.lng, 15);
+        }
+    };
+
+    // ── Permission denied ──────────────────────────────────────────────────────
     if (permissionState === "denied") {
         return (
             <View style={styles.root}>
                 <StatusBar barStyle="dark-content" />
-                {/* Thin progress bar at the very top */}
                 <View style={styles.topProgress}>
                     <View style={[styles.topProgressFill, { width: "50%" }]} />
                 </View>
@@ -480,7 +515,7 @@ export default function LocationPickerScreen() {
     }
 
     // ── Loading ────────────────────────────────────────────────────────────────
-    if (initialRegion === null) {
+    if (initialPos === null) {
         return (
             <View style={[styles.root, styles.centred]}>
                 <StatusBar barStyle="dark-content" />
@@ -495,16 +530,20 @@ export default function LocationPickerScreen() {
         <View style={styles.root}>
             <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
-            {/* Full-screen map */}
-            <MapView
-                ref={mapRef}
+            {/* Leaflet WebView — fills the entire screen */}
+            <WebView
+                ref={webViewRef}
                 style={StyleSheet.absoluteFillObject}
-                initialRegion={initialRegion}
-                onRegionChange={onRegionChange}
-                onRegionChangeComplete={onRegionChangeComplete}
-                showsUserLocation={permissionState === "granted"}
-                showsMyLocationButton={false}
-                loadingEnabled
+                source={{ html: buildLeafletHTML(initialPos.lat, initialPos.lng, initialPos.zoom) }}
+                onMessage={handleWebViewMessage}
+                javaScriptEnabled
+                domStorageEnabled
+                originWhitelist={["*"]}
+                scrollEnabled={false}
+                // Allow cross-origin requests (needed for OSM tiles & Nominatim CDN)
+                mixedContentMode="always"
+                // Prevent WebView from stealing focus from the search TextInput
+                keyboardDisplayRequiresUserAction={false}
             />
 
             {/* ── Top overlay: progress + search ──────────────────────────── */}
@@ -515,7 +554,7 @@ export default function LocationPickerScreen() {
                 </View>
 
                 {/* Search bar */}
-                <View style={styles.searchCard}>
+                <View style={styles.searchCard} pointerEvents="auto">
                     <Ionicons name="search-outline" size={18} color="#6B7280" style={{ marginRight: 8 }} />
                     <TextInput
                         style={styles.searchInput}
@@ -538,7 +577,7 @@ export default function LocationPickerScreen() {
 
                 {/* Search results dropdown */}
                 {showResults && searchResults.length > 0 && (
-                    <View style={styles.resultsCard}>
+                    <View style={styles.resultsCard} pointerEvents="auto">
                         {searchResults.map((result, idx) => (
                             <Pressable
                                 key={result.placeId}
@@ -568,27 +607,8 @@ export default function LocationPickerScreen() {
                 </View>
             )}
 
-            {/* ── Fixed centre pin ──────────────────────────────────────────── */}
-            <Animated.View
-                style={[styles.pinContainer, { transform: [{ translateY: pinAnim }] }]}
-                pointerEvents="none"
-            >
-                <View style={styles.pinHead} />
-                <View style={styles.pinStem} />
-                <View style={styles.pinShadow} />
-            </Animated.View>
-
             {/* ── My location button ────────────────────────────────────────── */}
-            <Pressable
-                style={styles.myLocationBtn}
-                onPress={() => {
-                    if (initialRegion !== INDIA_FALLBACK_REGION) {
-                        mapRef.current?.animateToRegion(
-                            { ...initialRegion, latitudeDelta: 0.008, longitudeDelta: 0.008 }, 400
-                        );
-                    }
-                }}
-            >
+            <Pressable style={styles.myLocationBtn} onPress={handleMyLocation}>
                 <Ionicons name="locate" size={22} color="#386641" />
             </Pressable>
 
@@ -652,62 +672,35 @@ const styles = StyleSheet.create({
     // ── Top overlay ──
     topOverlay: {
         position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
+        top: 0, left: 0, right: 0,
         zIndex: 20,
         paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight ?? 24) + 8 : 56,
         paddingHorizontal: 16,
     },
     progressTrack: {
-        height: 4,
-        borderRadius: 2,
+        height: 4, borderRadius: 2,
         backgroundColor: "rgba(255,255,255,0.5)",
         marginBottom: 12,
     },
-    progressFill: {
-        height: "100%",
-        borderRadius: 2,
-        backgroundColor: "#FBBF24",
-    },
+    progressFill: { height: "100%", borderRadius: 2, backgroundColor: "#FBBF24" },
     searchCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 16,
+        flexDirection: "row", alignItems: "center",
+        backgroundColor: "#fff", borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: Platform.OS === "ios" ? 14 : 10,
-        shadowColor: "#000",
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        elevation: 6,
-        marginBottom: 6,
+        shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12,
+        elevation: 6, marginBottom: 6,
     },
-    searchInput: {
-        flex: 1,
-        fontSize: 15,
-        color: "#111827",
-        padding: 0,
-    },
+    searchInput: { flex: 1, fontSize: 15, color: "#111827", padding: 0 },
     resultsCard: {
-        backgroundColor: "#fff",
-        borderRadius: 16,
-        overflow: "hidden",
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        backgroundColor: "#fff", borderRadius: 16, overflow: "hidden",
+        shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
     resultRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
+        flexDirection: "row", alignItems: "center",
+        paddingHorizontal: 16, paddingVertical: 14,
     },
-    resultRowBorder: {
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-    },
+    resultRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
     resultText: { flex: 1, color: "#374151", lineHeight: 20 },
 
     // ── GPS fallback banner ──
@@ -715,84 +708,32 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: Platform.OS === "android" ? (StatusBar.currentHeight ?? 24) + 80 : 130,
         alignSelf: "center",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
+        flexDirection: "row", alignItems: "center", gap: 6,
         backgroundColor: "#FEF3C7",
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 20,
+        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
         zIndex: 10,
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
     },
     fallbackText: { color: "#92400E", fontSize: 12 },
 
-    // ── Centre pin ──
-    pinContainer: {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        marginLeft: -12,
-        marginTop: -42,
-        alignItems: "center",
-        zIndex: 10,
-    },
-    pinHead: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: "#386641",
-        borderWidth: 3,
-        borderColor: "#fff",
-        shadowColor: "#1a1a1a",
-        shadowOpacity: 0.35,
-        shadowRadius: 6,
-        elevation: 6,
-    },
-    pinStem: { width: 2, height: 14, backgroundColor: "#386641", marginTop: -1 },
-    pinShadow: {
-        width: 10, height: 5, borderRadius: 5,
-        backgroundColor: "rgba(0,0,0,0.15)", marginTop: 2,
-    },
-
     // ── My location button ──
     myLocationBtn: {
-        position: "absolute",
-        bottom: 230,
-        right: 16,
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: "#fff",
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 4,
+        position: "absolute", bottom: 230, right: 16,
+        width: 48, height: 48, borderRadius: 24,
+        backgroundColor: "#fff", alignItems: "center", justifyContent: "center",
+        shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
         zIndex: 10,
     },
 
     // ── Bottom sheet ──
     bottomSheet: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: "absolute", bottom: 0, left: 0, right: 0,
         backgroundColor: "#fff",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingHorizontal: 24,
-        paddingTop: 12,
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        paddingHorizontal: 24, paddingTop: 12,
         paddingBottom: Platform.OS === "ios" ? 40 : 24,
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
-        elevation: 12,
-        zIndex: 15,
+        shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20,
+        elevation: 12, zIndex: 15,
     },
     sheetHandle: {
         width: 40, height: 4, borderRadius: 2,

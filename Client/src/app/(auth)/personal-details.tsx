@@ -1,6 +1,6 @@
 // src/app/(auth)/personal-details.tsx
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -24,6 +24,8 @@ import {
 import {
   validateName,
 } from "../../utils/validation";
+import { useAuth } from "../../contexts/AuthContext";
+import { userApi } from "../../services/apiService";
 
 export const unstable_settings = {
   headerShown: false,
@@ -41,11 +43,56 @@ interface FieldErrors {
 const AuthPersonalDetailsScreen = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
+  const { user } = useAuth();
   const { personalDetails, updatePersonalDetails } = useOnboardingStore();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const genderSelectOptions = getLocalizedOptions(genderOptions, currentLanguage);
+
+  // ── Resume interrupted onboarding ─────────────────────────────────────────
+  // If the user got cut off mid-onboarding (e.g. on the map page), the store
+  // may be empty but the DB might already have partial data. Pre-populate the
+  // store from the backend so the user doesn't start completely from scratch.
+  useEffect(() => {
+    const storeIsEmpty =
+      !personalDetails.name?.trim() &&
+      !personalDetails.age &&
+      !personalDetails.gender;
+
+    if (!storeIsEmpty) return; // Store already has data — don't overwrite
+
+    // Try to load any partially-saved profile data from the backend
+    userApi.getProfile().then((res) => {
+      const profile = res.data?.user;
+      if (!profile) return;
+
+      const updates: Record<string, any> = {};
+      // Only fill fields that have real data (not placeholder values)
+      if (profile.name && profile.name !== 'New User') updates.name = profile.name;
+      if (profile.age) updates.age = profile.age;
+      if (profile.gender) updates.gender = profile.gender;
+      if (profile.fathersName) updates.fathersName = profile.fathersName;
+      if (profile.mothersName) updates.mothersName = profile.mothersName;
+      if (profile.village) updates.village = profile.village;
+      if (profile.district) updates.district = profile.district;
+      if (profile.state) updates.state = profile.state;
+      if (profile.tehsil) updates.tehsil = profile.tehsil;
+      if (profile.block) updates.block = profile.block;
+      if (profile.pinCode) updates.pinCode = profile.pinCode;
+      if (profile.aadhaarNumber) updates.aadhaar = profile.aadhaarNumber;
+      if (profile.educationalQualification) updates.educationalQualification = profile.educationalQualification;
+
+      if (Object.keys(updates).length > 0) {
+        updatePersonalDetails(updates);
+        console.log('📋 [personal-details] Restored partial onboarding data from backend:', Object.keys(updates));
+      }
+    }).catch(() => {
+      // Non-fatal — user can fill in fields manually
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const validateField = (field: keyof FieldErrors, value: string) => {
     let error: string | undefined;

@@ -43,5 +43,23 @@ const query = async (text, params) => {
     }
 };
 
-export { pool, query, supabase };
-export default { pool, query, supabase };
+// Transaction helper — ensures multi-table writes are atomic.
+// Usage: await withTransaction(async (client) => { await client.query(...); });
+const withTransaction = async (callback) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const result = await callback(client);
+        await client.query('COMMIT');
+        return result;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Transaction rolled back due to error:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
+export { pool, query, withTransaction, supabase };
+export default { pool, query, withTransaction, supabase };

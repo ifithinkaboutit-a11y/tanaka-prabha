@@ -48,10 +48,9 @@ const startServer = async () => {
                 process.exit(1);
             }, 10000);
         };
-
-        // Self-ping cron to keep Render free-tier alive (every 14 min)
         const HEALTH_URL = 'https://tanak-prabha.onrender.com/health';
         const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
+        const SUPABASE_KEEPALIVE_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
         setInterval(async () => {
             try {
                 const res = await fetch(HEALTH_URL);
@@ -59,8 +58,13 @@ const startServer = async () => {
             } catch (err) {
                 console.warn(`[keep-alive] 🏓 ping failed: ${err.message}`);
             }
-        }, PING_INTERVAL);
-        console.log(`[keep-alive] 🏓 cron started — pinging every 14m`);
+        }, SUPABASE_KEEPALIVE_INTERVAL , PING_INTERVAL);
+
+        // Fire once immediately on boot so we confirm connectivity at startup
+        pool.query('SELECT 1').then(() => {
+            console.log('[keep-alive] 💚 Supabase keep-alive cron started (every 4h)');
+        });
+
 
         // Handle shutdown signals
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

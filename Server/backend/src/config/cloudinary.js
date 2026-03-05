@@ -95,7 +95,7 @@ const generalStorage = new CloudinaryStorage({
 // File filter for images only
 const imageFileFilter = (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    
+
     if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
@@ -159,7 +159,7 @@ export const uploadGeneral = multer({
 export const deleteImage = async (imageUrlOrPublicId) => {
     try {
         let publicId = imageUrlOrPublicId;
-        
+
         // If it's a URL, extract the public_id
         if (imageUrlOrPublicId.includes('cloudinary.com')) {
             // Extract public_id from URL
@@ -173,7 +173,7 @@ export const deleteImage = async (imageUrlOrPublicId) => {
                 publicId = fileNameWithExt.replace(/\.[^/.]+$/, ''); // Remove extension
             }
         }
-        
+
         const result = await cloudinary.uploader.destroy(publicId);
         return result;
     } catch (error) {
@@ -203,17 +203,52 @@ export const uploadFromUrl = async (imageUrl, folder = 'tanak-prabha/general', o
 };
 
 /**
- * Get optimized URL for an existing Cloudinary image
- * @param {string} publicId - The public_id of the image
- * @param {object} transformations - Transformation options
- * @returns {string} - Optimized image URL
+ * Get an optimized delivery URL for an existing Cloudinary asset.
+ *
+ * Applies the three transformations that keep you within the free‑tier credit
+ * budget by maximising CDN cache reuse:
+ *   f_auto  → serves WebP/AVIF to modern browsers (40–60 % smaller than JPEG)
+ *   q_auto  → Cloudinary picks the best quality for each device
+ *   dpr_auto→ sends the right resolution for each screen density
+ *
+ * All three are SINGLE transformations, so they count as ONE unique transform
+ * in the Cloudinary credit model, not three.
+ *
+ * @param {string} publicId - The Cloudinary public_id of the asset
+ * @param {object} extra    - Any additional transformation options (e.g. width)
+ * @returns {string} - CDN‑optimized secure HTTPS URL
  */
-export const getOptimizedUrl = (publicId, transformations = {}) => {
+export const getOptimizedUrl = (publicId, extra = {}) => {
     return cloudinary.url(publicId, {
-        fetch_format: 'auto',
-        quality: 'auto',
-        ...transformations,
+        secure: true,            // always HTTPS
+        fetch_format: 'auto',    // f_auto
+        quality: 'auto',         // q_auto
+        dpr: 'auto',             // dpr_auto — correct resolution per device
+        ...extra,
     });
+};
+
+/**
+ * Inject f_auto, q_auto, dpr_auto into any raw Cloudinary URL string.
+ *
+ * Use this on the CLIENT side (or anywhere you only have the URL, not the
+ * public_id) so images already stored in the database get delivery‑optimised
+ * without re‑uploading.
+ *
+ * Before: https://res.cloudinary.com/demo/image/upload/v123/folder/img.jpg
+ * After:  https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,dpr_auto/v123/folder/img.jpg
+ *
+ * @param {string|null|undefined} url  - Raw Cloudinary URL from the database
+ * @param {string}                [extra] - Additional comma‑separated transforms, e.g. 'w_400,h_400,c_fill'
+ * @returns {string} - Optimized URL (or the original string if not a Cloudinary URL)
+ */
+export const transformCloudinaryUrl = (url, extra = '') => {
+    if (!url || !url.includes('res.cloudinary.com')) return url ?? '';
+
+    const transforms = ['f_auto', 'q_auto', 'dpr_auto', extra].filter(Boolean).join(',');
+
+    // Insert the transform chain right after '/upload/'
+    return url.replace(/\/upload\/(?!f_auto)/, `/upload/${transforms}/`);
 };
 
 export { cloudinary };
@@ -228,4 +263,6 @@ export default {
     deleteImage,
     uploadFromUrl,
     getOptimizedUrl,
+    transformCloudinaryUrl,
 };
+

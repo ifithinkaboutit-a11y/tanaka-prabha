@@ -21,7 +21,7 @@ const NOTIFICATION_TYPES = [
     { key: "announcement", label: "📢 Announcement", color: "#3B82F6" },
     { key: "info", label: "ℹ️ Info", color: "#6366F1" },
     { key: "alert", label: "⚠️ Alert", color: "#F59E0B" },
-    { key: "update", label: "🔄 Update", color: "#10B981" },
+    { key: "reminder", label: "🔔 Reminder", color: "#10B981" },
 ];
 
 // Common audience targets

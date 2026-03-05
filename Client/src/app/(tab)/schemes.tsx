@@ -19,6 +19,7 @@ import { bannersApi, schemesApi, Scheme, Banner } from "@/services/apiService";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
+import { cdn } from "@/utils/cloudinaryUtils";
 
 // Scheme Card Component
 const SchemeCard = ({
@@ -59,7 +60,7 @@ const SchemeCard = ({
       >
         <View style={{ position: "relative" }}>
           <Image
-            source={{ uri: scheme.imageUrl || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Scheme" }}
+            source={{ uri: cdn(scheme.imageUrl) || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Scheme" }}
             style={{ width: "100%", height: 140 }}
             resizeMode="cover"
           />

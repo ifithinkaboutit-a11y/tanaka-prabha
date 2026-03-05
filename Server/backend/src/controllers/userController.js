@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import LandDetails from '../models/LandDetails.js';
 import LivestockDetails from '../models/LivestockDetails.js';
-import { query } from '../config/db.js';
+import { query, withTransaction } from '../config/db.js';
 import { DISTRICT_COORDS } from '../data/districtCoords.js';
 
 /**
@@ -390,24 +390,17 @@ export const getCurrentUserProfile = async (req, res) => {
 
 /**
  * Update current user's profile (from JWT token)
+ * All writes (user + land + livestock) are wrapped in a single DB transaction.
  */
 export const updateCurrentUserProfile = async (req, res) => {
     try {
         const userId = req.user.userId;
         const userData = req.body;
 
-        const existingUser = await User.findById(userId);
-        if (!existingUser) {
-            return res.status(404).json({
-                status: 'error',
-                message: 'User not found'
-            });
-        }
-
         // Don't allow changing mobile number through profile update
         delete userData.mobile_number;
 
-        // ── Location picker integration ──────────────────────────────────────
+        // ── Location picker integration ───────────────────────────────────────────
         // App sends: { location: { lat, lng, address, accuracy, setAt, method } }
         // DB stores: latitude + longitude → GEOGRAPHY(POINT) via existing update logic,
         //            plus location_address, location_accuracy, location_set_at, location_method
@@ -431,19 +424,25 @@ export const updateCurrentUserProfile = async (req, res) => {
             delete userData.location;
         }
 
-        // ── District-centroid fallback (Dashboard Sync) ──────────────────────
+        // ── District-centroid fallback ─────────────────────────────────────────────────
         // When a user saves their district but has no GPS location yet,
         // automatically assign the district's known centroid coordinates.
         // This is the SAME logic used during seeding, so that real user data
         // immediately appears on the Frequency Dashboard, Heatmap, and
         // Farmer-Locations map without requiring GPS location to be set.
+        // We need the existing user to check current location state, but we do
+        // this BEFORE the transaction to keep the transaction window short.
+        const existingUser = await User.findById(userId);
+        if (!existingUser) {
+            return res.status(404).json({ status: 'error', message: 'User not found' });
+        }
+
         const districtToUse = userData.district || existingUser.district;
         const hasGpsLocation = !!(
             userData.latitude ||
             existingUser.latitude ||
             existingUser.longitude
         );
-
         if (districtToUse && !hasGpsLocation && !userData.latitude && !userData.longitude) {
             const coords = DISTRICT_COORDS[districtToUse];
             if (coords) {
@@ -452,7 +451,7 @@ export const updateCurrentUserProfile = async (req, res) => {
                 const jitter = () => (Math.random() - 0.5) * 0.02;
                 userData.latitude = coords[0] + jitter();
                 userData.longitude = coords[1] + jitter();
-                console.log(`📍 [userController] Auto-assigned district centroid for "${districtToUse}" → [${userData.latitude.toFixed(4)}, ${userData.longitude.toFixed(4)}]`);
+                console.log(`📍 [userController] Auto-assigned district centroid for "${districtToUse}"`);
             }
         }
 
@@ -460,33 +459,45 @@ export const updateCurrentUserProfile = async (req, res) => {
         // These belong to separate tables, not the users table
         const { land_details, livestock_details, ...userOnlyData } = userData;
 
-        const user = await User.update(userId, userOnlyData);
+        // ── All DB writes in one atomic transaction ─────────────────────────────────────
+        const { user, updatedLandDetails, updatedLivestockDetails } = await withTransaction(async (client) => {
+            // 1. Update the user row
+            const updatedUser = await User.updateWithClient(client, userId, userOnlyData);
 
-        // Update land details if provided
-        if (land_details) {
-            const existingLand = await LandDetails.findByUserId(userId);
-            if (existingLand) {
-                await LandDetails.update(userId, land_details);
+            // 2. Land details
+            let landResult = null;
+            if (land_details) {
+                const existingLand = await LandDetails.findByUserId(userId); // This find is outside the transaction, but the update/create is inside. This is fine.
+                if (existingLand) {
+                    landResult = await LandDetails.updateWithClient(client, userId, land_details);
+                } else {
+                    landResult = await LandDetails.createWithClient(client, { user_id: userId, ...land_details });
+                }
             } else {
-                await LandDetails.create({ user_id: userId, ...land_details });
+                // If land_details not provided, fetch existing for response consistency
+                landResult = await LandDetails.findByUserId(userId);
             }
-        }
 
-        // Update livestock details if provided
-        if (livestock_details) {
-            const existingLivestock = await LivestockDetails.findByUserId(userId);
-            if (existingLivestock) {
-                await LivestockDetails.update(userId, livestock_details);
+            // 3. Livestock details
+            let livestockResult = null;
+            if (livestock_details) {
+                const existingLivestock = await LivestockDetails.findByUserId(userId); // This find is outside the transaction, but the update/create is inside. This is fine.
+                if (existingLivestock) {
+                    livestockResult = await LivestockDetails.updateWithClient(client, userId, livestock_details);
+                } else {
+                    livestockResult = await LivestockDetails.createWithClient(client, { user_id: userId, ...livestock_details });
+                }
             } else {
-                await LivestockDetails.create({ user_id: userId, ...livestock_details });
+                // If livestock_details not provided, fetch existing for response consistency
+                livestockResult = await LivestockDetails.findByUserId(userId);
             }
-        }
 
-        // Fetch the updated land and livestock details for the response
-        const [updatedLandDetails, updatedLivestockDetails] = await Promise.all([
-            LandDetails.findByUserId(userId),
-            LivestockDetails.findByUserId(userId)
-        ]);
+            return {
+                user: updatedUser,
+                updatedLandDetails: landResult,
+                updatedLivestockDetails: livestockResult,
+            };
+        });
 
         res.status(200).json({
             status: 'success',

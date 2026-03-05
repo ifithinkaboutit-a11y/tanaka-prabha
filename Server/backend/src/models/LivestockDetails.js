@@ -104,7 +104,7 @@ class LivestockDetails {
      */
     static async findByLivestockType(livestockType, minCount = 1) {
         const validTypes = ['cow', 'buffalo', 'goat', 'sheep', 'pig', 'poultry', 'others'];
-        
+
         if (!validTypes.includes(livestockType)) {
             throw new Error(`Invalid livestock type. Valid types: ${validTypes.join(', ')}`);
         }
@@ -116,9 +116,48 @@ class LivestockDetails {
             WHERE ld.${livestockType} >= $1
             ORDER BY ld.${livestockType} DESC
         `;
-        
+
         const result = await query(text, [minCount]);
         return result.rows;
+    }
+    /**
+     * Create livestock details using a provided pg client (for transactions)
+     */
+    static async createWithClient(client, livestockData) {
+        const { user_id, cow, buffalo, goat, sheep, pig, poultry, others } = livestockData;
+        const text = `
+            INSERT INTO public.livestock_details (
+                user_id, cow, buffalo, goat, sheep, pig, poultry, others
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `;
+        const values = [user_id, cow || 0, buffalo || 0, goat || 0, sheep || 0, pig || 0, poultry || 0, others || 0];
+        const result = await client.query(text, values);
+        return result.rows[0];
+    }
+
+    /**
+     * Update livestock details using a provided pg client (for transactions)
+     */
+    static async updateWithClient(client, user_id, livestockData) {
+        const { cow, buffalo, goat, sheep, pig, poultry, others } = livestockData;
+        const text = `
+            UPDATE public.livestock_details
+            SET 
+                cow = COALESCE($2, cow),
+                buffalo = COALESCE($3, buffalo),
+                goat = COALESCE($4, goat),
+                sheep = COALESCE($5, sheep),
+                pig = COALESCE($6, pig),
+                poultry = COALESCE($7, poultry),
+                others = COALESCE($8, others),
+                updated_at = timezone('utc', now())
+            WHERE user_id = $1
+            RETURNING *
+        `;
+        const values = [user_id, cow, buffalo, goat, sheep, pig, poultry, others];
+        const result = await client.query(text, values);
+        return result.rows[0];
     }
 }
 

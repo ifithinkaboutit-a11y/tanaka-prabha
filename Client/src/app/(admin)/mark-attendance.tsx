@@ -2,6 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService, { ApiEvent, UserProfile } from "@/services/apiService";
+import { avatar } from "@/utils/cloudinaryUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -34,7 +35,7 @@ function UserCard({ user, onMarkPresent, marking }: {
             {/* Avatar */}
             <View style={uc.avatarRow}>
                 {user.photoUrl ? (
-                    <Image source={{ uri: user.photoUrl }} style={uc.avatar} />
+                    <Image source={{ uri: avatar(user.photoUrl) }} style={uc.avatar} />
                 ) : (
                     <View style={uc.avatarFallback}>
                         <AppText style={uc.avatarInitials}>{initials}</AppText>

@@ -23,6 +23,7 @@ import TextArea from "@/components/atoms/TextArea";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "react-native";
 import { uploadApi } from "../../services/apiService";
+import { avatar } from "@/utils/cloudinaryUtils";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -253,7 +254,7 @@ const Profile = () => {
           <Pressable onPress={handleAvatarUpload} style={s.avatarRing} disabled={avatarUploading}>
             {(localAvatarUri || profile.photoUrl) ? (
               <Image
-                source={{ uri: localAvatarUri ?? profile.photoUrl }}
+                source={{ uri: localAvatarUri ?? avatar(profile.photoUrl) }}
                 style={{ width: 86, height: 86, borderRadius: 43 }}
                 resizeMode="cover"
               />

@@ -109,6 +109,45 @@ class LandDetails {
         const result = await query(text);
         return result.rows;
     }
+    /**
+     * Create land details using a provided pg client (for transactions)
+     */
+    static async createWithClient(client, landData) {
+        const { user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address } = landData;
+        const text = `
+            INSERT INTO public.land_details (
+                user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `;
+        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address];
+        const result = await client.query(text, values);
+        return result.rows[0];
+    }
+
+    /**
+     * Update land details using a provided pg client (for transactions)
+     */
+    static async updateWithClient(client, user_id, landData) {
+        const { total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address } = landData;
+        const text = `
+            UPDATE public.land_details
+            SET 
+                total_land_area = COALESCE($2, total_land_area),
+                rabi_crop = COALESCE($3, rabi_crop),
+                kharif_crop = COALESCE($4, kharif_crop),
+                zaid_crop = COALESCE($5, zaid_crop),
+                latitude = COALESCE($6, latitude),
+                longitude = COALESCE($7, longitude),
+                location_address = COALESCE($8, location_address),
+                updated_at = timezone('utc', now())
+            WHERE user_id = $1
+            RETURNING *
+        `;
+        const values = [user_id, total_land_area, rabi_crop, kharif_crop, zaid_crop, latitude, longitude, location_address];
+        const result = await client.query(text, values);
+        return result.rows[0];
+    }
 }
 
 export default LandDetails;
