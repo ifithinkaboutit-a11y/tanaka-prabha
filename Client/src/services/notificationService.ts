@@ -8,18 +8,16 @@ import { Platform } from "react-native";
 const isExpoGo = Constants.appOwnership === "expo";
 
 // Configure how notifications are handled when app is in foreground
-// Only set if not in Expo Go (to avoid SDK 53+ errors)
-if (!isExpoGo) {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-}
+// Set unconditionally — needed for local notifications to fire in Expo Go too
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 // Notification types
 export type NotificationType = "approval" | "reminder" | "alert" | "info";
@@ -39,10 +37,11 @@ export async function registerForPushNotificationsAsync(): Promise<
 > {
   let token: string | null = null;
 
-  // Push notifications don't work in Expo Go for SDK 53+
+  // Push token registration doesn't work in Expo Go (SDK 53+)
+  // but local notifications still work fine — only skip token acquisition
   if (isExpoGo) {
     console.log(
-      "Push notifications are not supported in Expo Go. Use a development build.",
+      "📵 Push token unavailable in Expo Go — local notifications still work.",
     );
     return null;
   }

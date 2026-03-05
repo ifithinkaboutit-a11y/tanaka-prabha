@@ -16,6 +16,8 @@ import {
   resendOTP as authResendOTP,
 } from "@/utils/auth";
 import { User, tokenManager, userApi, UserProfileUpdate } from "@/services/apiService";
+import { setupPushNotifications } from "@/utils/pushNotifications";
+
 
 export interface OnboardingData {
   personalDetails?: {
@@ -110,6 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(userData);
               setIsAuthenticated(true);
               setNeedsOnboarding(userData.is_new_user === true);
+              // Register/refresh push token on each app open while authenticated
+              setupPushNotifications().catch(() => { });
             } else {
               // Backend explicitly rejected the token — clear and re-auth
               await tokenManager.clearAll();
@@ -164,16 +168,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    // Onboarding-only screens that login users must never see
+    // Screens that belong exclusively to the onboarding flow.
+    // A user with needsOnboarding=true must be allowed to stay on these.
     const onboardingScreens = ["personal-details", "location-picker", "land-details", "livestock-details", "onboarding"];
     const onCurrentOnboardingScreen = inAuthGroup && onboardingScreens.includes(segments[1] as string);
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to auth if not authenticated and not in auth screens
       router.replace("/(auth)/" as any);
+    } else if (isAuthenticated && needsOnboarding && onCurrentOnboardingScreen) {
+      // ✅ User is authenticated AND still needs onboarding AND is already on an
+      // onboarding screen — let the onboarding flow manage its own navigation.
+      // DO NOT redirect. This was the crash trigger: the guard was firing during
+      // the async location-permission dialog, unmounting the map screen mid-operation.
+      return;
     } else if (isAuthenticated && !needsOnboarding && (inAuthGroup || onCurrentOnboardingScreen)) {
-      // Authenticated user who doesn't need onboarding — skip to tabs
-      // This also blocks login users from landing on onboarding screens
+      // Authenticated user who completed onboarding — skip to tabs.
+      // Also blocks login users (needsOnboarding=false) from landing on onboarding screens.
       router.replace("/(tab)/" as any);
     }
   }, [isAuthenticated, isAdmin, segments, isLoading, needsOnboarding, router]);
@@ -207,10 +218,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await authVerifyOTP(phoneNumber, otp);
       setUser(userData);
       setIsAuthenticated(true);
-      // If the caller explicitly signals this is a login (not signup), skip onboarding
-      // regardless of what the server returns. Belt-and-suspenders alongside the server fix.
       const isNewUser = isLoginMode ? false : userData.is_new_user === true;
       setNeedsOnboarding(isNewUser);
+      // Register push token now that user is authenticated
+      setupPushNotifications().catch(() => { });
       return { user: userData, isNewUser };
     },
     []

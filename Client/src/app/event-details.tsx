@@ -73,12 +73,18 @@ const EventDetails = () => {
         }
         try {
             setRegistering(true);
-            if (!user?.mobileNumber) {
+            // The User object from the backend may carry mobile_number (snake_case)
+            // or mobileNumber (camelCase) depending on which path populated it.
+            const rawMobile = user?.mobileNumber || (user as any)?.mobile_number;
+            if (!rawMobile) {
                 Alert.alert(t("common.error"), t("events.mobileRequired"));
                 return;
             }
-            const fullName = user.name || "Unknown User";
-            await eventsApi.register(eventId!, user.mobileNumber, fullName);
+            // Strip country code prefix (+91 or 91) so we always store a clean 10-digit number.
+            // This prevents a mismatch with the mark-attendance flow which also uses 10 digits.
+            const mobile = rawMobile.replace(/^\+91/, "").replace(/^91/, "").replace(/\D/g, "").slice(-10);
+            const fullName = user?.name || "Unknown User";
+            await eventsApi.register(eventId!, mobile, fullName);
             setAlreadyRegistered(true);
             setShowModal(false);
             Alert.alert(t("events.successTitle"), t("events.successMessage"));
@@ -410,7 +416,7 @@ const EventDetails = () => {
                                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                     <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.mobile")}</AppText>
                                     <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>
-                                        {user?.mobileNumber || "—"}
+                                        {user?.mobileNumber || (user as any)?.mobile_number || "—"}
                                     </AppText>
                                 </View>
                             </View>

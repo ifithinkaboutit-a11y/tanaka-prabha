@@ -1,6 +1,5 @@
-// src/components/molecules/QuickActionGrid.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View } from "react-native";
+import { Pressable, useWindowDimensions, View } from "react-native";
 import AppText from "../atoms/AppText";
 
 type QuickActionItem = {
@@ -23,6 +22,18 @@ const defaultActions: QuickActionItem[] = [
 ];
 
 export default function QuickActionGrid({ actions = defaultActions }: QuickActionGridProps) {
+  const { width } = useWindowDimensions();
+
+  // Card = half screen minus horizontal padding (px-6 = 24px each side) and gap between cards (gap-3 = 12px)
+  const cardWidth = (width - 48 - 12) / 2;
+
+  const iconCircleSize = Math.round(cardWidth * 0.42);
+  const iconSize = Math.round(iconCircleSize * 0.55);
+  const iconRadius = Math.round(iconCircleSize * 0.38);
+  const fontSize = Math.round(cardWidth * 0.1);
+  const lineHeight = Math.round(fontSize * 1.3);
+  const padding = Math.round(cardWidth * 0.12);
+
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
   return (
@@ -36,8 +47,9 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
               className="flex-1 aspect-square active:opacity-85 active:scale-95"
             >
               <View
-                className="flex-1 bg-white rounded-[20px] items-center justify-center p-8 border border-gray-100"
+                className="flex-1 bg-white rounded-[20px] items-center justify-center border border-gray-100"
                 style={{
+                  padding,
                   shadowColor: action.iconColor ?? "#000",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.1,
@@ -47,12 +59,17 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
               >
                 {/* Icon Circle */}
                 <View
-                  className="w-[74px] h-[74px] rounded-[32px] items-center justify-center mb-4"
-                  style={{ backgroundColor: action.bgColor ?? "#F3F4F6" }}
+                  className="items-center justify-center mb-3"
+                  style={{
+                    width: iconCircleSize,
+                    height: iconCircleSize,
+                    borderRadius: iconRadius,
+                    backgroundColor: action.bgColor ?? "#F3F4F6",
+                  }}
                 >
                   <Ionicons
                     name={action.icon}
-                    size={50}
+                    size={iconSize}
                     color={action.iconColor ?? "#386641"}
                   />
                 </View>
@@ -60,7 +77,13 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                 {/* Title */}
                 <AppText
                   numberOfLines={2}
-                  style={{ textAlign: "center", color: "#1F2937", fontWeight: "700", fontSize: 17, lineHeight: 22 }}
+                  style={{
+                    textAlign: "center",
+                    color: "#1F2937",
+                    fontWeight: "700",
+                    fontSize,
+                    lineHeight,
+                  }}
                 >
                   {action.title}
                 </AppText>

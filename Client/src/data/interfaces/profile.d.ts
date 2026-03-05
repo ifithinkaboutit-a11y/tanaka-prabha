@@ -86,6 +86,7 @@ export interface LivestockDetails {
   buffalo: number;
   sheep: number;
   goat: number;
-  hen: number;
+  pig: number;
+  poultry: number;
   others: number;
 }

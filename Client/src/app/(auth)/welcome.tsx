@@ -26,7 +26,7 @@ export default function Welcome() {
     <View style={s.root}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         {/* Image Background fills top, card overlaps it */}
-        <View className="h-[55vh]">
+        <View className="h-[51vh]">
           <AuthVideoBackground />
         </View>
 

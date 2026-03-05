@@ -1,7 +1,6 @@
 // src/app/(auth)/personal-details.tsx
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -19,15 +18,11 @@ import Select from "../../components/atoms/Select";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
-  indianStates,
   genderOptions,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
-import { indianDistricts, getTehsilOptions, getBlockOptions, getVillageOptions } from "../../data/indianLocations";
 import {
-  validatePersonalDetails,
   validateName,
-  validatePinCode,
 } from "../../utils/validation";
 
 export const unstable_settings = {
@@ -41,12 +36,6 @@ interface FieldErrors {
   aadhaar?: string;
   fathersName?: string;
   mothersName?: string;
-  village?: string;
-  district?: string;
-  tehsil?: string;
-  block?: string;
-  state?: string;
-  pinCode?: string;
 }
 
 const AuthPersonalDetailsScreen = () => {
@@ -56,33 +45,7 @@ const AuthPersonalDetailsScreen = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const stateOptions = getLocalizedOptions(indianStates, currentLanguage);
   const genderSelectOptions = getLocalizedOptions(genderOptions, currentLanguage);
-
-  const districtOptions = useMemo(() => {
-    if (!personalDetails.state) return [];
-    return indianDistricts
-      .filter((d) => d.stateValue === personalDetails.state)
-      .map((d) => ({
-        value: d.value,
-        label: currentLanguage === "hi" ? d.labelHi : d.label,
-      }));
-  }, [personalDetails.state, currentLanguage]);
-
-  const tehsilOptions = useMemo(() => {
-    if (!personalDetails.state || !personalDetails.district) return [];
-    return getTehsilOptions(personalDetails.state, personalDetails.district);
-  }, [personalDetails.state, personalDetails.district]);
-
-  const blockOptions = useMemo(() => {
-    if (!personalDetails.state || !personalDetails.district || !personalDetails.tehsil) return [];
-    return getBlockOptions(personalDetails.state, personalDetails.district, personalDetails.tehsil);
-  }, [personalDetails.state, personalDetails.district, personalDetails.tehsil]);
-
-  const villageOptions = useMemo(() => {
-    if (!personalDetails.state || !personalDetails.district || !personalDetails.tehsil || !personalDetails.block) return [];
-    return getVillageOptions(personalDetails.state, personalDetails.district, personalDetails.tehsil, personalDetails.block);
-  }, [personalDetails.state, personalDetails.district, personalDetails.tehsil, personalDetails.block]);
 
   const validateField = (field: keyof FieldErrors, value: string) => {
     let error: string | undefined;
@@ -128,17 +91,6 @@ const AuthPersonalDetailsScreen = () => {
           error = nameValidation.errors[0];
         }
         break;
-      case "state":
-        if (!value) {
-          error = t("validation.stateRequired") || "State is required";
-        }
-        break;
-      case "pinCode":
-        if (value) {
-          const pinValidation = validatePinCode(value);
-          error = pinValidation.errors[0];
-        }
-        break;
     }
 
     setErrors((prev) => ({ ...prev, [field]: error }));
@@ -161,8 +113,7 @@ const AuthPersonalDetailsScreen = () => {
   const handleNext = () => {
     setTouched({
       name: true, age: true, gender: true, aadhaar: true,
-      fathersName: true, mothersName: true, village: true,
-      district: true, state: true, pinCode: true,
+      fathersName: true, mothersName: true,
     });
 
     let hasErrors = false;
@@ -184,11 +135,6 @@ const AuthPersonalDetailsScreen = () => {
       newErrors.fathersName = t("validation.fathersNameRequired") || "Father's name is required";
       hasErrors = true;
     }
-    if (!personalDetails.state) {
-      newErrors.state = t("validation.stateRequired") || "State is required";
-      hasErrors = true;
-    }
-
     if (hasErrors) {
       setErrors(newErrors);
       Alert.alert(
@@ -212,7 +158,6 @@ const AuthPersonalDetailsScreen = () => {
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&
       personalDetails.fathersName?.trim() !== "" &&
-      personalDetails.state !== "" &&
       Object.values(errors).every((e) => !e)
     );
   };
@@ -265,13 +210,6 @@ const AuthPersonalDetailsScreen = () => {
           nativeControls={false}
           allowsPictureInPicture={false}
         />
-        {/* Progress Bar — 25% complete */}
-        <View
-          className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
-          style={{ top: 50 }}
-        >
-          <View className="h-full bg-amber-400 rounded-full" style={{ width: "25%" }} />
-        </View>
       </View>
 
       {/* Content Card */}
@@ -292,7 +230,7 @@ const AuthPersonalDetailsScreen = () => {
         >
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
             {/* Full Name */}
@@ -398,160 +336,6 @@ const AuthPersonalDetailsScreen = () => {
               />
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
-
-
-
-            {/* State */}
-            <FieldWrapper>
-              <FieldLabel text={`${t("onboarding.state")} *`} />
-              <View
-                style={{
-                  borderWidth: errors.state && touched.state ? 1 : 0,
-                  borderColor: "#EF4444",
-                  borderRadius: 12,
-                }}
-              >
-                <Select
-                  value={personalDetails.state}
-                  onChange={(value) => handleFieldChange("state", value)}
-                  options={stateOptions}
-                  placeholder={t("onboarding.selectState")}
-                />
-              </View>
-              <FieldError message={touched.state ? errors.state : undefined} />
-            </FieldWrapper>
-
-            {/* District */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.district")} />
-              {districtOptions.length > 0 ? (
-                <Select
-                  value={personalDetails.district}
-                  onChange={(value) => {
-                    handleFieldChange("district", value);
-                    // Reset downstream fields
-                    updatePersonalDetails({ tehsil: "", block: "", village: "" });
-                  }}
-                  options={districtOptions}
-                  placeholder={t("onboarding.selectDistrict")}
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("district")}
-                  value={personalDetails.district}
-                  onChangeText={(text) => handleFieldChange("district", text)}
-                  onBlur={() => handleFieldBlur("district")}
-                  placeholder={
-                    personalDetails.state
-                      ? t("onboarding.enterDistrict")
-                      : t("onboarding.selectStateFirst")
-                  }
-                  placeholderTextColor="#9CA3AF"
-                  editable={!!personalDetails.state}
-                />
-              )}
-            </FieldWrapper>
-
-            {/* Tehsil */}
-            <FieldWrapper>
-              <FieldLabel text="Tehsil" />
-              {tehsilOptions.length > 0 ? (
-                <Select
-                  value={personalDetails.tehsil}
-                  onChange={(value) => {
-                    handleFieldChange("tehsil", value);
-                    updatePersonalDetails({ block: "", village: "" });
-                  }}
-                  options={tehsilOptions}
-                  placeholder="Select Tehsil"
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("tehsil")}
-                  value={personalDetails.tehsil}
-                  onChangeText={(text) => handleFieldChange("tehsil", text)}
-                  placeholder={
-                    personalDetails.district
-                      ? "Enter Tehsil"
-                      : "Select District First"
-                  }
-                  placeholderTextColor="#9CA3AF"
-                  editable={!!personalDetails.district}
-                />
-              )}
-            </FieldWrapper>
-
-            {/* Block */}
-            <FieldWrapper>
-              <FieldLabel text="Block" />
-              {blockOptions.length > 0 ? (
-                <Select
-                  value={personalDetails.block}
-                  onChange={(value) => {
-                    handleFieldChange("block", value);
-                    updatePersonalDetails({ village: "" });
-                  }}
-                  options={blockOptions}
-                  placeholder="Select Block"
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("block")}
-                  value={personalDetails.block}
-                  onChangeText={(text) => handleFieldChange("block", text)}
-                  placeholder={
-                    personalDetails.tehsil
-                      ? "Enter Block"
-                      : "Select Tehsil First"
-                  }
-                  placeholderTextColor="#9CA3AF"
-                  editable={!!personalDetails.tehsil}
-                />
-              )}
-            </FieldWrapper>
-
-            {/* Village */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.village")} />
-              {villageOptions.length > 0 ? (
-                <Select
-                  value={personalDetails.village}
-                  onChange={(value) => handleFieldChange("village", value)}
-                  options={villageOptions}
-                  placeholder="Select Village"
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("village")}
-                  value={personalDetails.village}
-                  onChangeText={(text) => handleFieldChange("village", text)}
-                  onBlur={() => handleFieldBlur("village")}
-                  placeholder={
-                    personalDetails.block
-                      ? t("onboarding.enterVillage")
-                      : "Select Block First"
-                  }
-                  placeholderTextColor="#9CA3AF"
-                  editable={!!personalDetails.block}
-                />
-              )}
-            </FieldWrapper>
-
-            {/* Pin Code */}
-            <KeyboardAvoidingView>
-              <FieldLabel text={t("onboarding.pinCode")} />
-              <TextInput
-                style={inputStyle("pinCode")}
-                value={personalDetails.pinCode}
-                onChangeText={(text) => handleFieldChange("pinCode", text)}
-                onBlur={() => handleFieldBlur("pinCode")}
-                placeholder={t("onboarding.enterPinCode")}
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                maxLength={6}
-              />
-              <FieldError message={touched.pinCode ? errors.pinCode : undefined} />
-            </KeyboardAvoidingView>
           </ScrollView>
         </KeyboardAvoidingView>
 

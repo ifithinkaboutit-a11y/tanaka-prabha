@@ -42,13 +42,20 @@ export interface User {
   date_of_birth?: string;
   fathersName?: string;
   mothersName?: string;
+  /** Snake_case aliases — returned directly from backend in some responses */
+  fathers_name?: string;
+  mothers_name?: string;
   educationalQualification?: string;
   block?: string;
   tehsil?: string;
   pinCode?: string;
   photoUrl?: string;
   isNewUser?: boolean;
+  /** Snake_case alias — returned directly from /auth/verify-otp and /auth/verify-token */
+  is_new_user?: boolean;
   is_verified?: boolean;
+  /** Snake_case alias for mobile number — returned by some backend responses */
+  mobile_number?: string;
 }
 
 export interface AuthData {
@@ -116,21 +123,37 @@ export const tokenManager = {
   async getUser(): Promise<User | null> {
     try {
       const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-      return userData ? JSON.parse(userData) : null;
+      if (!userData) return null;
+      const parsed: User = JSON.parse(userData);
+      // Normalize backend snake_case field → camelCase at read time,
+      // so existing cached sessions work without needing a fresh login.
+      if (!parsed.mobileNumber && parsed.mobile_number) {
+        parsed.mobileNumber = parsed.mobile_number;
+      }
+      return parsed;
     } catch (error) {
       console.error("Error getting user:", error);
       return null;
     }
   },
 
+
   async setUser(user: User): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+      // Normalize snake_case mobile_number → camelCase mobileNumber so every
+      // consumer of user.mobileNumber gets the right value regardless of which
+      // auth route returned the user object.
+      const normalized: User = {
+        ...user,
+        mobileNumber: user.mobileNumber || user.mobile_number,
+      };
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(normalized));
     } catch (error) {
       console.error("Error setting user:", error);
       throw error;
     }
   },
+
 
   async removeUser(): Promise<void> {
     try {
@@ -382,6 +405,22 @@ export const userApi = {
     }
     return response as unknown as ApiResponse<{ user: UserProfile }>;
   },
+
+  /**
+   * Look up a user by their mobile number (for admin mark-attendance flow)
+   */
+  async lookupByMobile(mobile_number: string): Promise<UserProfile | null> {
+    try {
+      const response = await fetchWithAuth<{ users: ApiUserProfile[] }>(
+        `/users?search=${encodeURIComponent(mobile_number)}&limit=1`
+      );
+      const users = response.data?.users || [];
+      if (users.length === 0) return null;
+      return convertApiUserToUserProfile(users[0]);
+    } catch {
+      return null;
+    }
+  },
 };
 
 // ============================================================
@@ -446,6 +485,36 @@ export const uploadApi = {
     const data = await response.json();
     if (!response.ok || data.status !== 'success') {
       throw new Error(data.message || 'Failed to upload photo');
+    }
+    return data.data.url as string;
+  },
+
+  /**
+   * Upload an event hero image to Cloudinary via the backend.
+   * @param imageUri - Local file URI from expo-image-picker
+   * @returns Cloudinary URL of the uploaded image
+   */
+  async uploadEventImage(imageUri: string): Promise<string> {
+    const token = await tokenManager.getToken();
+    const url = `${API_BASE_URL}/upload/general`;
+
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() ?? 'event.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    formData.append('file', { uri: imageUri, name: filename, type } as any);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') {
+      throw new Error(data.message || 'Failed to upload event image');
     }
     return data.data.url as string;
   },
@@ -783,8 +852,8 @@ export const eventsApi = {
 
   getAttendees: async (eventId: string): Promise<any[]> => {
     try {
-      const response = await fetchWithAuth<{ attendees: any[] }>(`/events/${eventId}/attendees`);
-      return response.data?.attendees || [];
+      const response = await fetchWithAuth<{ participants: any[] }>(`/events/${eventId}/participants`);
+      return response.data?.participants || [];
     } catch (error) {
       console.error("Error fetching attendees:", error);
       return [];
@@ -798,6 +867,8 @@ export const eventsApi = {
     });
   },
 };
+
+
 
 // ============================================================
 // Schemes API
@@ -1444,5 +1515,7 @@ export default {
   notifications: notificationsApi,
   appointments: appointmentsApi,
   analytics: analyticsApi,
+  upload: uploadApi,
   tokenManager,
 };
+

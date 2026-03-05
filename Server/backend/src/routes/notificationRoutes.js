@@ -5,6 +5,7 @@ import {
     createNotification,
     sendBulkNotification,
     broadcastNotification,
+    registerPushToken,
     markAsRead,
     markAllAsRead,
     markMyNotificationsAsRead,
@@ -13,6 +14,13 @@ import {
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @route   POST /api/notifications/register-token
+ * @desc    Register device Expo push token for the authenticated user
+ * @access  Protected
+ */
+router.post('/register-token', authMiddleware, registerPushToken);
 
 /**
  * @route   GET /api/notifications/my

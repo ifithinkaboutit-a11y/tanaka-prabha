@@ -23,7 +23,8 @@ const ANIMAL_DATA = [
   { key: "buffalo" as const, emoji: "🐃", color: "#E0E7FF", iconColor: "#4F46E5" },
   { key: "sheep" as const, emoji: "🐑", color: "#FCE7F3", iconColor: "#DB2777" },
   { key: "goat" as const, emoji: "🐐", color: "#DCFCE7", iconColor: "#16A34A" },
-  { key: "hen" as const, emoji: "🐔", color: "#FEF9C3", iconColor: "#CA8A04" },
+  { key: "pig" as const, emoji: "🐷", color: "#FFE4E6", iconColor: "#E11D48" },
+  { key: "poultry" as const, emoji: "🐔", color: "#FEF9C3", iconColor: "#CA8A04" },
   { key: "others" as const, emoji: "🐾", color: "#F3F4F6", iconColor: "#6B7280" },
 ];
 
@@ -37,45 +38,48 @@ const AnimalCounter = ({
   isLast = false,
 }: {
   label: string;
-  value: number;
+  value: number | undefined;
   onChange: (v: number) => void;
   emoji: string;
   bgColor: string;
   isLast?: boolean;
-}) => (
-  <View style={[ac.container, !isLast && ac.borderBottom]}>
-    <View style={ac.left}>
-      <View style={[ac.emojiBox, { backgroundColor: bgColor }]}>
-        <Text style={ac.emoji}>{emoji}</Text>
+}) => {
+  const safeValue = value ?? 0;
+  return (
+    <View style={[ac.container, !isLast && ac.borderBottom]}>
+      <View style={ac.left}>
+        <View style={[ac.emojiBox, { backgroundColor: bgColor }]}>
+          <Text style={ac.emoji}>{emoji}</Text>
+        </View>
+        <Text style={ac.label}>{label}</Text>
       </View>
-      <Text style={ac.label}>{label}</Text>
-    </View>
 
-    <View style={ac.right}>
-      <Pressable
-        onPress={() => onChange(Math.max(0, value - 1))}
-        style={({ pressed }) => [ac.btn, ac.btnMinus, pressed && { opacity: 0.7 }]}
-      >
-        <Ionicons name="remove" size={18} color="#6B7280" />
-      </Pressable>
-      <TextInput
-        style={ac.input}
-        value={value.toString()}
-        onChangeText={(t) => onChange(parseInt(t) || 0)}
-        keyboardType="numeric"
-        textAlign="center"
-        placeholder="0"
-        placeholderTextColor="#C4C9D4"
-      />
-      <Pressable
-        onPress={() => onChange(value + 1)}
-        style={({ pressed }) => [ac.btn, ac.btnPlus, pressed && { opacity: 0.7 }]}
-      >
-        <Ionicons name="add" size={18} color="#EA580C" />
-      </Pressable>
+      <View style={ac.right}>
+        <Pressable
+          onPress={() => onChange(Math.max(0, safeValue - 1))}
+          style={({ pressed }) => [ac.btn, ac.btnMinus, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="remove" size={18} color="#6B7280" />
+        </Pressable>
+        <TextInput
+          style={ac.input}
+          value={safeValue.toString()}
+          onChangeText={(t) => onChange(parseInt(t) || 0)}
+          keyboardType="numeric"
+          textAlign="center"
+          placeholder="0"
+          placeholderTextColor="#C4C9D4"
+        />
+        <Pressable
+          onPress={() => onChange(safeValue + 1)}
+          style={({ pressed }) => [ac.btn, ac.btnPlus, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="add" size={18} color="#EA580C" />
+        </Pressable>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const ac = StyleSheet.create({
   container: {

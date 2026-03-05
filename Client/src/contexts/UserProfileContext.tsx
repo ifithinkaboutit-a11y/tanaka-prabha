@@ -78,7 +78,7 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
             prev ?? {
               id: cachedUser.id,
               name: cachedUser.name || "",
-              mobileNumber: cachedUser.mobile_number || "",
+              mobileNumber: cachedUser.mobileNumber || "",
               village: cachedUser.village,
               district: cachedUser.district,
               state: cachedUser.state,
@@ -159,7 +159,8 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
         buffalo: data.buffalo,
         sheep: data.sheep,
         goat: data.goat,
-        poultry: data.hen,
+        pig: data.pig,
+        poultry: data.poultry,
         others: data.others,
       },
     });

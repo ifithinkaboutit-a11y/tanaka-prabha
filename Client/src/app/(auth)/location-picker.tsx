@@ -158,6 +158,9 @@ export default function LocationPickerScreen() {
         (async () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
+                // ⚠️ CRITICAL: always re-check isMounted after every async boundary.
+                // The navigation guard in AuthContext can unmount this screen while
+                // the OS permission dialog is open, causing state-on-unmount crashes.
                 if (!isMounted) return;
 
                 if (status !== "granted") {
@@ -165,6 +168,9 @@ export default function LocationPickerScreen() {
                     setInitialRegion(INDIA_FALLBACK_REGION);
                     return;
                 }
+
+                // Guard again before setting granted state
+                if (!isMounted) return;
                 setPermissionState("granted");
 
                 try {
@@ -498,6 +504,7 @@ export default function LocationPickerScreen() {
                 onRegionChangeComplete={onRegionChangeComplete}
                 showsUserLocation={permissionState === "granted"}
                 showsMyLocationButton={false}
+                loadingEnabled
             />
 
             {/* ── Top overlay: progress + search ──────────────────────────── */}

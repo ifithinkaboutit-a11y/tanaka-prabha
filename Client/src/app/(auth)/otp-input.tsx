@@ -1,6 +1,5 @@
 // src/app/(auth)/otp-input.tsx
 import AppText from "@/components/atoms/AppText";
-import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,9 +10,12 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -30,11 +32,10 @@ const OTPInput = () => {
   const [canResend, setCanResend] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
   const router = useRouter();
-  const { phoneNumber, mode } = useLocalSearchParams<{
-    phoneNumber: string;
-    mode?: string;
-  }>();
+  const { phoneNumber, mode } = useLocalSearchParams<{ phoneNumber: string; mode?: string }>();
   const { t } = useTranslation();
   const { signIn, resendOTP } = useAuth();
   const isLogin = mode === "login";
@@ -44,30 +45,35 @@ const OTPInput = () => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
     }
+    setCanResend(true);
   }, [countdown]);
 
-  // Focus first input on mount
+  // Auto-focus first box
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 100);
-    return () => clearTimeout(timer); // FIX: clean up focus timer to prevent memory leak
+    const timer = setTimeout(() => inputRefs.current[0]?.focus(), 150);
+    return () => clearTimeout(timer);
   }, []);
+
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 7, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -7, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 45, useNativeDriver: true }),
+    ]).start();
+  };
 
   const handleOtpChange = (value: string, index: number) => {
     if (value && !/^\d+$/.test(value)) return;
-
     const newOtp = [...otp];
 
     if (value.length > 1) {
+      // Paste handling
       const digits = value.slice(0, OTP_LENGTH - index).split("");
       digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) {
-          newOtp[index + i] = digit;
-        }
+        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
       });
       setOtp(newOtp);
       const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
@@ -77,10 +83,8 @@ const OTPInput = () => {
 
     newOtp[index] = value;
     setOtp(newOtp);
-
-    if (value && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (validationError) setValidationError(null);
+    if (value && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyPress = (e: any, index: number) => {
@@ -91,10 +95,10 @@ const OTPInput = () => {
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join("");
-
     const otpValidation = validateOTP(otpString);
     if (!otpValidation.isValid) {
       setValidationError(otpValidation.errors[0]);
+      shake();
       Alert.alert(t("common.error") || "Error", otpValidation.errors[0]);
       return;
     }
@@ -102,6 +106,7 @@ const OTPInput = () => {
     if (!phoneNumber) {
       const error = "Phone number not found. Please go back and try again.";
       setValidationError(error);
+      shake();
       Alert.alert(t("common.error") || "Error", error);
       return;
     }
@@ -110,6 +115,7 @@ const OTPInput = () => {
     const phoneValidation = validateMobileNumber(cleanedNumber);
     if (!phoneValidation.isValid) {
       setValidationError(phoneValidation.errors[0]);
+      shake();
       Alert.alert(t("common.error") || "Error", phoneValidation.errors[0]);
       return;
     }
@@ -118,8 +124,8 @@ const OTPInput = () => {
     setLoading(true);
     try {
       const { isNewUser: serverIsNewUser } = await signIn(phoneNumber, otpString, mode === "login");
-      // If mode is 'login', bypass onboarding regardless of server response
       const isNewUser = mode === "login" ? false : serverIsNewUser;
+
       if (isNewUser) {
         router.replace("/(auth)/personal-details");
       } else {
@@ -128,6 +134,7 @@ const OTPInput = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid OTP";
       setValidationError(errorMessage);
+      shake();
       Alert.alert(t("common.error") || "Error", errorMessage);
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
@@ -141,7 +148,6 @@ const OTPInput = () => {
       Alert.alert("Error", "Phone number not found");
       return;
     }
-
     try {
       await resendOTP(phoneNumber);
       setCountdown(30);
@@ -154,134 +160,154 @@ const OTPInput = () => {
     }
   };
 
-  const handleChangeNumber = () => {
-    router.back();
-  };
-
+  // "98765 *****"
   const maskedPhone = phoneNumber
     ? `+91 ${phoneNumber.replace(/^\+91/, "").slice(0, 5)} *****`
     : "";
 
   const filledCount = otp.filter(Boolean).length;
+  const isComplete = filledCount === OTP_LENGTH;
 
   return (
     <KeyboardAvoidingView
       style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="h-[97vh]"
     >
-      {/* Image Background */}
-      <View className="h-[45vh]">
-        <AuthVideoBackground />
-      </View>
-
-      {/* FIX: ScrollView should only control scroll behavior.
-          Layout/visual styles (borderRadius, padding, shadow, alignItems)
-          must live on a child View, not on ScrollView's style prop. */}
+      <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
       <ScrollView
         bounces={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        style={s.scrollView}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={{ flexGrow: 1 }}
       >
-        <View style={s.card}>
-          {/* Icon + Title */}
-          <View style={s.iconCircle}>
-            <Ionicons name="shield-checkmark-outline" size={28} color="#386641" />
-          </View>
+        {/* Video — same height as phone-input */}
+        <View className="h-[52vh]">
+          <AuthVideoBackground />
+        </View>
 
-          <AppText variant="h2" style={s.title}>
-            {t("auth.enterOTP")}
+        {/* Card — mirrors phone-input card exactly */}
+        <View style={s.card}>
+          {/* Title — same as cardLabel in phone-input */}
+          <AppText variant="h2" style={s.cardLabel}>
+            {t("auth.enterOTP") || "Verify Number"}
           </AppText>
 
-          <Text style={s.subtitle}>
-            {t("auth.otpSentTo")}
+          {/* Subtitle — same videoSubtitle style */}
+          <Text style={s.videoSubtitle}>
+            {t("auth.otpSentTo") || "OTP sent to"}{" "}
+            <Text style={s.phoneHighlight}>{maskedPhone}</Text>
           </Text>
-          <Text style={s.phoneDisplay}>{maskedPhone}</Text>
 
-          {/* OTP Input Fields */}
-          <View style={s.otpRow}>
+          {/* Input label — same as phone-input */}
+          <Text style={s.inputLabel}>Enter 6-digit OTP</Text>
+
+          {/* OTP boxes — animated, shake on error */}
+          <Animated.View
+            style={[s.otpRow, { transform: [{ translateX: shakeAnim }] }]}
+          >
             {otp.map((digit, index) => (
-              <TextInput
+              <View
                 key={index}
-                ref={(ref) => { inputRefs.current[index] = ref; }}
                 style={[
-                  s.otpBox,
-                  digit ? s.otpBoxFilled : null,
-                  validationError ? s.otpBoxError : null,
+                  s.otpBoxOuter,
+                  digit ? s.otpBoxOuterFilled : null,
+                  validationError ? s.otpBoxOuterError : null,
                 ]}
-                value={digit}
-                onChangeText={(value) => {
-                  handleOtpChange(value, index);
-                  if (validationError) setValidationError(null);
-                }}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-                editable={!loading}
-              />
+              >
+                <TextInput
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
+                  style={[
+                    s.otpBox,
+                    digit ? s.otpBoxFilled : null,
+                    validationError ? s.otpBoxError : null,
+                  ]}
+                  value={digit}
+                  onChangeText={(value) => {
+                    handleOtpChange(value, index);
+                    if (validationError) setValidationError(null);
+                  }}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  keyboardType="number-pad"
+                  maxLength={OTP_LENGTH}
+                  selectTextOnFocus
+                  editable={!loading}
+                />
+              </View>
             ))}
+          </Animated.View>
+
+          {/* Helper / error — mirrors phone-input helperRow */}
+          <View style={s.helperRow}>
+            {validationError ? (
+              <View style={s.errorRow}>
+                <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+                <Text style={s.errorText}>{validationError}</Text>
+              </View>
+            ) : (
+              <Text style={s.charCount}>
+                {filledCount}/{OTP_LENGTH} digits entered
+                {!canResend && (
+                  <Text style={s.countdownInline}>{`  ·  Expires in ${countdown}s`}</Text>
+                )}
+              </Text>
+            )}
           </View>
 
-          {/* Validation Error */}
-          {validationError ? (
-            <View style={s.errorRow}>
-              <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
-              <Text style={s.errorText}>{validationError}</Text>
-            </View>
-          ) : (
-            <View style={{ marginBottom: 16 }} />
-          )}
-
-          {/* Verify Button */}
-          <Button
-            variant="primary"
+          {/* Verify CTA — same as phone-input ctaBtn */}
+          <Pressable
             onPress={handleVerifyOTP}
-            disabled={loading || filledCount !== OTP_LENGTH}
-            style={s.verifyBtn}
+            disabled={!isComplete || loading}
+            style={[
+              s.ctaBtn,
+              (!isComplete || loading) && s.ctaBtnDisabled,
+            ]}
           >
             {loading ? (
               <View style={s.loadingRow}>
                 <ActivityIndicator color="white" size="small" />
-                <Text style={[s.btnText, { marginLeft: 8 }]}>Verifying...</Text>
+                <Text style={[s.ctaText, { marginLeft: 8 }]}>Verifying…</Text>
               </View>
             ) : (
-              <Text style={s.btnText}>{t("auth.verifyOTP")}</Text>
+              <View style={s.loadingRow}>
+                <Text style={s.ctaText}>{t("auth.verifyOTP") || "Verify OTP"}</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
+              </View>
             )}
-          </Button>
+          </Pressable>
 
-          {/* Resend + Change Number */}
+          {/* Resend + Change number — mirrors switchRow */}
           <View style={s.footerRow}>
             {canResend ? (
-              <TouchableOpacity onPress={handleResendOTP} style={s.footerBtn}>
+              <TouchableOpacity
+                onPress={handleResendOTP}
+                style={s.footerBtn}
+                activeOpacity={0.65}
+              >
                 <Ionicons name="refresh-outline" size={14} color="#386641" />
-                <Text style={s.resendLink}> {t("auth.resendOTP")}</Text>
+                <Text style={s.switchLink}>{" "}{t("auth.resendOTP") || "Resend OTP"}</Text>
               </TouchableOpacity>
             ) : (
-              <Text style={s.resendTimer}>
-                {t("auth.resendOtpIn")} {countdown}s
+              <Text style={s.charCount}>
+                Resend in <Text style={s.countdownInline}>{countdown}s</Text>
               </Text>
             )}
 
-            <View style={s.dot} />
+            <View style={s.footerDot} />
 
-            <TouchableOpacity onPress={handleChangeNumber} style={s.footerBtn}>
-              <Ionicons name="arrow-back-outline" size={14} color="#616161" />
-              <Text style={s.changeNumber}> {t("auth.changeNumber")}</Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={s.footerBtn}
+              activeOpacity={0.65}
+            >
+              <Ionicons name="arrow-back-outline" size={14} color="#6B7280" />
+              <Text style={s.switchText}>{" "}{t("auth.changeNumber") || "Change Number"}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Mode badge */}
-          <View style={s.modeBadge}>
-            <Ionicons
-              name={isLogin ? "log-in-outline" : "person-add-outline"}
-              size={12}
-              color={isLogin ? "#2563EB" : "#7C3AED"}
-            />
-            <Text style={[s.modeBadgeText, { color: isLogin ? "#2563EB" : "#7C3AED" }]}>
-              {isLogin ? "Logging in to existing account" : "Creating new account"}
-            </Text>
+          {/* Security note — mirrors phone-input securityRow */}
+          <View style={s.securityRow}>
+            <Ionicons name="lock-closed-outline" size={12} color="#9CA3AF" />
+            <Text style={s.securityText}>OTP is valid for 10 minutes only</Text>
           </View>
         </View>
       </ScrollView>
@@ -292,168 +318,148 @@ const OTPInput = () => {
 export default OTPInput;
 
 const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "#FFFFFF",
-  },
-  // FIX: ScrollView gets only flex/positional styles
-  scrollView: {
-    flex: 1,
-    marginTop: -32,
-  },
-  // FIX: flexGrow + justifyContent ensure card sits at bottom when content is short
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "flex-end",
-  },
-  // FIX: visual/layout styles moved here, onto a real View
+  root: { flex: 1, backgroundColor: "#fff" },
+
+  // ── Card — identical to phone-input ──
   card: {
-    backgroundColor: "#FFFFFF",
+    flex: 1,
+    backgroundColor: "#fff",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    padding: 28,
-    paddingBottom: 40,
-    alignItems: "center",
+    marginTop: -32,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: Platform.OS === "ios" ? 48 : 32,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: -6 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowRadius: 16,
+    elevation: 16,
   },
-  iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "rgba(56, 102, 65, 0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(56, 102, 65, 0.2)",
+
+  // ── Typography — identical to phone-input ──
+  cardLabel: {
+    color: "#374151",
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 2,
+    letterSpacing: 0.1,
+    textTransform: "uppercase",
   },
-  title: {
-    textAlign: "center",
-    color: "#111827",
-    fontWeight: "700",
-    fontSize: 24,
-    marginBottom: 6,
-  },
-  subtitle: {
-    textAlign: "center",
+  videoSubtitle: {
     color: "#6B7280",
     fontSize: 14,
-    marginBottom: 2,
+    lineHeight: 20,
+    marginBottom: 20,
   },
-  phoneDisplay: {
-    textAlign: "center",
-    color: "#111827",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 28,
-    letterSpacing: 0.5,
+  phoneHighlight: {
+    color: "#386641",
+    fontWeight: "700",
   },
-  // FIX: replaced `gap` with marginHorizontal on otpBox for broader RN compatibility
+  inputLabel: {
+    color: "#374151",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 10,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
+
+  // ── OTP boxes ──
   otpRow: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 12,
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 10,
   },
-  otpBox: {
-    width: 46,
-    height: 56,
-    borderWidth: 2,
+  otpBoxOuter: {
+    flex: 1,
     borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+  },
+  otpBoxOuterFilled: { borderColor: "#386641" },
+  otpBoxOuterError: { borderColor: "#EF4444" },
+  otpBox: {
+    height: 58,
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    borderColor: "#E5E7EB",
     backgroundColor: "#F9FAFB",
     color: "#111827",
-    marginHorizontal: 5, // FIX: replaces `gap: 10` on parent
   },
   otpBoxFilled: {
-    borderColor: "#386641",
-    backgroundColor: "rgba(56, 102, 65, 0.06)",
+    backgroundColor: "rgba(56,102,65,0.07)",
     color: "#386641",
   },
   otpBoxError: {
-    borderColor: "#EF4444",
-    backgroundColor: "rgba(239, 68, 68, 0.05)",
-  },
-  errorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  errorText: {
+    backgroundColor: "rgba(239,68,68,0.05)",
     color: "#EF4444",
-    fontSize: 13,
-    textAlign: "center",
-    flex: 1,
-    marginLeft: 4, // FIX: replaces `gap: 4` on parent
   },
-  verifyBtn: {
+
+  // ── Progress bar ──
+  progressTrack: {
     width: "100%",
-    paddingVertical: 16,
-    marginBottom: 20,
-    borderRadius: 14,
+    height: 3,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 2,
+    marginBottom: 8,
+    overflow: "hidden",
   },
-  loadingRow: {
-    flexDirection: "row",
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+
+  // ── Helper — identical to phone-input ──
+  helperRow: { minHeight: 22, marginTop: 0, marginBottom: 18 },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  errorText: { color: "#EF4444", fontSize: 13, flex: 1 },
+  charCount: { color: "#9CA3AF", fontSize: 12 },
+  countdownInline: { color: "#386641", fontWeight: "600" },
+
+  // ── CTA button — identical to phone-input ──
+  ctaBtn: {
+    width: "100%",
+    backgroundColor: "#386641",
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: "center",
-    justifyContent: "center",
+    marginBottom: 18,
+    shadowColor: "#386641",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  btnText: {
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontWeight: "700",
-    fontSize: 16,
-    letterSpacing: 0.3,
+  ctaBtnDisabled: {
+    backgroundColor: "#D1D5DB",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  // FIX: replaced `gap` with margins on children for broader RN compatibility
+  loadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  ctaText: { color: "#fff", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
+
+  // ── Footer — mirrors phone-input switchRow ──
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    gap: 10,
   },
-  footerBtn: {
+  footerBtn: { flexDirection: "row", alignItems: "center" },
+  footerDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: "#D1D5DB" },
+  switchLink: { color: "#386641", fontWeight: "700", fontSize: 14 },
+  switchText: { color: "#6B7280", fontSize: 13 },
+
+  // ── Security — identical to phone-input ──
+  securityRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 6, // FIX: replaces `gap: 12` on parent
+    justifyContent: "center",
+    gap: 5,
   },
-  resendLink: {
-    color: "#386641",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  resendTimer: {
-    color: "#9CA3AF",
-    fontSize: 13,
-    marginHorizontal: 6, // FIX: consistent spacing alongside footerBtn margins
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#D1D5DB",
-  },
-  changeNumber: {
-    color: "#6B7280",
-    fontSize: 13,
-  },
-  modeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-  },
-  modeBadgeText: {
-    fontSize: 11,
-    fontWeight: "500",
-    marginLeft: 5, // FIX: replaces `gap: 5` on parent
-  },
+  securityText: { color: "#9CA3AF", fontSize: 11 },
 });

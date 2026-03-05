@@ -1,7 +1,7 @@
 // src/app/(tab)/profile.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,6 @@ import {
   Text,
   View,
 } from "react-native";
-import AppText from "../../components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import Avatar from "../../components/atoms/Avatar";
 import { useTranslation } from "../../i18n";
@@ -110,6 +109,15 @@ const Profile = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
 
+  // ── Auto-refresh on tab focus ──────────────────────────────────────────────
+  // Every time the user navigates to the profile tab, silently re-fetch from
+  // the server. The existing cached data stays visible so there's no blank flash.
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfile();
+    }, [refreshProfile])
+  );
+
   const handleAvatarUpload = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
@@ -182,6 +190,7 @@ const Profile = () => {
     (profile?.livestockDetails?.buffalo || 0) +
     (profile?.livestockDetails?.goat || 0) +
     (profile?.livestockDetails?.sheep || 0) +
+    (profile?.livestockDetails?.pig || 0) +
     (profile?.livestockDetails?.poultry || 0) +
     (profile?.livestockDetails?.others || 0);
 
@@ -425,9 +434,16 @@ const Profile = () => {
                 <Text style={s.livestockLabel}>{t("livestockDetails.sheep")}</Text>
               </View>
             ) : null}
+            {profile.livestockDetails?.pig ? (
+              <View style={s.livestockItem}>
+                <Text style={s.livestockEmoji}>🐷</Text>
+                <Text style={s.livestockCount}>{profile.livestockDetails.pig}</Text>
+                <Text style={s.livestockLabel}>Pig</Text>
+              </View>
+            ) : null}
             {profile.livestockDetails?.poultry ? (
               <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐓</Text>
+                <Text style={s.livestockEmoji}>🐔</Text>
                 <Text style={s.livestockCount}>{profile.livestockDetails.poultry}</Text>
                 <Text style={s.livestockLabel}>{t("livestockDetails.hen")}</Text>
               </View>

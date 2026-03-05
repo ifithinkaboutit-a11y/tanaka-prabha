@@ -217,6 +217,48 @@ class User {
         const result = await query(text);
         return result.rows;
     }
+
+    /**
+     * Save Expo push token for a user (upsert)
+     */
+    static async savePushToken(user_id, push_token, platform = 'unknown') {
+        const text = `
+            UPDATE public.users
+            SET expo_push_token = $1, push_token_platform = $2, updated_at = timezone('utc', now())
+            WHERE id = $3
+            RETURNING id, expo_push_token
+        `;
+        const result = await query(text, [push_token, platform, user_id]);
+        return result.rows[0];
+    }
+
+    /**
+     * Get all users' push tokens (for broadcast)
+     */
+    static async getAllPushTokens() {
+        const text = `
+            SELECT id, expo_push_token, name
+            FROM public.users
+            WHERE expo_push_token IS NOT NULL AND expo_push_token != ''
+        `;
+        const result = await query(text);
+        return result.rows;
+    }
+
+    /**
+     * Get push tokens for users in a specific district
+     */
+    static async getPushTokensByDistrict(district) {
+        const text = `
+            SELECT id, expo_push_token, name
+            FROM public.users
+            WHERE expo_push_token IS NOT NULL AND expo_push_token != ''
+            AND district = $1
+        `;
+        const result = await query(text, [district]);
+        return result.rows;
+    }
 }
 
 export default User;
+

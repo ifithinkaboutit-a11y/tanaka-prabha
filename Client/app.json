@@ -1,40 +1,34 @@
 {
   "expo": {
-    "name": "tanak-prabha",
+    "name": "Tanak Prabha",
     "slug": "tanak-prabha",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "tanakprabha",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.tanakprabha.app",
-      "config": {
-        "googleMapsApiKey": ""
-      }
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./src/assets/images/android-icon-foreground.png",
         "backgroundImage": "./src/assets/images/android-icon-background.png",
-        "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
+        "monochromeImage": "./src/assets/images/android-icon-monochrome.png",
+        "backgroundColor": "#1B4332"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "package": "com.tanakprabha.app",
-      "config": {
-        "googleMaps": {
-          "apiKey": ""
-        }
-      }
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./src/assets/images/favicon.png"
+      "favicon": "./src/assets/images/icon.png"
     },
     "plugins": [
       "./plugins/withAndroidPackagingOptions",
@@ -51,17 +45,22 @@
         "expo-splash-screen",
         {
           "image": "./src/assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 250,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#1B4332",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1B4332"
           }
         }
       ],
       "expo-video",
       [
-        "expo-notifications"
+        "expo-notifications",
+        {
+          "icon": "./src/assets/images/notification-icon.png",
+          "color": "#1B4332",
+          "defaultChannel": "default"
+        }
       ]
     ],
     "experiments": {
@@ -71,9 +70,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "44ac0997-c234-4a0c-82d4-c6eaa4052709"
+        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
       }
     },
-    "owner": "cr_8"
+    "owner": "cr-8"
   }
 }

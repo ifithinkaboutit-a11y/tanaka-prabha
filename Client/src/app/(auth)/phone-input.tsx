@@ -1,19 +1,21 @@
 // src/app/(auth)/phone-input.tsx
 import AppText from "@/components/atoms/AppText";
-import Button from "@/components/atoms/Button";
 import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateMobileNumber } from "@/utils/validation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -26,29 +28,36 @@ const PhoneInput = () => {
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
   const router = useRouter();
   const { t } = useTranslation();
   const { sendOTP } = useAuth();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isLogin = mode === "login";
 
-  const formatPhoneNumber = (text: string) => {
-    const cleaned = text.replace(/\D/g, "");
-    return cleaned.slice(0, 10);
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 5, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -5, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
   };
 
+  const formatPhoneNumber = (text: string) => text.replace(/\D/g, "").slice(0, 10);
+
   const handlePhoneChange = (text: string) => {
-    const formatted = formatPhoneNumber(text);
-    setPhoneNumber(formatted);
-    if (validationError) {
-      setValidationError(null);
-    }
+    setPhoneNumber(formatPhoneNumber(text));
+    if (validationError) setValidationError(null);
   };
 
   const handleSendOTP = async () => {
     const validation = validateMobileNumber(phoneNumber);
     if (!validation.isValid) {
       setValidationError(validation.errors[0]);
+      shake();
       Alert.alert(t("common.error") || "Error", validation.errors[0]);
       return;
     }
@@ -57,16 +66,12 @@ const PhoneInput = () => {
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
       await sendOTP(fullPhoneNumber);
-
       router.push({
         pathname: "/(auth)/otp-input",
         params: { phoneNumber: fullPhoneNumber, mode: mode || "signup" },
       });
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to send OTP",
-      );
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -82,48 +87,50 @@ const PhoneInput = () => {
 
   const isReady = phoneNumber.length === 10 && !loading;
 
+  // Format display: "98765 43210"
+  const displayPhone = phoneNumber.length > 5
+    ? `${phoneNumber.slice(0, 5)} ${phoneNumber.slice(5)}`
+    : phoneNumber;
+
   return (
     <KeyboardAvoidingView
       style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="h-[100vh]"
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
-        {/* Image Background fills top, card overlaps it  */}
+      <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Video Header */}
         <View className="h-[55vh]">
           <AuthVideoBackground />
         </View>
 
-        {/* Input Card — negative marginTop pulls it over the image so no gap shows */}
+        {/* Card */}
         <View style={s.card}>
-          {/* Mode indicator chip */}
-          <View style={[s.modeChip, isLogin ? s.modeChipLogin : s.modeChipSignup]}>
-            <Ionicons
-              name={isLogin ? "log-in-outline" : "person-add-outline"}
-              size={13}
-              color={isLogin ? "#1D4ED8" : "#7C3AED"}
-            />
-            <Text style={[s.modeChipText, { color: isLogin ? "#1D4ED8" : "#7C3AED" }]}>
-              {isLogin ? "Log In" : "Create Account"}
-            </Text>
-          </View>
-
-          {/* Title */}
-          <AppText variant="h2" style={s.title}>
-            {isLogin
-              ? (t("auth.loginTitle") || "Welcome Back")
-              : (t("auth.enterPhone") || "Get Started")}
+          <AppText variant="h2" style={s.cardLabel}>
+            {isLogin ? (t("auth.loginTitle") || "Welcome Back") : (t("auth.enterPhone") || "Get Started")}
           </AppText>
-
-          {/* Subtitle */}
-          <Text style={s.subtitle}>
+          <Text style={s.videoSubtitle}>
             {isLogin
-              ? (t("auth.loginSubtitle") || "Enter your registered mobile number to log in")
+              ? (t("auth.loginSubtitle") || "Enter your registered mobile number")
               : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
           </Text>
+          {/* Label */}
+          <Text style={s.inputLabel}>{t("auth.mobileNumber") || "Mobile Number"}</Text>
 
-          {/* Phone Input */}
-          <Text style={s.inputLabel}>{t("auth.mobileNumber")}</Text>
-          <View style={[s.inputRow, isFocused && s.inputRowFocused, validationError ? s.inputRowError : null]}>
+          {/* Phone Row */}
+          <Animated.View
+            style={[
+              s.inputRow,
+              isFocused && s.inputRowFocused,
+              validationError ? s.inputRowError : null,
+              { transform: [{ translateX: shakeAnim }] },
+            ]}
+          >
             <View style={s.countryCode}>
               <Text style={s.flag}>🇮🇳</Text>
               <Text style={s.countryCodeText}>+91</Text>
@@ -131,24 +138,25 @@ const PhoneInput = () => {
             <View style={s.divider} />
             <TextInput
               style={s.phoneInput}
-              placeholder="Enter 10-digit number"
-              placeholderTextColor="#9CA3AF"
+              placeholder="00000 00000"
+              placeholderTextColor="#C4C9D4"
               keyboardType="phone-pad"
-              value={phoneNumber}
+              value={displayPhone}
               onChangeText={handlePhoneChange}
-              maxLength={10}
+              maxLength={11} // 10 digits + 1 space
               editable={!loading}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
             {phoneNumber.length === 10 && (
-              <View style={s.checkIcon}>
-                <Ionicons name="checkmark-circle" size={20} color="#386641" />
-              </View>
+              <Ionicons name="checkmark-circle" size={22} color="#386641" style={s.checkIcon} />
             )}
-          </View>
+            {validationError && (
+              <Ionicons name="alert-circle" size={22} color="#EF4444" style={s.checkIcon} />
+            )}
+          </Animated.View>
 
-          {/* Character counter */}
+          {/* Helper / error */}
           <View style={s.helperRow}>
             {validationError ? (
               <View style={s.errorRow}>
@@ -156,43 +164,49 @@ const PhoneInput = () => {
                 <Text style={s.errorText}>{validationError}</Text>
               </View>
             ) : (
-              <Text style={s.charCount}>{phoneNumber.length}/10 digits</Text>
+              <Text style={s.charCount}>
+                {phoneNumber.length}/10 digits entered
+              </Text>
             )}
           </View>
-
-          {/* Get OTP Button */}
-          <Button
-            variant="primary"
+          <Pressable
             onPress={handleSendOTP}
             disabled={!isReady}
-            style={s.otpBtn}
+            style={[
+              s.ctaBtn,
+              !isReady && s.ctaBtnDisabled,
+            ]}
           >
             {loading ? (
               <View style={s.loadingRow}>
                 <ActivityIndicator color="white" size="small" />
-                <Text style={[s.btnText, { marginLeft: 8 }]}>Sending OTP...</Text>
+                <Text style={[s.ctaText, { marginLeft: 8 }]}>Sending OTP…</Text>
               </View>
             ) : (
-              <View style={s.btnRow}>
-                <Text style={s.btnText}>{t("auth.getOtp")}</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              <View style={s.loadingRow}>
+                <Text style={s.ctaText}>{t("auth.getOtp") || "Send OTP"}</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
               </View>
             )}
-          </Button>
+          </Pressable>
 
           {/* Switch mode */}
-          <TouchableOpacity onPress={handleSwitchMode} style={s.switchRow}>
+          <TouchableOpacity onPress={handleSwitchMode} style={s.switchRow} activeOpacity={0.65}>
             <Text style={s.switchText}>
               {isLogin
                 ? (t("auth.noAccount") || "Don't have an account? ")
                 : (t("auth.alreadyRegistered") || "Already have an account? ")}
               <Text style={s.switchLink}>
-                {isLogin
-                  ? (t("auth.signUp") || "Sign Up")
-                  : (t("auth.login") || "Log In")}
+                {isLogin ? (t("auth.signUp") || "Sign Up") : (t("auth.login") || "Log In")}
               </Text>
             </Text>
           </TouchableOpacity>
+
+          {/* Security note */}
+          <View style={s.securityRow}>
+            <Ionicons name="lock-closed-outline" size={12} color="#9CA3AF" />
+            <Text style={s.securityText}>Your number is encrypted and never shared</Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -202,170 +216,163 @@ const PhoneInput = () => {
 export default PhoneInput;
 
 const s = StyleSheet.create({
-  root: {
-    flex: 1,
+  root: { flex: 1, backgroundColor: "#fff" },
+
+  // ── Video section ──
+  videoContainer: {
+    position: "relative",
     justifyContent: "flex-end",
-    backgroundColor: "#FFFFFF",
   },
-  card: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 28,
-    paddingBottom: 40,
-    marginTop: -32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 12,
-    alignItems: "center",
-  },
-  modeChip: {
+  modeBadge: {
+    position: "absolute",
+    right: 20,
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "center",
     gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: 16,
   },
-  modeChipLogin: {
-    backgroundColor: "#EFF6FF",
+  modeBadgeLogin: { backgroundColor: "rgba(239,246,255,0.95)" },
+  modeBadgeSignup: { backgroundColor: "rgba(245,243,255,0.95)" },
+  modeBadgeText: { fontSize: 12, fontWeight: "700" },
+  videoTextBlock: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
-  modeChipSignup: {
-    backgroundColor: "#F5F3FF",
+  videoTitle: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 28,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
-  modeChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  title: {
-    textAlign: "center",
-    color: "#111827",
-    fontWeight: "700",
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: "center",
-    color: "#6B7280",
+  videoSubtitle: {
+    color: "rgba(255,255,255,0.82)",
     fontSize: 14,
-    marginBottom: 24,
     lineHeight: 20,
+  },
+
+  // ── Card ──
+  card: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -32,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: Platform.OS === "ios" ? 48 : 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#E5E7EB",
+    alignSelf: "center",
+    marginBottom: 24,
   },
   inputLabel: {
     color: "#374151",
     fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
+    fontWeight: "700",
+    marginBottom: 10,
     letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
+  cardLabel: {
+    color: "#374151",
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 2,
+    letterSpacing: 0.1,
+    textTransform: "uppercase",
+  },
+
+  // ── Phone input ──
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: "#F9FAFB",
     borderColor: "#E5E7EB",
     overflow: "hidden",
   },
   inputRowFocused: {
     borderColor: "#386641",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     shadowColor: "#386641",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  inputRowError: {
-    borderColor: "#EF4444",
-  },
+  inputRowError: { borderColor: "#EF4444" },
   countryCode: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    paddingVertical: 16,
+    paddingVertical: 18,
     gap: 6,
+    backgroundColor: "#F3F4F6",
   },
-  flag: {
-    fontSize: 18,
-  },
-  divider: {
-    width: 1,
-    height: 24,
-    backgroundColor: "#E5E7EB",
-  },
-  countryCodeText: {
-    color: "#374151",
-    fontWeight: "600",
-    fontSize: 15,
-  },
+  flag: { fontSize: 20 },
+  divider: { width: 1, height: 26, backgroundColor: "#E5E7EB" },
+  countryCodeText: { color: "#374151", fontWeight: "700", fontSize: 15 },
   phoneInput: {
     flex: 1,
     paddingHorizontal: 14,
-    paddingVertical: 16,
-    fontSize: 17,
+    paddingVertical: 18,
+    fontSize: 20,
     color: "#111827",
-    letterSpacing: 1,
+    letterSpacing: 2,
+    fontWeight: "600",
   },
-  checkIcon: {
-    paddingRight: 12,
-  },
-  helperRow: {
-    minHeight: 24,
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  errorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  errorText: {
-    color: "#EF4444",
-    fontSize: 13,
-  },
-  charCount: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  otpBtn: {
+  checkIcon: { paddingRight: 14 },
+
+  // ── Helper ──
+  helperRow: { minHeight: 22, marginTop: 8, marginBottom: 4 },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  errorText: { color: "#EF4444", fontSize: 13, flex: 1 },
+  charCount: { color: "#9CA3AF", fontSize: 12 },
+
+  // ── CTA button ──
+  ctaBtn: {
     width: "100%",
-    paddingVertical: 16,
-    marginBottom: 20,
-    borderRadius: 14,
+    backgroundColor: "#386641",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 18,
+    shadowColor: "#386641",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  loadingRow: {
+  ctaBtnDisabled: {
+    backgroundColor: "#D1D5DB",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  loadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  ctaText: { color: "#fff", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
+
+  // ── Switch / footer ──
+  switchRow: { alignItems: "center", marginBottom: 16 },
+  switchText: { textAlign: "center", color: "#6B7280", fontSize: 14 },
+  switchLink: { color: "#386641", fontWeight: "700" },
+  securityRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 5,
   },
-  btnRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnText: {
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontWeight: "700",
-    fontSize: 16,
-    letterSpacing: 0.3,
-  },
-  switchRow: {
-    alignItems: "center",
-  },
-  switchText: {
-    textAlign: "center",
-    color: "#6B7280",
-    fontSize: 14,
-  },
-  switchLink: {
-    color: "#386641",
-    fontWeight: "700",
-  },
+  securityText: { color: "#9CA3AF", fontSize: 11 },
 });

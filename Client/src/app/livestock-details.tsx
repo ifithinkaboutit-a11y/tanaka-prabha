@@ -37,7 +37,8 @@ const LivestockDetailsScreen = () => {
     buffalo: profile?.livestockDetails?.buffalo || 0,
     sheep: profile?.livestockDetails?.sheep || 0,
     goat: profile?.livestockDetails?.goat || 0,
-    hen: profile?.livestockDetails?.poultry || 0,
+    pig: profile?.livestockDetails?.pig || 0,
+    poultry: profile?.livestockDetails?.poultry || 0,
     others: profile?.livestockDetails?.others || 0,
   };
 

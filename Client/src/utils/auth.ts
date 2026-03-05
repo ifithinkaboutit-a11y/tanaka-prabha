@@ -59,13 +59,14 @@ export const verifyOTP = async (
     if (response.status === "success" && response.data) {
       // Store the token and user data
       await tokenManager.setToken(response.data.token);
-      
-      // Add is_new_user flag to user object
+
+      // Add is_new_user flag and normalize mobile_number → mobileNumber
       const userWithFlag: User = {
         ...response.data.user,
-        is_new_user: response.data.is_new_user
+        is_new_user: response.data.is_new_user,
+        mobileNumber: response.data.user.mobileNumber || (response.data.user as any).mobile_number,
       };
-      
+
       await tokenManager.setUser(userWithFlag);
 
       console.log("🔐 User authenticated:", userWithFlag, "isNewUser:", response.data.is_new_user);
@@ -125,12 +126,14 @@ export const verifyToken = async (): Promise<User | null> => {
     const response = await authApi.verifyToken();
 
     if (response.status === "success" && response.data) {
-      // Add is_new_user flag to user object
+      // Add is_new_user flag to user object and normalize snake_case mobile field
       const userWithFlag: User = {
         ...response.data.user,
-        is_new_user: (response.data as any).is_new_user
+        is_new_user: (response.data as any).is_new_user,
+        // Backend returns mobile_number (snake_case) — map it to mobileNumber for app-wide consistency
+        mobileNumber: response.data.user.mobileNumber || (response.data.user as any).mobile_number,
       };
-      
+
       // Update stored user data
       await tokenManager.setUser(userWithFlag);
       return userWithFlag;
@@ -179,7 +182,7 @@ export const syncUserProfile = async (
   try {
     const { userApi } = await import("@/services/apiService");
     const response = await userApi.updateProfile(userData);
-    
+
     if (response.status === "success" && response.data) {
       await tokenManager.setUser(response.data.user);
       return response.data.user;
