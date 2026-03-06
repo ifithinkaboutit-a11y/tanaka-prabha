@@ -265,10 +265,10 @@ export const authApi = {
    * Send OTP to mobile number
    * @param mobile_number - 10-digit Indian mobile number
    */
-  async sendOTP(mobile_number: string): Promise<ApiResponse<SendOTPResponse>> {
+  async sendOTP(mobile_number: string, language = 'en'): Promise<ApiResponse<SendOTPResponse>> {
     return fetchWithAuth<SendOTPResponse>("/auth/send-otp", {
       method: "POST",
-      body: JSON.stringify({ mobile_number }),
+      body: JSON.stringify({ mobile_number, language }),
     });
   },
 
@@ -291,10 +291,10 @@ export const authApi = {
    * Resend OTP to mobile number
    * @param mobile_number - Phone number to resend OTP to
    */
-  async resendOTP(mobile_number: string): Promise<ApiResponse<SendOTPResponse>> {
+  async resendOTP(mobile_number: string, language = 'en'): Promise<ApiResponse<SendOTPResponse>> {
     return fetchWithAuth<SendOTPResponse>("/auth/resend-otp", {
       method: "POST",
-      body: JSON.stringify({ mobile_number }),
+      body: JSON.stringify({ mobile_number, language }),
     });
   },
 

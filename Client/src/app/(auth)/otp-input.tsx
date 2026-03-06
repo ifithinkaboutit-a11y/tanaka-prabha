@@ -171,7 +171,8 @@ const OTPInput = () => {
   return (
     <KeyboardAvoidingView
       style={s.root}
-      className="h-[97vh]"
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
+      keyboardVerticalOffset={0}
     >
       <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
       <ScrollView

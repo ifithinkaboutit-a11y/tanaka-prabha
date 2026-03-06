@@ -28,9 +28,13 @@ const isOTPExpired = (expiryTime) => {
 };
 
 /**
- * Send SMS/WhatsApp OTP via MSG91
+ * Send WhatsApp OTP via MSG91 WhatsApp Outbound Message Bulk API
+ *
+ * Template: tanak_prabha_otp
+ *   - body_1  → the 6-digit OTP shown in the message body
+ *   - button_1 → the copy-code URL button variable (same OTP value)
  */
-const sendSMS = async (mobileNumber, otp) => {
+const sendSMS = async (mobileNumber, otp, language = 'en') => {
     try {
         console.log(`[OTP] 📱 Sending MSG91 WhatsApp OTP to ${mobileNumber}`);
 
@@ -39,8 +43,8 @@ const sendSMS = async (mobileNumber, otp) => {
             console.log(`[OTP] 🔑 DEV OTP ➜ ${otp} (for ${mobileNumber})`);
 
             // If MSG91 keys are missing, mock the send and return early
-            if (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID) {
-                console.log(`[OTP] MSG91 keys not set — skipping real SMS send.`);
+            if (!process.env.MSG91_AUTH_KEY) {
+                console.log(`[OTP] MSG91_AUTH_KEY not set — skipping real WhatsApp send (mock mode).`);
                 return {
                     success: true,
                     message: 'OTP sent successfully (mock)',
@@ -49,21 +53,63 @@ const sendSMS = async (mobileNumber, otp) => {
             }
         }
 
-        const response = await axios.post('https://control.msg91.com/api/v5/otp', {
-            template_id: process.env.MSG91_TEMPLATE_ID,
-            mobile: mobileNumber,
-            authkey: process.env.MSG91_AUTH_KEY,
-            otp: otp
-        });
+        // Ensure the number has the 91 country-code prefix (no '+')
+        const wa_number = mobileNumber.startsWith('91') ? mobileNumber : `91${mobileNumber}`;
+
+        const payload = {
+            integrated_number: process.env.MSG91_INTEGRATED_NUMBER || '918887365002',
+            content_type: 'template',
+            payload: {
+                messaging_product: 'whatsapp',
+                type: 'template',
+                template: {
+                    name: 'tanak_prabha_otp',
+                    language: {
+                        code: language,   // 'en' or 'hi' based on user's app language
+                        policy: 'deterministic'
+                    },
+                    namespace: '3d70d0bd_fd9c_4c0a_a8b1_507056ef9ec9',
+                    to_and_components: [
+                        {
+                            to: [wa_number],
+                            components: {
+                                body_1: {
+                                    type: 'text',
+                                    value: otp          // 6-digit OTP shown in the message body
+                                },
+                                button_1: {
+                                    subtype: 'url',
+                                    type: 'text',
+                                    value: otp          // copy-code button URL variable
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        };
+
+        const response = await axios.post(
+            'https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/',
+            payload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authkey': process.env.MSG91_AUTH_KEY
+                }
+            }
+        );
+
+        console.log(`[OTP] ✅ MSG91 WhatsApp response:`, response.data);
 
         return {
             success: true,
-            message: 'OTP sent successfully',
+            message: 'OTP sent successfully via WhatsApp',
             data: response.data
         };
     } catch (error) {
-        console.error('MSG91 OTP Send Error:', error.response?.data || error.message);
-        throw new Error('Failed to send OTP via MSG91');
+        console.error('[OTP] MSG91 WhatsApp Send Error:', error.response?.data || error.message);
+        throw new Error('Failed to send OTP via MSG91 WhatsApp');
     }
 };
 

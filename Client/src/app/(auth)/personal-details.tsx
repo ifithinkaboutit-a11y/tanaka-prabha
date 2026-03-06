@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   View,
@@ -30,6 +29,31 @@ import { userApi } from "../../services/apiService";
 export const unstable_settings = {
   headerShown: false,
 };
+
+// ─── Reusable field sub-components ───────────────────────────────────────────
+// IMPORTANT: These MUST be defined at module level (outside the screen component).
+// Defining them inside a render function causes React to treat them as brand-new
+// component types on every render, which unmounts/remounts TextInputs on each
+// keystroke and breaks typing (only one character registers at a time).
+
+const FieldWrapper = ({ children }: { children: React.ReactNode }) => (
+  <View style={{ marginBottom: 20 }}>{children}</View>
+);
+
+const FieldLabel = ({ text }: { text: string }) => (
+  <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
+    {text}
+  </AppText>
+);
+
+const FieldError = ({ message }: { message?: string }) =>
+  message ? (
+    <AppText variant="bodySm" style={{ color: "#EF4444", marginTop: 4 }}>
+      {message}
+    </AppText>
+  ) : null;
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface FieldErrors {
   name?: string;
@@ -218,24 +242,6 @@ const AuthPersonalDetailsScreen = () => {
     player.play();
   });
 
-  // Reusable field wrapper
-  const FieldWrapper = ({ children }: { children: React.ReactNode }) => (
-    <View className="mb-5">{children}</View>
-  );
-
-  const FieldLabel = ({ text }: { text: string }) => (
-    <AppText variant="bodySm" className="text-gray-700 font-semibold mb-2">
-      {text}
-    </AppText>
-  );
-
-  const FieldError = ({ message }: { message?: string }) =>
-    message ? (
-      <AppText variant="bodySm" className="text-red-500 mt-1">
-        {message}
-      </AppText>
-    ) : null;
-
   const inputStyle = (field: keyof FieldErrors) => ({
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -272,8 +278,8 @@ const AuthPersonalDetailsScreen = () => {
         </View>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
+          behavior="padding"
+          style={{ flex: 1 }}
         >
           <ScrollView
             className="flex-1"

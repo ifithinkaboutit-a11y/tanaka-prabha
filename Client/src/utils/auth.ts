@@ -8,14 +8,14 @@ import { authApi, tokenManager, ApiError, User } from "@/services/apiService";
  * @param phoneNumber - 10-digit Indian mobile number (with or without +91 prefix)
  * @returns Phone number that OTP was sent to
  */
-export const sendOTP = async (phoneNumber: string): Promise<string> => {
+export const sendOTP = async (phoneNumber: string, language = 'en'): Promise<string> => {
   // Clean the phone number - remove +91 prefix if present
   const cleanedNumber = phoneNumber.replace(/^\+91/, "").replace(/\D/g, "");
 
-  console.log("📱 sendOTP called with:", phoneNumber, "-> cleaned:", cleanedNumber);
+  console.log("📱 sendOTP called with:", phoneNumber, "-> cleaned:", cleanedNumber, "lang:", language);
 
   try {
-    const response = await authApi.sendOTP(cleanedNumber);
+    const response = await authApi.sendOTP(cleanedNumber, language);
     console.log("📱 sendOTP response:", response);
 
     if (response.status === "success" && response.data) {
@@ -88,11 +88,11 @@ export const verifyOTP = async (
  * @param phoneNumber - Phone number to resend OTP to
  * @returns Phone number that OTP was sent to
  */
-export const resendOTP = async (phoneNumber: string): Promise<string> => {
+export const resendOTP = async (phoneNumber: string, language = 'en'): Promise<string> => {
   const cleanedNumber = phoneNumber.replace(/^\+91/, "").replace(/\D/g, "");
 
   try {
-    const response = await authApi.resendOTP(cleanedNumber);
+    const response = await authApi.resendOTP(cleanedNumber, language);
 
     if (response.status === "success" && response.data) {
       if (response.data.otp) {

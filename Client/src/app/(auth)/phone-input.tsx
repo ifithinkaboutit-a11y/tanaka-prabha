@@ -95,7 +95,8 @@ const PhoneInput = () => {
   return (
     <KeyboardAvoidingView
       style={s.root}
-      className="h-[100vh]"
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
+      keyboardVerticalOffset={0}
     >
       <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
       <ScrollView
@@ -217,8 +218,6 @@ export default PhoneInput;
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
-
-  // ── Video section ──
   videoContainer: {
     position: "relative",
     justifyContent: "flex-end",

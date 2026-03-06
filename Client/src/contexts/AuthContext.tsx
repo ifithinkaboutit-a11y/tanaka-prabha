@@ -7,16 +7,10 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import {
-  verifyToken,
-  signOutUser,
-  getStoredUser,
-  verifyOTP as authVerifyOTP,
-  sendOTP as authSendOTP,
-  resendOTP as authResendOTP,
-} from "@/utils/auth";
+import { verifyToken, signOutUser, getStoredUser, verifyOTP as authVerifyOTP, sendOTP as authSendOTP, resendOTP as authResendOTP } from "@/utils/auth";
 import { User, tokenManager, userApi, UserProfileUpdate } from "@/services/apiService";
 import { setupPushNotifications } from "@/utils/pushNotifications";
+import { useLanguageStore } from "@/stores/languageStore";
 
 
 export interface OnboardingData {
@@ -95,6 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
+  const { currentLanguage } = useLanguageStore();
+  // Map app language to MSG91 WhatsApp template language code
+  const waLanguage = currentLanguage === 'hi' ? 'hi' : 'en';
 
   // Check authentication status on mount
   useEffect(() => {
@@ -191,15 +188,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Send OTP function
   const sendOTP = useCallback(async (phoneNumber: string): Promise<string> => {
-    return authSendOTP(phoneNumber);
-  }, []);
+    return authSendOTP(phoneNumber, waLanguage);
+  }, [waLanguage]);
 
   // Resend OTP function
   const resendOTP = useCallback(
     async (phoneNumber: string): Promise<string> => {
-      return authResendOTP(phoneNumber);
+      return authResendOTP(phoneNumber, waLanguage);
     },
-    []
+    [waLanguage]
   );
 
   const loginAsAdmin = useCallback(async (token: string, userData: User) => {

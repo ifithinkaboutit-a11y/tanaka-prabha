@@ -20,7 +20,7 @@ const generateToken = (userId, mobile_number) => {
  */
 export const sendOTP = async (req, res) => {
     try {
-        const { mobile_number } = req.body;
+        const { mobile_number, language = 'en' } = req.body;
 
         // Validate phone number format
         if (!isValidIndianPhone(mobile_number)) {
@@ -46,8 +46,8 @@ export const sendOTP = async (req, res) => {
         // Generate and store OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
 
-        // Send SMS (mock in development) — run in background so SMTP/email issues don't block the response
-        sendSMS(formattedNumber, otpRecord.otp).catch(() => { });
+        // Send WhatsApp OTP — fire-and-forget so any MSG91 issues don't block the response
+        sendSMS(formattedNumber, otpRecord.otp, language).catch(() => { });
 
         res.status(200).json({
             status: 'success',
@@ -186,7 +186,7 @@ export const verifyOTP = async (req, res) => {
  */
 export const resendOTP = async (req, res) => {
     try {
-        const { mobile_number } = req.body;
+        const { mobile_number, language = 'en' } = req.body;
 
         // Validate phone number
         if (!isValidIndianPhone(mobile_number)) {
@@ -220,8 +220,8 @@ export const resendOTP = async (req, res) => {
 
         // Generate and send new OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
-        // Fire-and-forget send — do not block on SMTP/email
-        sendSMS(formattedNumber, otpRecord.otp).catch(() => { });
+        // Fire-and-forget send — do not block on MSG91
+        sendSMS(formattedNumber, otpRecord.otp, language).catch(() => { });
 
         res.status(200).json({
             status: 'success',
