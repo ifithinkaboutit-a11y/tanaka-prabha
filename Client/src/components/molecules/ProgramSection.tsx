@@ -95,7 +95,7 @@ export default function ProgramSection({
             alignItems: "center",
             opacity: pressed ? 0.7 : 1,
           })}
-                      className="flex flex-row items-center justify-center"
+          className="flex flex-row items-center justify-center"
         >
           <AppText
             variant="bodySm"
@@ -109,9 +109,9 @@ export default function ProgramSection({
         </Pressable>
       </View>
 
-      {/* Program Cards - Show up to 2 */}
+      {/* Program Cards */}
       <View>
-        {programs.slice(0, 2).map((program) => (
+        {programs.map((program) => (
           <ProgramCard
             key={program.id}
             program={program}

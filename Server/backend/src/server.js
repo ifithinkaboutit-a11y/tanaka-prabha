@@ -48,22 +48,39 @@ const startServer = async () => {
                 process.exit(1);
             }, 10000);
         };
-        const HEALTH_URL = 'https://tanak-prabha.onrender.com/health';
-        const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
-        const SUPABASE_KEEPALIVE_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
-        setInterval(async () => {
-            try {
-                const res = await fetch(HEALTH_URL);
-                console.log(`[keep-alive] 🏓 ping ${res.status} — ${HEALTH_URL}`);
-            } catch (err) {
-                console.warn(`[keep-alive] 🏓 ping failed: ${err.message}`);
-            }
-        }, SUPABASE_KEEPALIVE_INTERVAL , PING_INTERVAL);
+        // ── Keep-alive pings (development / staging only) ────────────────────
+        // In production the server is assumed to be on a paid plan (always-on),
+        // so self-pinging is unnecessary and wastes resources.
+        if (process.env.NODE_ENV !== 'production') {
+            const HEALTH_URL = process.env.SELF_PING_URL || `http://localhost:${PORT}/health`;
+            const PING_INTERVAL_MS = 14 * 60 * 1000;          // 14 minutes — keeps Render free tier awake
+            const SUPABASE_KEEPALIVE_MS = 4 * 60 * 60 * 1000; // 4 hours   — keeps Supabase free tier awake
 
-        // Fire once immediately on boot so we confirm connectivity at startup
-        pool.query('SELECT 1').then(() => {
-            console.log('[keep-alive] 💚 Supabase keep-alive cron started (every 4h)');
-        });
+            // Render self-ping
+            setInterval(async () => {
+                try {
+                    const res = await fetch(HEALTH_URL);
+                    console.log(`[keep-alive] 🏓 self-ping ${res.status} — ${HEALTH_URL}`);
+                } catch (err) {
+                    console.warn(`[keep-alive] 🏓 self-ping failed: ${err.message}`);
+                }
+            }, PING_INTERVAL_MS);
+
+            // Supabase keep-alive (prevents free-tier DB from sleeping)
+            setInterval(async () => {
+                try {
+                    await pool.query('SELECT 1');
+                    console.log('[keep-alive] 💚 Supabase keep-alive OK');
+                } catch (err) {
+                    console.warn(`[keep-alive] 💚 Supabase keep-alive failed: ${err.message}`);
+                }
+            }, SUPABASE_KEEPALIVE_MS);
+
+            console.log(`[keep-alive] ✅ Active — self-ping every 14 min, Supabase every 4 h`);
+            console.log(`[keep-alive] 🎯 Target: ${HEALTH_URL}`);
+        } else {
+            console.log('[keep-alive] ⏸️  Disabled in production (server is always-on)');
+        }
 
 
         // Handle shutdown signals

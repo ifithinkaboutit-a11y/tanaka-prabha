@@ -15,6 +15,19 @@ import { EventCardSkeleton, ProgramCardSkeleton } from "@/components/atoms/Skele
 import { useTranslation } from "../../i18n";
 import { useAuth } from "../../contexts/AuthContext";
 
+// Compute live status based on current date/time (same logic as EventCard)
+function computeEventStatus(event: ApiEvent): "upcoming" | "ongoing" | "completed" | "cancelled" {
+  if (event.status === "cancelled") return "cancelled";
+  if (!event.date) return (event.status as any) || "upcoming";
+  const dateStr = event.date.split("T")[0];
+  const start = new Date(`${dateStr}T${event.start_time || "00:00:00"}`);
+  const end = new Date(`${dateStr}T${event.end_time || "23:59:59"}`);
+  const now = new Date();
+  if (now < start) return "upcoming";
+  if (now >= start && now <= end) return "ongoing";
+  return "completed";
+}
+
 const Program = () => {
   const router = useRouter();
   const { t } = useTranslation();
@@ -34,10 +47,11 @@ const Program = () => {
   const fetchData = useCallback(async () => {
     try {
       const [allSchemes, allEvents] = await Promise.all([
-        schemesApi.getAll({ limit: 50 }),
+        schemesApi.getAll({ limit: 100 }),
         eventsApi.getAll(),
       ]);
-      setTrainingPrograms(allSchemes.filter((s) => s.category === "Training"));
+      // Case-insensitive match so "training" set from dashboard also shows here
+      setTrainingPrograms(allSchemes.filter((s) => s.category?.toLowerCase() === "training"));
       setEvents(allEvents);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -68,7 +82,8 @@ const Program = () => {
     );
   }, [searchQuery, trainingPrograms]);
 
-  const filteredEvents = useMemo(() => {
+  // All filtered events (search applied)
+  const allFilteredEvents = useMemo(() => {
     if (!searchQuery.trim()) return events;
     return events.filter(
       (ev) =>
@@ -77,6 +92,34 @@ const Program = () => {
         ev.location_name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [searchQuery, events]);
+
+  // Upcoming events: upcoming + ongoing, sorted by date ascending (soonest first)
+  const upcomingEvents = useMemo(() => {
+    return allFilteredEvents
+      .filter((ev) => {
+        const s = computeEventStatus(ev);
+        return s === "upcoming" || s === "ongoing";
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime();
+        const dateB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime();
+        return dateA - dateB;
+      });
+  }, [allFilteredEvents]);
+
+  // Past events: completed or cancelled, sorted by date descending (most recent first)
+  const pastEvents = useMemo(() => {
+    return allFilteredEvents
+      .filter((ev) => {
+        const s = computeEventStatus(ev);
+        return s === "completed" || s === "cancelled";
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime();
+        const dateB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime();
+        return dateB - dateA;
+      });
+  }, [allFilteredEvents]);
 
   const handleProgramPress = (program: any) => {
     router.push({ pathname: "/program-details", params: { programId: program.id } });
@@ -167,10 +210,10 @@ const Program = () => {
           </View>
         </View>
 
-        {/* Events Section */}
+        {/* Upcoming Events Section */}
         <EventSection
           title={t("programs.upcomingEvents") || "Upcoming Events"}
-          events={filteredEvents}
+          events={upcomingEvents}
           onEventPress={handleEventPress}
           onParticipate={handleParticipate}
         />
@@ -181,6 +224,13 @@ const Program = () => {
           programs={filteredTrainingPrograms}
           onViewAll={() => { }}
           onProgramPress={handleProgramPress}
+        />
+
+        {/* Past Events Section */}
+        <EventSection
+          title="Past Events"
+          events={pastEvents}
+          onEventPress={handleEventPress}
         />
 
         <View style={{ height: 24 }} />

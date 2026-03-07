@@ -19,7 +19,7 @@ export const createEvent = async (req, res) => {
 
 export const getEvents = async (req, res) => {
     try {
-        const { limit = 50, offset = 0 } = req.query;
+        const { limit = 200, offset = 0 } = req.query;
         const events = await Event.findAll(parseInt(limit), parseInt(offset));
 
         res.status(200).json({

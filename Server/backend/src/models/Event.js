@@ -37,7 +37,7 @@ class Event {
         return result.rows[0];
     }
 
-    static async findAll(limit = 50, offset = 0) {
+    static async findAll(limit = 200, offset = 0) {
         const text = `
             SELECT * FROM public.events 
             ORDER BY date ASC, start_time ASC

@@ -837,9 +837,11 @@ export const eventsApi = {
   },
 
   register: async (id: string, mobile_number: string, name?: string): Promise<any> => {
+    // Strip any 91/+91 prefix — always send a clean 10-digit number
+    const cleanMobile = mobile_number.replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
     return await fetchWithAuth(`/events/${id}/register`, {
       method: "POST",
-      body: JSON.stringify({ mobile_number, name }),
+      body: JSON.stringify({ mobile_number: cleanMobile, name }),
     });
   },
 
@@ -860,10 +862,12 @@ export const eventsApi = {
     }
   },
 
-  markAttendance: async (eventId: string, mobile_number: string, status: "present" | "absent"): Promise<any> => {
+  markAttendance: async (eventId: string, mobile_number: string, status: "present" | "absent", name?: string): Promise<any> => {
+    // Strip any 91/+91 prefix — always send a clean 10-digit number
+    const cleanMobile = mobile_number.replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
     return await fetchWithAuth(`/events/${eventId}/attendance`, {
       method: "POST",
-      body: JSON.stringify({ mobile_number, status }),
+      body: JSON.stringify({ mobile_number: cleanMobile, status, name }),
     });
   },
 };

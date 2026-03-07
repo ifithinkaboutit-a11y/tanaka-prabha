@@ -7,15 +7,27 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { tokenManager } from "@/services/apiService";
 
+// ── Detect if running inside Expo Go ─────────────────────────────────────────
+// expo-notifications removed remote push support from Expo Go in SDK 53.
+// We must skip token registration there to avoid the crash/error.
+function isExpoGo(): boolean {
+    return Constants.executionEnvironment === "storeClient";
+}
+
 // ── How foreground notifications behave ──────────────────────────────────────
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowBanner: true,   // banner drop-down (expo-notifications >= 0.28)
-        shouldShowList: true,     // notification tray list
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-    }),
-});
+// Wrap in try/catch: in Expo Go the handler may throw for remote notifications
+try {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowBanner: true,   // banner drop-down (expo-notifications >= 0.28)
+            shouldShowList: true,     // notification tray list
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+        }),
+    });
+} catch {
+    // Expo Go or unsupported environment — silently ignore
+}
 
 
 // ── Android channel setup ─────────────────────────────────────────────────────
@@ -32,9 +44,14 @@ async function ensureAndroidChannel() {
 
 // ── Get the Expo push token ───────────────────────────────────────────────────
 export async function getExpoPushToken(): Promise<string | null> {
-    // Push tokens only work on real physical devices
+    // Remote push tokens require a real device AND a dev build (not Expo Go in SDK 53+)
     if (!Device.isDevice) {
         console.log("📲 Push notifications require a physical device (not emulator).");
+        return null;
+    }
+
+    if (isExpoGo()) {
+        console.log("📵 Push token unavailable in Expo Go — local notifications still work.");
         return null;
     }
 

@@ -234,7 +234,14 @@ export default function MarkAttendance() {
         if (!selectedEvent) return;
         setMarking(true);
         try {
-            await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present");
+            // Resolve the best available name:
+            // - Registered user → their real name from the DB lookup
+            // - Walk-in (not found) → "Walk-in: {number}" so the report always shows something
+            const resolvedName =
+                foundUser && foundUser !== "not_found"
+                    ? foundUser.name
+                    : `Walk-in: ${mobileNumber}`;
+            await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present", resolvedName);
             Alert.alert("✅ Done!", "Attendance marked as Present.", [
                 { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); } },
                 { text: "Done", onPress: () => setSelectedEvent(null) },

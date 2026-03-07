@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconPlus, IconEye, IconEdit, IconTrash, IconCalendarEvent, IconUsers } from "@tabler/icons-react"
+import { IconPlus, IconCalendarEvent, IconUsers, IconClock, IconCheck } from "@tabler/icons-react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -17,25 +17,55 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { eventsApi } from "@/lib/api"
 import { toast } from "sonner"
+
+// Compute live status based on current time (same logic as mobile app)
+function computeEventStatus(event) {
+    if (event.status === "cancelled") return "cancelled"
+    if (!event.date) return event.status || "upcoming"
+    const dateStr = event.date.split("T")[0]
+    const start = new Date(`${dateStr}T${event.start_time || "00:00:00"}`)
+    const end = new Date(`${dateStr}T${event.end_time || "23:59:59"}`)
+    const now = new Date()
+    if (now < start) return "upcoming"
+    if (now >= start && now <= end) return "ongoing"
+    return "completed"
+}
+
+const STATUS_BADGE = {
+    upcoming: { label: "Upcoming", variant: "default", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+    ongoing: { label: "Ongoing", variant: "default", color: "bg-amber-100 text-amber-800 border-amber-200" },
+    completed: { label: "Completed", variant: "secondary", color: "bg-gray-100 text-gray-600 border-gray-200" },
+    cancelled: { label: "Cancelled", variant: "destructive", color: "bg-red-100 text-red-700 border-red-200" },
+}
+
+const emptyForm = {
+    title: "",
+    description: "",
+    date: "",
+    start_time: "",
+    end_time: "",
+    location_name: "",
+    location_address: "",
+    guidelines_and_rules: "",
+    requirements: "",
+    hero_image_url: "",
+    status: "upcoming",
+}
 
 export default function EventsPage() {
     const [events, setEvents] = React.useState([])
     const [loading, setLoading] = React.useState(true)
     const [isAddOpen, setIsAddOpen] = React.useState(false)
-    const [formData, setFormData] = React.useState({
-        title: "",
-        description: "",
-        date: "",
-        start_time: "",
-        end_time: "",
-        location_name: "",
-        location_address: "",
-        guidelines_and_rules: "",
-        requirements: "",
-        hero_image_url: "",
-    })
+    const [formData, setFormData] = React.useState(emptyForm)
     const router = useRouter()
 
     React.useEffect(() => {
@@ -45,7 +75,8 @@ export default function EventsPage() {
     async function fetchEvents() {
         try {
             setLoading(true)
-            const res = await eventsApi.getAll()
+            // Fetch up to 200 events to ensure all are shown
+            const res = await eventsApi.getAll({ limit: 200, offset: 0 })
             setEvents(res.data?.events || [])
         } catch (err) {
             toast.error("Failed to fetch events")
@@ -62,15 +93,120 @@ export default function EventsPage() {
             toast.success("Event created successfully")
             setIsAddOpen(false)
             fetchEvents()
-            setFormData({
-                title: "", description: "", date: "", start_time: "", end_time: "",
-                location_name: "", location_address: "", guidelines_and_rules: "", requirements: "", hero_image_url: ""
-            })
+            setFormData(emptyForm)
         } catch (err) {
             toast.error("Failed to create event")
             console.error(err)
         }
     }
+
+    // Split and sort events
+    const upcomingEvents = React.useMemo(() => {
+        return events
+            .filter(ev => {
+                const s = computeEventStatus(ev)
+                return s === "upcoming" || s === "ongoing"
+            })
+            .sort((a, b) => {
+                const dA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime()
+                const dB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime()
+                return dA - dB
+            })
+    }, [events])
+
+    const pastEvents = React.useMemo(() => {
+        return events
+            .filter(ev => {
+                const s = computeEventStatus(ev)
+                return s === "completed" || s === "cancelled"
+            })
+            .sort((a, b) => {
+                const dA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime()
+                const dB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime()
+                return dB - dA // Most recent past first
+            })
+    }, [events])
+
+    const createEventDialog = (
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <IconPlus className="mr-2 h-4 w-4" />
+                    Create Event
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="overflow-y-auto sm:max-w-xl max-h-[85vh]">
+                <DialogHeader>
+                    <DialogTitle>Create New Event</DialogTitle>
+                    <DialogDescription>Provide details for the event.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAdd} className="mt-6 space-y-4">
+                    <div className="space-y-2">
+                        <Label>Title</Label>
+                        <Input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Location Name</Label>
+                            <Input required value={formData.location_name} onChange={e => setFormData({ ...formData, location_name: e.target.value })} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Start Time</Label>
+                            <Input type="time" required value={formData.start_time} onChange={e => setFormData({ ...formData, start_time: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>End Time</Label>
+                            <Input type="time" required value={formData.end_time} onChange={e => setFormData({ ...formData, end_time: e.target.value })} />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={formData.status} onValueChange={v => setFormData({ ...formData, status: v })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="upcoming">Upcoming</SelectItem>
+                                <SelectItem value="ongoing">Ongoing</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            Status is also computed automatically from the date & time. This is the stored default.
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Location Address</Label>
+                        <Input value={formData.location_address} onChange={e => setFormData({ ...formData, location_address: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Guidelines and Rules</Label>
+                        <Textarea value={formData.guidelines_and_rules} onChange={e => setFormData({ ...formData, guidelines_and_rules: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Requirements</Label>
+                        <Textarea value={formData.requirements} onChange={e => setFormData({ ...formData, requirements: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Image URL (optional)</Label>
+                        <Input value={formData.hero_image_url} onChange={e => setFormData({ ...formData, hero_image_url: e.target.value })} />
+                    </div>
+                    <Button type="submit" className="w-full">Save Event</Button>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
 
     return (
         <div className="@container/main flex flex-1 flex-col">
@@ -81,66 +217,10 @@ export default function EventsPage() {
                             Events Management
                         </h1>
                         <p className="text-muted-foreground text-sm md:text-base">
-                            Create and manage upcoming events for the community.
+                            Create and manage events for the community. Upcoming events are sorted by date.
                         </p>
                     </div>
-                    <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <IconPlus className="mr-2 h-4 w-4" />
-                                Create Event
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="overflow-y-auto sm:max-w-xl max-h-[85vh]">
-                            <DialogHeader>
-                                <DialogTitle>Create New Event</DialogTitle>
-                                <DialogDescription>Provide details for the upcoming event.</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleAdd} className="mt-6 space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Title</Label>
-                                    <Input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Description</Label>
-                                    <Textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Date</Label>
-                                        <Input type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Location Name</Label>
-                                        <Input required value={formData.location_name} onChange={e => setFormData({ ...formData, location_name: e.target.value })} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Start Time</Label>
-                                        <Input type="time" required value={formData.start_time} onChange={e => setFormData({ ...formData, start_time: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>End Time</Label>
-                                        <Input type="time" required value={formData.end_time} onChange={e => setFormData({ ...formData, end_time: e.target.value })} />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Location Address</Label>
-                                    <Input value={formData.location_address} onChange={e => setFormData({ ...formData, location_address: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Guidelines and Rules</Label>
-                                    <Textarea value={formData.guidelines_and_rules} onChange={e => setFormData({ ...formData, guidelines_and_rules: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Image URL (optional)</Label>
-                                    <Input value={formData.hero_image_url} onChange={e => setFormData({ ...formData, hero_image_url: e.target.value })} />
-                                </div>
-                                <Button type="submit" className="w-full">Save Event</Button>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    {createEventDialog}
                 </div>
 
                 {loading ? (
@@ -166,41 +246,86 @@ export default function EventsPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {events.map(event => (
-                            <Card key={event.id}>
-                                <CardHeader className="p-0 relative">
-                                    {event.hero_image_url ? (
-                                        <img src={event.hero_image_url} alt={event.title} className="w-full h-40 object-cover rounded-t-lg" />
-                                    ) : (
-                                        <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
-                                            <IconCalendarEvent className="size-10 text-primary/40" />
-                                        </div>
-                                    )}
-                                    <div className="absolute top-2 right-2">
-                                        <Badge variant="secondary" className="capitalize">
-                                            {event.status}
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-4">
-                                    <h3 className="font-semibold line-clamp-1">{event.title}</h3>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        {new Date(event.date).toLocaleDateString()} | {event.start_time}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{event.location_name}</p>
-                                </CardContent>
-                                <CardFooter className="p-4 pt-0 gap-2">
-                                    <Button variant="outline" className="flex-1" onClick={() => router.push(`/events/${event.id}`)}>
-                                        <IconUsers className="size-4 mr-2" />
-                                        Manage
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
+                    <div className="space-y-10">
+                        {/* ── Upcoming Events ── */}
+                        {upcomingEvents.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <IconClock className="size-5 text-emerald-600" />
+                                    <h2 className="text-lg font-semibold">Upcoming Events</h2>
+                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 border text-xs font-semibold">
+                                        {upcomingEvents.length}
+                                    </Badge>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {upcomingEvents.map(event => (
+                                        <EventCard key={event.id} event={event} router={router} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* ── Past Events ── */}
+                        {pastEvents.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <IconCheck className="size-5 text-gray-500" />
+                                    <h2 className="text-lg font-semibold text-muted-foreground">Past Events</h2>
+                                    <Badge variant="secondary" className="text-xs font-semibold">
+                                        {pastEvents.length}
+                                    </Badge>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-75">
+                                    {pastEvents.map(event => (
+                                        <EventCard key={event.id} event={event} router={router} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
                     </div>
                 )}
             </div>
         </div>
+    )
+}
+
+function EventCard({ event, router }) {
+    const liveStatus = computeEventStatus(event)
+    const sc = STATUS_BADGE[liveStatus] ?? STATUS_BADGE.upcoming
+
+    const formattedDate = event.date
+        ? new Date(event.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+        : ""
+
+    return (
+        <Card>
+            <CardHeader className="p-0 relative">
+                {event.hero_image_url ? (
+                    <img src={event.hero_image_url} alt={event.title} className="w-full h-40 object-cover rounded-t-lg" />
+                ) : (
+                    <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
+                        <IconCalendarEvent className="size-10 text-primary/40" />
+                    </div>
+                )}
+                <div className="absolute top-2 right-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${sc.color}`}>
+                        {sc.label}
+                    </span>
+                </div>
+            </CardHeader>
+            <CardContent className="p-4">
+                <h3 className="font-semibold line-clamp-1">{event.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                    {formattedDate} {event.start_time ? `| ${event.start_time.substring(0, 5)}` : ""}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{event.location_name}</p>
+            </CardContent>
+            <CardFooter className="p-4 pt-0 gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => router.push(`/events/${event.id}`)}>
+                    <IconUsers className="size-4 mr-2" />
+                    Manage
+                </Button>
+            </CardFooter>
+        </Card>
     )
 }

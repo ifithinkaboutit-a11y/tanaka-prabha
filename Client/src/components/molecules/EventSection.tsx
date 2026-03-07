@@ -80,7 +80,7 @@ export default function EventSection({
 
             {/* Event Cards */}
             <View>
-                {events.slice(0, 5).map((event) => (
+                {events.map((event) => (
                     <EventCard
                         key={event.id}
                         event={event}

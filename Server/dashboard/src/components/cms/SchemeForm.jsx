@@ -66,8 +66,10 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
             <SelectItem value="livestock">Livestock</SelectItem>
             <SelectItem value="financial">Financial Aid</SelectItem>
             <SelectItem value="insurance">Insurance</SelectItem>
-            <SelectItem value="training">Training / Program</SelectItem>
+            <SelectItem value="training">Training & Awareness Program</SelectItem>
             <SelectItem value="subsidy">Subsidy</SelectItem>
+            <SelectItem value="workshop">Workshop</SelectItem>
+            <SelectItem value="technology">Technology</SelectItem>
           </SelectContent>
         </Select>
       </div>
