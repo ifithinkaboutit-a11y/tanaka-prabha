@@ -47,7 +47,9 @@ export const sendOTP = async (req, res) => {
         const otpRecord = await OTP.createOTP(formattedNumber);
 
         // Send WhatsApp OTP — fire-and-forget so any MSG91 issues don't block the response
-        sendSMS(formattedNumber, otpRecord.otp, language).catch(() => { });
+        sendSMS(formattedNumber, otpRecord.otp, language).catch((err) => {
+            console.error('[sendOTP] ⚠️ MSG91 WhatsApp send failed (non-blocking):', err?.message || err);
+        });
 
         res.status(200).json({
             status: 'success',
@@ -221,7 +223,9 @@ export const resendOTP = async (req, res) => {
         // Generate and send new OTP
         const otpRecord = await OTP.createOTP(formattedNumber);
         // Fire-and-forget send — do not block on MSG91
-        sendSMS(formattedNumber, otpRecord.otp, language).catch(() => { });
+        sendSMS(formattedNumber, otpRecord.otp, language).catch((err) => {
+            console.error('[resendOTP] ⚠️ MSG91 WhatsApp send failed (non-blocking):', err?.message || err);
+        });
 
         res.status(200).json({
             status: 'success',

@@ -57,7 +57,7 @@ const sendSMS = async (mobileNumber, otp, language = 'en') => {
         const wa_number = mobileNumber.startsWith('91') ? mobileNumber : `91${mobileNumber}`;
 
         const payload = {
-            integrated_number: process.env.MSG91_INTEGRATED_NUMBER || '918887365002',
+            integrated_number: process.env.MSG91_INTEGRATED_NUMBER,
             content_type: 'template',
             payload: {
                 messaging_product: 'whatsapp',
@@ -108,8 +108,13 @@ const sendSMS = async (mobileNumber, otp, language = 'en') => {
             data: response.data
         };
     } catch (error) {
-        console.error('[OTP] MSG91 WhatsApp Send Error:', error.response?.data || error.message);
-        throw new Error('Failed to send OTP via MSG91 WhatsApp');
+        const errBody = error.response?.data;
+        const status = error.response?.status;
+        console.error(`[OTP] ❌ MSG91 WhatsApp Send Error (HTTP ${status ?? 'N/A'}):`,
+            errBody ? JSON.stringify(errBody) : error.message);
+        // Include MSG91 error details in the thrown message for easier diagnosis
+        const detail = errBody?.errors ?? errBody?.message ?? error.message;
+        throw new Error(`Failed to send OTP via MSG91 WhatsApp: ${detail}`);
     }
 };
 
