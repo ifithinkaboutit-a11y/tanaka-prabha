@@ -4,20 +4,34 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-// Check if running in Expo Go
-const isExpoGo = Constants.appOwnership === "expo";
+// Check if running in Expo Go.
+// Constants.appOwnership was removed in SDK 50. Use executionEnvironment instead.
+// In Expo Go executionEnvironment === "storeClient"; in preview/production it is "standalone".
+const isExpoGo =
+  Constants.executionEnvironment === "storeClient" ||
+  // Fallback: older SDK may still have appOwnership
+  (Constants as any).appOwnership === "expo";
 
-// Configure how notifications are handled when app is in foreground
-// Set unconditionally — needed for local notifications to fire in Expo Go too
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Configure how notifications are handled when the app is in the foreground.
+// IMPORTANT: Do NOT call this in Expo Go (SDK 53+).
+// Calling setNotificationHandler at module load time — even inside a try/catch —
+// triggers expo-notifications' internal DevicePushTokenAutoRegistration side-effect
+// which crashes because remote notifications were removed from Expo Go in SDK 53.
+if (!isExpoGo) {
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch {
+    // Silently ignore — unsupported environment
+  }
+}
 
 // Notification types
 export type NotificationType = "approval" | "reminder" | "alert" | "info";
@@ -131,9 +145,19 @@ export async function scheduleLocalNotification(
       sound: true,
       priority: Notifications.AndroidNotificationPriority.HIGH,
     },
+    // expo-notifications ~0.28+ requires an explicit `type` field on triggers.
     trigger: notification.scheduledTime
-      ? { date: notification.scheduledTime, channelId }
-      : { channelId, seconds: 1 },
+      ? {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: notification.scheduledTime,
+        channelId,
+      }
+      : {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 1,
+        channelId,
+        repeats: false,
+      },
   });
 
   return id;

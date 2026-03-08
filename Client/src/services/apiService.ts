@@ -1119,6 +1119,16 @@ export interface Notification {
 
 export const notificationsApi = {
   /**
+   * Register push notification token
+   */
+  async registerToken(pushToken: string, platform: string): Promise<void> {
+    await fetchWithAuth("/notifications/register-token", {
+      method: "POST",
+      body: JSON.stringify({ push_token: pushToken, platform }),
+    });
+  },
+
+  /**
    * Get current user's notifications
    */
   async getMy(params?: {

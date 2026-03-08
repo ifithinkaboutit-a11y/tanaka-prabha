@@ -9,24 +9,35 @@ import { tokenManager } from "@/services/apiService";
 
 // ── Detect if running inside Expo Go ─────────────────────────────────────────
 // expo-notifications removed remote push support from Expo Go in SDK 53.
-// We must skip token registration there to avoid the crash/error.
+// Constants.appOwnership was removed in SDK 50; use executionEnvironment instead.
+// In a real dev/preview/production build executionEnvironment is "standalone".
+// In Expo Go it is "storeClient".
 function isExpoGo(): boolean {
-    return Constants.executionEnvironment === "storeClient";
+    return (
+        Constants.executionEnvironment === "storeClient" ||
+        // Fallback for older SDK – appOwnership still present on some builds
+        (Constants as any).appOwnership === "expo"
+    );
 }
 
 // ── How foreground notifications behave ──────────────────────────────────────
-// Wrap in try/catch: in Expo Go the handler may throw for remote notifications
-try {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowBanner: true,   // banner drop-down (expo-notifications >= 0.28)
-            shouldShowList: true,     // notification tray list
-            shouldPlaySound: true,
-            shouldSetBadge: true,
-        }),
-    });
-} catch {
-    // Expo Go or unsupported environment — silently ignore
+// Only set the notification handler in dev-builds / standalone apps.
+// In Expo Go (SDK 53+) even calling setNotificationHandler at module load time
+// triggers the internal DevicePushTokenAutoRegistration side-effect which
+// crashes because remote notifications were removed from Expo Go in SDK 53.
+if (!isExpoGo()) {
+    try {
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowBanner: true,   // banner drop-down (expo-notifications >= 0.28)
+                shouldShowList: true,     // notification tray list
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+            }),
+        });
+    } catch {
+        // Silently ignore any remaining edge-cases
+    }
 }
 
 
@@ -176,3 +187,8 @@ export async function sendLocalNotification(title: string, body: string, data?: 
         trigger: null, // fire immediately
     });
 }
+
+// ── Convenience alias used by (tab)/_layout.tsx ───────────────────────────────
+// (tab)/_layout.tsx imports `registerForPushNotificationsAsync` from this file.
+// Keeping the alias here avoids changing the import in the layout file.
+export const registerForPushNotificationsAsync = getExpoPushToken;

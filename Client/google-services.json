@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "226494517512",
+    "project_id": "tanaka-prabha",
+    "storage_bucket": "tanaka-prabha.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226494517512:android:302139171a45b395015cbd",
+        "android_client_info": {
+          "package_name": "com.tanakprabha.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_gEzspQhWzJr7rUVdjsj8SkYIQK3nKEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

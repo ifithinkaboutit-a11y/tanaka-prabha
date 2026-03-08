@@ -1,13 +1,32 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { useTranslation } from "../../i18n";
+import { registerForPushNotificationsAsync } from "../../utils/pushNotifications";
+import { notificationsApi } from "@/services/apiService";
 
 const ACTIVE_COLOR = "#386641";
 const INACTIVE_COLOR = "#9E9E9E";
 
 const TabNavigation = () => {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    async function setupPush() {
+      try {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          await notificationsApi.registerToken(token, Platform.OS);
+          console.log("✅ Successfully registered push token with backend");
+        }
+      } catch (err) {
+        console.error("Push registration failed", err);
+      }
+    }
+
+    setupPush();
+  }, []);
 
   return (
     <Tabs
