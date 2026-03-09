@@ -4,6 +4,7 @@ import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateMobileNumber } from "@/utils/validation";
+import { authApi, tokenManager } from "@/services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useState, useRef } from "react";
@@ -25,6 +26,8 @@ import {
 
 const PhoneInput = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -32,7 +35,7 @@ const PhoneInput = () => {
 
   const router = useRouter();
   const { t } = useTranslation();
-  const { sendOTP } = useAuth();
+  const { sendOTP, signIn } = useAuth();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isLogin = mode === "login";
 
@@ -77,6 +80,77 @@ const PhoneInput = () => {
     }
   };
 
+  // Login with password (no OTP needed)
+  const handleLoginWithPassword = async () => {
+    const validation = validateMobileNumber(phoneNumber);
+    if (!validation.isValid) {
+      setValidationError(validation.errors[0]);
+      shake();
+      return;
+    }
+    if (!password) {
+      setValidationError("Please enter your password");
+      shake();
+      return;
+    }
+    setValidationError(null);
+    setLoading(true);
+    try {
+      const fullPhoneNumber = `+91${phoneNumber}`;
+      const response = await authApi.loginWithPassword(fullPhoneNumber, password);
+      if (response.data) {
+        // Persist auth data exactly like the OTP flow
+        await tokenManager.setToken(response.data.token);
+        await tokenManager.setUser(response.data.user as any);
+        // Trigger AuthContext signIn by using the stored token — just navigate
+        // The nav guard in AuthContext will pick up the token and redirect
+        if (response.data.is_new_user) {
+          router.replace("/(auth)/personal-details" as any);
+        } else {
+          router.replace("/(tab)/" as any);
+        }
+      }
+    } catch (e: any) {
+      if (e?.data?.needs_password_setup) {
+        Alert.alert(
+          "No Password Set",
+          "This account doesn't have a password yet. We'll send you an OTP to log in and set one.",
+          [
+            { text: "Send OTP", onPress: () => handleSendOTP() },
+            { text: "Cancel", style: "cancel" },
+          ]
+        );
+      } else {
+        setValidationError(e.message || "Invalid phone number or password");
+        shake();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot password — send OTP then go to set-password screen
+  const handleForgotPassword = async () => {
+    const validation = validateMobileNumber(phoneNumber);
+    if (!validation.isValid) {
+      Alert.alert("Enter Phone Number", "Please enter your 10-digit mobile number first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const fullPhoneNumber = `+91${phoneNumber}`;
+      await authApi.forgotPassword(fullPhoneNumber);
+      router.push({
+        pathname: "/(auth)/otp-input" as any,
+        params: { phoneNumber: fullPhoneNumber, mode: "forgot-password" },
+      });
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSwitchMode = () => {
     if (isLogin) {
       router.replace({ pathname: "/(auth)/phone-input", params: { mode: "signup" } } as any);
@@ -85,7 +159,10 @@ const PhoneInput = () => {
     }
   };
 
-  const isReady = phoneNumber.length === 10 && !loading;
+  // isReady depends on mode
+  const isReady = isLogin
+    ? phoneNumber.length === 10 && password.length >= 6 && !loading
+    : phoneNumber.length === 10 && !loading;
 
   // Format display: "98765 43210"
   const displayPhone = phoneNumber.length > 5
@@ -170,8 +247,40 @@ const PhoneInput = () => {
               </Text>
             )}
           </View>
+
+          {/* Password field — only shown in login mode */}
+          {isLogin && (
+            <>
+              <Text style={[s.inputLabel, { marginTop: 4 }]}>PASSWORD</Text>
+              <View style={[s.inputRow, { marginBottom: 4 }]}>
+                <TextInput
+                  style={[s.phoneInput, { flex: 1 }]}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#C4C9D4"
+                  value={password}
+                  onChangeText={(v) => { setPassword(v); setValidationError(null); }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                  onSubmitEditing={handleLoginWithPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword((p) => !p)} style={{ paddingHorizontal: 12 }}>
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              {/* Forgot Password Link */}
+              <TouchableOpacity
+                onPress={handleForgotPassword}
+                style={{ alignSelf: "flex-end", marginBottom: 16, marginTop: 4 }}
+                activeOpacity={0.65}
+              >
+                <Text style={[s.switchLink, { fontSize: 13 }]}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
           <Pressable
-            onPress={handleSendOTP}
+            onPress={isLogin ? handleLoginWithPassword : handleSendOTP}
             disabled={!isReady}
             style={[
               s.ctaBtn,
@@ -181,11 +290,15 @@ const PhoneInput = () => {
             {loading ? (
               <View style={s.loadingRow}>
                 <ActivityIndicator color="white" size="small" />
-                <Text style={[s.ctaText, { marginLeft: 8 }]}>Sending OTP…</Text>
+                <Text style={[s.ctaText, { marginLeft: 8 }]}>
+                  {isLogin ? "Logging in…" : "Sending OTP…"}
+                </Text>
               </View>
             ) : (
               <View style={s.loadingRow}>
-                <Text style={s.ctaText}>{t("auth.getOtp") || "Send OTP"}</Text>
+                <Text style={s.ctaText}>
+                  {isLogin ? (t("auth.login") || "Log In") : (t("auth.getOtp") || "Send OTP")}
+                </Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
               </View>
             )}

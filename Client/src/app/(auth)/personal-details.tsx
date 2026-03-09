@@ -2,17 +2,22 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
+  StyleSheet,
   View,
   TextInput,
   Dimensions,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useVideoPlayer, VideoView } from "expo-video";
 import MediaPath from "../../constants/MediaPath";
 import AppText from "../../components/atoms/AppText";
+import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
@@ -24,7 +29,8 @@ import {
   validateName,
 } from "../../utils/validation";
 import { useAuth } from "../../contexts/AuthContext";
-import { userApi } from "../../services/apiService";
+import { userApi, uploadApi } from "../../services/apiService";
+import { Ionicons } from "@expo/vector-icons";
 
 export const unstable_settings = {
   headerShown: false,
@@ -71,6 +77,58 @@ const AuthPersonalDetailsScreen = () => {
   const { personalDetails, updatePersonalDetails } = useOnboardingStore();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // ── Photo upload state (same pattern as profile.tsx) ────────────────────────
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+
+  const handlePhotoUpload = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      // Also try camera permission as a fallback prompt
+      Alert.alert(
+        "Photo Required",
+        "Please allow photo library access to upload your profile picture.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Use Camera",
+            onPress: async () => {
+              const camPerm = await ImagePicker.requestCameraPermissionsAsync();
+              if (!camPerm.granted) return;
+              const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.75 });
+              if (result.canceled || !result.assets?.[0]) return;
+              await processPhoto(result.assets[0].uri);
+            },
+          },
+        ]
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.75,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    await processPhoto(result.assets[0].uri);
+  };
+
+  const processPhoto = async (uri: string) => {
+    setLocalPhotoUri(uri);
+    setPhotoUploading(true);
+    try {
+      const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+      updatePersonalDetails({ photoUrl: cloudUrl });
+    } catch (e: any) {
+      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+      setLocalPhotoUri(null);
+      updatePersonalDetails({ photoUrl: "" });
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const genderSelectOptions = getLocalizedOptions(genderOptions, currentLanguage);
 
@@ -187,6 +245,12 @@ const AuthPersonalDetailsScreen = () => {
       fathersName: true, mothersName: true,
     });
 
+    // Photo is mandatory
+    if (!personalDetails.photoUrl) {
+      Alert.alert("Photo Required", "Please upload a profile photo to continue.");
+      return;
+    }
+
     let hasErrors = false;
     const newErrors: FieldErrors = {};
 
@@ -225,6 +289,7 @@ const AuthPersonalDetailsScreen = () => {
 
   const isValid = () => {
     return (
+      !!personalDetails.photoUrl &&        // photo is mandatory
       personalDetails.name?.trim() !== "" &&
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&
@@ -274,6 +339,40 @@ const AuthPersonalDetailsScreen = () => {
           </AppText>
           <AppText variant="bodySm" className="text-gray-500 mt-1.5 text-center">
             {t("onboarding.personalSubtitle")}
+          </AppText>
+        </View>
+
+        {/* ── Mandatory Photo Upload (same pattern as profile.tsx) ── */}
+        <View style={photoStyles.container}>
+          <Pressable
+            onPress={handlePhotoUpload}
+            style={photoStyles.avatarRing}
+            disabled={photoUploading}
+          >
+            {(localPhotoUri || personalDetails.photoUrl) ? (
+              <Image
+                source={{ uri: localPhotoUri ?? personalDetails.photoUrl }}
+                style={{ width: 86, height: 86, borderRadius: 43 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor="#386641" />
+            )}
+            {/* Camera badge */}
+            {!photoUploading && (
+              <View style={photoStyles.cameraBadge}>
+                <Ionicons name="camera" size={13} color="#FFFFFF" />
+              </View>
+            )}
+            {/* Upload spinner overlay */}
+            {photoUploading && (
+              <View style={photoStyles.loadingOverlay}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              </View>
+            )}
+          </Pressable>
+          <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? "#059669" : "#6B7280", marginTop: 8, fontWeight: "600" }}>
+            {personalDetails.photoUrl ? "✓ Photo uploaded" : "Tap to add profile photo *"}
           </AppText>
         </View>
 
@@ -420,3 +519,47 @@ const AuthPersonalDetailsScreen = () => {
 };
 
 export default AuthPersonalDetailsScreen;
+
+// ─── Photo upload styles (mirrors profile.tsx avatar styles exactly) ──────────
+const photoStyles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginBottom: 4,
+  },
+  avatarRing: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    borderWidth: 3,
+    borderColor: "#386641",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  cameraBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#386641",
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 46,
+  },
+});

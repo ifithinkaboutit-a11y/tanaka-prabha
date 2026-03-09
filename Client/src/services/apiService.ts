@@ -306,6 +306,36 @@ export const authApi = {
       method: "GET",
     });
   },
+
+  /**
+   * Login with mobile number + password (no OTP)
+   */
+  async loginWithPassword(mobile_number: string, password: string): Promise<ApiResponse<VerifyOTPResponse>> {
+    return fetchWithAuth<VerifyOTPResponse>("/auth/login-with-password", {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, password }),
+    });
+  },
+
+  /**
+   * Set or reset password for the current user (call after OTP verification)
+   */
+  async setPassword(mobile_number: string, password: string): Promise<ApiResponse<void>> {
+    return fetchWithAuth<void>("/auth/set-password", {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, password }),
+    });
+  },
+
+  /**
+   * Send OTP for forgot-password flow
+   */
+  async forgotPassword(mobile_number: string, language = 'en'): Promise<ApiResponse<SendOTPResponse>> {
+    return fetchWithAuth<SendOTPResponse>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, language }),
+    });
+  },
 };
 
 // User API endpoints

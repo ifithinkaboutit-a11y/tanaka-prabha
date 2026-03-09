@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import OTP from '../models/OTP.js';
 import User from '../models/User.js';
 import { sendSMS, formatPhoneNumber, isValidIndianPhone } from '../utils/otp.js';
+
+const BCRYPT_ROUNDS = 12;
 
 /**
  * Generate JWT token
@@ -302,3 +305,160 @@ export const verifyToken = async (req, res) => {
         });
     }
 };
+
+/**
+ * Set or reset password after OTP verification
+ * POST /api/auth/set-password
+ * Body: { mobile_number, password }
+ * Must be called immediately after verifyOTP (token already issued and sent to client)
+ */
+export const setPassword = async (req, res) => {
+    try {
+        const { mobile_number, password } = req.body;
+
+        if (!mobile_number || !password) {
+            return res.status(400).json({ status: 'error', message: 'Mobile number and password are required' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ status: 'error', message: 'Password must be at least 6 characters' });
+        }
+
+        const formattedNumber = formatPhoneNumber(mobile_number);
+        const user = await User.findByMobile(formattedNumber);
+        if (!user) {
+            return res.status(404).json({ status: 'error', message: 'User not found' });
+        }
+
+        const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+        await User.update(user.id, { password_hash: hash });
+
+        res.status(200).json({ status: 'success', message: 'Password set successfully' });
+    } catch (error) {
+        console.error('Set Password Error:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to set password' });
+    }
+};
+
+/**
+ * Login with mobile number + password (no OTP required)
+ * POST /api/auth/login-with-password
+ * Body: { mobile_number, password }
+ */
+export const loginWithPassword = async (req, res) => {
+    try {
+        const { mobile_number, password } = req.body;
+
+        if (!mobile_number || !password) {
+            return res.status(400).json({ status: 'error', message: 'Mobile number and password are required' });
+        }
+
+        if (!isValidIndianPhone(mobile_number)) {
+            return res.status(400).json({ status: 'error', message: 'Invalid phone number' });
+        }
+
+        const formattedNumber = formatPhoneNumber(mobile_number);
+
+        // Fetch the stored hash — must query password_hash explicitly
+        const { query } = await import('../config/db.js');
+        const result = await query(
+            'SELECT *, password_hash FROM public.users WHERE mobile_number = $1',
+            [formattedNumber]
+        );
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(401).json({ status: 'error', message: 'Invalid mobile number or password', authenticated: false });
+        }
+
+        if (!user.password_hash) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'No password set for this account. Please use OTP to log in and set a password.',
+                authenticated: false,
+                needs_password_setup: true,
+            });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        if (!passwordMatch) {
+            return res.status(401).json({ status: 'error', message: 'Invalid mobile number or password', authenticated: false });
+        }
+
+        const token = generateToken(user.id, formattedNumber);
+        const isNewUser = (user.name === 'New User');
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Authentication successful',
+            authenticated: true,
+            data: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    mobile_number: user.mobile_number,
+                    age: user.age,
+                    gender: user.gender,
+                    photo_url: user.photo_url,
+                    fathers_name: user.fathers_name,
+                    mothers_name: user.mothers_name,
+                    educational_qualification: user.educational_qualification,
+                    village: user.village,
+                    gram_panchayat: user.gram_panchayat,
+                    block: user.block,
+                    tehsil: user.tehsil,
+                    district: user.district,
+                    pin_code: user.pin_code,
+                    state: user.state,
+                },
+                is_new_user: isNewUser,
+                token,
+                token_type: 'Bearer',
+            },
+        });
+    } catch (error) {
+        console.error('Login With Password Error:', error);
+        res.status(500).json({ status: 'error', message: 'Login failed. Please try again.', authenticated: false });
+    }
+};
+
+/**
+ * Forgot password — send OTP to mobile number
+ * POST /api/auth/forgot-password
+ * Body: { mobile_number }
+ * After this, client calls /verify-otp then /set-password
+ */
+export const forgotPassword = async (req, res) => {
+    try {
+        const { mobile_number, language = 'en' } = req.body;
+
+        if (!isValidIndianPhone(mobile_number)) {
+            return res.status(400).json({ status: 'error', message: 'Invalid phone number' });
+        }
+
+        const formattedNumber = formatPhoneNumber(mobile_number);
+        const user = await User.findByMobile(formattedNumber);
+        if (!user) {
+            // Don't reveal whether account exists
+            return res.status(200).json({ status: 'success', message: 'If the number is registered, an OTP has been sent.' });
+        }
+
+        const otpRecord = await OTP.createOTP(formattedNumber);
+        sendSMS(formattedNumber, otpRecord.otp, language).catch((err) => {
+            console.error('[forgotPassword] ⚠️ MSG91 WhatsApp send failed:', err?.message || err);
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'OTP sent for password reset',
+            data: {
+                mobile_number: formattedNumber,
+                expires_in: '10 minutes',
+                ...(process.env.NODE_ENV === 'development' && { otp: otpRecord.otp }),
+            },
+        });
+    } catch (error) {
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to send OTP' });
+    }
+};
+

@@ -100,6 +100,7 @@ const initialPersonalDetails: PersonalDetails = {
   age: 0,
   gender: "",
   aadhaar: "",
+  photoUrl: "",
   fathersName: "",
   mothersName: "",
   educationalQualification: "",

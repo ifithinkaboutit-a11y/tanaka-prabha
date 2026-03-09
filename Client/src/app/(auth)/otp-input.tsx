@@ -126,8 +126,18 @@ const OTPInput = () => {
       const { isNewUser: serverIsNewUser } = await signIn(phoneNumber, otpString, mode === "login");
       const isNewUser = mode === "login" ? false : serverIsNewUser;
 
-      if (isNewUser) {
-        router.replace("/(auth)/personal-details");
+      if (mode === "forgot-password") {
+        // Go to set-password in reset mode
+        router.replace({
+          pathname: "/(auth)/set-password" as any,
+          params: { phoneNumber, mode: "reset" },
+        });
+      } else if (isNewUser) {
+        // New signup → set password first, then onboard
+        router.replace({
+          pathname: "/(auth)/set-password" as any,
+          params: { phoneNumber, mode: "signup" },
+        });
       } else {
         router.replace("/(tab)");
       }

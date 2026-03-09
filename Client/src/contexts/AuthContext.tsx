@@ -231,9 +231,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data?.personalDetails) {
         const pd = data.personalDetails;
         const profilePayload: Partial<UserProfileUpdate> = {
-          name: pd.name || undefined, // Full name the user typed in the "Full Name" field
+          name: pd.name || undefined,
           age: pd.age || undefined,
           gender: pd.gender || undefined,
+          photo_url: (pd as any).photoUrl || undefined,
           fathers_name: pd.fathersName || undefined,
           mothers_name: pd.mothersName || undefined,
           educational_qualification: pd.educationalQualification || undefined,

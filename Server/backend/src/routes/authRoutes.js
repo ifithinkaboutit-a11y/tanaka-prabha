@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { sendOTP, verifyOTP, resendOTP, verifyToken } from '../controllers/authController.js';
+import { sendOTP, verifyOTP, resendOTP, verifyToken, setPassword, loginWithPassword, forgotPassword } from '../controllers/authController.js';
 import { otpLimiter, verifyOTPLimiter } from '../middlewares/rateLimiter.js';
 import { validateSendOTP, validateVerifyOTP } from '../middlewares/validator.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
@@ -32,5 +32,26 @@ router.post('/resend-otp', otpLimiter, validateSendOTP, resendOTP);
  * @access  Protected
  */
 router.get('/verify-token', authMiddleware, verifyToken);
+
+/**
+ * @route   POST /api/auth/set-password
+ * @desc    Set or reset password after OTP verification
+ * @access  Public (caller must have just verified OTP)
+ */
+router.post('/set-password', setPassword);
+
+/**
+ * @route   POST /api/auth/login-with-password
+ * @desc    Login with mobile number + password
+ * @access  Public
+ */
+router.post('/login-with-password', loginWithPassword);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Send OTP for password reset
+ * @access  Public
+ */
+router.post('/forgot-password', otpLimiter, forgotPassword);
 
 export default router;

@@ -54,6 +54,7 @@ export interface PersonalDetails {
   age: number;
   gender: string;
   aadhaar: string;
+  photoUrl: string;
   // Family info
   fathersName: string;
   mothersName: string;
