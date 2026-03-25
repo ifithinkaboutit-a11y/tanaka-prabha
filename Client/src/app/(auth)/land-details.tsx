@@ -7,22 +7,20 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StatusBar,
+  StyleSheet,
   View,
   TextInput,
   Alert,
-  Dimensions,
 } from "react-native";
-import { useVideoPlayer, VideoView } from "expo-video";
-import MediaPath from "../../constants/MediaPath";
 import AppText from "../../components/atoms/AppText";
 import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
-import MultiSelect from "../../components/atoms/MultiSelect";
 import Select from "../../components/atoms/Select";
+import CropSelector from "../../components/molecules/CropSelector";
 import { useOnboardingStore, LandEntry } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
-  cropTypes,
   landUnits,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
@@ -56,7 +54,6 @@ const AuthLandDetailsScreen = () => {
   const [errors, setErrors] = useState<EntryErrors>({});
   const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
 
-  const cropOptions = getLocalizedOptions(cropTypes, currentLanguage);
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
 
   const validateEntry = (entry: LandEntry): boolean => {
@@ -198,53 +195,29 @@ const AuthLandDetailsScreen = () => {
     );
   };
 
-  const { height: screenHeight } = Dimensions.get("window");
-  const videoHeight = screenHeight * 0.28;
-
-  const player = useVideoPlayer(MediaPath.videos.authBackground, (player) => {
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
 
   return (
-    <View className="flex-1 bg-[#F8FAFC]">
-      {/* Video Background Header */}
-      <View style={{ height: videoHeight, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }} className="relative">
-        <VideoView
-          player={player}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
-          contentFit="cover"
-          nativeControls={false}
-          allowsPictureInPicture={false}
-        />
-        {/* Progress Bar — 66% complete */}
-        <View
-          className="absolute left-5 right-5 h-1.5 rounded-full bg-white/30"
-          style={{ top: 50 }}
-        >
-          <View className="h-full bg-amber-400 rounded-full" style={{ width: "75%" }} />
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      {/* Static Header */}
+      <View style={headerStyles.header}>
+        <View style={headerStyles.progressTrack}>
+          <View style={[headerStyles.progressFill, { width: "75%" }]} />
         </View>
+        <AppText variant="h2" style={headerStyles.headerTitle}>
+          {t("onboarding.landTitle") || "Land Details"}
+        </AppText>
+        <AppText variant="bodySm" style={headerStyles.headerSubtitle}>
+          {t("onboarding.landSubtitle") || "Tell us about your land holdings"}
+        </AppText>
       </View>
 
-      {/* Content Card */}
-      <View className="flex-1 bg-white" style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, paddingTop: 24 }}>
-        {/* Title Section */}
-        <View className="items-center px-5 mb-4">
-          <AppText variant="h3" className="font-bold text-gray-800 text-[22px] text-center">
-            {t("onboarding.landTitle")}
-          </AppText>
-          <AppText variant="bodySm" className="text-gray-500 mt-1.5 text-center">
-            {t("onboarding.landSubtitle")}
-          </AppText>
-        </View>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
-        >
+      <View style={{ flex: 1 }}>
           <ScrollView
-            className="flex-1"
+            style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
@@ -344,11 +317,10 @@ const AuthLandDetailsScreen = () => {
                           borderRadius: 12,
                         }}
                       >
-                        <MultiSelect
+                        <CropSelector
                           value={entry.crops || []}
                           onValueChange={(crops) => handleCropsChange(entry.id, crops)}
-                          options={cropOptions}
-                          placeholder={t("onboarding.selectCrops")}
+                          language={currentLanguage as "en" | "hi"}
                         />
                       </View>
                       {errors[entry.id]?.crops && touched[entry.id]?.crops && (
@@ -375,15 +347,14 @@ const AuthLandDetailsScreen = () => {
               </>
             )}
           </ScrollView>
-        </KeyboardAvoidingView>
 
         {/* Bottom Buttons */}
-        <View className="p-5 bg-white border-t border-gray-200 flex-row gap-3">
+        <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
           <Pressable
             onPress={handleSkip}
-            className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
+            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: "#fff", borderWidth: 1, borderColor: "#D1D5DB", alignItems: "center" }}
           >
-            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
+            <AppText variant="bodyMd" style={{ color: "#6B7280", fontWeight: "600" }}>
               {t("common.skip")}
             </AppText>
           </Pressable>
@@ -391,17 +362,50 @@ const AuthLandDetailsScreen = () => {
           <Pressable
             onPress={handleNext}
             disabled={!isValid()}
-            className="flex-[2] py-4 rounded-full items-center"
-            style={{ backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
+            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
           >
-            <AppText variant="bodyMd" className="text-white font-bold">
+            <AppText variant="bodyMd" style={{ color: "#fff", fontWeight: "700" }}>
               {t("common.next")}
             </AppText>
           </Pressable>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 export default AuthLandDetailsScreen;
+
+const headerStyles = StyleSheet.create({
+  header: {
+    backgroundColor: "#386641",
+    paddingTop: 56,
+    paddingBottom: 28,
+    paddingHorizontal: 24,
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 2,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 2,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});

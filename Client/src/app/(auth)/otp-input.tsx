@@ -1,6 +1,5 @@
 // src/app/(auth)/otp-input.tsx
 import AppText from "@/components/atoms/AppText";
-import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateOTP, validateMobileNumber } from "@/utils/validation";
@@ -181,35 +180,28 @@ const OTPInput = () => {
   return (
     <KeyboardAvoidingView
       style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "padding"}
-      keyboardVerticalOffset={0}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
+      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      {/* Static Header */}
+      <View style={s.header}>
+        <AppText variant="h2" style={s.headerTitle}>
+          {t("auth.enterOTP") || "Verify Number"}
+        </AppText>
+        <Text style={s.headerSubtitle}>
+          {t("auth.otpSentTo") || "OTP sent to"}{" "}
+          <Text style={s.headerPhoneHighlight}>{maskedPhone}</Text>
+        </Text>
+      </View>
       <ScrollView
         bounces={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
       >
-        {/* Video — same height as phone-input */}
-        <View className="h-[52vh]">
-          <AuthVideoBackground />
-        </View>
-
-        {/* Card — mirrors phone-input card exactly */}
+        {/* Card */}
         <View style={s.card}>
-          {/* Title — same as cardLabel in phone-input */}
-          <AppText variant="h2" style={s.cardLabel}>
-            {t("auth.enterOTP") || "Verify Number"}
-          </AppText>
-
-          {/* Subtitle — same videoSubtitle style */}
-          <Text style={s.videoSubtitle}>
-            {t("auth.otpSentTo") || "OTP sent to"}{" "}
-            <Text style={s.phoneHighlight}>{maskedPhone}</Text>
-          </Text>
-
-          {/* Input label — same as phone-input */}
+          {/* Input label */}
           <Text style={s.inputLabel}>Enter 6-digit OTP</Text>
 
           {/* OTP boxes — animated, shake on error */}
@@ -331,41 +323,38 @@ export default OTPInput;
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
 
-  // ── Card — identical to phone-input ──
+  // ── Static Header ──
+  header: {
+    backgroundColor: "#386641",
+    paddingTop: 60,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  headerPhoneHighlight: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
+  // ── Card ──
   card: {
     flex: 1,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -32,
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 16,
-  },
-
-  // ── Typography — identical to phone-input ──
-  cardLabel: {
-    color: "#374151",
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 2,
-    letterSpacing: 0.1,
-    textTransform: "uppercase",
-  },
-  videoSubtitle: {
-    color: "#6B7280",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  phoneHighlight: {
-    color: "#386641",
-    fontWeight: "700",
   },
   inputLabel: {
     color: "#374151",

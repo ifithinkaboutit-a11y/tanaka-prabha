@@ -36,6 +36,15 @@ export const sendOTP = async (req, res) => {
         // Format phone number
         const formattedNumber = formatPhoneNumber(mobile_number);
 
+        // Check for duplicate phone number BEFORE sending OTP (Bug 9 fix)
+        const existingUser = await User.findByMobile(formattedNumber);
+        if (existingUser && existingUser.name !== 'New User') {
+            return res.status(409).json({
+                status: 'error',
+                message: 'This phone number is already registered. Please log in instead.'
+            });
+        }
+
         // [TESTING] DB-level OTP rate limit disabled — up to 100 OTPs/min allowed.
         // TODO: Restore before production.
         // const recentAttempts = await OTP.getRecentAttempts(formattedNumber, 5);

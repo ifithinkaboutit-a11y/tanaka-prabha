@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import Event from '../models/Event.js';
 import EventParticipant from '../models/EventParticipant.js';
 import User from '../models/User.js';
@@ -138,13 +139,64 @@ export const getEventParticipants = async (req, res) => {
 export const markAttendance = async (req, res) => {
     try {
         const { id } = req.params;
-        const { mobile_number, name } = req.body;
+        const { mobile_number, name, token } = req.body;
 
-        // Mark attendance by registering if not present, and then updating state
-        // Register handles it gracefully due to ON CONFLICT UPDATE
+        // QR token flow: validate the signed JWT when a token is provided
+        if (token !== undefined) {
+            const secret = process.env.QR_TOKEN_SECRET || process.env.JWT_SECRET;
+            if (!secret) {
+                return res.status(500).json({ status: 'error', message: 'Server configuration error' });
+            }
+
+            let payload;
+            try {
+                payload = jwt.verify(token, secret);
+            } catch (err) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: err.name === 'TokenExpiredError'
+                        ? 'QR token has expired'
+                        : 'Invalid QR token'
+                });
+            }
+
+            // Ensure the token was issued for this event
+            if (String(payload.eventId) !== String(id) || payload.purpose !== 'attendance-qr') {
+                return res.status(401).json({ status: 'error', message: 'Invalid QR token for this event' });
+            }
+
+            // Derive mobile_number from the authenticated user when using QR flow
+            const userMobile = req.user?.mobile_number || mobile_number;
+            if (!userMobile) {
+                return res.status(400).json({ status: 'error', message: 'mobile_number is required' });
+            }
+
+            // 409 if already attended
+            const existing = await EventParticipant.findAttendance(id, userMobile);
+            if (existing && existing.status === 'attended') {
+                return res.status(409).json({ status: 'error', message: 'Attendance already recorded' });
+            }
+
+            // Register (upsert) then mark attended
+            let finalUserId = req.user?.userId || null;
+            let finalName = name;
+            if (!finalUserId && userMobile) {
+                const existingUser = await User.findByMobile(userMobile);
+                if (existingUser) {
+                    finalUserId = existingUser.id;
+                    finalName = existingUser.name || name;
+                }
+            }
+
+            await EventParticipant.register(id, finalUserId, userMobile, finalName);
+            const participant = await EventParticipant.markAttendance(id, userMobile);
+
+            return res.status(200).json({ status: 'success', data: { participant } });
+        }
+
+        // Admin / legacy flow (no token): existing behaviour preserved
         let participant = await EventParticipant.markAttendance(id, mobile_number);
 
-        // If participant didn't exist in DB, create it and mark attended
         if (!participant) {
             let finalUserId = null;
             let finalName = name;
@@ -181,5 +233,39 @@ export const getMyEvents = async (req, res) => {
     } catch (error) {
         console.error('Error fetching my events:', error);
         res.status(500).json({ status: 'error', message: 'Failed to fetch my events' });
+    }
+};
+
+export const generateQrToken = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify the event exists
+        const event = await Event.findById(id);
+        if (!event) {
+            return res.status(404).json({ status: 'error', message: 'Event not found' });
+        }
+
+        const secret = process.env.QR_TOKEN_SECRET || process.env.JWT_SECRET;
+        if (!secret) {
+            return res.status(500).json({ status: 'error', message: 'Server configuration error' });
+        }
+
+        // Sign a JWT with 24-hour expiry; keep payload minimal
+        const token = jwt.sign(
+            { eventId: id, purpose: 'attendance-qr' },
+            secret,
+            { expiresIn: '24h' }
+        );
+
+        const deepLink = `tanakprabha://attendance?eventId=${id}&token=${token}`;
+
+        res.status(200).json({
+            status: 'success',
+            data: { token, deepLink }
+        });
+    } catch (error) {
+        console.error('Error generating QR token:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to generate QR token' });
     }
 };

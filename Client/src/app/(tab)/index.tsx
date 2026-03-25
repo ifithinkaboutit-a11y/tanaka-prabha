@@ -6,6 +6,7 @@ import SearchBar from "@/components/molecules/SearchBar";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
 import { bannersApi, schemesApi, notificationsApi, Banner, Scheme } from "@/services/apiService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { ScrollView, View } from "react-native";
@@ -19,6 +20,35 @@ export default function Home() {
   const { t } = useTranslation();
   const { currentLanguage } = useLanguageStore();
   const { user } = useAuth();
+  const { profile } = useUserProfile();
+  // Use UserProfileContext photo first (freshest, updated after uploads),
+  // fall back to AuthContext user photo (available immediately from cache)
+  const avatarUri = profile?.photoUrl || user?.photoUrl || undefined;
+
+  // Fallback banners shown when API returns nothing
+  const FALLBACK_BANNERS = [
+    {
+      id: "fallback-1",
+      title: t("banners.welcome.title"),
+      subtitle: t("banners.welcome.subtitle"),
+      imageUrl: undefined,
+      url: undefined,
+    },
+    {
+      id: "fallback-2",
+      title: t("banners.programs.title"),
+      subtitle: t("banners.programs.subtitle"),
+      imageUrl: undefined,
+      url: undefined,
+    },
+    {
+      id: "fallback-3",
+      title: t("banners.connect.title"),
+      subtitle: t("banners.connect.subtitle"),
+      imageUrl: undefined,
+      url: undefined,
+    },
+  ];
 
   // State for API data
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -79,26 +109,28 @@ export default function Home() {
     },
   }));
 
-  // Translate banners - use API data with fallback translations
-  const translatedBanners = banners.map((banner, index) => {
-    const displayTitle = currentLanguage === 'hi' && banner.titleHi ? banner.titleHi : banner.title;
-    const displaySubtitle = currentLanguage === 'hi' && banner.subtitleHi ? banner.subtitleHi : banner.subtitle;
-    return {
-      id: banner.id,
-      title: displayTitle || (index === 0
-        ? t("banners.welcome.title")
-        : index === 1
-          ? t("banners.programs.title")
-          : t("banners.connect.title")),
-      subtitle: displaySubtitle || (index === 0
-        ? t("banners.welcome.subtitle")
-        : index === 1
-          ? t("banners.programs.subtitle")
-          : t("banners.connect.subtitle")),
-      imageUrl: banner.imageUrl,
-      url: banner.redirectUrl,
-    };
-  });
+  // Translate banners — use API data; fall back to hardcoded banners if API returns nothing
+  const translatedBanners = banners.length > 0
+    ? banners.map((banner, index) => {
+        const displayTitle = currentLanguage === 'hi' && banner.titleHi ? banner.titleHi : banner.title;
+        const displaySubtitle = currentLanguage === 'hi' && banner.subtitleHi ? banner.subtitleHi : banner.subtitle;
+        return {
+          id: banner.id,
+          title: displayTitle || (index === 0
+            ? t("banners.welcome.title")
+            : index === 1
+              ? t("banners.programs.title")
+              : t("banners.connect.title")),
+          subtitle: displaySubtitle || (index === 0
+            ? t("banners.welcome.subtitle")
+            : index === 1
+              ? t("banners.programs.subtitle")
+              : t("banners.connect.subtitle")),
+          imageUrl: banner.imageUrl,
+          url: banner.redirectUrl,
+        };
+      })
+    : FALLBACK_BANNERS;
 
   // Get user's display name
   const userName = user?.name || t("common.farmer");
@@ -132,6 +164,7 @@ export default function Home() {
       }}>
         <GreetingHeader
           name={userName}
+          avatarUri={avatarUri}
           onNotificationPress={handleNotificationPress}
           onAvatarPress={() => router.push("/(tab)/profile")}
           hasNotifications={unreadCount > 0}

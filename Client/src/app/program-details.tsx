@@ -7,8 +7,10 @@ import AppText from "../components/atoms/AppText";
 import { DetailPageSkeleton } from "../components/atoms/Skeleton";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
+import InterestButton from "../components/atoms/InterestButton";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
+import { useInterest } from "../hooks/useInterest";
 
 export const options = {
   headerShown: false,
@@ -23,6 +25,10 @@ const ProgramDetails = () => {
   >("overview");
   const [program, setProgram] = useState<Scheme | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isInterested, interestCount, toggleInterest, loading: interestLoading } = useInterest(
+    programId ?? "",
+    program?.interest_count ?? 0
+  );
 
   // Fetch program on mount
   useEffect(() => {
@@ -151,9 +157,17 @@ const ProgramDetails = () => {
 
         {/* Program Title & Description */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-          <AppText variant="h1" style={{ color: "#212121", marginBottom: 16 }}>
-            {program.title}
-          </AppText>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+            <AppText variant="h1" style={{ color: "#212121", flex: 1, marginRight: 12 }}>
+              {program.title}
+            </AppText>
+            <InterestButton
+              isInterested={isInterested}
+              count={interestCount}
+              onToggle={toggleInterest}
+              loading={interestLoading}
+            />
+          </View>
           <AppText variant="bodyLg" style={{ color: "#616161", lineHeight: 24 }}>
             {program.description}
           </AppText>

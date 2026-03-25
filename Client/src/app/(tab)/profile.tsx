@@ -19,11 +19,8 @@ import { useUserProfile } from "../../contexts/UserProfileContext";
 import { useLanguageStore } from "../../stores/languageStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { useAuth } from "../../contexts/AuthContext";
-import TextArea from "@/components/atoms/TextArea";
 import * as ImagePicker from "expo-image-picker";
-import { Image } from "react-native";
 import { uploadApi } from "../../services/apiService";
-import { avatar } from "@/utils/cloudinaryUtils";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -163,7 +160,7 @@ const Profile = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshProfile();
+    await refreshProfile(true); // bypass TTL — explicit pull-to-refresh always fetches
     setRefreshing(false);
   };
 
@@ -195,28 +192,11 @@ const Profile = () => {
     (profile?.livestockDetails?.poultry || 0) +
     (profile?.livestockDetails?.others || 0);
 
-  // ── Loading ──
-  if (loading && !profile) {
+  if (!profile) {
     return (
       <View style={s.center}>
         <ActivityIndicator size="large" color="#386641" />
         <Text style={s.centerText}>{t("common.loading")}</Text>
-      </View>
-    );
-  }
-
-  // ── No profile ──
-  if (!profile) {
-    return (
-      <View style={s.center}>
-        <View style={s.emptyIcon}>
-          <Ionicons name="person-outline" size={40} color="#9CA3AF" />
-        </View>
-        <Text style={s.centerText}>Could not load profile</Text>
-        <Pressable onPress={onRefresh} style={s.retryBtn}>
-          <Ionicons name="refresh-outline" size={16} color="#fff" />
-          <Text style={s.retryBtnText}>{t("common.retry")}</Text>
-        </Pressable>
       </View>
     );
   }
@@ -252,15 +232,13 @@ const Profile = () => {
         <View style={s.heroCenter}>
           {/* Tappable avatar with upload overlay */}
           <Pressable onPress={handleAvatarUpload} style={s.avatarRing} disabled={avatarUploading}>
-            {(localAvatarUri || profile.photoUrl) ? (
-              <Image
-                source={{ uri: localAvatarUri ?? avatar(profile.photoUrl) }}
-                style={{ width: 86, height: 86, borderRadius: 43 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Avatar name={profile.name} size="3xl" shape="circle" bgColor="#FFFFFF" />
-            )}
+            <Avatar
+              uri={localAvatarUri || profile.photoUrl || undefined}
+              name={profile.name}
+              size="3xl"
+              shape="circle"
+              bgColor="#FFFFFF"
+            />
             {/* Camera badge */}
             {!avatarUploading && (
               <View style={s.cameraBadge}>

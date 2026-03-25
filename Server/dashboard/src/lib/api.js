@@ -262,6 +262,11 @@ export const eventsApi = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+    generateQrToken: (id) =>
+        apiRequest(`/events/${id}/qr-token`, {
+            method: 'POST',
+        }),
 };
 
 // ============================================================

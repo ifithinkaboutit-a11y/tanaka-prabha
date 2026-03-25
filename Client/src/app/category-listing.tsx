@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import SchemePreviewCard from "../components/atoms/SchemePreviewCard";
@@ -18,17 +17,28 @@ import {
   schemeCategories,
 } from "../data/content/schemeCategories";
 import { useTranslation } from "../i18n";
+import FilterPanel, { FilterState, TypeFilter } from "../components/molecules/FilterPanel";
 
 const CategoryListing = () => {
   const router = useRouter();
-  const { category, type } = useLocalSearchParams<{
+  const params = useLocalSearchParams<{
     category: string;
     type?: string;
+    sortBy?: string;
+    categories?: string;
+    typeFilter?: string;
   }>();
+  const { category, type } = params;
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<"name" | "newest" | "interested">(
+    (params.sortBy as "name" | "newest" | "interested") || "name"
+  );
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    categories: params.categories ? params.categories.split(",") : [],
+    typeFilter: (params.typeFilter as TypeFilter) || "both",
+  });
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,23 +86,38 @@ const CategoryListing = () => {
       );
     }
 
+    // Apply category filter
+    if (activeFilters.categories.length > 0) {
+      filtered = filtered.filter((scheme) =>
+        activeFilters.categories.includes(scheme.category)
+      );
+    }
+
+    // Apply type filter (scheme.type field not present — skip if 'both')
+    if (activeFilters.typeFilter !== "both") {
+      filtered = filtered.filter(
+        (scheme) => (scheme as any).type === activeFilters.typeFilter
+      );
+    }
+
     // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
           return a.title.localeCompare(b.title);
-        case "date":
-          // Assuming date is in format "DD Month YYYY"
+        case "newest":
           return (
-            new Date(b.eventDate || "").getTime() - new Date(a.eventDate || "").getTime()
+            new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
           );
+        case "interested":
+          return (b.interestCount ?? 0) - (a.interestCount ?? 0);
         default:
           return 0;
       }
     });
 
     return filtered;
-  }, [schemes, searchQuery, sortBy]);
+  }, [schemes, searchQuery, sortBy, activeFilters]);
 
   const handleSchemePress = (scheme: any) => {
     router.push({
@@ -103,6 +128,24 @@ const CategoryListing = () => {
 
   const handleBack = () => {
     router.back();
+  };
+
+  // Sync sort and filter state to URL params
+  useEffect(() => {
+    router.setParams({
+      sortBy,
+      categories: activeFilters.categories.length > 0 ? activeFilters.categories.join(",") : undefined,
+      typeFilter: activeFilters.typeFilter !== "both" ? activeFilters.typeFilter : undefined,
+    });
+  }, [sortBy, activeFilters]);
+
+  // Count active filters for badge
+  const activeFilterCount =
+    activeFilters.categories.length + (activeFilters.typeFilter !== "both" ? 1 : 0);
+
+  const clearFilters = () => {
+    setActiveFilters({ categories: [], typeFilter: "both" });
+    router.setParams({ categories: undefined, typeFilter: undefined });
   };
 
   // Get display title
@@ -144,9 +187,10 @@ const CategoryListing = () => {
           </AppText>
         </View>
 
-        {/* Search Bar */}
-        <View style={{ paddingHorizontal: 16, marginTop: 4 }}>
+        {/* Search Bar + Filters Button */}
+        <View style={{ paddingHorizontal: 16, marginTop: 4, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <View style={{
+            flex: 1,
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: "#FFFFFF",
@@ -175,6 +219,45 @@ const CategoryListing = () => {
               </Pressable>
             )}
           </View>
+
+          {/* Filters Button */}
+          <TouchableOpacity
+            onPress={() => setShowFilterPanel(true)}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: activeFilterCount > 0 ? "#166534" : "#E5E7EB",
+              backgroundColor: activeFilterCount > 0 ? "#DCFCE7" : "#FFFFFF",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
+            <Ionicons name="options-outline" size={18} color={activeFilterCount > 0 ? "#166534" : "#6B7280"} />
+            {activeFilterCount > 0 && (
+              <View style={{
+                marginLeft: 6,
+                backgroundColor: "#166534",
+                borderRadius: 10,
+                minWidth: 20,
+                height: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 4,
+              }}>
+                <AppText variant="caption" style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>
+                  {activeFilterCount}
+                </AppText>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -188,6 +271,7 @@ const CategoryListing = () => {
               description={scheme.description || ""}
               category={scheme.category}
               imageUrl={scheme.imageUrl}
+              interestCount={scheme.interestCount}
               onPress={() => handleSchemePress(scheme)}
             />
           ))}
@@ -199,8 +283,29 @@ const CategoryListing = () => {
                 variant="bodyMd"
                 style={{ color: "#616161", marginTop: 16, textAlign: "center" }}
               >
-                {t("schemesPage.noSchemesFound") || "No schemes found"}
+                {activeFilterCount > 0
+                  ? "No results found"
+                  : t("schemesPage.noSchemesFound") || "No schemes found"}
               </AppText>
+              {activeFilterCount > 0 && (
+                <TouchableOpacity
+                  onPress={clearFilters}
+                  activeOpacity={0.7}
+                  style={{
+                    marginTop: 16,
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 20,
+                    borderWidth: 1.5,
+                    borderColor: "#166534",
+                    backgroundColor: "#FFFFFF",
+                  }}
+                >
+                  <AppText variant="bodyMd" style={{ color: "#166534", fontWeight: "600" }}>
+                    Clear Filters
+                  </AppText>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -208,7 +313,7 @@ const CategoryListing = () => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Fixed Bottom Bar for Sort and Filter */}
+      {/* Fixed Bottom Sort_Bar */}
       <View style={{
         position: 'absolute',
         bottom: 0,
@@ -216,8 +321,8 @@ const CategoryListing = () => {
         right: 0,
         backgroundColor: '#FFFFFF',
         flexDirection: 'row',
-        paddingVertical: 16,
-        paddingBottom: 32, // for safe area
+        paddingVertical: 12,
+        paddingBottom: 28,
         borderTopWidth: 1,
         borderColor: '#E5E7EB',
         shadowColor: "#000",
@@ -226,28 +331,55 @@ const CategoryListing = () => {
         shadowRadius: 10,
         elevation: 10,
       }}>
-        <TouchableOpacity
-          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderColor: '#E5E7EB' }}
-          onPress={() => setSortBy(sortBy === "name" ? "date" : "name")}
-        >
-          <Ionicons name="filter-outline" size={20} color="#4B5563" style={{ transform: [{ rotate: '180deg' }] }} />
-          <AppText variant="bodyMd" style={{ color: "#4B5563", marginLeft: 8, fontWeight: "600" }}>
-            Sort By {sortBy === "name" ? "(A-Z)" : "(Date)"}
-          </AppText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Ionicons name="options-outline" size={20} color="#4B5563" />
-          <AppText variant="bodyMd" style={{ color: "#4B5563", marginLeft: 8, fontWeight: "600" }}>
-            Filters
-          </AppText>
-        </TouchableOpacity>
+        {(
+          [
+            { key: "name", label: "Name (A–Z)" },
+            { key: "newest", label: "Newest First" },
+            { key: "interested", label: "Most Interested" },
+          ] as const
+        ).map(({ key, label }, index, arr) => {
+          const isActive = sortBy === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 8,
+                paddingHorizontal: 4,
+                marginHorizontal: 6,
+                borderRadius: 20,
+                backgroundColor: isActive ? '#166534' : 'transparent',
+                borderWidth: isActive ? 0 : 1,
+                borderColor: '#E5E7EB',
+              }}
+              onPress={() => setSortBy(key)}
+            >
+              <AppText
+                variant="bodyMd"
+                style={{
+                  color: isActive ? '#FFFFFF' : '#4B5563',
+                  fontWeight: isActive ? '700' : '500',
+                  fontSize: 12,
+                  textAlign: 'center',
+                }}
+              >
+                {label}
+              </AppText>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Mocked Filter Dropdown just changing the search query logic could happen here, keeping simple for UI */}
+      {/* Filter Panel */}
+      <FilterPanel
+        visible={showFilterPanel}
+        initialFilters={activeFilters}
+        onApply={(f) => { setActiveFilters(f); setShowFilterPanel(false); }}
+        onClear={() => { clearFilters(); setShowFilterPanel(false); }}
+        onClose={() => setShowFilterPanel(false)}
+      />
     </View>
   );
 };

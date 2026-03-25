@@ -1,7 +1,7 @@
 // src/app/(tab)/schemes.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Image,
   Pressable,
@@ -265,6 +265,17 @@ export default function Schemes() {
     setRefreshing(false);
   };
 
+  const filteredSchemes = useMemo(() => {
+    const query = searchQuery.trim();
+    if (!query) return schemes;
+    const lower = query.toLowerCase();
+    return schemes.filter(
+      (s) =>
+        s.title.toLowerCase().includes(lower) ||
+        (s.category && s.category.toLowerCase().includes(lower))
+    );
+  }, [schemes, searchQuery]);
+
   const handleSchemePress = (schemeId: string) => {
     router.push({
       pathname: "/scheme-details",
@@ -286,10 +297,12 @@ export default function Schemes() {
     } as any);
   };
 
+  const isSearchActive = searchQuery.trim().length > 0;
+
   // Featured scheme (first one)
   const featuredScheme = schemes[0];
-  // Recommended schemes (next 3)
-  const recommendedSchemes = schemes.slice(1, 4);
+  // Recommended schemes (first 3 from filtered results)
+  const recommendedSchemes = filteredSchemes.slice(0, 3);
 
   if (loading) {
     return (
@@ -365,17 +378,19 @@ export default function Schemes() {
       </View>
 
       {/* Banner Slideshow — live data from bannersApi */}
-      <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
-        <BannerSlideshow
-          banners={banners.map((b) => ({
-            title: (currentLanguage === 'hi' && b.titleHi ? b.titleHi : b.title) || "",
-            subtitle: (currentLanguage === 'hi' && b.subtitleHi ? b.subtitleHi : b.subtitle) || "",
-            imageUrl: b.imageUrl,
-            url: b.redirectUrl,
-          }))}
-          autoSlideInterval={4000}
-        />
-      </View>
+      {!isSearchActive && (
+        <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
+          <BannerSlideshow
+            banners={banners.map((b) => ({
+              title: (currentLanguage === 'hi' && b.titleHi ? b.titleHi : b.title) || "",
+              subtitle: (currentLanguage === 'hi' && b.subtitleHi ? b.subtitleHi : b.subtitle) || "",
+              imageUrl: b.imageUrl,
+              url: b.redirectUrl,
+            }))}
+            autoSlideInterval={4000}
+          />
+        </View>
+      )}
 
       {/* Recommended Schemes */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: "#F8FAFC" }}>
@@ -448,59 +463,61 @@ export default function Schemes() {
       </View>
 
       {/* Categories */}
-      <View
-        style={{
-          marginHorizontal: 16,
-          marginBottom: 24,
-          padding: 20,
-          backgroundColor: "#FFFFFF",
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: "#E5E7EB",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          elevation: 3,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#386641",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="grid-outline" size={20} color="#FFFFFF" />
+      {!isSearchActive && (
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 24,
+            padding: 20,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 8,
+            elevation: 3,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: "#386641",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 12,
+              }}
+            >
+              <Ionicons name="grid-outline" size={20} color="#FFFFFF" />
+            </View>
+            <AppText
+              variant="h3"
+              style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
+            >
+              {t("schemesPage.categories")}
+            </AppText>
           </View>
-          <AppText
-            variant="h3"
-            style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
-          >
-            {t("schemesPage.categories")}
-          </AppText>
-        </View>
 
-        {schemeCategories.map((category, index) => (
-          <CategoryItem
-            key={category.id}
-            category={category}
-            onPress={() => handleCategoryPress(category.id)}
-            isLast={index === schemeCategories.length - 1}
-            realCount={categoryCounts[category.id] || 0}
-          />
-        ))}
-      </View>
+          {schemeCategories.map((category, index) => (
+            <CategoryItem
+              key={category.id}
+              category={category}
+              onPress={() => handleCategoryPress(category.id)}
+              isLast={index === schemeCategories.length - 1}
+              realCount={categoryCounts[category.id] || 0}
+            />
+          ))}
+        </View>
+      )}
 
       {/* Government Schemes — ProgramSection cards */}
       <ProgramSection
         title={t("schemesPage.recommendedSchemes")}
-        programs={schemes.slice(0, 9).map((s) => ({
+        programs={filteredSchemes.slice(0, 9).map((s) => ({
           ...s,
           title: currentLanguage === 'hi' && s.titleHi ? s.titleHi : s.title,
           description: (currentLanguage === 'hi' && s.descriptionHi ? s.descriptionHi : s.description) || "",
@@ -508,6 +525,15 @@ export default function Schemes() {
         onViewAll={handleViewAllSchemes}
         onProgramPress={(program) => handleSchemePress(program.id)}
       />
+
+      {/* No results message */}
+      {isSearchActive && filteredSchemes.length === 0 && (
+        <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 32 }}>
+          <AppText variant="bodyMd" style={{ color: "#6B7280", textAlign: "center", fontSize: 16 }}>
+            {t("schemesPage.noSchemesFound")}
+          </AppText>
+        </View>
+      )}
 
       {/* Bottom Spacing */}
       <View style={{ height: 24 }} />

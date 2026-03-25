@@ -1,6 +1,5 @@
 // src/app/(auth)/phone-input.tsx
 import AppText from "@/components/atoms/AppText";
-import AuthVideoBackground from "@/components/molecules/AuthVideoBackground";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateMobileNumber } from "@/utils/validation";
@@ -31,11 +30,12 @@ const PhoneInput = () => {
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [duplicateBanner, setDuplicateBanner] = useState(false);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   const router = useRouter();
   const { t } = useTranslation();
-  const { sendOTP, signIn } = useAuth();
+  const { sendOTP, signIn, refreshUser } = useAuth();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isLogin = mode === "login";
 
@@ -54,6 +54,19 @@ const PhoneInput = () => {
   const handlePhoneChange = (text: string) => {
     setPhoneNumber(formatPhoneNumber(text));
     if (validationError) setValidationError(null);
+    if (duplicateBanner) setDuplicateBanner(false);
+  };
+
+  const isDuplicatePhoneError = (error: unknown): boolean => {
+    if (!(error instanceof Error)) return false;
+    const msg = error.message.toLowerCase();
+    return (
+      msg.includes("already registered") ||
+      msg.includes("duplicate") ||
+      msg.includes("already exists") ||
+      msg.includes("phone number is taken") ||
+      msg.includes("user already exists")
+    );
   };
 
   const handleSendOTP = async () => {
@@ -74,7 +87,11 @@ const PhoneInput = () => {
         params: { phoneNumber: fullPhoneNumber, mode: mode || "signup" },
       });
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Failed to send OTP");
+      if (isDuplicatePhoneError(error)) {
+        setDuplicateBanner(true);
+      } else {
+        Alert.alert("Error", error instanceof Error ? error.message : "Failed to send OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -99,11 +116,12 @@ const PhoneInput = () => {
       const fullPhoneNumber = `+91${phoneNumber}`;
       const response = await authApi.loginWithPassword(fullPhoneNumber, password);
       if (response.data) {
-        // Persist auth data exactly like the OTP flow
+        // Persist auth data to AsyncStorage
         await tokenManager.setToken(response.data.token);
         await tokenManager.setUser(response.data.user as any);
-        // Trigger AuthContext signIn by using the stored token — just navigate
-        // The nav guard in AuthContext will pick up the token and redirect
+        // Sync AuthContext state so the navigation guard fires correctly
+        await refreshUser();
+        // Navigate based on user type
         if (response.data.is_new_user) {
           router.replace("/(auth)/personal-details" as any);
         } else {
@@ -172,31 +190,28 @@ const PhoneInput = () => {
   return (
     <KeyboardAvoidingView
       style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "padding"}
-      keyboardVerticalOffset={0}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
+      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      {/* Static Header */}
+      <View style={s.header}>
+        <AppText variant="h2" style={s.headerTitle}>
+          {isLogin ? (t("auth.loginTitle") || "Welcome Back") : (t("auth.enterPhone") || "Get Started")}
+        </AppText>
+        <Text style={s.headerSubtitle}>
+          {isLogin
+            ? (t("auth.loginSubtitle") || "Enter your registered mobile number")
+            : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
+        </Text>
+      </View>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         bounces={false}
         showsVerticalScrollIndicator={false}
       >
-        {/* Video Header */}
-        <View className="h-[55vh]">
-          <AuthVideoBackground />
-        </View>
-
         {/* Card */}
         <View style={s.card}>
-          <AppText variant="h2" style={s.cardLabel}>
-            {isLogin ? (t("auth.loginTitle") || "Welcome Back") : (t("auth.enterPhone") || "Get Started")}
-          </AppText>
-          <Text style={s.videoSubtitle}>
-            {isLogin
-              ? (t("auth.loginSubtitle") || "Enter your registered mobile number")
-              : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
-          </Text>
           {/* Label */}
           <Text style={s.inputLabel}>{t("auth.mobileNumber") || "Mobile Number"}</Text>
 
@@ -247,6 +262,34 @@ const PhoneInput = () => {
               </Text>
             )}
           </View>
+
+          {/* Duplicate phone inline banner — Requirement 4.1 */}
+          {duplicateBanner && (
+            <View style={s.duplicateBanner}>
+              <View style={s.duplicateBannerContent}>
+                <Ionicons name="warning-outline" size={18} color="#92400E" style={{ marginTop: 1 }} />
+                <Text style={s.duplicateBannerText}>
+                  This number is already registered. Please log in instead.
+                </Text>
+              </View>
+              <View style={s.duplicateBannerActions}>
+                <TouchableOpacity
+                  onPress={() => router.replace("/(auth)/phone-input?mode=login" as any)}
+                  style={s.duplicateBannerLogIn}
+                  activeOpacity={0.75}
+                >
+                  <Text style={s.duplicateBannerLogInText}>Log In</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDuplicateBanner(false)}
+                  style={s.duplicateBannerDismiss}
+                  activeOpacity={0.75}
+                >
+                  <Text style={s.duplicateBannerDismissText}>Dismiss</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Password field — only shown in login mode */}
           {isLogin && (
@@ -331,6 +374,25 @@ export default PhoneInput;
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
+  header: {
+    backgroundColor: "#386641",
+    paddingTop: 60,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   videoContainer: {
     position: "relative",
     justifyContent: "flex-end",
@@ -359,27 +421,14 @@ const s = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
-  videoSubtitle: {
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 14,
-    lineHeight: 20,
-  },
 
   // ── Card ──
   card: {
     flex: 1,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -32,
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 16,
   },
   handle: {
     width: 40,
@@ -487,4 +536,55 @@ const s = StyleSheet.create({
     gap: 5,
   },
   securityText: { color: "#9CA3AF", fontSize: 11 },
+
+  // ── Duplicate phone banner ──
+  duplicateBanner: {
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  duplicateBannerContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 10,
+  },
+  duplicateBannerText: {
+    flex: 1,
+    color: "#92400E",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  duplicateBannerActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+  },
+  duplicateBannerLogIn: {
+    backgroundColor: "#D97706",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  duplicateBannerLogInText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  duplicateBannerDismiss: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D97706",
+  },
+  duplicateBannerDismissText: {
+    color: "#92400E",
+    fontWeight: "600",
+    fontSize: 13,
+  },
 });

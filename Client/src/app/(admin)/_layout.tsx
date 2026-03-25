@@ -10,6 +10,8 @@ export default function AdminLayout() {
             <Stack.Screen name="view-attendance" />
             <Stack.Screen name="content-management" />
             <Stack.Screen name="send-notification" />
+            <Stack.Screen name="beneficiaries" />
+            <Stack.Screen name="beneficiary-detail" />
         </Stack>
 
     );

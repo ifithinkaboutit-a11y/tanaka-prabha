@@ -18,6 +18,14 @@ export interface LocationData {
   setAt: string;
   /** How location was captured. 'gps' = confirmed pin, 'skipped' = user skipped */
   method: 'gps' | 'skipped';
+  /**
+   * Ordered boundary vertices for a land parcel polygon.
+   * Only populated in Land_Flow when the user places >= 3 pins.
+   * Undefined for home-location confirmations and single-pin land confirmations.
+   * Backwards-compatible: existing AsyncStorage records without this field
+   * deserialise as undefined (Zustand persist does not require all fields).
+   */
+  polygon?: Array<{ lat: number; lng: number }>;
 }
 
 export interface LandEntry {
@@ -37,6 +45,10 @@ export interface LivestockEntry {
 interface OnboardingState {
   // Current step (0-2)
   currentStep: number;
+
+  // Onboarding screen step — persisted so mid-onboarding relaunches resume correctly
+  // 0=personal-details, 1=location-picker, 2=land-details, 3=livestock-details
+  onboardingStep: number;
 
   // Step completion status
   isPersonalCompleted: boolean;
@@ -61,6 +73,7 @@ interface OnboardingState {
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
+  setOnboardingStep: (step: number) => void;
 
   // Personal details actions
   setMobileNumber: (num: string) => void;
@@ -90,6 +103,11 @@ interface OnboardingState {
   // personal-details reads this and clears it after consuming
   profileAddressOverride: Record<string, string> | null;
   setProfileAddressOverride: (data: Record<string, string> | null) => void;
+
+  // Event location pick — set by location-picker when purpose==='event-location'
+  // create-event reads this and clears it after consuming
+  eventLocationPick: { lat: number; lng: number } | null;
+  setEventLocationPick: (data: { lat: number; lng: number } | null) => void;
 
   // Reset
   resetOnboarding: () => void;
@@ -126,6 +144,7 @@ export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set, get) => ({
       currentStep: 0,
+      onboardingStep: 0,
       isPersonalCompleted: false,
       isLandCompleted: false,
       isLivestockCompleted: false,
@@ -134,6 +153,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       locationData: null,
       landLocationData: null,
       profileAddressOverride: null,
+      eventLocationPick: null,
 
       // Land Details
       hasLand: true,
@@ -147,6 +167,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setMobileNumber: (num) => set((state) => ({ personalDetails: { ...state.personalDetails, mobileNumber: num } })),
       setRole: (role) => set((state) => ({ personalDetails: { ...state.personalDetails, role: role } })),
       setCurrentStep: (step) => set({ currentStep: step }),
+      setOnboardingStep: (step) => set({ onboardingStep: step }),
 
       nextStep: () => {
         const { currentStep } = get();
@@ -173,6 +194,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setLocationData: (data) => set({ locationData: data }),
       setLandLocationData: (data) => set({ landLocationData: data }),
       setProfileAddressOverride: (data) => set({ profileAddressOverride: data }),
+      setEventLocationPick: (data) => set({ eventLocationPick: data }),
 
       setHasLand: (has) => set({ hasLand: has }),
 
@@ -235,6 +257,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       resetOnboarding: () =>
         set({
           currentStep: 0,
+          onboardingStep: 0,
           isPersonalCompleted: false,
           isLandCompleted: false,
           isLivestockCompleted: false,

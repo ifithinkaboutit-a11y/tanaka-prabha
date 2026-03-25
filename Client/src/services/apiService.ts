@@ -437,6 +437,26 @@ export const userApi = {
   },
 
   /**
+   * Get all registered farmers/users (for admin beneficiaries screen)
+   */
+  async getAll(params?: { limit?: number; offset?: number }): Promise<ApiUserProfile[]> {
+    const limit = params?.limit ?? 100;
+    const offset = params?.offset ?? 0;
+    const response = await fetchWithAuth<{ users: ApiUserProfile[] }>(
+      `/users?limit=${limit}&offset=${offset}`
+    );
+    return response.data?.users ?? [];
+  },
+
+  /**
+   * Get a single user by ID (for admin beneficiary detail screen)
+   */
+  async getById(id: string): Promise<ApiUserProfile | null> {
+    const response = await fetchWithAuth<{ user: ApiUserProfile }>(`/users/${id}`);
+    return response.data?.user ?? null;
+  },
+
+  /**
    * Look up a user by their mobile number (for admin mark-attendance flow)
    */
   async lookupByMobile(mobile_number: string): Promise<UserProfile | null> {
@@ -607,6 +627,7 @@ export interface ApiUserProfile {
   land_details?: ApiLandDetails;
   livestock_details?: ApiLivestockDetails;
   is_new_user?: boolean;
+  is_verified?: boolean;
 }
 
 export interface UserProfile {
@@ -771,6 +792,7 @@ export interface ApiScheme {
   apply_url?: string;
   is_active?: boolean;
   created_at?: string;
+  interest_count?: number;
 }
 
 export interface Scheme {
@@ -796,6 +818,7 @@ export interface Scheme {
   applyUrl?: string;
   isActive?: boolean;
   createdAt?: string;
+  interestCount?: number;
 }
 
 // ============================================================
@@ -843,6 +866,13 @@ export interface ApiEvent {
   requirements?: string;
   hero_image_url?: string;
   status: string;
+  master_trainer_name?: string;
+  master_trainer_phone?: string;
+  trainer_name?: string;
+  trainer_phone?: string;
+  contact_number?: string;
+  location_lat?: number;
+  location_lng?: number;
 }
 
 export const eventsApi = {
@@ -898,6 +928,20 @@ export const eventsApi = {
     return await fetchWithAuth(`/events/${eventId}/attendance`, {
       method: "POST",
       body: JSON.stringify({ mobile_number: cleanMobile, status, name }),
+    });
+  },
+
+  generateQrToken: async (id: string | number): Promise<{ token: string; deepLink: string }> => {
+    const response = await fetchWithAuth<{ token: string; deepLink: string }>(`/events/${id}/qr-token`, {
+      method: "POST",
+    });
+    return response.data as { token: string; deepLink: string };
+  },
+
+  submitAttendance: async (id: string | number, token: string): Promise<any> => {
+    return await fetchWithAuth(`/events/${id}/attendance`, {
+      method: "POST",
+      body: JSON.stringify({ token }),
     });
   },
 };
@@ -961,6 +1005,30 @@ export const schemesApi = {
       `/schemes?search=${encodeURIComponent(query)}&limit=${limit}`
     );
     return convertKeysToCamelCase<Scheme[]>(response.data?.schemes || []);
+  },
+
+  /**
+   * Express interest in a scheme
+   * Requirements: 5.1.3, 5.1.4
+   */
+  async addInterest(id: string): Promise<{ interestCount: number }> {
+    const response = await fetchWithAuth<{ interest_count: number }>(
+      `/schemes/${id}/interest`,
+      { method: "POST" }
+    );
+    return { interestCount: response.data?.interest_count ?? 0 };
+  },
+
+  /**
+   * Remove interest from a scheme
+   * Requirements: 5.1.5, 5.1.6
+   */
+  async removeInterest(id: string): Promise<{ interestCount: number }> {
+    const response = await fetchWithAuth<{ interest_count: number }>(
+      `/schemes/${id}/interest`,
+      { method: "DELETE" }
+    );
+    return { interestCount: response.data?.interest_count ?? 0 };
   },
 };
 

@@ -8,14 +8,19 @@ interface FormInputProps extends Omit<TextInputProps, "style"> {
   label?: string;
   error?: string;
   containerStyle?: ViewStyle;
+  /** Explicit accessibility label. Falls back to `label` if not provided. */
+  accessibilityLabel?: string;
 }
 
 export default function FormInput({
   label,
   error,
   containerStyle,
+  accessibilityLabel,
   ...props
 }: FormInputProps) {
+  const derivedLabel = accessibilityLabel ?? label;
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -27,13 +32,16 @@ export default function FormInput({
       <TextInput
         style={[styles.input, error ? styles.inputError : styles.inputNormal]}
         placeholderTextColor={colors.neutral.textLight}
+        accessibilityLabel={derivedLabel}
         {...props}
       />
 
       {error && (
-        <AppText variant="bodySm" style={styles.error}>
-          {error}
-        </AppText>
+        <View accessibilityLiveRegion="assertive">
+          <AppText variant="bodySm" style={styles.error}>
+            {error}
+          </AppText>
+        </View>
       )}
     </View>
   );

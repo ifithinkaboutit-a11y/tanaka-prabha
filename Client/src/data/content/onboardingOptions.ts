@@ -45,23 +45,45 @@ export const indianStates: SelectOption[] = sortOptions([
   { value: "west_bengal", label: "West Bengal", labelHi: "पश्चिम बंगाल" },
 ]);
 
+export interface CropsBySeason {
+  rabi: SelectOption[];
+  kharif: SelectOption[];
+  zayed: SelectOption[];
+}
+
+export const cropsBySeason: CropsBySeason = {
+  rabi: [
+    { value: "wheat", label: "Wheat", labelHi: "गेहूं" },
+    { value: "mustard", label: "Mustard", labelHi: "सरसों" },
+    { value: "gram", label: "Gram", labelHi: "चना" },
+    { value: "potato", label: "Potato", labelHi: "आलू" },
+  ],
+  kharif: [
+    { value: "rice", label: "Rice", labelHi: "चावल" },
+    { value: "maize", label: "Maize", labelHi: "मक्का" },
+    { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
+    { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
+    { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
+  ],
+  zayed: [
+    { value: "vegetables", label: "Vegetables", labelHi: "सब्जियां" },
+    { value: "fruits", label: "Fruits", labelHi: "फल" },
+  ],
+};
+
+const pulses: SelectOption = { value: "pulses", label: "Pulses", labelHi: "दालें" };
+const tomato: SelectOption = { value: "tomato", label: "Tomato", labelHi: "टमाटर" };
+const onion: SelectOption = { value: "onion", label: "Onion", labelHi: "प्याज" };
+const other: SelectOption = { value: "other", label: "Other", labelHi: "अन्य" };
+
 export const cropTypes: SelectOption[] = sortOptions([
-  { value: "cotton", label: "Cotton", labelHi: "कपास" },
-  { value: "fruits", label: "Fruits", labelHi: "फल" },
-  { value: "gram", label: "Gram", labelHi: "चना" },
-  { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
-  { value: "maize", label: "Maize", labelHi: "मक्का" },
-  { value: "mustard", label: "Mustard", labelHi: "सरसों" },
-  { value: "onion", label: "Onion", labelHi: "प्याज" },
-  { value: "potato", label: "Potato", labelHi: "आलू" },
-  { value: "pulses", label: "Pulses", labelHi: "दालें" },
-  { value: "rice", label: "Rice", labelHi: "चावल" },
-  { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
-  { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
-  { value: "tomato", label: "Tomato", labelHi: "टमाटर" },
-  { value: "vegetables", label: "Vegetables", labelHi: "सब्जियां" },
-  { value: "wheat", label: "Wheat", labelHi: "गेहूं" },
-  { value: "other", label: "Other", labelHi: "अन्य" },
+  ...cropsBySeason.rabi,
+  ...cropsBySeason.kharif,
+  ...cropsBySeason.zayed,
+  pulses,
+  tomato,
+  onion,
+  other,
 ]);
 
 export const landUnits: SelectOption[] = [

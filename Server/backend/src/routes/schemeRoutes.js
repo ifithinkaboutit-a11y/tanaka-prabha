@@ -6,7 +6,8 @@ import {
     updateScheme,
     deleteScheme,
     toggleSchemeStatus,
-    getSchemeCategories
+    getSchemeCategories,
+    expressInterest
 } from '../controllers/schemeController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -25,6 +26,13 @@ router.get('/', getAllSchemes);
  * @access  Public
  */
 router.get('/categories', getSchemeCategories);
+
+/**
+ * @route   POST /api/schemes/:id/interest
+ * @desc    Express interest in a scheme
+ * @access  Protected
+ */
+router.post('/:id/interest', authMiddleware, expressInterest);
 
 /**
  * @route   GET /api/schemes/:id

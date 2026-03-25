@@ -6,19 +6,19 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
+  Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
   TextInput,
-  Dimensions,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { useVideoPlayer, VideoView } from "expo-video";
-import MediaPath from "../../constants/MediaPath";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
+import AddressDropdowns, { type AddressValue } from "../../components/molecules/AddressDropdowns";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -28,6 +28,7 @@ import {
 import {
   validateName,
 } from "../../utils/validation";
+import { getDistrictOptions } from "../../data/indianLocations";
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
@@ -74,7 +75,7 @@ const AuthPersonalDetailsScreen = () => {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation();
   const { user } = useAuth();
-  const { personalDetails, updatePersonalDetails } = useOnboardingStore();
+  const { personalDetails, updatePersonalDetails, setOnboardingStep, onboardingStep } = useOnboardingStore();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -83,36 +84,52 @@ const AuthPersonalDetailsScreen = () => {
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
 
   const handlePhotoUpload = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      // Also try camera permission as a fallback prompt
+    // 1. Request camera permission first
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
       Alert.alert(
-        "Photo Required",
-        "Please allow photo library access to upload your profile picture.",
+        "Camera Required",
+        "Please allow camera access to take your profile photo.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
+        ]
+      );
+      return;
+    }
+
+    // 2. Try to launch camera
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.75,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await processPhoto(result.assets[0].uri);
+    } catch {
+      // 3. No-camera device fallback — show alert then open library
+      Alert.alert(
+        "No Camera Found",
+        "A live photo is preferred. Opening your photo library instead.",
         [
           { text: "Cancel", style: "cancel" },
           {
-            text: "Use Camera",
+            text: "Open Library",
             onPress: async () => {
-              const camPerm = await ImagePicker.requestCameraPermissionsAsync();
-              if (!camPerm.granted) return;
-              const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.75 });
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ["images"],
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.75,
+              });
               if (result.canceled || !result.assets?.[0]) return;
               await processPhoto(result.assets[0].uri);
             },
           },
         ]
       );
-      return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.75,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
-    await processPhoto(result.assets[0].uri);
   };
 
   const processPhoto = async (uri: string) => {
@@ -137,6 +154,13 @@ const AuthPersonalDetailsScreen = () => {
   // may be empty but the DB might already have partial data. Pre-populate the
   // store from the backend so the user doesn't start completely from scratch.
   useEffect(() => {
+    // If onboardingStep >= 1, the user already completed personal-details and
+    // was on the location-picker (or later). Redirect them there directly.
+    if (onboardingStep >= 1) {
+      router.replace("/(auth)/location-picker" as any);
+      return;
+    }
+
     const storeIsEmpty =
       !personalDetails.name?.trim() &&
       !personalDetails.age &&
@@ -280,6 +304,7 @@ const AuthPersonalDetailsScreen = () => {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setOnboardingStep(1);
     router.push("/(auth)/location-picker" as any);
   };
 
@@ -298,15 +323,6 @@ const AuthPersonalDetailsScreen = () => {
     );
   };
 
-  const { height: screenHeight } = Dimensions.get("window");
-  const videoHeight = screenHeight * 0.28;
-
-  const player = useVideoPlayer(MediaPath.videos.authBackground, (player) => {
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
-
   const inputStyle = (field: keyof FieldErrors) => ({
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -318,36 +334,39 @@ const AuthPersonalDetailsScreen = () => {
   });
 
   return (
-    <View className="flex-1 bg-[#F8FAFC]">
-      {/* Video Background Header */}
-      <View style={{ height: videoHeight, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }} className="relative">
-        <VideoView
-          player={player}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}
-          contentFit="cover"
-          nativeControls={false}
-          allowsPictureInPicture={false}
-        />
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      {/* Static Header */}
+      <View style={headerStyles.header}>
+        {/* Progress bar at 25% (step 1 of 4) */}
+        <View style={headerStyles.progressTrack}>
+          <View style={[headerStyles.progressFill, { width: "25%" }]} />
+        </View>
+        <AppText variant="h2" style={headerStyles.headerTitle}>
+          {t("onboarding.personalTitle") || "Personal Details"}
+        </AppText>
+        <AppText variant="bodySm" style={headerStyles.headerSubtitle}>
+          {t("onboarding.personalSubtitle") || "Tell us a bit about yourself"}
+        </AppText>
       </View>
 
-      {/* Content Card */}
-      <View className="flex-1 bg-white" style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, paddingTop: 24 }}>
-        {/* Title Section */}
-        <View className="items-center px-5 mb-4">
-          <AppText variant="h3" className="font-bold text-gray-800 text-[22px] text-center">
-            {t("onboarding.personalTitle")}
-          </AppText>
-          <AppText variant="bodySm" className="text-gray-500 mt-1.5 text-center">
-            {t("onboarding.personalSubtitle")}
-          </AppText>
-        </View>
-
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* ── Mandatory Photo Upload (same pattern as profile.tsx) ── */}
         <View style={photoStyles.container}>
           <Pressable
             onPress={handlePhotoUpload}
             style={photoStyles.avatarRing}
             disabled={photoUploading}
+            accessibilityLabel="Upload profile photo"
+            accessibilityRole="button"
           >
             {(localPhotoUri || personalDetails.photoUrl) ? (
               <Image
@@ -375,16 +394,7 @@ const AuthPersonalDetailsScreen = () => {
             {personalDetails.photoUrl ? "✓ Photo uploaded" : "Tap to add profile photo *"}
           </AppText>
         </View>
-
-        <KeyboardAvoidingView
-          behavior="padding"
-          style={{ flex: 1 }}
-        >
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={{ paddingHorizontal: 20 }}>
             {/* Full Name */}
             <FieldWrapper>
               <FieldLabel text={`${t("onboarding.fullName")} *`} />
@@ -488,11 +498,93 @@ const AuthPersonalDetailsScreen = () => {
               />
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
-          </ScrollView>
-        </KeyboardAvoidingView>
+
+            {/* District */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.district") || "District"} />
+              <Select
+                value={personalDetails.district}
+                onChange={(v) =>
+                  updatePersonalDetails({
+                    district: v,
+                    tehsil: "",
+                    nyayPanchayat: "",
+                    gramPanchayat: "",
+                    village: "",
+                  })
+                }
+                options={getDistrictOptions("uttar_pradesh")}
+                placeholder="Select District"
+              />
+            </FieldWrapper>
+
+            {/* Address sub-fields — cascading dropdowns for Bhadohi/Mirzapur, free-text otherwise */}
+            {personalDetails.district &&
+              (personalDetails.district.toLowerCase() === "bhadohi" ||
+                personalDetails.district.toLowerCase() === "mirzapur") ? (
+              <AddressDropdowns
+                district={personalDetails.district}
+                value={{
+                  tehsil: personalDetails.tehsil || "",
+                  nyayPanchayat: personalDetails.nyayPanchayat || "",
+                  gramPanchayat: personalDetails.gramPanchayat || "",
+                  village: personalDetails.village || "",
+                }}
+                onChange={(v: AddressValue) =>
+                  updatePersonalDetails({
+                    tehsil: v.tehsil,
+                    nyayPanchayat: v.nyayPanchayat,
+                    gramPanchayat: v.gramPanchayat,
+                    village: v.village,
+                  })
+                }
+                language={currentLanguage as "en" | "hi"}
+              />
+            ) : personalDetails.district ? (
+              <>
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.tehsil") || "Tehsil"} />
+                  <TextInput
+                    style={{
+                      backgroundColor: "#F9FAFB",
+                      borderWidth: 1,
+                      borderColor: "#E5E7EB",
+                      borderRadius: 12,
+                      padding: 14,
+                      fontSize: 16,
+                      color: "#1F2937",
+                    }}
+                    value={personalDetails.tehsil}
+                    onChangeText={(text) => updatePersonalDetails({ tehsil: text })}
+                    placeholder="Enter Tehsil"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </FieldWrapper>
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.village") || "Village"} />
+                  <TextInput
+                    style={{
+                      backgroundColor: "#F9FAFB",
+                      borderWidth: 1,
+                      borderColor: "#E5E7EB",
+                      borderRadius: 12,
+                      padding: 14,
+                      fontSize: 16,
+                      color: "#1F2937",
+                    }}
+                    value={personalDetails.village}
+                    onChangeText={(text) => updatePersonalDetails({ village: text })}
+                    placeholder="Enter Village"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </FieldWrapper>
+              </>
+            ) : null}
+          </View>
+      </ScrollView>
 
         {/* Bottom Buttons */}
-        <View className="p-5 bg-white border-t border-gray-200 flex-row gap-3">
+        <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
           <Pressable
             onPress={handleSkip}
             className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
@@ -513,8 +605,7 @@ const AuthPersonalDetailsScreen = () => {
             </AppText>
           </Pressable>
         </View>
-      </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -561,5 +652,40 @@ const photoStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 46,
+  },
+});
+
+// ─── Header styles ────────────────────────────────────────────────────────────
+const headerStyles = StyleSheet.create({
+  header: {
+    backgroundColor: "#386641",
+    paddingTop: 56,
+    paddingBottom: 28,
+    paddingHorizontal: 24,
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 2,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 2,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

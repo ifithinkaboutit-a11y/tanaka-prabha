@@ -42,6 +42,15 @@ class EventParticipant {
         return result.rows;
     }
 
+    static async findAttendance(event_id, mobile_number) {
+        const text = `
+            SELECT * FROM public.event_participants
+            WHERE event_id = $1 AND mobile_number = $2
+        `;
+        const result = await query(text, [event_id, mobile_number]);
+        return result.rows[0] || null;
+    }
+
     static async findByUserId(user_id) {
         const text = `
             SELECT ep.*, e.title, e.date, e.start_time, e.location_name 

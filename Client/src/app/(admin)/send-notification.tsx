@@ -2,7 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -18,10 +18,10 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
 // Notification type options
 const NOTIFICATION_TYPES = [
-    { key: "announcement", label: "📢 Announcement", color: "#3B82F6" },
-    { key: "info", label: "ℹ️ Info", color: "#6366F1" },
-    { key: "alert", label: "⚠️ Alert", color: "#F59E0B" },
-    { key: "reminder", label: "🔔 Reminder", color: "#10B981" },
+    { key: "announcement", label: "Announcement", color: "#3B82F6" },
+    { key: "info", label: "Info", color: "#6366F1" },
+    { key: "alert", label: "Alert", color: "#F59E0B" },
+    { key: "reminder", label: "Reminder", color: "#10B981" },
 ];
 
 // Common audience targets
@@ -39,6 +39,13 @@ export default function SendNotificationScreen() {
     const [audience, setAudience] = useState<"all" | "district">("all");
     const [district, setDistrict] = useState("");
     const [sending, setSending] = useState(false);
+    const [sent, setSent] = useState(false);
+
+    useEffect(() => {
+        if (sent) {
+            router.back();
+        }
+    }, [sent]);
 
     // ── Send handler ──────────────────────────────────────────────────────────
     const handleSend = async () => {
@@ -86,7 +93,7 @@ export default function SendNotificationScreen() {
                 Alert.alert(
                     "✅ Sent Successfully",
                     `Notification delivered to ${db_count} users.\n${push_count} device(s) will receive a push notification.`,
-                    [{ text: "Done", onPress: () => router.back() }]
+                    [{ text: "Done", onPress: () => setSent(true) }]
                 );
                 // Reset form
                 setTitle("");

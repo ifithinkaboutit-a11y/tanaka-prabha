@@ -1,7 +1,7 @@
 // src/app/personal-details.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -30,19 +30,23 @@ const PersonalDetailsScreen = () => {
   const { profile, loading, saving, updatePersonalDetails } = useUserProfile();
 
   // ── Map address override: written by location-picker, read here ──
-  const profileAddressOverride = useOnboardingStore((s) => s.profileAddressOverride);
   const setProfileAddressOverride = useOnboardingStore((s) => s.setProfileAddressOverride);
 
   // Track override locally with state so form key changes reliably on update
   const [addressOverride, setAddressOverride] = useState<Record<string, string> | null>(null);
 
-  useEffect(() => {
-    if (profileAddressOverride && Object.keys(profileAddressOverride).length > 0) {
-      setAddressOverride(profileAddressOverride);
-      // Clear from store immediately so it doesn't persist across unrelated navigations
-      setProfileAddressOverride(null);
-    }
-  }, [profileAddressOverride, setProfileAddressOverride]);
+  // Auto-apply map address override every time this screen comes into focus
+  // (e.g. when the user returns from the location picker)
+  useFocusEffect(
+    useCallback(() => {
+      const override = useOnboardingStore.getState().profileAddressOverride;
+      if (override && Object.keys(override).length > 0) {
+        setAddressOverride(override);
+        // Clear from store immediately after consuming so it doesn't persist
+        setProfileAddressOverride(null);
+      }
+    }, [setProfileAddressOverride])
+  );
 
   if (loading && !profile) {
     return (

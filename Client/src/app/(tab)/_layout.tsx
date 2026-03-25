@@ -49,6 +49,7 @@ const TabNavigation = () => {
         name="index"
         options={{
           title: t("tabs.home"),
+          tabBarAccessibilityLabel: t("tabs.home"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -63,6 +64,7 @@ const TabNavigation = () => {
         name="program"
         options={{
           title: t("tabs.programs"),
+          tabBarAccessibilityLabel: t("tabs.programs"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
@@ -77,6 +79,7 @@ const TabNavigation = () => {
         name="schemes"
         options={{
           title: t("tabs.schemes"),
+          tabBarAccessibilityLabel: t("tabs.schemes"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "pie-chart" : "pie-chart-outline"}
@@ -91,6 +94,7 @@ const TabNavigation = () => {
         name="connect"
         options={{
           title: t("tabs.connect"),
+          tabBarAccessibilityLabel: t("tabs.connect"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "time" : "time-outline"}
@@ -105,6 +109,7 @@ const TabNavigation = () => {
         name="profile"
         options={{
           title: t("tabs.profile"),
+          tabBarAccessibilityLabel: t("tabs.profile"),
           tabBarIcon: ({ focused, size }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

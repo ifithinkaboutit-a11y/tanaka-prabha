@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import SearchResults from "../components/molecules/SearchResults";
 import { useSearch } from "../hooks/useSearch";
@@ -12,7 +12,7 @@ export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { q: initialQuery } = useLocalSearchParams<{ q: string }>();
-  const { searchQuery, searchResults, performSearch, clearSearch, totalResults, loading, isSearching } = useSearch();
+  const { searchQuery, searchResults, performSearch, clearSearch, totalResults, loading, isSearching, typeFilter, setTypeFilter } = useSearch();
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -37,7 +37,10 @@ export default function SearchScreen() {
         <View className="flex-row items-center mb-3.5">
           <Pressable
             onPress={() => router.back()}
-            className="mr-3 p-1.5 bg-gray-100 rounded-xl"
+            className="mr-3 bg-gray-100 rounded-xl"
+            style={{ padding: 12, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Ionicons name="arrow-back" size={20} color="#374151" />
           </Pressable>
@@ -63,7 +66,9 @@ export default function SearchScreen() {
           {hasQuery && (
             <Pressable
               onPress={() => { clearSearch(); inputRef.current?.focus(); }}
-              className="w-7 h-7 rounded-full bg-gray-200 items-center justify-center"
+              style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
             >
               <Ionicons name="close" size={16} color="#6B7280" />
             </Pressable>
@@ -73,15 +78,73 @@ export default function SearchScreen() {
           )}
         </View>
 
-        {/* Results count */}
-        {hasQuery && totalResults > 0 && !isSearching && (
-          <View className="flex-row items-center mt-2.5 gap-1.5">
-            <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-            <AppText style={{ color: "#6B7280", fontSize: 13, fontWeight: "500" }}>
-              {t("search.resultsCount", { count: totalResults })}
-            </AppText>
-          </View>
-        )}
+        {/* Type-filter chip row */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 8, gap: 8 }}
+          accessibilityRole="tablist"
+        >
+          {(
+            [
+              { label: "All", value: "all" },
+              { label: "Scheme", value: "scheme" },
+              { label: "Program", value: "training" },
+              { label: "Event", value: "event" },
+            ] as const
+          ).map(({ label, value }) => {
+            const active = typeFilter === value;
+            return (
+              <Pressable
+                key={value}
+                onPress={() => setTypeFilter(value)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`Filter by ${label}`}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: active ? "#166534" : "#F3F4F6",
+                  borderWidth: 1,
+                  borderColor: active ? "#166534" : "#E5E7EB",
+                }}
+              >
+                <AppText
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: active ? "#FFFFFF" : "#6B7280",
+                  }}
+                >
+                  {label}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* Results count — live region so screen reader announces changes */}
+        <View
+          accessible={true}
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={
+            hasQuery && totalResults > 0 && !isSearching
+              ? `${totalResults} results found`
+              : hasQuery && totalResults === 0 && !isSearching && !loading
+              ? "No results found"
+              : ""
+          }
+        >
+          {hasQuery && totalResults > 0 && !isSearching && (
+            <View className="flex-row items-center mt-2.5 gap-1.5">
+              <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
+              <AppText style={{ color: "#6B7280", fontSize: 13, fontWeight: "500" }}>
+                {t("search.resultsCount", { count: totalResults })}
+              </AppText>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* ── States ── */}

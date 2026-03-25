@@ -85,6 +85,7 @@ function ImageUploadRow({
         </View>
     );
 }
+
 const ir = StyleSheet.create({
     wrapper: { marginBottom: 12 },
     label: { fontSize: 12, fontWeight: "600", color: "#374151", marginBottom: 6 },
@@ -140,6 +141,7 @@ function BannersTab() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<Banner | null>(null);
 
     // form
     const [title, setTitle] = useState("");
@@ -176,6 +178,43 @@ function BannersTab() {
 
     function reset() {
         setTitle(""); setSubtitle(""); setTitleHi(""); setImageUrl(null);
+        setEditingItem(null);
+    }
+
+    function openCreate() {
+        reset();
+        setShowModal(true);
+    }
+
+    function openEdit(item: Banner) {
+        setEditingItem(item);
+        setTitle(item.title ?? "");
+        setSubtitle(item.subtitle ?? "");
+        setTitleHi((item as any).titleHi ?? "");
+        setImageUrl(item.imageUrl ?? null);
+        setShowModal(true);
+    }
+
+    function confirmDelete(item: Banner) {
+        Alert.alert("Delete Banner", `Delete "${item.title}"?`, [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete", style: "destructive", onPress: async () => {
+                    try {
+                        const token = await apiService.tokenManager.getToken();
+                        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+                        const res = await fetch(`${API_BASE}/banners/${item.id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!res.ok) throw new Error("Failed");
+                        load();
+                    } catch {
+                        Alert.alert("Error", "Could not delete banner.");
+                    }
+                },
+            },
+        ]);
     }
 
     async function handleSave() {
@@ -185,22 +224,23 @@ function BannersTab() {
         }
         setSaving(true);
         try {
-            // POST to /banners via direct fetch (not yet in apiService)
             const token = await apiService.tokenManager.getToken();
             const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-            const res = await fetch(`${API_BASE}/banners`, {
-                method: "POST",
+            const method = editingItem ? "PUT" : "POST";
+            const url = editingItem ? `${API_BASE}/banners/${editingItem.id}` : `${API_BASE}/banners`;
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ title, subtitle, title_hi: titleHi, image_url: imageUrl }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed");
-            Alert.alert("✅ Success", "Banner created!");
+            Alert.alert("✅ Success", editingItem ? "Banner updated!" : "Banner created!");
             reset();
             setShowModal(false);
             load();
         } catch (e: any) {
-            Alert.alert("Error", e.message || "Could not create banner.");
+            Alert.alert("Error", e.message || "Could not save banner.");
         } finally {
             setSaving(false);
         }
@@ -208,7 +248,7 @@ function BannersTab() {
 
     return (
         <View style={{ flex: 1 }}>
-            <TouchableOpacity style={cms.addBtn} onPress={() => setShowModal(true)}>
+            <TouchableOpacity style={cms.addBtn} onPress={openCreate}>
                 <Ionicons name="add-circle" size={18} color="#fff" />
                 <AppText style={cms.addBtnText}>Add New Banner</AppText>
             </TouchableOpacity>
@@ -240,18 +280,24 @@ function BannersTab() {
                                 {item.subtitle ? <AppText style={cms.itemSub}>{item.subtitle}</AppText> : null}
                             </View>
                             <View style={[cms.statusDot, { backgroundColor: item.isActive ? "#10B981" : "#EF4444" }]} />
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => openEdit(item)}>
+                                <Ionicons name="pencil" size={16} color="#3B82F6" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
+                                <Ionicons name="trash" size={16} color="#EF4444" />
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
             )}
 
-            {/* Create Modal */}
-            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-                <Pressable style={cms.overlay} onPress={() => setShowModal(false)}>
+            {/* Create / Edit Modal */}
+            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
+                <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
                     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
-                            <AppText style={cms.sheetTitle}>Add Banner</AppText>
+                            <AppText style={cms.sheetTitle}>{editingItem ? "Edit Banner" : "Add Banner"}</AppText>
                             <ScrollView showsVerticalScrollIndicator={false}>
                                 <ImageUploadRow label="Banner Image *" url={imageUrl} uploading={uploadingImage} onPick={pickImage} />
                                 <Field label="Title (English) *" value={title} onChangeText={setTitle} />
@@ -259,9 +305,9 @@ function BannersTab() {
                                 <Field label="Subtitle" value={subtitle} onChangeText={setSubtitle} />
                                 <Button variant="primary" disabled={saving} onPress={handleSave}
                                     style={{ backgroundColor: "#F59E0B", borderColor: "#F59E0B", marginTop: 8 } as any}>
-                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>Save Banner</AppText>}
+                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>{editingItem ? "Update Banner" : "Save Banner"}</AppText>}
                                 </Button>
-                                <Button variant="outline" label="Cancel" onPress={() => setShowModal(false)} style={{ marginTop: 8 }} />
+                                <Button variant="outline" label="Cancel" onPress={() => { setShowModal(false); reset(); }} style={{ marginTop: 8 }} />
                             </ScrollView>
                         </Pressable>
                     </KeyboardAvoidingView>
@@ -276,6 +322,7 @@ function SchemesTab() {
     const [schemes, setSchemes] = useState<Scheme[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<Scheme | null>(null);
 
     // form
     const [schTitle, setSchTitle] = useState("");
@@ -316,6 +363,46 @@ function SchemesTab() {
     function reset() {
         setSchTitle(""); setSchTitleHi(""); setSchDesc(""); setSchDescHi("");
         setSchCategory(""); setSchEligibility(""); setSchImageUrl(null);
+        setEditingItem(null);
+    }
+
+    function openCreate() {
+        reset();
+        setShowModal(true);
+    }
+
+    function openEdit(item: Scheme) {
+        setEditingItem(item);
+        setSchTitle(item.title ?? "");
+        setSchTitleHi((item as any).titleHi ?? "");
+        setSchDesc((item as any).description ?? "");
+        setSchDescHi((item as any).descriptionHi ?? "");
+        setSchCategory(item.category ?? "");
+        setSchEligibility((item as any).eligibility ?? "");
+        setSchImageUrl(item.imageUrl ?? null);
+        setShowModal(true);
+    }
+
+    function confirmDelete(item: Scheme) {
+        Alert.alert("Delete Scheme", `Delete "${item.title}"?`, [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete", style: "destructive", onPress: async () => {
+                    try {
+                        const token = await apiService.tokenManager.getToken();
+                        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+                        const res = await fetch(`${API_BASE}/schemes/${item.id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!res.ok) throw new Error("Failed");
+                        load();
+                    } catch {
+                        Alert.alert("Error", "Could not delete scheme.");
+                    }
+                },
+            },
+        ]);
     }
 
     async function handleSave() {
@@ -327,8 +414,10 @@ function SchemesTab() {
         try {
             const token = await apiService.tokenManager.getToken();
             const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-            const res = await fetch(`${API_BASE}/schemes`, {
-                method: "POST",
+            const method = editingItem ? "PUT" : "POST";
+            const url = editingItem ? `${API_BASE}/schemes/${editingItem.id}` : `${API_BASE}/schemes`;
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                     title: schTitle, title_hi: schTitleHi,
@@ -339,10 +428,10 @@ function SchemesTab() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed");
-            Alert.alert("✅ Success", "Scheme created!");
+            Alert.alert("✅ Success", editingItem ? "Scheme updated!" : "Scheme created!");
             reset(); setShowModal(false); load();
         } catch (e: any) {
-            Alert.alert("Error", e.message || "Could not create scheme.");
+            Alert.alert("Error", e.message || "Could not save scheme.");
         } finally {
             setSaving(false);
         }
@@ -350,7 +439,7 @@ function SchemesTab() {
 
     return (
         <View style={{ flex: 1 }}>
-            <TouchableOpacity style={[cms.addBtn, { backgroundColor: "#EC4899" }]} onPress={() => setShowModal(true)}>
+            <TouchableOpacity style={[cms.addBtn, { backgroundColor: "#EC4899" }]} onPress={openCreate}>
                 <Ionicons name="add-circle" size={18} color="#fff" />
                 <AppText style={cms.addBtnText}>Add New Scheme</AppText>
             </TouchableOpacity>
@@ -384,17 +473,23 @@ function SchemesTab() {
                                 </View>
                             </View>
                             <View style={[cms.statusDot, { backgroundColor: item.isActive ? "#10B981" : "#EF4444" }]} />
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => openEdit(item)}>
+                                <Ionicons name="pencil" size={16} color="#3B82F6" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
+                                <Ionicons name="trash" size={16} color="#EF4444" />
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
             )}
 
-            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-                <Pressable style={cms.overlay} onPress={() => setShowModal(false)}>
+            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
+                <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
                     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
-                            <AppText style={cms.sheetTitle}>Add Scheme</AppText>
+                            <AppText style={cms.sheetTitle}>{editingItem ? "Edit Scheme" : "Add Scheme"}</AppText>
                             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 520 }}>
                                 <ImageUploadRow label="Scheme Image" url={schImageUrl} uploading={uploadingImg} onPick={pickImage} />
                                 <Field label="Title (English) *" value={schTitle} onChangeText={setSchTitle} />
@@ -405,9 +500,9 @@ function SchemesTab() {
                                 <Field label="Eligibility" value={schEligibility} onChangeText={setSchEligibility} multiline />
                                 <Button variant="primary" disabled={saving} onPress={handleSave}
                                     style={{ backgroundColor: "#EC4899", borderColor: "#EC4899", marginTop: 8 } as any}>
-                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>Save Scheme</AppText>}
+                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>{editingItem ? "Update Scheme" : "Save Scheme"}</AppText>}
                                 </Button>
-                                <Button variant="outline" label="Cancel" onPress={() => setShowModal(false)} style={{ marginTop: 8 }} />
+                                <Button variant="outline" label="Cancel" onPress={() => { setShowModal(false); reset(); }} style={{ marginTop: 8 }} />
                             </ScrollView>
                         </Pressable>
                     </KeyboardAvoidingView>
@@ -422,6 +517,7 @@ function ProfessionalsTab() {
     const [profs, setProfs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<any | null>(null);
 
     const [pName, setPName] = useState("");
     const [pRole, setPRole] = useState("");
@@ -452,7 +548,50 @@ function ProfessionalsTab() {
         finally { setUploadingImg(false); }
     }
 
-    function reset() { setPName(""); setPRole(""); setPDept(""); setPCategory(""); setPPhone(""); setPDistrict(""); setPImageUrl(null); }
+    function reset() {
+        setPName(""); setPRole(""); setPDept(""); setPCategory("");
+        setPPhone(""); setPDistrict(""); setPImageUrl(null);
+        setEditingItem(null);
+    }
+
+    function openCreate() {
+        reset();
+        setShowModal(true);
+    }
+
+    function openEdit(item: any) {
+        setEditingItem(item);
+        setPName(item.name ?? "");
+        setPRole(item.role ?? "");
+        setPDept(item.department ?? "");
+        setPCategory(item.category ?? "");
+        setPPhone(item.phoneNumber ?? item.phone_number ?? "");
+        setPDistrict(item.district ?? "");
+        setPImageUrl(item.imageUrl ?? null);
+        setShowModal(true);
+    }
+
+    function confirmDelete(item: any) {
+        Alert.alert("Delete Professional", `Delete "${item.name}"?`, [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete", style: "destructive", onPress: async () => {
+                    try {
+                        const token = await apiService.tokenManager.getToken();
+                        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+                        const res = await fetch(`${API_BASE}/professionals/${item.id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!res.ok) throw new Error("Failed");
+                        load();
+                    } catch {
+                        Alert.alert("Error", "Could not delete professional.");
+                    }
+                },
+            },
+        ]);
+    }
 
     async function handleSave() {
         if (!pName || !pRole || !pCategory) {
@@ -463,21 +602,24 @@ function ProfessionalsTab() {
         try {
             const token = await apiService.tokenManager.getToken();
             const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-            const res = await fetch(`${API_BASE}/professionals`, {
-                method: "POST",
+            const method = editingItem ? "PUT" : "POST";
+            const url = editingItem ? `${API_BASE}/professionals/${editingItem.id}` : `${API_BASE}/professionals`;
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ name: pName, role: pRole, department: pDept, category: pCategory, phone_number: pPhone, district: pDistrict, image_url: pImageUrl, is_available: true }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed");
-            Alert.alert("✅ Success", "Professional added!"); reset(); setShowModal(false); load();
-        } catch (e: any) { Alert.alert("Error", e.message || "Could not add professional."); }
+            Alert.alert("✅ Success", editingItem ? "Professional updated!" : "Professional added!");
+            reset(); setShowModal(false); load();
+        } catch (e: any) { Alert.alert("Error", e.message || "Could not save professional."); }
         finally { setSaving(false); }
     }
 
     return (
         <View style={{ flex: 1 }}>
-            <TouchableOpacity style={[cms.addBtn, { backgroundColor: "#6366F1" }]} onPress={() => setShowModal(true)}>
+            <TouchableOpacity style={[cms.addBtn, { backgroundColor: "#6366F1" }]} onPress={openCreate}>
                 <Ionicons name="person-add" size={18} color="#fff" />
                 <AppText style={cms.addBtnText}>Add Professional</AppText>
             </TouchableOpacity>
@@ -509,17 +651,23 @@ function ProfessionalsTab() {
                                 <AppText style={cms.itemSub}>{item.role} {item.department ? `· ${item.department}` : ""}</AppText>
                             </View>
                             <View style={[cms.statusDot, { backgroundColor: item.isAvailable ? "#10B981" : "#9CA3AF" }]} />
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => openEdit(item)}>
+                                <Ionicons name="pencil" size={16} color="#3B82F6" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
+                                <Ionicons name="trash" size={16} color="#EF4444" />
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
             )}
 
-            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-                <Pressable style={cms.overlay} onPress={() => setShowModal(false)}>
+            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
+                <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
                     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
-                            <AppText style={cms.sheetTitle}>Add Professional</AppText>
+                            <AppText style={cms.sheetTitle}>{editingItem ? "Edit Professional" : "Add Professional"}</AppText>
                             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 520 }}>
                                 <ImageUploadRow label="Profile Photo" url={pImageUrl} uploading={uploadingImg} onPick={pickImage} />
                                 <Field label="Full Name *" value={pName} onChangeText={setPName} />
@@ -530,9 +678,9 @@ function ProfessionalsTab() {
                                 <Field label="District" value={pDistrict} onChangeText={setPDistrict} />
                                 <Button variant="primary" disabled={saving} onPress={handleSave}
                                     style={{ backgroundColor: "#6366F1", borderColor: "#6366F1", marginTop: 8 } as any}>
-                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>Save Professional</AppText>}
+                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>{editingItem ? "Update Professional" : "Save Professional"}</AppText>}
                                 </Button>
-                                <Button variant="outline" label="Cancel" onPress={() => setShowModal(false)} style={{ marginTop: 8 }} />
+                                <Button variant="outline" label="Cancel" onPress={() => { setShowModal(false); reset(); }} style={{ marginTop: 8 }} />
                             </ScrollView>
                         </Pressable>
                     </KeyboardAvoidingView>
@@ -610,6 +758,7 @@ const cms = StyleSheet.create({
     statusDot: { width: 10, height: 10, borderRadius: 5, marginLeft: 8 },
     categoryBadge: { backgroundColor: "#EFF6FF", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, alignSelf: "flex-start", marginTop: 4 },
     categoryText: { fontSize: 11, color: "#3B82F6", fontWeight: "600" },
+    actionBtn: { padding: 8, marginLeft: 4 },
 
     // modal
     overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import {
+  BarChart2,
   Bell,
   Calendar,
   FileText,
@@ -29,6 +30,12 @@ const dashboardRoutes = [
     title: "Dashboard",
     icon: <LayoutDashboard className="size-4" />,
     link: "/",
+  },
+  {
+    id: "analytics",
+    title: "Analytics",
+    icon: <BarChart2 className="size-4" />,
+    link: "/analytics",
   },
   {
     id: "events",

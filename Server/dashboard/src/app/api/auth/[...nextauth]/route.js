@@ -15,7 +15,7 @@ const authOptions = {
             return null
           }
 
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://34.131.190.214:5000/api";
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
           const res = await fetch(`${apiUrl}/admin/login`, {
             method: 'POST',

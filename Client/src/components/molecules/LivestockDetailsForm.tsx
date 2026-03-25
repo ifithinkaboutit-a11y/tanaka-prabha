@@ -17,15 +17,15 @@ import {
 import T from "../../i18n";
 import Button from "../atoms/Button";
 
-// Animal data config
+// Animal data config — using emoji for clear, cross-platform livestock representations
 const ANIMAL_DATA = [
-  { key: "cow" as const, emoji: "🐄", color: "#FEF3C7", iconColor: "#D97706" },
-  { key: "buffalo" as const, emoji: "🐃", color: "#E0E7FF", iconColor: "#4F46E5" },
-  { key: "sheep" as const, emoji: "🐑", color: "#FCE7F3", iconColor: "#DB2777" },
-  { key: "goat" as const, emoji: "🐐", color: "#DCFCE7", iconColor: "#16A34A" },
-  { key: "pig" as const, emoji: "🐷", color: "#FFE4E6", iconColor: "#E11D48" },
-  { key: "poultry" as const, emoji: "🐔", color: "#FEF9C3", iconColor: "#CA8A04" },
-  { key: "others" as const, emoji: "🐾", color: "#F3F4F6", iconColor: "#6B7280" },
+  { key: "cow" as const, emoji: "🐄", color: "#FEF3C7" },
+  { key: "buffalo" as const, emoji: "🐃", color: "#E0E7FF" },
+  { key: "sheep" as const, emoji: "🐑", color: "#FCE7F3" },
+  { key: "goat" as const, emoji: "🐐", color: "#DCFCE7" },
+  { key: "pig" as const, emoji: "🐷", color: "#FFE4E6" },
+  { key: "poultry" as const, emoji: "🐔", color: "#FEF9C3" },
+  { key: "others" as const, emoji: "🐾", color: "#F3F4F6" },
 ];
 
 // ─── Counter Input for Animals ────────────────────────────────────────────────
@@ -101,7 +101,7 @@ const ac = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
-  emoji: { fontSize: 22 },
+  emoji: { fontSize: 24 },
   label: { fontSize: 15, fontWeight: "600", color: "#1F2937" },
   right: { flexDirection: "row", alignItems: "center", gap: 10 },
   btn: {

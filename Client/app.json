@@ -23,7 +23,24 @@
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "package": "com.tanakprabha.app",
-      "versionCode": 2
+      "versionCode": 2,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "tanakprabha",
+              "host": "attendance"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +59,12 @@
         {
           "photosPermission": "Allow Tanak-Prabha to access your photos to upload a profile picture.",
           "cameraPermission": "Allow Tanak-Prabha to use your camera."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Tanak-Prabha to use your camera to scan attendance QR codes."
         }
       ],
       [
@@ -73,9 +96,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
-      }
-    },
-    "owner": "cr-8"
+        "projectId": "44ac0997-c234-4a0c-82d4-c6eaa4052709"
+      },
+      "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.app"
+    }
   }
 }

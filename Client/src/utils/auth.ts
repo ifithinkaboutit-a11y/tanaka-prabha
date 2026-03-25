@@ -139,14 +139,27 @@ export const verifyToken = async (): Promise<User | null> => {
       return userWithFlag;
     }
 
-    // Token invalid, clear storage
+    // If response status is not success, it means the token was explicitly rejected by the API.
+    // Clear storage and return null.
+    console.warn("Token verification failed with non-success status:", response.message);
     await tokenManager.clearAll();
     return null;
   } catch (error) {
     console.error("Token verification failed:", error);
-    // On error, clear auth data
-    await tokenManager.clearAll();
-    return null;
+    if (error instanceof ApiError) {
+      // Only clear auth data on explicit token rejection (401/403).
+      // For network/server errors (status 0 = no connectivity), re-throw so
+      // AuthContext can fall back to the cached user instead of logging them out.
+      if (error.status === 401 || error.status === 403) {
+        console.warn("Clearing auth data due to 401/403 API error.");
+        await tokenManager.clearAll();
+        return null;
+      }
+      // Network/server unavailable — surface to caller
+      throw error;
+    }
+    // Non-ApiError (should not happen normally) — re-throw
+    throw error;
   }
 };
 

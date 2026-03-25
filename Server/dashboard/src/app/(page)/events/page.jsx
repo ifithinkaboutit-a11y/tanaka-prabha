@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
     Select,
     SelectContent,
@@ -26,6 +25,14 @@ import {
 } from "@/components/ui/select"
 import { eventsApi } from "@/lib/api"
 import { toast } from "sonner"
+import { LocalizedContentEditor } from "@/components/cms/LocalizedContentEditor"
+
+const EVENT_FIELDS = [
+    { key: "title", label: "Title", type: "text" },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "guidelines_and_rules", label: "Guidelines & Rules", type: "textarea" },
+    { key: "requirements", label: "Requirements", type: "textarea" },
+]
 
 // Compute live status based on current time (same logic as mobile app)
 function computeEventStatus(event) {
@@ -49,14 +56,18 @@ const STATUS_BADGE = {
 
 const emptyForm = {
     title: "",
+    title_hi: "",
     description: "",
+    description_hi: "",
     date: "",
     start_time: "",
     end_time: "",
     location_name: "",
     location_address: "",
     guidelines_and_rules: "",
+    guidelines_and_rules_hi: "",
     requirements: "",
+    requirements_hi: "",
     hero_image_url: "",
     status: "upcoming",
 }
@@ -88,6 +99,10 @@ export default function EventsPage() {
 
     async function handleAdd(e) {
         e.preventDefault()
+        if (!formData.title_hi?.trim()) {
+            toast.error("Please enter the Hindi title (हिंदी शीर्षक आवश्यक है)")
+            return
+        }
         try {
             await eventsApi.create(formData)
             toast.success("Event created successfully")
@@ -141,14 +156,12 @@ export default function EventsPage() {
                     <DialogDescription>Provide details for the event.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAdd} className="mt-6 space-y-4">
-                    <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Description</Label>
-                        <Textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
-                    </div>
+                    <LocalizedContentEditor
+                        fields={EVENT_FIELDS}
+                        value={formData}
+                        onChange={setFormData}
+                        entityLabel="event"
+                    />
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Date</Label>
@@ -189,14 +202,6 @@ export default function EventsPage() {
                     <div className="space-y-2">
                         <Label>Location Address</Label>
                         <Input value={formData.location_address} onChange={e => setFormData({ ...formData, location_address: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Guidelines and Rules</Label>
-                        <Textarea value={formData.guidelines_and_rules} onChange={e => setFormData({ ...formData, guidelines_and_rules: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Requirements</Label>
-                        <Textarea value={formData.requirements} onChange={e => setFormData({ ...formData, requirements: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                         <Label>Image URL (optional)</Label>

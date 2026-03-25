@@ -1,6 +1,8 @@
+// src/components/molecules/QuickActionGrid.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import AppText from "../atoms/AppText";
+import AnimatedPressable from "../atoms/AnimatedPressable";
 
 type QuickActionItem = {
   title: string;
@@ -24,40 +26,42 @@ const defaultActions: QuickActionItem[] = [
 export default function QuickActionGrid({ actions = defaultActions }: QuickActionGridProps) {
   const { width } = useWindowDimensions();
 
-  // Card = half screen minus horizontal padding (px-6 = 24px each side) and gap between cards (gap-3 = 12px)
+  // Two columns with horizontal padding 24px each side + 12px gap
   const cardWidth = (width - 48 - 12) / 2;
-
   const iconCircleSize = Math.round(cardWidth * 0.42);
-  const iconSize = Math.round(iconCircleSize * 0.55);
-  const iconRadius = Math.round(iconCircleSize * 0.38);
+  const iconSize = Math.round(iconCircleSize * 0.52);
+  const iconRadius = Math.round(iconCircleSize * 0.36);
   const fontSize = Math.round(cardWidth * 0.1);
-  const lineHeight = Math.round(fontSize * 1.3);
+  const lineHeight = Math.round(fontSize * 1.35);
   const padding = Math.round(cardWidth * 0.12);
 
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
   return (
-    <View className="flex-col gap-4 px-6">
+    <View className="gap-3">
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} className="flex-row gap-3">
           {row.map((action, colIndex) => (
-            <Pressable
+            <AnimatedPressable
               key={colIndex}
               onPress={action.onPress}
-              className="flex-1 aspect-square active:opacity-85 active:scale-95"
+              scaleOnPress={0.94}
+              style={{
+                flex: 1,
+                // Tinted shadow using the icon's brand colour
+                shadowColor: action.iconColor ?? "#000",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.12,
+                shadowRadius: 14,
+                elevation: 5,
+                borderRadius: 20,
+              }}
             >
               <View
-                className="flex-1 bg-white rounded-[20px] items-center justify-center border border-gray-100"
-                style={{
-                  padding,
-                  shadowColor: action.iconColor ?? "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 12,
-                  elevation: 4,
-                }}
+                className="bg-white items-center justify-center border border-gray-100 rounded-[20px]"
+                style={{ padding, aspectRatio: 1 }}
               >
-                {/* Icon Circle */}
+                {/* Icon pill */}
                 <View
                   className="items-center justify-center mb-3"
                   style={{
@@ -74,7 +78,7 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                   />
                 </View>
 
-                {/* Title */}
+                {/* Label */}
                 <AppText
                   numberOfLines={2}
                   style={{
@@ -88,7 +92,7 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                   {action.title}
                 </AppText>
               </View>
-            </Pressable>
+            </AnimatedPressable>
           ))}
         </View>
       ))}

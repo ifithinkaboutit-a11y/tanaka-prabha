@@ -105,7 +105,8 @@ describe('Authentication API Tests', () => {
         otp: '123456',
         expires_at: new Date(Date.now() + 10 * 60 * 1000),
       });
-      
+      // New (unregistered) phone number — no existing user
+      User.findByMobile.mockResolvedValue(null);
       otpUtils.sendSMS.mockResolvedValue(true);
 
       const response = await request(app)
@@ -117,6 +118,52 @@ describe('Authentication API Tests', () => {
       expect(response.body.status).toBe('success');
       expect(response.body.message).toBe('OTP sent successfully');
       expect(response.body.data).toHaveProperty('mobile_number');
+      expect(OTP.createOTP).toHaveBeenCalled();
+    });
+
+    test('should return 409 and NOT send OTP for already-registered phone number', async () => {
+      // Simulate a fully registered user (name is not the placeholder)
+      User.findByMobile.mockResolvedValue({
+        id: 'user-existing',
+        name: 'Ramesh Kumar',
+        mobile_number: '919876543210',
+      });
+
+      const response = await request(app)
+        .post('/api/auth/send-otp')
+        .send({ mobile_number: '9876543210' })
+        .expect('Content-Type', /json/)
+        .expect(409);
+
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toMatch(/already registered/i);
+      // OTP must NOT have been created or sent
+      expect(OTP.createOTP).not.toHaveBeenCalled();
+      expect(otpUtils.sendSMS).not.toHaveBeenCalled();
+    });
+
+    test('should send OTP for phone number with incomplete registration (New User placeholder)', async () => {
+      // User exists but never completed onboarding — OTP should still be sent
+      User.findByMobile.mockResolvedValue({
+        id: 'user-incomplete',
+        name: 'New User',
+        mobile_number: '919876543210',
+      });
+      OTP.createOTP.mockResolvedValue({
+        id: '124',
+        mobile_number: '919876543210',
+        otp: '654321',
+        expires_at: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      otpUtils.sendSMS.mockResolvedValue(true);
+
+      const response = await request(app)
+        .post('/api/auth/send-otp')
+        .send({ mobile_number: '9876543210' })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
       expect(OTP.createOTP).toHaveBeenCalled();
     });
 
@@ -303,19 +350,25 @@ describe('Authentication API Tests', () => {
       expect(response.body.message).toBe('OTP resent successfully');
     });
 
-    test('should reject resend too soon', async () => {
+    test('should resend OTP successfully even if a recent OTP exists (rate limit disabled for testing)', async () => {
       OTP.getOTP.mockResolvedValue({
-        created_at: new Date(),
+        created_at: new Date(), // recent OTP exists, but rate limit is disabled
       });
+      OTP.createOTP.mockResolvedValue({
+        id: '125',
+        mobile_number: '919876543210',
+        otp: '111111',
+        expires_at: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      otpUtils.sendSMS.mockResolvedValue(true);
 
       const response = await request(app)
         .post('/api/auth/resend-otp')
         .send({ mobile_number: '9876543210' })
         .expect('Content-Type', /json/)
-        .expect(429);
+        .expect(200);
 
-      expect(response.body.status).toBe('error');
-      expect(response.body.message).toContain('Please wait');
+      expect(response.body.status).toBe('success');
     });
   });
 

@@ -8,9 +8,11 @@ import { DetailPageSkeleton } from "../components/atoms/Skeleton";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
 import ExpandableText from "../components/atoms/ExpandableText";
+import InterestButton from "../components/atoms/InterestButton";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 import { useLanguageStore } from "../stores/languageStore";
+import { useInterest } from "../hooks/useInterest";
 
 export const options = {
   headerShown: false,
@@ -26,6 +28,10 @@ const SchemeDetailsScreen = () => {
   const [scheme, setScheme] = useState<Scheme | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentLanguage } = useLanguageStore();
+  const { isInterested, interestCount, toggleInterest, loading: interestLoading } = useInterest(
+    schemeId ?? "",
+    scheme?.interest_count ?? 0
+  );
 
   // Fetch scheme on mount
   useEffect(() => {
@@ -193,9 +199,17 @@ const SchemeDetailsScreen = () => {
 
         {/* Scheme Title & Description */}
         <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
-          <AppText variant="h2" style={{ color: "#111827", marginBottom: 12, fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
-            {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
-          </AppText>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+            <AppText variant="h2" style={{ color: "#111827", fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32, flex: 1, marginRight: 12 }}>
+              {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
+            </AppText>
+            <InterestButton
+              isInterested={isInterested}
+              count={interestCount}
+              onToggle={toggleInterest}
+              loading={interestLoading}
+            />
+          </View>
           <ExpandableText
             text={(currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) ?? ""}
             style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}

@@ -2,10 +2,12 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService from "@/services/apiService";
+import { useOnboardingStore } from "@/stores/onboardingStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { useTranslation } from "@/i18n";
 import {
     ActivityIndicator,
     Alert,
@@ -285,16 +287,34 @@ const tp = StyleSheet.create({
 // ─── Main Screen ─────────────────────────────────────────────
 export default function CreateEvent() {
     const router = useRouter();
+    const { t } = useTranslation();
 
+    // English fields
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [guidelines, setGuidelines] = useState("");
     const [requirements, setRequirements] = useState("");
+
+    // Hindi fields
+    const [titleHi, setTitleHi] = useState("");
+    const [descriptionHi, setDescriptionHi] = useState("");
+    const [guidelinesHi, setGuidelinesHi] = useState("");
+    const [requirementsHi, setRequirementsHi] = useState("");
+
+    // Language tab
+    const [langTab, setLangTab] = useState<"en" | "hi">("en");
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [locationName, setLocationName] = useState("");
     const [locationAddress, setLocationAddress] = useState("");
+
+    // trainer & contact
+    const [masterTrainerName, setMasterTrainerName] = useState("");
+    const [masterTrainerPhone, setMasterTrainerPhone] = useState("");
+    const [trainerName, setTrainerName] = useState("");
+    const [trainerPhone, setTrainerPhone] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
 
     // image
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -307,6 +327,23 @@ export default function CreateEvent() {
     const [showEndPicker, setShowEndPicker] = useState(false);
 
     const [loading, setLoading] = useState(false);
+
+    // GPS coordinates — written back from location picker
+    const [locationLat, setLocationLat] = useState<number | null>(null);
+    const [locationLng, setLocationLng] = useState<number | null>(null);
+
+    const { eventLocationPick, setEventLocationPick } = useOnboardingStore();
+
+    // Consume coordinates written by the location picker on return
+    useFocusEffect(
+        useCallback(() => {
+            if (eventLocationPick) {
+                setLocationLat(eventLocationPick.lat);
+                setLocationLng(eventLocationPick.lng);
+                setEventLocationPick(null);
+            }
+        }, [eventLocationPick, setEventLocationPick])
+    );
 
     async function pickImage() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -341,20 +378,35 @@ export default function CreateEvent() {
             Alert.alert("Missing Fields", "Please fill in Title, Date, Start Time and Location.");
             return;
         }
+        if (!titleHi.trim()) {
+            Alert.alert("Hindi Title Required", "Please enter the Hindi title (हिंदी शीर्षक आवश्यक है).");
+            return;
+        }
         setLoading(true);
         try {
             await apiService.events.create({
                 title,
+                title_hi: titleHi,
                 description,
+                description_hi: descriptionHi,
                 date,
                 start_time: startTime,
                 end_time: endTime,
                 location_name: locationName,
                 location_address: locationAddress,
                 guidelines_and_rules: guidelines,
+                guidelines_and_rules_hi: guidelinesHi,
                 requirements,
+                requirements_hi: requirementsHi,
                 hero_image_url: imageUrl || undefined,
                 status: "upcoming",
+                master_trainer_name: masterTrainerName || undefined,
+                master_trainer_phone: masterTrainerPhone || undefined,
+                trainer_name: trainerName || undefined,
+                trainer_phone: trainerPhone || undefined,
+                contact_number: contactNumber || undefined,
+                location_lat: locationLat ?? undefined,
+                location_lng: locationLng ?? undefined,
             });
             Alert.alert("✅ Success", "Event created successfully!", [
                 { text: "OK", onPress: () => router.back() },
@@ -437,22 +489,66 @@ export default function CreateEvent() {
 
                         {/* ── Basic Info ── */}
                         <SectionHeader icon="information-circle-outline" label="Basic Information" />
-                        <TextInput
-                            style={s.input}
-                            placeholder="Event Title *"
-                            placeholderTextColor="#9CA3AF"
-                            value={title}
-                            onChangeText={setTitle}
-                        />
-                        <TextInput
-                            style={[s.input, s.textArea]}
-                            placeholder="Description (optional)"
-                            placeholderTextColor="#9CA3AF"
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                            textAlignVertical="top"
-                        />
+
+                        {/* Language tab switcher */}
+                        <View style={s.langTabRow}>
+                            <TouchableOpacity
+                                style={[s.langTab, langTab === "en" && s.langTabActive]}
+                                onPress={() => setLangTab("en")}
+                            >
+                                <AppText style={[s.langTabText, langTab === "en" && s.langTabTextActive]}>
+                                    English
+                                </AppText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[s.langTab, langTab === "hi" && s.langTabActive]}
+                                onPress={() => setLangTab("hi")}
+                            >
+                                <AppText style={[s.langTabText, langTab === "hi" && s.langTabTextActive]}>
+                                    हिंदी
+                                </AppText>
+                            </TouchableOpacity>
+                        </View>
+
+                        {langTab === "en" ? (
+                            <>
+                                <TextInput
+                                    style={s.input}
+                                    placeholder="Event Title *"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={title}
+                                    onChangeText={setTitle}
+                                />
+                                <TextInput
+                                    style={[s.input, s.textArea]}
+                                    placeholder="Description (optional)"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={description}
+                                    onChangeText={setDescription}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <TextInput
+                                    style={s.input}
+                                    placeholder={t("admin.titleHi")}
+                                    placeholderTextColor="#9CA3AF"
+                                    value={titleHi}
+                                    onChangeText={setTitleHi}
+                                />
+                                <TextInput
+                                    style={[s.input, s.textArea]}
+                                    placeholder={t("admin.descriptionHi")}
+                                    placeholderTextColor="#9CA3AF"
+                                    value={descriptionHi}
+                                    onChangeText={setDescriptionHi}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </>
+                        )}
 
                         {/* ── Date & Time ── */}
                         <SectionHeader icon="calendar-outline" label="Date & Time" />
@@ -510,24 +606,125 @@ export default function CreateEvent() {
 
                         {/* ── Additional Info ── */}
                         <SectionHeader icon="list-outline" label="Additional Details" />
+                        {langTab === "en" ? (
+                            <>
+                                <TextInput
+                                    style={[s.input, s.textArea]}
+                                    placeholder="Guidelines & Rules (optional)"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={guidelines}
+                                    onChangeText={setGuidelines}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                                <TextInput
+                                    style={[s.input, s.textArea, { height: 70 }]}
+                                    placeholder="Requirements (optional)"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={requirements}
+                                    onChangeText={setRequirements}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <TextInput
+                                    style={[s.input, s.textArea]}
+                                    placeholder={t("admin.guidelinesHi")}
+                                    placeholderTextColor="#9CA3AF"
+                                    value={guidelinesHi}
+                                    onChangeText={setGuidelinesHi}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                                <TextInput
+                                    style={[s.input, s.textArea, { height: 70 }]}
+                                    placeholder={t("admin.requirementsHi")}
+                                    placeholderTextColor="#9CA3AF"
+                                    value={requirementsHi}
+                                    onChangeText={setRequirementsHi}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </>
+                        )}
+
+                        {/* ── Trainer & Contact ── */}
+                        <SectionHeader icon="people-outline" label="Trainer & Contact" />
                         <TextInput
-                            style={[s.input, s.textArea]}
-                            placeholder="Guidelines & Rules (optional)"
+                            style={s.input}
+                            placeholder="Master Trainer Name (optional)"
                             placeholderTextColor="#9CA3AF"
-                            value={guidelines}
-                            onChangeText={setGuidelines}
-                            multiline
-                            textAlignVertical="top"
+                            value={masterTrainerName}
+                            onChangeText={setMasterTrainerName}
                         />
                         <TextInput
-                            style={[s.input, s.textArea, { height: 70 }]}
-                            placeholder="Requirements (optional)"
+                            style={s.input}
+                            placeholder="Master Trainer Phone (optional)"
                             placeholderTextColor="#9CA3AF"
-                            value={requirements}
-                            onChangeText={setRequirements}
-                            multiline
-                            textAlignVertical="top"
+                            value={masterTrainerPhone}
+                            onChangeText={setMasterTrainerPhone}
+                            keyboardType="phone-pad"
                         />
+                        <TextInput
+                            style={s.input}
+                            placeholder="Trainer Name (optional)"
+                            placeholderTextColor="#9CA3AF"
+                            value={trainerName}
+                            onChangeText={setTrainerName}
+                        />
+                        <TextInput
+                            style={s.input}
+                            placeholder="Trainer Phone (optional)"
+                            placeholderTextColor="#9CA3AF"
+                            value={trainerPhone}
+                            onChangeText={setTrainerPhone}
+                            keyboardType="phone-pad"
+                        />
+                        <TextInput
+                            style={s.input}
+                            placeholder="Contact Number (optional)"
+                            placeholderTextColor="#9CA3AF"
+                            value={contactNumber}
+                            onChangeText={setContactNumber}
+                            keyboardType="phone-pad"
+                        />
+
+                        {/* ── GPS Location ── */}
+                        <SectionHeader icon="map-outline" label="GPS Location" />
+                        <TouchableOpacity
+                            style={s.pickerBtn}
+                            onPress={() =>
+                                router.push({
+                                    pathname: "/(auth)/location-picker" as any,
+                                    params: { purpose: "event-location" },
+                                })
+                            }
+                        >
+                            <View style={s.pickerBtnLeft}>
+                                <Ionicons name="location" size={20} color="#3B82F6" />
+                                <AppText style={[s.pickerBtnText, !(locationLat && locationLng) && s.pickerBtnPlaceholder]}>
+                                    {locationLat && locationLng
+                                        ? `${locationLat.toFixed(5)}, ${locationLng.toFixed(5)}`
+                                        : "Pick Location (optional)"}
+                                </AppText>
+                            </View>
+                            {locationLat && locationLng ? (
+                                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                            ) : (
+                                <Ionicons name="chevron-forward" size={18} color="#6B7280" />
+                            )}
+                        </TouchableOpacity>
+                        {locationLat && locationLng && (
+                            <TouchableOpacity
+                                onPress={() => { setLocationLat(null); setLocationLng(null); }}
+                                style={s.clearLocationBtn}
+                            >
+                                <Ionicons name="close-circle-outline" size={14} color="#EF4444" />
+                                <AppText style={s.clearLocationText}>Clear location</AppText>
+                            </TouchableOpacity>
+                        )}
 
                         {/* Buttons */}
                         <Button
@@ -639,4 +836,13 @@ const s = StyleSheet.create({
     // action buttons
     btn: { paddingVertical: 15, marginTop: 8 },
     btnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16, textAlign: "center" },
+    clearLocationBtn: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10, marginTop: -4 },
+    clearLocationText: { color: "#EF4444", fontSize: 12 },
+
+    // language tab switcher
+    langTabRow: { flexDirection: "row", marginBottom: 12, borderRadius: 10, overflow: "hidden", borderWidth: 1.5, borderColor: "#E5E7EB" },
+    langTab: { flex: 1, paddingVertical: 10, alignItems: "center", backgroundColor: "#F9FAFB" },
+    langTabActive: { backgroundColor: "#3B82F6" },
+    langTabText: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+    langTabTextActive: { color: "#FFFFFF" },
 });

@@ -1,5 +1,5 @@
 // src/components/molecules/LandDetailsForm.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Alert,
@@ -14,24 +14,18 @@ import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
 import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
+import { cropsBySeason } from "../../data/content/onboardingOptions";
 
+// "None" option allows the user to clear a previously selected crop
+const NONE_CROP_VALUE = "__none__";
+const NONE_OPTION = { value: NONE_CROP_VALUE, label: "None (remove crop)" };
+
+// Flatten cropsBySeason into a single options array (no cotton), with a clear option first
 const cropOptions = [
-  { value: "wheat", label: "Wheat", labelHi: "गेहूं" },
-  { value: "rice", label: "Rice", labelHi: "चावल" },
-  { value: "maize", label: "Maize", labelHi: "मक्का" },
-  { value: "cotton", label: "Cotton", labelHi: "कपास" },
-  { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
-  { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
-  { value: "moong", label: "Moong", labelHi: "मूंग" },
-  { value: "urad", label: "Urad", labelHi: "उड़द" },
-  { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
-  { value: "mustard", label: "Mustard", labelHi: "सरसों" },
-  { value: "potato", label: "Potato", labelHi: "आलू" },
-  { value: "onion", label: "Onion", labelHi: "प्याज" },
-  { value: "tomato", label: "Tomato", labelHi: "टमाटर" },
-  { value: "watermelon", label: "Watermelon", labelHi: "तरबूज" },
-  { value: "cucumber", label: "Cucumber", labelHi: "खीरा" },
-  { value: "other", label: "Other", labelHi: "अन्य" },
+  NONE_OPTION,
+  ...cropsBySeason.rabi,
+  ...cropsBySeason.kharif,
+  ...cropsBySeason.zayed,
 ];
 
 const unitOptions = [
@@ -48,7 +42,8 @@ const SEASONS = [
     period: "Oct – Mar",
     dotColor: "#3B82F6",
     bg: "#EFF6FF",
-    icon: "❄️",
+    iconName: "snowflake",
+    iconLib: "mci" as const,
   },
   {
     field: "kharifCrop" as const,
@@ -56,7 +51,8 @@ const SEASONS = [
     period: "Jun – Sep",
     dotColor: "#16A34A",
     bg: "#F0FDF4",
-    icon: "🌧️",
+    iconName: "weather-rainy",
+    iconLib: "mci" as const,
   },
   {
     field: "zaidCrop" as const,
@@ -64,7 +60,8 @@ const SEASONS = [
     period: "Mar – Jun",
     dotColor: "#EAB308",
     bg: "#FEFCE8",
-    icon: "☀️",
+    iconName: "weather-sunny",
+    iconLib: "mci" as const,
   },
 ];
 
@@ -82,7 +79,14 @@ export default function LandDetailsForm({
       Alert.alert("Error", "Land area cannot be negative");
       return;
     }
-    onSave(formData);
+    // Convert sentinel "none" values back to empty strings before saving
+    const dataToSave: LandDetails = {
+      ...formData,
+      rabiCrop: formData.rabiCrop === NONE_CROP_VALUE ? "" : formData.rabiCrop,
+      kharifCrop: formData.kharifCrop === NONE_CROP_VALUE ? "" : formData.kharifCrop,
+      zaidCrop: formData.zaidCrop === NONE_CROP_VALUE ? "" : formData.zaidCrop,
+    };
+    onSave(dataToSave);
   };
 
   const update = (field: keyof LandDetails, value: string | number) =>
@@ -146,7 +150,7 @@ export default function LandDetailsForm({
           return (
             <View key={season.field} style={s.seasonBlock}>
               <View style={[s.seasonHeader, { backgroundColor: season.bg }]}>
-                <Text style={s.seasonEmoji}>{season.icon}</Text>
+                <MaterialCommunityIcons name={season.iconName as any} size={18} color={season.dotColor} />
                 <View style={s.seasonTextBlock}>
                   <Text style={[s.seasonLabel, { color: season.dotColor }]}>
                     {String(T.translate(labelKey))}
@@ -157,7 +161,7 @@ export default function LandDetailsForm({
               </View>
               <View style={{ marginTop: 8 }}>
                 <Select
-                  value={formData[season.field]}
+                  value={formData[season.field] || undefined}
                   onChange={(v) => update(season.field, v)}
                   options={cropOptions}
                   placeholder={`Select ${season.label} crop`}
@@ -259,7 +263,6 @@ const s = StyleSheet.create({
     borderRadius: 10,
     gap: 8,
   },
-  seasonEmoji: { fontSize: 18 },
   seasonTextBlock: { flex: 1 },
   seasonLabel: { fontSize: 13, fontWeight: "700" },
   seasonPeriod: { fontSize: 11, color: "#9CA3AF", marginTop: 1 },

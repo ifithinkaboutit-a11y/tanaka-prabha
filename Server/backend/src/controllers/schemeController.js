@@ -1,4 +1,5 @@
 import Scheme from '../models/Scheme.js';
+import { query } from '../config/db.js';
 
 /**
  * Get all schemes
@@ -215,6 +216,51 @@ export const getSchemeCategories = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Failed to fetch categories',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Express interest in a scheme
+ * POST /api/schemes/:id/interest
+ */
+export const expressInterest = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const scheme = await Scheme.findById(id);
+        if (!scheme) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Scheme not found'
+            });
+        }
+
+        // Ensure the interest_count column exists, then atomically increment it
+        await query(
+            `ALTER TABLE public.schemes ADD COLUMN IF NOT EXISTS interest_count INTEGER DEFAULT 0`
+        );
+
+        const result = await query(
+            `UPDATE public.schemes
+             SET interest_count = COALESCE(interest_count, 0) + 1
+             WHERE id = $1
+             RETURNING interest_count`,
+            [id]
+        );
+
+        const interestCount = result?.rows?.[0]?.interest_count ?? 0;
+
+        res.status(200).json({
+            status: 'success',
+            data: { interestCount }
+        });
+    } catch (error) {
+        console.error('Error expressing interest in scheme:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to express interest in scheme',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

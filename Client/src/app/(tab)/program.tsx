@@ -228,7 +228,7 @@ const Program = () => {
 
         {/* Past Events Section */}
         <EventSection
-          title="Past Events"
+          title={t("programs.pastEvents") || "Past Events"}
           events={pastEvents}
           onEventPress={handleEventPress}
         />

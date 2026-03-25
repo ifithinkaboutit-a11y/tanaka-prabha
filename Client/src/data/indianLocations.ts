@@ -397,52 +397,22 @@ export const indianDistricts: DistrictOption[] = [
   { value: "tarn_taran", label: "Tarn Taran", labelHi: "तरन तारन", stateValue: "punjab" },
 ];
 
-// Helper function to get districts for a specific state
-export const getDistrictsByState = (stateValue: string): DistrictOption[] => {
-  return indianDistricts.filter(district => district.stateValue === stateValue);
-};
+import { additionalDistrictsA } from "./additionalDistrictsA";
+import { additionalDistrictsB } from "./additionalDistrictsB";
 
-// Export as simple options without Hindi labels for Select component
+// All districts merged: existing + south/east/central + NE/UTs
+const allDistricts: DistrictOption[] = [
+  ...indianDistricts,
+  ...additionalDistrictsA,
+  ...additionalDistrictsB,
+];
+
+// Get districts for a specific state (searches all three sources)
+export const getDistrictsByState = (stateValue: string): DistrictOption[] =>
+  allDistricts.filter(d => d.stateValue === stateValue);
+
+// Options for Select components
 export const getStateOptions = () => indianStates.map(s => ({ value: s.value, label: s.label }));
 export const getDistrictOptions = (stateValue: string) =>
   getDistrictsByState(stateValue).map(d => ({ value: d.value, label: d.label }));
 
-import locationsData from "./indianLocations.json";
-
-export const getTehsilOptions = (stateValue: string, districtValue: string) => {
-  const state = locationsData.states.find(s => s.name.toLowerCase().replace(/ /g, "_") === stateValue);
-  if (!state) return [];
-  const district = state.districts.find(d => d.name.toLowerCase().replace(/ /g, "_") === districtValue);
-  if (!district || !district.tehsils) return [];
-  return district.tehsils.map(t => {
-    const val = t.name.toLowerCase().replace(/ /g, "_");
-    return { value: val, label: t.name };
-  });
-};
-
-export const getBlockOptions = (stateValue: string, districtValue: string, tehsilValue: string) => {
-  const state = locationsData.states.find(s => s.name.toLowerCase().replace(/ /g, "_") === stateValue);
-  if (!state) return [];
-  const district = state.districts.find(d => d.name.toLowerCase().replace(/ /g, "_") === districtValue);
-  if (!district || !district.tehsils) return [];
-  const tehsil = district.tehsils.find(t => t.name.toLowerCase().replace(/ /g, "_") === tehsilValue);
-  if (!tehsil || !tehsil.blocks) return [];
-  return tehsil.blocks.map(b => {
-    const val = b.name.toLowerCase().replace(/ /g, "_");
-    return { value: val, label: b.name };
-  });
-};
-
-export const getVillageOptions = (stateValue: string, districtValue: string, tehsilValue: string, blockValue: string) => {
-  const state = locationsData.states.find(s => s.name.toLowerCase().replace(/ /g, "_") === stateValue);
-  if (!state) return [];
-  const district = state.districts.find(d => d.name.toLowerCase().replace(/ /g, "_") === districtValue);
-  if (!district || !district.tehsils) return [];
-  const tehsil = district.tehsils.find(t => t.name.toLowerCase().replace(/ /g, "_") === tehsilValue);
-  if (!tehsil || !tehsil.blocks) return [];
-  const block = tehsil.blocks.find(b => b.name.toLowerCase().replace(/ /g, "_") === blockValue);
-  if (!block || !block.villages) return [];
-  return block.villages.map(v => {
-    return { value: v, label: v };
-  });
-};

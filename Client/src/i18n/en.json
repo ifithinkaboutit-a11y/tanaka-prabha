@@ -29,7 +29,10 @@
     "didntReceiveOtp": "Didn't receive OTP?",
     "resendOTP": "Resend OTP",
     "resendOtpIn": "Resend OTP in",
-    "changeNumber": "Change mobile number"
+    "changeNumber": "Change mobile number",
+    "duplicatePhoneMessage": "This number is already registered. Please log in instead.",
+    "duplicatePhoneLogin": "Log In",
+    "duplicatePhoneDismiss": "Dismiss"
   },
   "onboarding": {
     "personal": {
@@ -101,6 +104,7 @@
     "hasLand": "Do you own agricultural land?",
     "landEntry": "Land Parcel",
     "landArea": "Land Area",
+    "enterArea": "Enter area",
     "selectUnit": "Unit",
     "cropsGrown": "Crops Grown",
     "selectCrops": "Select crops",
@@ -112,7 +116,11 @@
     "animalCount": "Count",
     "addAnotherLivestock": "Add Another Livestock",
     "almostDone": "You're almost done!",
-    "finishMessage": "Complete your profile to get personalized scheme recommendations"
+    "finishMessage": "Complete your profile to get personalized scheme recommendations",
+    "enterCount": "Enter count",
+    "remove": "Remove",
+    "yes": "Yes",
+    "no": "No"
   },
   "schemesPage": {
     "title": "Schemes",
@@ -149,6 +157,7 @@
     "governmentSchemes": "Government Schemes & Subsidies",
     "trainingPrograms": "Training & Awareness Programs",
     "upcomingEvents": "Upcoming Events",
+    "pastEvents": "Past Events",
     "viewAll": "View all",
     "noPrograms": "No programs available"
   },
@@ -343,6 +352,8 @@
     "sheep": "Sheep",
     "goat": "Goat",
     "hen": "Hen / Poultry",
+    "pig": "Pig",
+    "poultry": "Poultry",
     "others": "Others",
     "infoMessage": "Keep your livestock count updated to receive relevant animal husbandry schemes and veterinary support.",
     "save": "Save",
@@ -539,6 +550,52 @@
       "ongoing": "Ongoing",
       "completed": "Completed",
       "cancelled": "Cancelled"
-    }
+    },
+    "trainerContact": "Trainer & Contact",
+    "masterTrainer": "Master Trainer",
+    "trainer": "Trainer",
+    "contactNumber": "Contact Number",
+    "call": "Call",
+    "getDirections": "Get Directions"
+  },
+  "interested": {
+    "interested": "Interested",
+    "notInterested": "Not Interested",
+    "peopleInterested": "{{count}} people interested",
+    "errorToast": "Could not update interest. Please try again."
+  },
+  "qrAttendance": {
+    "scanToAttend": "Scan to Attend",
+    "scanning": "Scanning...",
+    "attendanceRecorded": "Attendance recorded",
+    "qrExpired": "QR code expired",
+    "alreadyAttended": "Already attended",
+    "cameraPermissionTitle": "Camera Permission Required",
+    "cameraPermissionMessage": "Please allow camera access to scan the QR code."
+  },
+  "filterSort": {
+    "sortBy": "Sort by",
+    "nameAZ": "Name (A–Z)",
+    "newestFirst": "Newest First",
+    "mostInterested": "Most Interested",
+    "filters": "Filters",
+    "clearFilters": "Clear Filters",
+    "noResultsFound": "No results found",
+    "typeAll": "All",
+    "typeScheme": "Scheme",
+    "typeProgram": "Program",
+    "typeEvent": "Event"
+  },
+  "admin": {
+    "englishContent": "English Content",
+    "hindiContent": "Hindi Content (हिंदी)",
+    "titleEn": "Title (English)",
+    "titleHi": "Title (Hindi)",
+    "descriptionEn": "Description (English)",
+    "descriptionHi": "Description (Hindi)",
+    "guidelinesEn": "Guidelines (English)",
+    "guidelinesHi": "Guidelines (Hindi)",
+    "requirementsEn": "Requirements (English)",
+    "requirementsHi": "Requirements (Hindi)"
   }
 }

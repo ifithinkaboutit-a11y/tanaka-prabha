@@ -9,27 +9,65 @@ interface SkeletonProps {
     style?: ViewStyle;
 }
 
-/** Base pulsing skeleton block */
+/** Shimmer skeleton — bright highlight sweeps left → right */
 export function Skeleton({ width, height = 16, borderRadius = 8, style }: SkeletonProps) {
-    const opacity = useRef(new Animated.Value(0.3)).current;
+    const shimmer = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        const pulse = Animated.loop(
-            Animated.sequence([
-                Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-                Animated.timing(opacity, { toValue: 0.3, duration: 700, useNativeDriver: true }),
-            ])
+        const anim = Animated.loop(
+            Animated.timing(shimmer, {
+                toValue: 1,
+                duration: 1200,
+                useNativeDriver: true,
+            })
         );
-        pulse.start();
-        return () => pulse.stop();
-    }, [opacity]);
+        anim.start();
+        return () => anim.stop();
+    }, [shimmer]);
+
+    // Translate from -width to +width across the container
+    const translateX = shimmer.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-350, 350],
+    });
 
     return (
-        <Animated.View
-            style={[{ width: width ?? "100%", height, borderRadius, backgroundColor: "#E5E7EB", opacity }, style]}
-        />
+        <View
+            style={[
+                {
+                    width: width ?? "100%",
+                    height,
+                    borderRadius,
+                    backgroundColor: "#E5E7EB",
+                    overflow: "hidden",
+                },
+                style,
+            ]}
+        >
+            {/* Shimmer highlight bar */}
+            <Animated.View
+                style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                        transform: [{ translateX }],
+                    },
+                ]}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(255,255,255,0.55)",
+                        // Angled look via skewX isn't available in RN View,
+                        // but a narrow width + white creates the highlight band
+                        width: 80,
+                        alignSelf: "center",
+                    }}
+                />
+            </Animated.View>
+        </View>
     );
 }
+
 
 // ─────────────────────────────────────────────────────────────
 // Connect screens

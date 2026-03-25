@@ -14,6 +14,7 @@ type SchemePreviewCardProps = {
   imageUrl?: string;
   onPress?: () => void;
   showBookmark?: boolean;
+  interestCount?: number;
 };
 
 export default function SchemePreviewCard({
@@ -23,6 +24,7 @@ export default function SchemePreviewCard({
   imageUrl,
   onPress,
   showBookmark = true,
+  interestCount,
 }: SchemePreviewCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -62,13 +64,21 @@ export default function SchemePreviewCard({
           {description}
         </AppText>
 
-        {/* Category Badge */}
+        {/* Category Badge + Interest Count */}
         <View style={styles.badgeRow}>
           <View style={styles.badge}>
             <AppText variant="caption" style={styles.badgeText}>
               {category}
             </AppText>
           </View>
+          {interestCount !== undefined && (
+            <View style={styles.interestBadge}>
+              <Ionicons name="heart" size={12} color="#EF4444" />
+              <AppText variant="caption" style={styles.interestText}>
+                {interestCount}
+              </AppText>
+            </View>
+          )}
         </View>
       </Card>
     </Pressable>
@@ -112,6 +122,7 @@ const styles = StyleSheet.create({
   badgeRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
   badge: {
     backgroundColor: "#F0FDF4",
@@ -121,6 +132,19 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.primary.green,
+    fontWeight: "500",
+  },
+  interestBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FEF2F2",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  interestText: {
+    color: "#EF4444",
     fontWeight: "500",
   },
 });

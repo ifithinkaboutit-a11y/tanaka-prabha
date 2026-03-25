@@ -10,6 +10,8 @@ type Variant =
   | "bodySm"
   | "caption";
 
+const HEADING_VARIANTS: Variant[] = ["h1", "h2", "h3"];
+
 type AppTextProps = TextProps & {
   variant?: Variant;
   className?: string;
@@ -37,16 +39,25 @@ const variantStyles: Record<Variant, TextStyle> = {
  * causing: "Couldn't find a navigation context".
  *
  * To override a style, use the `style` prop instead of `className`.
+ *
+ * Accessibility: h1/h2/h3 variants default to accessibilityRole="header".
+ * All other variants have no default role. Pass accessibilityRole explicitly
+ * to override.
  */
 export default function AppText({
   variant = "bodyMd",
   className: _className,   // accepted but not used — see note above
   style,
+  accessibilityRole,
   ...props
 }: AppTextProps) {
+  const resolvedRole =
+    accessibilityRole ?? (HEADING_VARIANTS.includes(variant) ? "header" : undefined);
+
   return (
     <Text
       {...props}
+      accessibilityRole={resolvedRole}
       style={[variantStyles[variant], style]}
     />
   );

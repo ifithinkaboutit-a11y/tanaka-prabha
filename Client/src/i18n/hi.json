@@ -29,7 +29,10 @@
     "didntReceiveOtp": "OTP नहीं मिला?",
     "resendOTP": "OTP पुनः भेजें",
     "resendOtpIn": "OTP पुनः भेजें",
-    "changeNumber": "मोबाइल नंबर बदलें"
+    "changeNumber": "मोबाइल नंबर बदलें",
+    "duplicatePhoneMessage": "यह नंबर पहले से पंजीकृत है। कृपया लॉग इन करें।",
+    "duplicatePhoneLogin": "लॉग इन करें",
+    "duplicatePhoneDismiss": "बंद करें"
   },
   "onboarding": {
     "personal": {
@@ -154,6 +157,7 @@
     "governmentSchemes": "सरकारी योजनाएं और सब्सिडी",
     "trainingPrograms": "प्रशिक्षण और जागरूकता कार्यक्रम",
     "upcomingEvents": "आगामी कार्यक्रम",
+    "pastEvents": "पिछले कार्यक्रम",
     "viewAll": "सभी देखें",
     "noPrograms": "कोई कार्यक्रम उपलब्ध नहीं"
   },
@@ -348,6 +352,8 @@
     "sheep": "भेड़",
     "goat": "बकरी",
     "hen": "मुर्गी / पोल्ट्री",
+    "pig": "सूअर",
+    "poultry": "मुर्गी",
     "others": "अन्य",
     "infoMessage": "प्रासंगिक पशुपालन योजनाओं और पशु चिकित्सा सहायता प्राप्त करने के लिए अपने पशुधन की गिनती अपडेट रखें।",
     "save": "सहेजें",
@@ -499,7 +505,11 @@
     "testSent": "टेस्ट नोटिफिकेशन भेजा गया",
     "testSentDesc": "आपको जल्द ही एक नोटिफिकेशन मिलेगा।",
     "testError": "त्रुटि",
-    "testErrorDesc": "टेस्ट नोटिफिकेशन नहीं भेज सका। सुनिश्चित करें कि आप फिजिकल डिवाइस पर हैं।"
+    "testErrorDesc": "टेस्ट नोटिफिकेशन नहीं भेज सका। सुनिश्चित करें कि आप फिजिकल डिवाइस पर हैं।",
+    "announcement": "घोषणा",
+    "announcement.desc": "तनक प्रभा से नई घोषणा",
+    "broadcastTitle": "प्रसारण",
+    "broadcastDesc": "सभी उपयोगकर्ताओं को एक नया संदेश भेजा गया है"
   },
   "events": {
     "title": "कार्यक्रम",
@@ -540,6 +550,52 @@
       "ongoing": "चल रहा",
       "completed": "पूर्ण",
       "cancelled": "रद्द"
-    }
+    },
+    "trainerContact": "प्रशिक्षक और संपर्क",
+    "masterTrainer": "मास्टर प्रशिक्षक",
+    "trainer": "प्रशिक्षक",
+    "contactNumber": "संपर्क नंबर",
+    "call": "कॉल करें",
+    "getDirections": "दिशा-निर्देश प्राप्त करें"
+  },
+  "interested": {
+    "interested": "रुचि है",
+    "notInterested": "रुचि नहीं है",
+    "peopleInterested": "{{count}} लोगों को रुचि है",
+    "errorToast": "रुचि अपडेट नहीं हो सकी। कृपया पुनः प्रयास करें।"
+  },
+  "qrAttendance": {
+    "scanToAttend": "उपस्थिति के लिए स्कैन करें",
+    "scanning": "स्कैन हो रहा है...",
+    "attendanceRecorded": "उपस्थिति दर्ज हो गई",
+    "qrExpired": "QR कोड की समय सीमा समाप्त हो गई",
+    "alreadyAttended": "पहले से उपस्थित हैं",
+    "cameraPermissionTitle": "कैमरा अनुमति आवश्यक है",
+    "cameraPermissionMessage": "QR कोड स्कैन करने के लिए कृपया कैमरा एक्सेस की अनुमति दें।"
+  },
+  "filterSort": {
+    "sortBy": "क्रमबद्ध करें",
+    "nameAZ": "नाम (अ–ज)",
+    "newestFirst": "नवीनतम पहले",
+    "mostInterested": "सर्वाधिक रुचि",
+    "filters": "फ़िल्टर",
+    "clearFilters": "फ़िल्टर हटाएं",
+    "noResultsFound": "कोई परिणाम नहीं मिला",
+    "typeAll": "सभी",
+    "typeScheme": "योजना",
+    "typeProgram": "कार्यक्रम",
+    "typeEvent": "इवेंट"
+  },
+  "admin": {
+    "englishContent": "अंग्रेज़ी सामग्री",
+    "hindiContent": "हिंदी सामग्री",
+    "titleEn": "शीर्षक (अंग्रेज़ी)",
+    "titleHi": "शीर्षक (हिंदी)",
+    "descriptionEn": "विवरण (अंग्रेज़ी)",
+    "descriptionHi": "विवरण (हिंदी)",
+    "guidelinesEn": "दिशानिर्देश (अंग्रेज़ी)",
+    "guidelinesHi": "दिशानिर्देश (हिंदी)",
+    "requirementsEn": "आवश्यकताएं (अंग्रेज़ी)",
+    "requirementsHi": "आवश्यकताएं (हिंदी)"
   }
 }

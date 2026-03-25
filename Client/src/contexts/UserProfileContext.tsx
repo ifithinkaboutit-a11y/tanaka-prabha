@@ -1,14 +1,36 @@
 // src/contexts/UserProfileContext.tsx
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Alert } from "react-native";
 import { tokenManager, userApi, UserProfile, UserProfileUpdate } from "../services/apiService";
 
+// ── Cache constants ──────────────────────────────────────────────────────────
+export const PROFILE_CACHE_TTL_MS = 300_000; // 5 minutes
+export const PROFILE_CACHE_KEY = "profile_cache";
+
+// ── Cache shape ──────────────────────────────────────────────────────────────
+export interface ProfileCache {
+  profile: UserProfile;
+  cachedAt: string;   // ISO-8601
+  isDirty: boolean;
+}
+
+// ── Pure helper: is the cache still fresh? ───────────────────────────────────
+export function isCacheFresh(cache: ProfileCache): boolean {
+  return !cache.isDirty && (Date.now() - Date.parse(cache.cachedAt)) < PROFILE_CACHE_TTL_MS;
+}
+
+// ── Standalone logout helper ─────────────────────────────────────────────────
+export async function clearProfileCache(): Promise<void> {
+  await AsyncStorage.removeItem(PROFILE_CACHE_KEY);
+}
+
+// ── Context type ─────────────────────────────────────────────────────────────
 interface UserProfileContextType {
   profile: UserProfile | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (force?: boolean) => Promise<void>;
   updateProfile: (updates: Partial<UserProfileUpdate>) => Promise<void>;
   updatePersonalDetails: (data: any) => Promise<void>;
   updateLandDetails: (data: any) => Promise<void>;
@@ -38,14 +60,54 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
   // Track in-flight fetch to avoid double-loads
   const fetchingRef = useRef(false);
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async (force = false) => {
     if (fetchingRef.current) return;
+
+    // ── Read cache ──────────────────────────────────────────────────────────
+    let cachedData: ProfileCache | null = null;
+    try {
+      const raw = await AsyncStorage.getItem(PROFILE_CACHE_KEY);
+      if (raw) {
+        cachedData = JSON.parse(raw) as ProfileCache;
+      }
+    } catch (e) {
+      console.warn("⚠️ [UserProfileContext] Cache read failed:", e);
+      cachedData = null;
+    }
+
+    // ── Fresh cache and no force → return immediately without fetching ──────
+    if (cachedData && isCacheFresh(cachedData) && !force) {
+      setProfile(cachedData.profile);
+      setLoading(false);
+      return;
+    }
+
+    // ── Show cached data immediately while fetching in background ────────────
+    if (cachedData) {
+      setProfile(cachedData.profile);
+      setLoading(false);
+    }
+
+    // ── Background fetch ─────────────────────────────────────────────────────
     fetchingRef.current = true;
     try {
       setError(null);
       const response = await userApi.getProfile();
       if (response.data?.user) {
-        setProfile(response.data.user);
+        const freshProfile = response.data.user;
+        setProfile(freshProfile);
+
+        // Write updated cache
+        const newCache: ProfileCache = {
+          profile: freshProfile,
+          cachedAt: new Date().toISOString(),
+          isDirty: false,
+        };
+        try {
+          await AsyncStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(newCache));
+        } catch (writeErr) {
+          console.warn("⚠️ [UserProfileContext] Cache write failed:", writeErr);
+        }
         console.log("✅ [UserProfileContext] Profile loaded from backend");
       }
     } catch (err) {
@@ -58,8 +120,7 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     }
   }, []);
 
-  // On mount: load cached user data from AsyncStorage immediately, then
-  // fire off a backend refresh in parallel so the UI isn't blocked.
+  // On mount: hydrate from ProfileCache first (instant display), then refresh
   useEffect(() => {
     const init = async () => {
       try {
@@ -69,27 +130,37 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
           return;
         }
 
-        // Step 1: Show cached user data immediately (from tokenManager)
-        const cachedUser = await tokenManager.getUser();
-        if (cachedUser) {
-          // Build a minimal UserProfile from the AuthContext cache
-          // so the form pre-populates instantly without waiting for the network
-          setProfile((prev) =>
-            prev ?? {
-              id: cachedUser.id,
-              name: cachedUser.name || "",
-              mobileNumber: cachedUser.mobileNumber || "",
-              village: cachedUser.village,
-              district: cachedUser.district,
-              state: cachedUser.state,
-              gender: cachedUser.gender,
+        // Step 1: Hydrate from ProfileCache immediately
+        try {
+          const raw = await AsyncStorage.getItem(PROFILE_CACHE_KEY);
+          if (raw) {
+            const cached: ProfileCache = JSON.parse(raw);
+            setProfile(cached.profile);
+            setLoading(false);
+          } else {
+            // Fall back to tokenManager user for minimal instant display
+            const cachedUser = await tokenManager.getUser();
+            if (cachedUser) {
+              setProfile((prev) =>
+                prev ?? {
+                  id: cachedUser.id,
+                  name: cachedUser.name || "",
+                  mobileNumber: cachedUser.mobileNumber || "",
+                  village: cachedUser.village,
+                  district: cachedUser.district,
+                  state: cachedUser.state,
+                  gender: cachedUser.gender,
+                  photoUrl: cachedUser.photoUrl,
+                }
+              );
+              setLoading(false);
             }
-          );
-          // Don't keep the spinner up just for the cached fallback
-          setLoading(false);
+          }
+        } catch {
+          // ignore cache read errors — refreshProfile will fetch fresh data
         }
 
-        // Step 2: Fetch full profile from backend in background
+        // Step 2: Fetch full profile from backend (respects cache TTL)
         await refreshProfile();
       } catch {
         setLoading(false);
@@ -106,6 +177,27 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
       const response = await userApi.updateProfile(updates);
       if (response.data?.user) {
         setProfile(response.data.user);
+
+        // Mark cache dirty so next profile visit triggers a fresh fetch
+        try {
+          const raw = await AsyncStorage.getItem(PROFILE_CACHE_KEY);
+          if (raw) {
+            const existing: ProfileCache = JSON.parse(raw);
+            const dirtyCache: ProfileCache = { ...existing, isDirty: true };
+            await AsyncStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(dirtyCache));
+          } else {
+            // No cache yet — write one with isDirty: true
+            const dirtyCache: ProfileCache = {
+              profile: response.data.user,
+              cachedAt: new Date().toISOString(),
+              isDirty: true,
+            };
+            await AsyncStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(dirtyCache));
+          }
+        } catch (cacheErr) {
+          console.warn("⚠️ [UserProfileContext] Failed to mark cache dirty:", cacheErr);
+        }
+
         console.log("✅ [UserProfileContext] Profile saved to backend");
       }
     } catch (err) {

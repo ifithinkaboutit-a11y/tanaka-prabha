@@ -11,6 +11,8 @@ type ButtonProps = {
   disabled?: boolean;
   style?: ViewStyle;
   size?: "sm" | "md" | "lg";
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 const sizeClasses: Record<string, string> = {
@@ -39,6 +41,8 @@ export default function Button({
   disabled,
   style,
   size = "md",
+  accessibilityLabel,
+  accessibilityHint,
 }: ButtonProps) {
   const content = children || (label ? (
     <Text className={`text-base font-semibold ${textColorClasses[variant]}`}>
@@ -51,11 +55,15 @@ export default function Button({
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       style={style}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: !!disabled }}
       className={`
         rounded-xl items-center justify-center flex-row
         ${sizeClasses[size]}
         ${variantClasses[variant]}
-        ${disabled ? "opacity-50" : "active:opacity-85"}
+        ${disabled ? "opacity-[0.45]" : "active:opacity-85"}
       `}
     >
       {content}

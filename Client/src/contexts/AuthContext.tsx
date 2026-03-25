@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { verifyToken, signOutUser, getStoredUser, verifyOTP as authVerifyOTP, sendOTP as authSendOTP, resendOTP as authResendOTP } from "@/utils/auth";
 import { User, tokenManager, userApi, UserProfileUpdate } from "@/services/apiService";
+import { clearProfileCache } from "@/contexts/UserProfileContext";
 import { setupPushNotifications } from "@/utils/pushNotifications";
 import { useLanguageStore } from "@/stores/languageStore";
 
@@ -330,6 +331,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       await signOutUser();
+      await clearProfileCache();
       setIsAuthenticated(false);
       setIsAdmin(false);
       setUser(null);
@@ -341,12 +343,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  // Refresh user data
+  // Refresh user data — also syncs isAuthenticated so callers like the
+  // password login flow can trigger the navigation guard without a full re-mount.
   const refreshUser = useCallback(async () => {
     try {
       const userData = await verifyToken();
       if (userData) {
         setUser(userData);
+        setIsAuthenticated(true);
         setNeedsOnboarding(userData.is_new_user === true);
       }
     } catch (error) {

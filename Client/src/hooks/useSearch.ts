@@ -48,6 +48,7 @@ export const useSearch = () => {
   const [loading, setLoading] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "scheme" | "training" | "event">("all");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,10 +136,11 @@ export const useSearch = () => {
         relevanceScore: computeRelevance(debouncedQuery, item),
       }))
       .filter((item) => item.relevanceScore > 0)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .filter((item) => typeFilter === "all" || item.type === typeFilter);
 
     return results;
-  }, [debouncedQuery, allContent]);
+  }, [debouncedQuery, allContent, typeFilter]);
 
   const performSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -147,6 +149,7 @@ export const useSearch = () => {
   const clearSearch = useCallback(() => {
     setSearchQuery("");
     setDebouncedQuery("");
+    setTypeFilter("all");
   }, []);
 
   return {
@@ -157,5 +160,7 @@ export const useSearch = () => {
     totalResults: searchResults.length,
     loading,
     isSearching: searchQuery !== debouncedQuery,
+    typeFilter,
+    setTypeFilter,
   };
 };

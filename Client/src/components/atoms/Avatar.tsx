@@ -1,6 +1,7 @@
 // src/components/atoms/Avatar.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Image, Text, View } from "react-native";
+import { cdn } from "../../utils/cloudinaryUtils";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 
@@ -55,6 +56,11 @@ export default function Avatar({
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
 
+  // Reset error state whenever the URI changes (e.g. after a new photo upload)
+  useEffect(() => {
+    setImageError(false);
+  }, [uri]);
+
   const initials =
     name
       ?.trim()
@@ -65,7 +71,11 @@ export default function Avatar({
       .toUpperCase() || "?";
 
   const showInitials = !uri || imageError;
-  const backgroundColor = bgColor || getColorFromName(name);
+  // When showing an image, bgColor is used as the container background (for borders/loading state).
+  // When showing initials, always use the name-based color so initials are always legible.
+  const initialsBackgroundColor = getColorFromName(name);
+  const imageBackgroundColor = bgColor || "#F3F4F6";
+  const backgroundColor = showInitials ? initialsBackgroundColor : imageBackgroundColor;
 
   return (
     <View
@@ -80,13 +90,14 @@ export default function Avatar({
     >
       {showInitials ? (
         <Text
-          className={`font-bold text-white ${textSizeClasses[size]}`}
+          className={`font-bold ${textSizeClasses[size]}`}
+          style={{ color: "#FFFFFF" }}
         >
           {initials}
         </Text>
       ) : (
         <Image
-          source={{ uri }}
+          source={{ uri: uri?.startsWith('file://') ? uri : cdn(uri, { w: 200, h: 200, c: 'fill', g: 'face' }) }}
           className="w-full h-full"
           resizeMode="cover"
           onError={() => setImageError(true)}

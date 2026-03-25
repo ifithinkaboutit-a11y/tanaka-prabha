@@ -3,11 +3,12 @@
 import * as React from "react"
 import {
     ArrowLeft, Calendar, Clock, MapPin, Users, UserPlus, Check, X,
-    FileText, ShieldCheck, ImageIcon, Pencil, Trash2, Phone, Star, Save
+    FileText, ShieldCheck, ImageIcon, Pencil, Trash2, Phone, Star, Save, QrCode, Download
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { eventsApi, professionalsApi } from "@/lib/api"
 import { toast } from "sonner"
+import QRCode from "qrcode"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,6 +90,11 @@ export default function EventDetailsPage({ params: paramsPromise }) {
     const [mentorDialogOpen, setMentorDialogOpen] = React.useState(false)
     const [selectedProfessionalId, setSelectedProfessionalId] = React.useState("")
 
+    // QR Code
+    const [qrDialogOpen, setQrDialogOpen] = React.useState(false)
+    const [qrDataUrl, setQrDataUrl] = React.useState("")
+    const [qrLoading, setQrLoading] = React.useState(false)
+
     // ── Data fetching ──
     React.useEffect(() => { fetchData() }, [id])
 
@@ -136,17 +142,25 @@ export default function EventDetailsPage({ params: paramsPromise }) {
     }
 
     async function handleSaveEdit() {
+        if (!editData.title_hi?.trim()) {
+            toast.error("Please enter the Hindi title (हिंदी शीर्षक आवश्यक है)")
+            return
+        }
         try {
             const payload = {
                 title: editData.title,
+                title_hi: editData.title_hi,
                 description: editData.description,
+                description_hi: editData.description_hi,
                 date: editData.date?.split("T")[0],
                 start_time: editData.start_time,
                 end_time: editData.end_time,
                 location_name: editData.location_name,
                 location_address: editData.location_address,
                 guidelines_and_rules: editData.guidelines_and_rules,
+                guidelines_and_rules_hi: editData.guidelines_and_rules_hi,
                 requirements: editData.requirements,
+                requirements_hi: editData.requirements_hi,
                 hero_image_url: editData.hero_image_url,
                 status: editData.status,
                 instructors: editData.instructors,
@@ -172,6 +186,30 @@ export default function EventDetailsPage({ params: paramsPromise }) {
             toast.success(`Status updated to ${newStatus}`)
             fetchData()
         } catch { toast.error("Failed to update status") }
+    }
+
+    async function handleGenerateQr() {
+        try {
+            setQrLoading(true)
+            setQrDialogOpen(true)
+            const res = await eventsApi.generateQrToken(id)
+            const deepLink = res.data?.deepLink
+            if (!deepLink) throw new Error("No deep link returned")
+            const dataUrl = await QRCode.toDataURL(deepLink, { width: 300, margin: 2 })
+            setQrDataUrl(dataUrl)
+        } catch (err) {
+            toast.error("Failed to generate QR code")
+            setQrDialogOpen(false)
+        } finally {
+            setQrLoading(false)
+        }
+    }
+
+    function handleDownloadQr() {
+        const link = document.createElement("a")
+        link.href = qrDataUrl
+        link.download = `event-${id}-qr.png`
+        link.click()
     }
 
     // ── Mentor Management ──
@@ -258,6 +296,9 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                     <Badge className={`capitalize ${statusColors[event.status] || ""}`}>{event.status}</Badge>
                     <Button variant="outline" size="sm" onClick={() => { setEditData({ ...event }); setIsEditing(true) }}>
                         <Pencil className="size-3.5 mr-1.5" /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleGenerateQr}>
+                        <QrCode className="size-3.5 mr-1.5" /> Generate QR
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -609,21 +650,55 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                 </Card>
             </div>
 
+            {/* ═══ QR Code Dialog ═══ */}
+            <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Event QR Code</DialogTitle>
+                        <DialogDescription>Scan this QR code to mark attendance for &quot;{event.title}&quot;.</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center gap-4 py-4">
+                        {qrLoading ? (
+                            <div className="size-[300px] flex items-center justify-center bg-muted rounded-lg">
+                                <p className="text-sm text-muted-foreground">Generating…</p>
+                            </div>
+                        ) : qrDataUrl ? (
+                            <img src={qrDataUrl} alt="Event QR Code" className="rounded-lg border" width={300} height={300} />
+                        ) : null}
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                        {qrDataUrl && (
+                            <Button onClick={handleDownloadQr}>
+                                <Download className="size-3.5 mr-1.5" /> Download PNG
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* ═══ Edit Dialog ═══ */}
-            <Dialog open={isEditing} onOpenChange={setIsEditing}>
-                <DialogContent className="overflow-y-auto sm:max-w-xl max-h-[85vh]">
+            <Dialog open={isEditing} onOpenChange={setIsEditing}>                <DialogContent className="overflow-y-auto sm:max-w-xl max-h-[85vh]">
                     <DialogHeader>
                         <DialogTitle>Edit Event</DialogTitle>
                         <DialogDescription>Update event details below.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Title</Label>
+                            <Label>Title (English)</Label>
                             <Input value={editData.title || ""} onChange={e => setEditData({ ...editData, title: e.target.value })} />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
+                            <Label>Title (Hindi) *</Label>
+                            <Input value={editData.title_hi || ""} onChange={e => setEditData({ ...editData, title_hi: e.target.value })} placeholder="हिंदी शीर्षक" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Description (English)</Label>
                             <Textarea rows={3} value={editData.description || ""} onChange={e => setEditData({ ...editData, description: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Description (Hindi)</Label>
+                            <Textarea rows={3} value={editData.description_hi || ""} onChange={e => setEditData({ ...editData, description_hi: e.target.value })} placeholder="हिंदी विवरण" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -650,12 +725,20 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                             <Input value={editData.location_address || ""} onChange={e => setEditData({ ...editData, location_address: e.target.value })} />
                         </div>
                         <div className="space-y-2">
-                            <Label>Guidelines & Rules</Label>
+                            <Label>Guidelines & Rules (English)</Label>
                             <Textarea rows={3} value={editData.guidelines_and_rules || ""} onChange={e => setEditData({ ...editData, guidelines_and_rules: e.target.value })} />
                         </div>
                         <div className="space-y-2">
-                            <Label>Requirements</Label>
+                            <Label>Guidelines & Rules (Hindi)</Label>
+                            <Textarea rows={3} value={editData.guidelines_and_rules_hi || ""} onChange={e => setEditData({ ...editData, guidelines_and_rules_hi: e.target.value })} placeholder="हिंदी दिशानिर्देश" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Requirements (English)</Label>
                             <Textarea rows={2} value={editData.requirements || ""} onChange={e => setEditData({ ...editData, requirements: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Requirements (Hindi)</Label>
+                            <Textarea rows={2} value={editData.requirements_hi || ""} onChange={e => setEditData({ ...editData, requirements_hi: e.target.value })} placeholder="हिंदी आवश्यकताएं" />
                         </div>
                         <div className="space-y-2">
                             <Label>Hero Image URL</Label>

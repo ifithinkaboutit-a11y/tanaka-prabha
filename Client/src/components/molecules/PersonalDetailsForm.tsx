@@ -1,6 +1,6 @@
 // src/components/molecules/PersonalDetailsForm.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Alert,
   Pressable,
@@ -14,10 +14,11 @@ import {
   PersonalDetails,
   PersonalDetailsFormProps,
 } from "../../data/interfaces";
-import { getStateOptions, getDistrictOptions, getTehsilOptions, getBlockOptions, getVillageOptions } from "../../data/indianLocations";
+import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
+import AddressDropdowns, { type AddressValue } from "./AddressDropdowns";
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 const educationOptions = [
@@ -326,26 +327,8 @@ export default function PersonalDetailsForm({
     }));
   }, [addressOverride]);
 
-  const stateOptions = useMemo(() => getStateOptions(), []);
-  const districtOptions = useMemo(
-    () => (formData.state ? getDistrictOptions(formData.state) : []),
-    [formData.state]
-  );
-
-  const tehsilOptions = useMemo(
-    () => (formData.district ? getTehsilOptions(formData.state, formData.district) : []),
-    [formData.state, formData.district]
-  );
-
-  const blockOptions = useMemo(
-    () => (formData.tehsil ? getBlockOptions(formData.state, formData.district, formData.tehsil) : []),
-    [formData.state, formData.district, formData.tehsil]
-  );
-
-  const villageOptions = useMemo(
-    () => (formData.block ? getVillageOptions(formData.state, formData.district, formData.tehsil, formData.block) : []),
-    [formData.state, formData.district, formData.tehsil, formData.block]
-  );
+  const stateOptions = getStateOptions();
+  const districtOptions = formData.state ? getDistrictOptions(formData.state) : [];
 
   const handleSave = () => {
     if (!formData.name.trim()) {
@@ -544,71 +527,80 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.district}
-            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); }}
+            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); update("gramPanchayat", ""); update("nyayPanchayat", ""); }}
             options={districtOptions}
             placeholder={formData.state ? "Select district" : "Select state first"}
             disabled={!formData.state}
           />
         </View>
 
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Text style={fi.label}>{String(T.translate("personalDetails.tehsil") || "Tehsil")}</Text>
-          </View>
-          <Select
-            value={formData.tehsil}
-            onChange={(v) => { update("tehsil", v); update("block", ""); update("village", ""); }}
-            options={tehsilOptions}
-            placeholder={formData.district ? "Select tehsil" : "Select district first"}
-            disabled={!formData.district}
+        {/* Cascading address dropdowns for Bhadohi/Mirzapur */}
+        {(formData.district?.toLowerCase() === "bhadohi" ||
+          formData.district?.toLowerCase() === "mirzapur") ? (
+          <AddressDropdowns
+            district={formData.district}
+            value={{
+              tehsil: formData.tehsil || "",
+              nyayPanchayat: formData.nyayPanchayat || "",
+              gramPanchayat: formData.gramPanchayat || "",
+              village: formData.village || "",
+            }}
+            onChange={(v: AddressValue) =>
+              setFormData((prev) => ({
+                ...prev,
+                tehsil: v.tehsil,
+                nyayPanchayat: v.nyayPanchayat,
+                gramPanchayat: v.gramPanchayat,
+                village: v.village,
+              }))
+            }
+            language="en"
           />
-        </View>
-
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block")}</Text>
-          </View>
-          <Select
-            value={formData.block}
-            onChange={(v) => { update("block", v); update("village", ""); }}
-            options={blockOptions}
-            placeholder={formData.tehsil ? "Select block" : "Select tehsil first"}
-            disabled={!formData.tehsil}
-          />
-        </View>
-
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
-          </View>
-          <Select
-            value={formData.village}
-            onChange={(v) => update("village", v)}
-            options={villageOptions}
-            placeholder={formData.block ? "Select village" : "Select block first"}
-            disabled={!formData.block}
-          />
-        </View>
-
-        <View style={s.twoCol}>
-          <View style={{ flex: 1 }}>
+        ) : (
+          <>
+            {/* Keep existing free-text inputs for non-Bhadohi/Mirzapur districts */}
             <FormInput
-              label={String(T.translate("personalDetails.gramPanchayat"))}
-              value={formData.gramPanchayat}
-              onChangeText={(v) => update("gramPanchayat", v)}
-              placeholder="Gram panchayat"
+              label={String(T.translate("personalDetails.tehsil") || "Tehsil")}
+              value={formData.tehsil}
+              onChangeText={(v) => update("tehsil", v)}
+              placeholder="e.g. Sadar, Kotwali..."
+              icon="layers-outline"
             />
-          </View>
-          <View style={{ flex: 1 }}>
             <FormInput
-              label={String(T.translate("personalDetails.nyayPanchayat"))}
-              value={formData.nyayPanchayat}
-              onChangeText={(v) => update("nyayPanchayat", v)}
-              placeholder="Nyay panchayat"
+              label={String(T.translate("personalDetails.village") || "Village / Town")}
+              value={formData.village}
+              onChangeText={(v) => update("village", v)}
+              placeholder="e.g. Rampur, Sector 12..."
+              icon="home-outline"
             />
-          </View>
-        </View>
+            <View style={s.twoCol}>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label={String(T.translate("personalDetails.gramPanchayat"))}
+                  value={formData.gramPanchayat}
+                  onChangeText={(v) => update("gramPanchayat", v)}
+                  placeholder="Gram panchayat"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label={String(T.translate("personalDetails.nyayPanchayat"))}
+                  value={formData.nyayPanchayat}
+                  onChangeText={(v) => update("nyayPanchayat", v)}
+                  placeholder="Nyay panchayat"
+                />
+              </View>
+            </View>
+          </>
+        )}
+
+        <FormInput
+          label={String(T.translate("personalDetails.block") || "Block")}
+          value={formData.block}
+          onChangeText={(v) => update("block", v)}
+          placeholder="e.g. Phulpur, Allahabad..."
+          icon="grid-outline"
+        />
 
         <View style={s.twoCol}>
           <View style={{ flex: 1 }}>

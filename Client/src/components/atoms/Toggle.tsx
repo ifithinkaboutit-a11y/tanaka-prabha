@@ -1,6 +1,13 @@
 // src/components/atoms/Toggle.tsx
-import React from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Pressable, Text, View } from "react-native";
+
+// Track dimensions
+const TRACK_WIDTH = 52;
+const TRACK_HEIGHT = 30;
+const THUMB_SIZE = 24;
+const TRACK_PADDING = 3;
+const THUMB_TRAVEL = TRACK_WIDTH - THUMB_SIZE - TRACK_PADDING * 2; // 22
 
 interface ToggleProps {
   label?: string;
@@ -21,6 +28,16 @@ export default function Toggle({
 }: ToggleProps) {
   const currentValue = checked ?? value ?? false;
 
+  const thumbAnim = useRef(new Animated.Value(currentValue ? THUMB_TRAVEL : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(thumbAnim, {
+      toValue: currentValue ? THUMB_TRAVEL : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [currentValue, thumbAnim]);
+
   const handleToggle = () => {
     if (disabled) return;
     const newValue = !currentValue;
@@ -29,30 +46,42 @@ export default function Toggle({
   };
 
   return (
-    <View className="flex-row items-center justify-between py-2">
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
       {label ? (
-        <Text className="text-[#212121] text-base flex-1">{label}</Text>
+        <Text style={{ color: "#212121", fontSize: 16, flex: 1 }}>{label}</Text>
       ) : null}
 
       <Pressable
-        onPress={handleToggle}
-        className="w-13 h-8 rounded-2xl p-1 justify-center"
+        onPress={disabled ? undefined : handleToggle}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: currentValue }}
         style={{
+          width: TRACK_WIDTH,
+          height: TRACK_HEIGHT,
+          borderRadius: TRACK_HEIGHT / 2,
+          padding: TRACK_PADDING,
+          justifyContent: "center",
           backgroundColor: currentValue ? "#386641" : "#FFFFFF",
           borderColor: currentValue ? "#386641" : "#E5E7EB",
           borderWidth: 1,
-          opacity: disabled ? 0.5 : 1,
+          opacity: disabled ? 0.45 : 1,
+          minWidth: 44,
+          minHeight: 44,
+          alignItems: "center",
         }}
       >
-        <View
-          className="w-6 h-6 rounded-full elevation-2"
+        <Animated.View
           style={{
-            backgroundColor: currentValue ? "#FFFFFF" : "#FFFFFF",
-            alignSelf: currentValue ? "flex-end" : "flex-start",
+            width: THUMB_SIZE,
+            height: THUMB_SIZE,
+            borderRadius: THUMB_SIZE / 2,
+            backgroundColor: "#FFFFFF",
+            transform: [{ translateX: thumbAnim }],
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.15,
             shadowRadius: 2,
+            elevation: 2,
             borderWidth: currentValue ? 0 : 1,
             borderColor: "#E5E7EB",
           }}
