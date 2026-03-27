@@ -1,10 +1,9 @@
-import BannerSlideshow from "@/components/molecules/Banner";
 import GreetingHeader from "@/components/molecules/GreetingHeader";
+import NotificationAlert from "@/components/molecules/NotificationAlert";
 import QuickActionGrid from "@/components/molecules/QuickActionGrid";
 import SchemePreviewList from "@/components/molecules/SchemePreviewList";
-import SearchBar from "@/components/molecules/SearchBar";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
-import { bannersApi, schemesApi, notificationsApi, Banner, Scheme } from "@/services/apiService";
+import { schemesApi, notificationsApi, Scheme, Notification } from "@/services/apiService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useRouter } from "expo-router";
@@ -25,51 +24,26 @@ export default function Home() {
   // fall back to AuthContext user photo (available immediately from cache)
   const avatarUri = profile?.photoUrl || user?.photoUrl || undefined;
 
-  // Fallback banners shown when API returns nothing
-  const FALLBACK_BANNERS = [
-    {
-      id: "fallback-1",
-      title: t("banners.welcome.title"),
-      subtitle: t("banners.welcome.subtitle"),
-      imageUrl: undefined,
-      url: undefined,
-    },
-    {
-      id: "fallback-2",
-      title: t("banners.programs.title"),
-      subtitle: t("banners.programs.subtitle"),
-      imageUrl: undefined,
-      url: undefined,
-    },
-    {
-      id: "fallback-3",
-      title: t("banners.connect.title"),
-      subtitle: t("banners.connect.subtitle"),
-      imageUrl: undefined,
-      url: undefined,
-    },
-  ];
-
   // State for API data
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [latestNotification, setLatestNotification] = useState<Notification | null>(null);
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
 
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [bannersData, schemesData] = await Promise.all([
-          bannersApi.getAll(),
-          schemesApi.getAll({ limit: 5 }),
-        ]);
-        setBanners(bannersData);
+        const schemesData = await schemesApi.getAll({ limit: 5 });
         setSchemes(schemesData);
-        // Fetch unread notification count
-        const count = await notificationsApi.getUnreadCount();
-        setUnreadCount(count);
+        // Fetch latest unread notification
+        const unread = await notificationsApi.getMy({ unread_only: true, limit: 1 });
+        if (unread.length > 0) {
+          setLatestNotification(unread[0]);
+          setUnreadCount(1);
+        }
       } catch (error) {
         console.error("Error fetching home data:", error);
       } finally {
@@ -109,29 +83,6 @@ export default function Home() {
     },
   }));
 
-  // Translate banners — use API data; fall back to hardcoded banners if API returns nothing
-  const translatedBanners = banners.length > 0
-    ? banners.map((banner, index) => {
-        const displayTitle = currentLanguage === 'hi' && banner.titleHi ? banner.titleHi : banner.title;
-        const displaySubtitle = currentLanguage === 'hi' && banner.subtitleHi ? banner.subtitleHi : banner.subtitle;
-        return {
-          id: banner.id,
-          title: displayTitle || (index === 0
-            ? t("banners.welcome.title")
-            : index === 1
-              ? t("banners.programs.title")
-              : t("banners.connect.title")),
-          subtitle: displaySubtitle || (index === 0
-            ? t("banners.welcome.subtitle")
-            : index === 1
-              ? t("banners.programs.subtitle")
-              : t("banners.connect.subtitle")),
-          imageUrl: banner.imageUrl,
-          url: banner.redirectUrl,
-        };
-      })
-    : FALLBACK_BANNERS;
-
   // Get user's display name
   const userName = user?.name || t("common.farmer");
 
@@ -149,7 +100,7 @@ export default function Home() {
       showsVerticalScrollIndicator={false}
       stickyHeaderIndices={[0]}
     >
-      {/* Top Header Section (Greeting + Search) */}
+      {/* Top Header Section (Greeting only) */}
       <View style={{
         backgroundColor: "#FFFFFF",
         paddingBottom: 16,
@@ -169,20 +120,19 @@ export default function Home() {
           onAvatarPress={() => router.push("/(tab)/profile")}
           hasNotifications={unreadCount > 0}
         />
-        <View style={{ marginTop: 4 }}>
-          <SearchBar
-            placeholder={t("home.searchPlaceholder")}
-            onSearch={(query) => {
-              router.push(`/search?q=${encodeURIComponent(query)}`);
-            }}
-          />
-        </View>
       </View>
 
-      {/* Banner Slideshow */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 20 }}>
-        <BannerSlideshow banners={translatedBanners} />
-      </View>
+      {/* NotificationAlert placeholder — added in Task 4 */}
+      {latestNotification && !notificationDismissed && (
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+          <NotificationAlert
+            notification={{ ...latestNotification, description: latestNotification.description ?? "" }}
+            onDismiss={() => setNotificationDismissed(true)}
+            onViewAll={() => router.push("/notifications" as any)}
+          />
+        </View>
+      )}
+
       {/* Quick Actions Section */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <AppText
@@ -199,8 +149,8 @@ export default function Home() {
         </AppText>
         <QuickActionGrid actions={quickActions} />
       </View>
-      {/* Popular Schemes Section - Hidden for cleaner look matching Figma */}
-      {/* Uncomment if needed: */}
+
+      {/* Popular Schemes Section */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
         <AppText
           variant="h2"

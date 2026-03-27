@@ -8,7 +8,6 @@ import { DetailPageSkeleton } from "../components/atoms/Skeleton";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
 import ExpandableText from "../components/atoms/ExpandableText";
-import InterestButton from "../components/atoms/InterestButton";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 import { useLanguageStore } from "../stores/languageStore";
@@ -199,16 +198,10 @@ const SchemeDetailsScreen = () => {
 
         {/* Scheme Title & Description */}
         <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
-          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-            <AppText variant="h2" style={{ color: "#111827", fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32, flex: 1, marginRight: 12 }}>
+          <View style={{ marginBottom: 12 }}>
+            <AppText variant="h2" style={{ color: "#111827", fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
               {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
             </AppText>
-            <InterestButton
-              isInterested={isInterested}
-              count={interestCount}
-              onToggle={toggleInterest}
-              loading={interestLoading}
-            />
           </View>
           <ExpandableText
             text={(currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) ?? ""}
@@ -273,6 +266,13 @@ const SchemeDetailsScreen = () => {
         shadowRadius: 12,
         elevation: 10,
       }}>
+        <Button
+          label={isInterested ? `✓ I'm Interested` : `I'm Interested`}
+          variant={isInterested ? "primary" : "outline"}
+          onPress={toggleInterest}
+          disabled={interestLoading}
+          style={{ width: "100%", borderRadius: 16, marginBottom: 12 }}
+        />
         <Button
           label={t("programReader.applyNow")}
           variant="primary"

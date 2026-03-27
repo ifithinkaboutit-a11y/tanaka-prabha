@@ -8,6 +8,7 @@ import {
   Pressable,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import AppText from "../atoms/AppText";
 import AnimatedPressable from "../atoms/AnimatedPressable";
 import { cdn } from "@/utils/cloudinaryUtils";
@@ -39,29 +40,36 @@ export default function BannerSlideshow({
   // Cross-fade opacity for the incoming slide
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
+  const goToSlide = (nextIndex: number) => {
+    // Cross-fade: fade out then back in
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+    setCurrentIndex(nextIndex);
+  };
+
   // Auto-slide
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(() => {
-      goToIndex((prev) => (prev + 1) % banners.length);
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) % banners.length;
+        fadeAnim.setValue(0);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+        return next;
+      });
     }, autoSlideInterval);
     return () => clearInterval(interval);
   }, [banners.length, autoSlideInterval]);
-
-  const goToIndex = (updater: (prev: number) => number) => {
-    setCurrentIndex((prev) => {
-      const next = updater(prev);
-      // Cross-fade: fade out then back in
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-      return next;
-    });
-  };
 
   // Animate dot pills — width is a layout prop, must use useNativeDriver: false
   useEffect(() => {
@@ -100,12 +108,6 @@ export default function BannerSlideshow({
               />
             )}
 
-            {/* Dark overlay for text legibility */}
-            <View
-              className="absolute bottom-0 left-0 right-0"
-              style={{ height: "65%", backgroundColor: "rgba(0,0,0,0.38)" }}
-            />
-
             {/* Text content */}
             <View className="absolute bottom-5 left-5 right-5">
               <AppText
@@ -136,6 +138,55 @@ export default function BannerSlideshow({
               </AppText>
             </View>
           </Animated.View>
+
+          {/* Chevron controls */}
+          {banners.length > 1 && (
+            <>
+              <Pressable
+                onPress={() =>
+                  goToSlide((currentIndex - 1 + banners.length) % banners.length)
+                }
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  top: "50%",
+                  transform: [{ translateY: -22 }],
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.35)",
+                    borderRadius: 22,
+                    padding: 10,
+                  }}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#fff" />
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={() =>
+                  goToSlide((currentIndex + 1) % banners.length)
+                }
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: [{ translateY: -22 }],
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.35)",
+                    borderRadius: 22,
+                    padding: 10,
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#fff" />
+                </View>
+              </Pressable>
+            </>
+          )}
         </View>
       </AnimatedPressable>
 
@@ -145,7 +196,7 @@ export default function BannerSlideshow({
           {banners.map((_, index) => (
             <AnimatedPressable
               key={index}
-              onPress={() => goToIndex(() => index)}
+              onPress={() => goToSlide(index)}
               scaleOnPress={0.85}
             >
               <Animated.View

@@ -151,7 +151,8 @@ const PhoneInput = () => {
   const handleForgotPassword = async () => {
     const validation = validateMobileNumber(phoneNumber);
     if (!validation.isValid) {
-      Alert.alert("Enter Phone Number", "Please enter your 10-digit mobile number first.");
+      setValidationError("Please enter your 10-digit mobile number first.");
+      shake();
       return;
     }
     setLoading(true);
@@ -163,7 +164,8 @@ const PhoneInput = () => {
         params: { phoneNumber: fullPhoneNumber, mode: "forgot-password" },
       });
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to send OTP. Please try again.");
+      setValidationError(e.message || "Failed to send OTP. Please try again.");
+      shake();
     } finally {
       setLoading(false);
     }

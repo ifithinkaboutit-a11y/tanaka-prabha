@@ -485,14 +485,18 @@ const AuthLivestockDetailsScreen = () => {
             )}
 
             {/* Completion Message */}
-            <View className="bg-green-100 rounded-2xl p-5 mt-2 items-center">
-              <Ionicons name="checkmark-circle" size={48} color="#16A34A" />
-              <AppText variant="bodyMd" className="text-green-800 font-semibold mt-3 text-center">
-                {t("onboarding.almostDone")}
-              </AppText>
-              <AppText variant="bodySm" className="text-green-700 mt-1 text-center">
-                {t("onboarding.finishMessage")}
-              </AppText>
+            <View style={{ backgroundColor: "#F0FDF4", borderRadius: 14, padding: 16, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#BBF7D0" }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="checkmark" size={20} color="#16A34A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="bodyMd" style={{ color: "#15803D", fontWeight: "700" }}>
+                  {t("onboarding.almostDone")}
+                </AppText>
+                <AppText variant="bodySm" style={{ color: "#166534", marginTop: 2 }}>
+                  {t("onboarding.finishMessage")}
+                </AppText>
+              </View>
             </View>
           </ScrollView>
 
