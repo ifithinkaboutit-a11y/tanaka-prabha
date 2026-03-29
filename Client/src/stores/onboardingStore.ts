@@ -109,6 +109,11 @@ interface OnboardingState {
   eventLocationPick: { lat: number; lng: number } | null;
   setEventLocationPick: (data: { lat: number; lng: number } | null) => void;
 
+  // Beneficiary location pick — set by location-picker when purpose==='beneficiary'
+  // add-beneficiary reads this and clears it after consuming
+  beneficiaryLocationPick: { lat: number; lng: number; address: string } | null;
+  setBeneficiaryLocationPick: (data: { lat: number; lng: number; address: string } | null) => void;
+
   // Reset
   resetOnboarding: () => void;
 }
@@ -154,6 +159,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       landLocationData: null,
       profileAddressOverride: null,
       eventLocationPick: null,
+      beneficiaryLocationPick: null,
 
       // Land Details
       hasLand: true,
@@ -195,6 +201,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setLandLocationData: (data) => set({ landLocationData: data }),
       setProfileAddressOverride: (data) => set({ profileAddressOverride: data }),
       setEventLocationPick: (data) => set({ eventLocationPick: data }),
+      setBeneficiaryLocationPick: (data) => set({ beneficiaryLocationPick: data }),
 
       setHasLand: (has) => set({ hasLand: has }),
 

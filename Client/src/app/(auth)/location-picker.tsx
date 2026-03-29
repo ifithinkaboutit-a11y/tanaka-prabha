@@ -67,6 +67,7 @@ export default function LocationPickerScreen() {
         updatePersonalDetails,
         setProfileAddressOverride,
         setEventLocationPick,
+        setBeneficiaryLocationPick,
     } = useOnboardingStore();
 
     // ── GPS / map state ────────────────────────────────────────────────────────
@@ -360,6 +361,16 @@ export default function LocationPickerScreen() {
                     return;
                 }
 
+                if (purpose === "beneficiary") {
+                    setBeneficiaryLocationPick({
+                        lat: pinCoords.lat,
+                        lng: pinCoords.lng,
+                        address: address || "Unknown location",
+                    });
+                    router.back();
+                    return;
+                }
+
                 if (purpose === "profile") {
                     let parsed;
                     try { parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng); } catch { parsed = null; }
@@ -418,7 +429,7 @@ export default function LocationPickerScreen() {
     }, [
         pinCoords, address, gpsAccuracy, isProfileMode, purpose,
         personalDetails, setLocationData, setProfileAddressOverride,
-        setEventLocationPick, updatePersonalDetails, router,
+        setEventLocationPick, setBeneficiaryLocationPick, updatePersonalDetails, router,
     ]);
 
     // ── Skip ───────────────────────────────────────────────────────────────────

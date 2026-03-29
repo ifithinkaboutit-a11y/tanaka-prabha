@@ -11,6 +11,7 @@ import ProgramSection from "../../components/molecules/ProgramSection";
 import EventSection from "../../components/molecules/EventSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemesApi, eventsApi, Scheme, ApiEvent } from "@/services/apiService";
+import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { EventCardSkeleton, ProgramCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useAuth } from "../../contexts/AuthContext";
@@ -47,7 +48,7 @@ const Program = () => {
   const fetchData = useCallback(async () => {
     try {
       const [allSchemes, allEvents] = await Promise.all([
-        schemesApi.getAll({ limit: 100 }),
+        fetchWithCache(CACHE_KEYS.PROGRAMS, () => schemesApi.getAll({ limit: 100 })),
         eventsApi.getAll(),
       ]);
       // Case-insensitive match so "training" set from dashboard also shows here

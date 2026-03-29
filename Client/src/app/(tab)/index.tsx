@@ -6,6 +6,7 @@ import WeatherWidget from "@/components/molecules/WeatherWidget";
 import EventCard from "@/components/atoms/EventCard";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
 import { schemesApi, notificationsApi, eventsApi, Scheme, Notification, ApiEvent } from "@/services/apiService";
+import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useRouter } from "expo-router";
@@ -40,7 +41,10 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const schemesData = await schemesApi.getAll({ limit: 5 });
+        const schemesData = await fetchWithCache(
+          CACHE_KEYS.HOME_SCHEMES,
+          () => schemesApi.getAll({ limit: 5 })
+        );
         setSchemes(schemesData);
         // Fetch latest unread notifications (up to 3)
         const unread = await notificationsApi.getMy({ unread_only: true, limit: 3 });
@@ -156,6 +160,9 @@ export default function Home() {
         </View>
       )}
 
+      {/* Weather Widget */}
+      <WeatherWidget district={profile?.district} language={currentLanguage as "en" | "hi"} />
+
       {/* Quick Actions Section */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <AppText
@@ -172,9 +179,6 @@ export default function Home() {
         </AppText>
         <QuickActionGrid actions={quickActions} />
       </View>
-
-      {/* Weather Widget */}
-      <WeatherWidget district={profile?.district} language={currentLanguage as "en" | "hi"} />
 
       {/* Popular Schemes Section */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>

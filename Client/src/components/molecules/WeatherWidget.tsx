@@ -1,15 +1,13 @@
-// src/components/molecules/WeatherWidget.tsx
+﻿// src/components/molecules/WeatherWidget.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import AppText from "../atoms/AppText";
 import { Skeleton } from "../atoms/Skeleton";
 import { DISTRICT_COORDS } from "@/data/districtCoords";
 
-// ── UP centroid fallback ──────────────────────────────────────────────────────
 const UP_FALLBACK: [number, number] = [26.8467, 80.9462];
 
-// ── WMO weather code mapping ──────────────────────────────────────────────────
 interface WeatherInfo {
   labelEn: string;
   labelHi: string;
@@ -43,13 +41,12 @@ const WMO_MAP: Record<number, WeatherInfo> = {
   99: { labelEn: "Thunderstorm + Hail",labelHi: "ओलावृष्टि",       icon: "thunderstorm" },
 };
 
-/** Map a WMO code to label + icon, falling back to nearest known code. */
-export function weatherCodeToInfo(code: number, language: "en" | "hi"): { label: string; icon: keyof typeof Ionicons.glyphMap } {
+export function weatherCodeToInfo(
+  code: number,
+  language: "en" | "hi"
+): { label: string; icon: keyof typeof Ionicons.glyphMap } {
   const entry = WMO_MAP[code];
-  if (entry) {
-    return { label: language === "hi" ? entry.labelHi : entry.labelEn, icon: entry.icon };
-  }
-  // Nearest fallback: find closest key
+  if (entry) return { label: language === "hi" ? entry.labelHi : entry.labelEn, icon: entry.icon };
   const keys = Object.keys(WMO_MAP).map(Number);
   const closest = keys.reduce((prev, curr) =>
     Math.abs(curr - code) < Math.abs(prev - code) ? curr : prev
@@ -58,7 +55,49 @@ export function weatherCodeToInfo(code: number, language: "en" | "hi"): { label:
   return { label: language === "hi" ? fallback.labelHi : fallback.labelEn, icon: fallback.icon };
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Adaptive theme based on temperature + time of day ────────────────────────
+interface WeatherTheme {
+  bg: string;
+  iconBg: string;
+  iconColor: string;
+  tempColor: string;
+  labelColor: string;
+  accentColor: string;
+  shadowColor: string;
+}
+
+function getWeatherTheme(temp: number, weathercode: number): WeatherTheme {
+  const hour = new Date().getHours();
+  const isEvening = hour >= 17 && hour < 20;
+  const isNight = hour >= 20 || hour < 6;
+  const isRainy = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weathercode);
+  const isSnowy = [71, 73, 75, 77, 85, 86].includes(weathercode);
+  const isCloudy = [3, 45, 48].includes(weathercode);
+
+  if (isSnowy) {
+    return { bg: "#E0F2FE", iconBg: "#BAE6FD", iconColor: "#0369A1", tempColor: "#0C4A6E", labelColor: "#0284C7", accentColor: "#38BDF8", shadowColor: "#7DD3FC" };
+  }
+  if (isRainy) {
+    return { bg: "#EFF6FF", iconBg: "#BFDBFE", iconColor: "#1D4ED8", tempColor: "#1E3A5F", labelColor: "#2563EB", accentColor: "#60A5FA", shadowColor: "#93C5FD" };
+  }
+  if (isNight) {
+    return { bg: "#1E1B4B", iconBg: "#3730A3", iconColor: "#A5B4FC", tempColor: "#E0E7FF", labelColor: "#C7D2FE", accentColor: "#818CF8", shadowColor: "#4338CA" };
+  }
+  if (isEvening) {
+    return { bg: "#FFF7ED", iconBg: "#FED7AA", iconColor: "#EA580C", tempColor: "#7C2D12", labelColor: "#C2410C", accentColor: "#F97316", shadowColor: "#FDBA74" };
+  }
+  if (temp >= 35) {
+    return { bg: "#FFFBEB", iconBg: "#FDE68A", iconColor: "#D97706", tempColor: "#78350F", labelColor: "#B45309", accentColor: "#F59E0B", shadowColor: "#FCD34D" };
+  }
+  if (temp >= 25) {
+    return { bg: "#FEFCE8", iconBg: "#FEF08A", iconColor: "#CA8A04", tempColor: "#713F12", labelColor: "#A16207", accentColor: "#EAB308", shadowColor: "#FDE047" };
+  }
+  if (isCloudy) {
+    return { bg: "#F8FAFC", iconBg: "#E2E8F0", iconColor: "#475569", tempColor: "#1E293B", labelColor: "#475569", accentColor: "#94A3B8", shadowColor: "#CBD5E1" };
+  }
+  // Pleasant / cool — green
+  return { bg: "#F0FDF4", iconBg: "#BBF7D0", iconColor: "#16A34A", tempColor: "#14532D", labelColor: "#15803D", accentColor: "#22C55E", shadowColor: "#86EFAC" };
+}
 
 interface WeatherWidgetProps {
   district?: string;
@@ -80,16 +119,13 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
     setError(false);
     try {
       const coords: [number, number] =
-        (district && DISTRICT_COORDS[district]) ?? UP_FALLBACK;
+        (district ? DISTRICT_COORDS[district] : undefined) ?? UP_FALLBACK;
       const [lat, lng] = coords;
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("non-2xx");
       const json = await res.json();
-      setData({
-        temperature: json.current.temperature_2m,
-        weathercode: json.current.weathercode,
-      });
+      setData({ temperature: json.current.temperature_2m, weathercode: json.current.weathercode });
     } catch {
       setError(true);
     } finally {
@@ -97,36 +133,30 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
     }
   }, [district]);
 
-  useEffect(() => {
-    fetchWeather();
-  }, [fetchWeather]);
+  useEffect(() => { fetchWeather(); }, [fetchWeather]);
 
-  // ── Loading state ────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View className="bg-white rounded-2xl p-4 mx-4 mb-4 flex-row items-center gap-4"
-        style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6 }}>
-        <Skeleton width={48} height={48} borderRadius={24} />
+      <View style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 20, backgroundColor: "#F8FAFC", padding: 16, flexDirection: "row", alignItems: "center", gap: 14 }}>
+        <Skeleton width={60} height={60} borderRadius={18} />
         <View style={{ flex: 1, gap: 8 }}>
-          <Skeleton height={20} width="40%" borderRadius={6} />
-          <Skeleton height={14} width="60%" borderRadius={6} />
+          <Skeleton height={24} width="35%" borderRadius={6} />
+          <Skeleton height={13} width="55%" borderRadius={6} />
         </View>
       </View>
     );
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────────
   if (error || !data) {
     return (
-      <View className="bg-white rounded-2xl p-4 mx-4 mb-4 flex-row items-center justify-between"
-        style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6 }}>
-        <View className="flex-row items-center gap-3">
+      <View style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 20, backgroundColor: "#F8FAFC", padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Ionicons name="cloud-offline-outline" size={28} color="#9CA3AF" />
           <AppText style={{ color: "#6B7280", fontSize: 14 }}>
             {language === "hi" ? "मौसम उपलब्ध नहीं" : "Weather unavailable"}
           </AppText>
         </View>
-        <TouchableOpacity onPress={fetchWeather} className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-green-50">
+        <TouchableOpacity onPress={fetchWeather} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: "#F0FDF4" }}>
           <Ionicons name="refresh" size={14} color="#16A34A" />
           <AppText style={{ color: "#16A34A", fontSize: 13, fontWeight: "600" }}>
             {language === "hi" ? "पुनः प्रयास" : "Retry"}
@@ -136,35 +166,64 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
     );
   }
 
-  // ── Success state ────────────────────────────────────────────────────────────
   const { label, icon } = weatherCodeToInfo(data.weathercode, language);
+  const theme = getWeatherTheme(data.temperature, data.weathercode);
   const tempStr = `${Math.round(data.temperature)}°C`;
+  const hour = new Date().getHours();
+  const timeLabel = hour < 12
+    ? (language === "hi" ? "सुबह" : "Morning")
+    : hour < 17
+      ? (language === "hi" ? "दोपहर" : "Afternoon")
+      : hour < 20
+        ? (language === "hi" ? "शाम" : "Evening")
+        : (language === "hi" ? "रात" : "Night");
 
   return (
-    <View className="bg-white rounded-2xl px-4 py-3 mx-4 mb-4 flex-row items-center gap-4"
-      style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6 }}>
-      {/* Icon */}
-      <View className="items-center justify-center rounded-full bg-blue-50"
-        style={{ width: 52, height: 52 }}>
-        <Ionicons name={icon} size={28} color="#2563EB" />
-      </View>
+    <View style={{
+      marginHorizontal: 16, marginBottom: 16, borderRadius: 20,
+      backgroundColor: theme.bg,
+      shadowColor: theme.shadowColor,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35, shadowRadius: 14, elevation: 5,
+      overflow: "hidden",
+    }}>
+      {/* Decorative blobs */}
+      <View style={{ position: "absolute", top: -18, right: -18, width: 90, height: 90, borderRadius: 45, backgroundColor: theme.iconBg, opacity: 0.45 }} />
+      <View style={{ position: "absolute", bottom: -24, left: -8, width: 70, height: 70, borderRadius: 35, backgroundColor: theme.iconBg, opacity: 0.25 }} />
 
-      {/* Temperature + condition */}
-      <View style={{ flex: 1 }}>
-        <AppText style={{ fontSize: 22, fontWeight: "700", color: "#1F2937", lineHeight: 28 }}>
-          {tempStr}
-        </AppText>
-        <AppText style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-          {label}
-        </AppText>
-      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 14 }}>
+        {/* Icon circle */}
+        <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: theme.iconBg, alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name={icon} size={32} color={theme.iconColor} />
+        </View>
 
-      {/* District label */}
-      {district ? (
-        <AppText style={{ fontSize: 11, color: "#9CA3AF", maxWidth: 80, textAlign: "right" }} numberOfLines={2}>
-          {district}
-        </AppText>
-      ) : null}
+        {/* Temp + condition */}
+        <View style={{ flex: 1 }}>
+          <AppText style={{ fontSize: 28, fontWeight: "800", color: theme.tempColor, lineHeight: 32, letterSpacing: -0.5 }}>
+            {tempStr}
+          </AppText>
+          <AppText style={{ fontSize: 13, color: theme.labelColor, fontWeight: "600", marginTop: 2 }}>
+            {label}
+          </AppText>
+        </View>
+
+        {/* District + time + refresh */}
+        <View style={{ alignItems: "flex-end", gap: 5 }}>
+          {district ? (
+            <View style={{ backgroundColor: theme.iconBg, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+              <AppText style={{ fontSize: 11, color: theme.iconColor, fontWeight: "700" }} numberOfLines={1}>
+                {district}
+              </AppText>
+            </View>
+          ) : null}
+          <AppText style={{ fontSize: 11, color: theme.accentColor, fontWeight: "500" }}>
+            {timeLabel}
+          </AppText>
+          <TouchableOpacity onPress={fetchWeather} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="refresh-outline" size={16} color={theme.accentColor} />
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }

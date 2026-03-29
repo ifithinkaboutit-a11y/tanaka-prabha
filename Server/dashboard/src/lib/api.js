@@ -15,6 +15,22 @@ class ApiError extends Error {
 }
 
 /**
+ * Get the admin JWT from NextAuth session (stored as session.accessToken)
+ */
+async function getSessionToken() {
+    if (typeof window === 'undefined') return null;
+    try {
+        // NextAuth exposes the session via /api/auth/session
+        const res = await fetch('/api/auth/session');
+        if (!res.ok) return null;
+        const session = await res.json();
+        return session?.accessToken ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Make an API request
  */
 async function apiRequest(endpoint, options = {}) {
@@ -29,9 +45,9 @@ async function apiRequest(endpoint, options = {}) {
         ...options,
     };
 
-    // Add auth token if available (for user-specific requests)
+    // Add admin JWT from NextAuth session
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('auth_token');
+        const token = await getSessionToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -450,9 +466,9 @@ async function uploadFile(endpoint, file, fieldName = 'image') {
         },
     };
 
-    // Add auth token if available
+    // Add admin JWT from NextAuth session
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('auth_token');
+        const token = await getSessionToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

@@ -16,6 +16,7 @@ import ProgramSection from "../../components/molecules/ProgramSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
 import { bannersApi, schemesApi, Scheme, Banner } from "@/services/apiService";
+import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
@@ -201,8 +202,8 @@ export default function Schemes() {
   const fetchSchemes = async () => {
     try {
       const [data, bannersData] = await Promise.all([
-        schemesApi.getAll({ limit: 50 }),
-        bannersApi.getAll(),
+        fetchWithCache(CACHE_KEYS.SCHEMES, () => schemesApi.getAll({ limit: 50 })),
+        fetchWithCache(CACHE_KEYS.BANNERS, () => bannersApi.getAll()),
       ]);
       setSchemes(data);
       setBanners(bannersData);
