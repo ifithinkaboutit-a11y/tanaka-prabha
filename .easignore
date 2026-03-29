@@ -1,0 +1,49 @@
+# Root-level .easignore — EAS archives from the workspace root,
+# so we exclude everything that isn't needed for the Client build.
+
+# Root node_modules (EAS installs fresh on the build server)
+node_modules/
+
+# Backend server — not needed for mobile build
+Server/
+
+# Docs
+docs/
+
+# Git history
+.git/
+
+# Kiro IDE files
+.kiro/
+
+# VS Code
+.vscode/
+
+# Root-level lock file and package (Client has its own)
+package-lock.json
+
+# Expo cache
+.expo/
+
+# Build outputs
+dist/
+web-build/
+android/
+ios/
+
+# Secrets / env
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+npm-debug.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+__tests__/

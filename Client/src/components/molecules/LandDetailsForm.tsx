@@ -4,12 +4,12 @@ import { useState } from "react";
 import {
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
 import T from "../../i18n";
 import Button from "../atoms/Button";
@@ -93,7 +93,7 @@ export default function LandDetailsForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.scrollContent}
@@ -193,7 +193,7 @@ export default function LandDetailsForm({
           style={{ flex: 2, backgroundColor: "#16A34A" }}
         />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

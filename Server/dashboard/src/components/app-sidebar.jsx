@@ -13,11 +13,13 @@ import {
   BarChart2,
   Bell,
   Calendar,
+  CalendarCheck,
   FileText,
   LayoutDashboard,
   Settings,
   Sprout,
   Stethoscope,
+  UserCog,
   Users,
 } from "lucide-react"
 import DashboardNavigation from "./nav-main"
@@ -42,6 +44,12 @@ const dashboardRoutes = [
     title: "Events",
     icon: <Calendar className="size-4" />,
     link: "/events",
+  },
+  {
+    id: "appointments",
+    title: "Appointments",
+    icon: <CalendarCheck className="size-4" />,
+    link: "/appointments",
   },
   {
     id: "beneficiaries",
@@ -76,6 +84,12 @@ const dashboardRoutes = [
     title: "Professionals",
     icon: <Stethoscope className="size-4" />,
     link: "/professionals",
+  },
+  {
+    id: "users",
+    title: "User Management",
+    icon: <UserCog className="size-4" />,
+    link: "/users",
   },
   {
     id: "settings",
@@ -141,7 +155,7 @@ export function AppSidebar(props) {
           )}
         >
           <NotificationsPopover notifications={sampleNotifications} />
-          <SidebarTrigger />
+          <SidebarTrigger aria-label="Toggle sidebar" />
         </div>
       </SidebarHeader>
 

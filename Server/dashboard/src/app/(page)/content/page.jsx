@@ -1,6 +1,5 @@
 import { SchemesGrid } from "@/components/schemes-grid"
 import { BannersManager } from "@/components/banners-manager"
-import { AnnouncementsManager } from "@/components/announcements-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ContentPage() {
@@ -12,23 +11,19 @@ export default function ContentPage() {
             Content Management
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Manage schemes, programs, banners, and announcements. Add content in English and हिंदी.
+            Manage schemes, programs, and banners. Add content in English and हिंदी.
           </p>
         </div>
         <Tabs defaultValue="schemes" className="w-full mt-8">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
             <TabsTrigger value="schemes">Schemes &amp; Programs</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
           </TabsList>
           <TabsContent value="schemes" className="mt-6">
             <SchemesGrid />
           </TabsContent>
           <TabsContent value="banners" className="mt-6">
             <BannersManager />
-          </TabsContent>
-          <TabsContent value="announcements" className="mt-6">
-            <AnnouncementsManager />
           </TabsContent>
         </Tabs>
       </div>

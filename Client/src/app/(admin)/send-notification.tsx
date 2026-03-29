@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -112,7 +114,8 @@ export default function SendNotificationScreen() {
     const selectedType = NOTIFICATION_TYPES.find(t => t.key === type)!;
 
     return (
-        <View style={s.root}>
+        <KeyboardAvoidingView style={s.root} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
+        <View style={{ flex: 1 }}>
             {/* Header */}
             <View style={s.header}>
                 <Pressable onPress={() => router.back()} style={s.backBtn}>
@@ -258,6 +261,7 @@ export default function SendNotificationScreen() {
                 </TouchableOpacity>
             </View>
         </View>
+        </KeyboardAvoidingView>
     );
 }
 

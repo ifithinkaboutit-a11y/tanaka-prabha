@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import {
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import {
   PersonalDetails,
   PersonalDetailsFormProps,
@@ -342,7 +342,7 @@ export default function PersonalDetailsForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.scrollContent}
@@ -646,7 +646,7 @@ export default function PersonalDetailsForm({
           style={{ flex: 2, backgroundColor: "#2563EB" }}
         />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

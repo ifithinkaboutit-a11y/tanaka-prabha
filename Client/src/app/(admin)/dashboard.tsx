@@ -251,6 +251,13 @@ export default function AdminDashboard() {
             {/* ── Beneficiaries ── */}
             <SectionHeader label="Beneficiaries" />
             <ActionCard
+                icon="person-add"
+                title="Add Beneficiary"
+                description="Register a new farmer on behalf of the community"
+                color="#10B981"
+                onPress={() => goTo("/(admin)/add-beneficiary")}
+            />
+            <ActionCard
                 icon="people"
                 title="View Beneficiaries"
                 description="Browse and search all registered farmers"

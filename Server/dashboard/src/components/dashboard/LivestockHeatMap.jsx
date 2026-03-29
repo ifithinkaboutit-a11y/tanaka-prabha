@@ -127,6 +127,7 @@ export default function LivestockHeatMap() {
                     <button
                         key={opt.value}
                         onClick={() => setFilter(opt.value)}
+                        aria-pressed={filter === opt.value}
                         className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                             filter === opt.value
                                 ? "bg-primary text-primary-foreground"
@@ -146,6 +147,7 @@ export default function LivestockHeatMap() {
                 className="h-[480px] w-full rounded-xl z-0"
                 scrollWheelZoom={false}
                 style={{ background: "#18181b" }}
+                aria-label="Livestock distribution heatmap"
             >
                 <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
                 <HeatLayer points={points} />

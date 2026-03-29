@@ -6,7 +6,7 @@ import {
     FileText, ShieldCheck, ImageIcon, Pencil, Trash2, Phone, Star, Save, QrCode, Download
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { eventsApi, professionalsApi } from "@/lib/api"
+import { eventsApi, professionalsApi, usersApi } from "@/lib/api"
 import { toast } from "sonner"
 import QRCode from "qrcode"
 
@@ -34,6 +34,8 @@ import {
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
     AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { MediaUploader } from "@/components/media-uploader"
 
 // ─── Helpers ────────────────────────────────────────────────────────
 function getInitials(name) {
@@ -90,6 +92,12 @@ export default function EventDetailsPage({ params: paramsPromise }) {
     const [mentorDialogOpen, setMentorDialogOpen] = React.useState(false)
     const [selectedProfessionalId, setSelectedProfessionalId] = React.useState("")
 
+    // Farmer search (participant_ids)
+    const [farmerQuery, setFarmerQuery] = React.useState("")
+    const [farmerResults, setFarmerResults] = React.useState([])
+    const [farmerSearching, setFarmerSearching] = React.useState(false)
+    const farmerDebounceRef = React.useRef(null)
+
     // QR Code
     const [qrDialogOpen, setQrDialogOpen] = React.useState(false)
     const [qrDataUrl, setQrDataUrl] = React.useState("")
@@ -97,6 +105,28 @@ export default function EventDetailsPage({ params: paramsPromise }) {
 
     // ── Data fetching ──
     React.useEffect(() => { fetchData() }, [id])
+
+    // ── Debounced farmer search ──
+    React.useEffect(() => {
+        if (farmerDebounceRef.current) clearTimeout(farmerDebounceRef.current)
+        if (!farmerQuery.trim()) {
+            setFarmerResults([])
+            return
+        }
+        farmerDebounceRef.current = setTimeout(async () => {
+            try {
+                setFarmerSearching(true)
+                const res = await usersApi.getAll({ search: farmerQuery.trim(), limit: 10 })
+                const users = res.data?.users || res.data || []
+                setFarmerResults(Array.isArray(users) ? users : [])
+            } catch {
+                setFarmerResults([])
+            } finally {
+                setFarmerSearching(false)
+            }
+        }, 300)
+        return () => { if (farmerDebounceRef.current) clearTimeout(farmerDebounceRef.current) }
+    }, [farmerQuery])
 
     async function fetchData() {
         try {
@@ -164,6 +194,9 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                 hero_image_url: editData.hero_image_url,
                 status: editData.status,
                 instructors: editData.instructors,
+                outcome: editData.outcome,
+                media_urls: editData.media_urls || [],
+                participant_ids: editData.participant_ids || [],
             }
             await eventsApi.update(id, payload)
             toast.success("Event updated")
@@ -294,7 +327,7 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                     <Badge className={`capitalize ${statusColors[event.status] || ""}`}>{event.status}</Badge>
-                    <Button variant="outline" size="sm" onClick={() => { setEditData({ ...event }); setIsEditing(true) }}>
+                    <Button variant="outline" size="sm" onClick={() => { setEditData({ ...event }); setFarmerQuery(""); setFarmerResults([]); setIsEditing(true) }}>
                         <Pencil className="size-3.5 mr-1.5" /> Edit
                     </Button>
                     <Button variant="outline" size="sm" onClick={handleGenerateQr}>
@@ -743,6 +776,92 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                         <div className="space-y-2">
                             <Label>Hero Image URL</Label>
                             <Input value={editData.hero_image_url || ""} onChange={e => setEditData({ ...editData, hero_image_url: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Outcome (optional)</Label>
+                            <RichTextEditor
+                                value={editData.outcome || ""}
+                                onChange={v => setEditData({ ...editData, outcome: v })}
+                                placeholder="Describe the event outcome…"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Media (Photos &amp; Videos)</Label>
+                            <MediaUploader
+                                mediaUrls={editData.media_urls || []}
+                                onChange={urls => setEditData(prev => ({ ...prev, media_urls: urls }))}
+                            />
+                        </div>
+                        {/* ── Farmer Participants ── */}
+                        <div className="space-y-2">
+                            <Label>Add Farmer Participants</Label>
+                            <div className="relative">
+                                <Input
+                                    placeholder="Search by name or mobile…"
+                                    value={farmerQuery}
+                                    onChange={e => { setFarmerQuery(e.target.value); setFarmerResults([]) }}
+                                    autoComplete="off"
+                                />
+                                {farmerSearching && (
+                                    <p className="text-xs text-muted-foreground mt-1">Searching…</p>
+                                )}
+                                {farmerResults.length > 0 && (
+                                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-48 overflow-y-auto">
+                                        {farmerResults.map(farmer => {
+                                            const alreadyAdded = (editData.participant_ids || []).includes(farmer.id)
+                                            return (
+                                                <button
+                                                    key={farmer.id}
+                                                    type="button"
+                                                    disabled={alreadyAdded}
+                                                    onClick={() => {
+                                                        if (!alreadyAdded) {
+                                                            setEditData(prev => ({
+                                                                ...prev,
+                                                                participant_ids: [...(prev.participant_ids || []), farmer.id],
+                                                            }))
+                                                        }
+                                                        setFarmerQuery("")
+                                                        setFarmerResults([])
+                                                    }}
+                                                    className="flex w-full items-center gap-3 px-3 py-2 text-sm hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium truncate">{farmer.name || "Unknown"}</p>
+                                                        <p className="text-xs text-muted-foreground">{farmer.mobile_number || "—"}</p>
+                                                    </div>
+                                                    {alreadyAdded && <Check className="size-3.5 text-green-600 shrink-0" />}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                            {/* Selected farmer chips */}
+                            {(editData.participant_ids || []).length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {(editData.participant_ids || []).map(pid => (
+                                        <span
+                                            key={pid}
+                                            className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-1"
+                                        >
+                                            <Users className="size-3" />
+                                            {pid.slice(0, 8)}…
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditData(prev => ({
+                                                    ...prev,
+                                                    participant_ids: (prev.participant_ids || []).filter(id => id !== pid),
+                                                }))}
+                                                className="ml-0.5 hover:text-red-600"
+                                                aria-label="Remove participant"
+                                            >
+                                                <X className="size-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <DialogFooter>

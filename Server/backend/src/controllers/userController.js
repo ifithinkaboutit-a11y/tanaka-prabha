@@ -10,9 +10,75 @@ import { DISTRICT_COORDS } from '../data/districtCoords.js';
 export { DISTRICT_COORDS };
 
 /**
+ * Escape a value for CSV output
+ */
+function csvEscape(value) {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+}
+
+/**
  * Get all users with pagination, including land and livestock details
  */
 export const getAllUsers = async (req, res) => {
+    // ── CSV export branch ──────────────────────────────────────────────────────
+    if (req.query.format === 'csv') {
+        try {
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="beneficiaries.csv"');
+
+            // Write header row
+            res.write('name,mobile_number,district,state,village,land_area,livestock_count,created_at,is_verified\n');
+
+            const result = await query(`
+                SELECT
+                    u.name, u.mobile_number, u.district, u.state, u.village,
+                    u.created_at, u.is_verified,
+                    ld.total_land_area,
+                    (
+                        COALESCE(ls.cows, 0) + COALESCE(ls.buffaloes, 0) +
+                        COALESCE(ls.bulls, 0) + COALESCE(ls.bullocks, 0) +
+                        COALESCE(ls.calves, 0) + COALESCE(ls.goats, 0) +
+                        COALESCE(ls.sheep, 0) + COALESCE(ls.pigs, 0) +
+                        COALESCE(ls.poultry, 0) + COALESCE(ls.other_animals, 0)
+                    ) AS livestock_count
+                FROM public.users u
+                LEFT JOIN public.land_details ld ON ld.user_id = u.id
+                LEFT JOIN public.livestock_details ls ON ls.user_id = u.id
+                WHERE u.name != 'New User'
+                ORDER BY u.created_at DESC
+            `);
+
+            for (const row of result.rows) {
+                const line = [
+                    csvEscape(row.name),
+                    csvEscape(row.mobile_number),
+                    csvEscape(row.district),
+                    csvEscape(row.state),
+                    csvEscape(row.village),
+                    csvEscape(row.total_land_area),
+                    csvEscape(row.livestock_count),
+                    csvEscape(row.created_at),
+                    csvEscape(row.is_verified),
+                ].join(',');
+                res.write(line + '\n');
+            }
+
+            return res.end();
+        } catch (error) {
+            console.error('Error exporting CSV:', error);
+            // If headers not yet sent, send error response
+            if (!res.headersSent) {
+                return res.status(500).json({ status: 'error', message: 'Failed to export CSV' });
+            }
+            return res.end();
+        }
+    }
+
     try {
         const { limit = 50, offset = 0, search } = req.query;
         const lim = parseInt(limit);

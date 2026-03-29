@@ -18,5 +18,8 @@
       "Server/backend",
       "Server/dashboard"
     ]
+  },
+  "dependencies": {
+    "react-native-svg": "^15.15.4"
   }
 }

@@ -375,6 +375,37 @@ export const getCountForDate = async (req, res) => {
 };
 
 /**
+ * Get all appointments (admin only) — returns full list with farmer and professional names joined
+ */
+export const getAllAppointmentsAdmin = async (req, res) => {
+    try {
+        const { limit = 50, offset = 0, status, date_from, date_to } = req.query;
+
+        const appointments = await Appointment.findAll({ limit, offset, status, date_from, date_to });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Appointments retrieved successfully',
+            data: {
+                appointments,
+                pagination: {
+                    limit: parseInt(limit),
+                    offset: parseInt(offset),
+                    count: appointments.length
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching all appointments (admin):', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch appointments',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
  * Delete an appointment (admin only)
  */
 export const deleteAppointment = async (req, res) => {

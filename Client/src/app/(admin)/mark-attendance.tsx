@@ -10,6 +10,8 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    KeyboardAvoidingView,
+    Platform,
     StyleSheet,
     TextInput,
     TouchableOpacity,
@@ -317,6 +319,7 @@ export default function MarkAttendance() {
 
     // ── Step 2: Enter mobile number & mark attendance ──
     return (
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
         <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 48 }}>
             {/* header */}
             <View style={s.header}>
@@ -403,6 +406,7 @@ export default function MarkAttendance() {
                 )}
             </View>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 

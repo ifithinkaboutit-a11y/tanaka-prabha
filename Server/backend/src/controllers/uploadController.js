@@ -5,6 +5,7 @@ import {
     uploadProfessionalImage,
     uploadUserPhoto,
     uploadGeneral,
+    uploadMedia,
     deleteImage,
     uploadFromUrl,
 } from '../config/cloudinary.js';
@@ -270,6 +271,39 @@ export const uploadGeneralHandler = [
             res.status(500).json({
                 status: 'error',
                 message: 'Failed to upload file',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            });
+        }
+    },
+];
+
+/**
+ * Upload a media file (image or video) for programme logging
+ * @route POST /api/upload/media
+ */
+export const uploadMediaHandler = [
+    uploadMedia.single('file'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'No file provided',
+                });
+            }
+
+            res.status(200).json({
+                status: 'success',
+                data: {
+                    url: req.file.path,
+                    public_id: req.file.filename,
+                },
+            });
+        } catch (error) {
+            console.error('Error uploading media file:', error);
+            res.status(500).json({
+                status: 'error',
+                message: 'Failed to upload media file',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined,
             });
         }

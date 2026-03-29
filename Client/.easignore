@@ -1,16 +1,43 @@
+# Client-level .easignore
+
+# Dependencies — EAS installs fresh
 node_modules/
+
+# Expo cache
 .expo/
+
+# Build outputs
 dist/
 web-build/
-*.tsbuildinfo
-npm-debug.*
+android/
+ios/
+
+# Test files
+__tests__/
+coverage/
+jest.config.js
+
+# Docs / markdown (not needed at runtime)
+*.md
+API_DOCUMENTATION.md
+DATA-MODELS.md
+README.md
+
+# Secrets
+.env
+.env.local
+.env*.local
+
+# Signing artifacts (managed by EAS)
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+
+# Misc
 *.orig.*
-.env*.local
-__tests__/
-coverage/
-.git/
+*.tsbuildinfo
+npm-debug.*
+.DS_Store
+Thumbs.db

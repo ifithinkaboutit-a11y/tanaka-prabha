@@ -163,12 +163,15 @@ export const getLandStatistics = async (req, res) => {
  */
 export const getLivestockStatistics = async (req, res) => {
     try {
-        const livestockStats = await LivestockDetails.getStatistics();
+        const [farmers, livestockStats] = await Promise.all([
+            LivestockDetails.getFarmersWithLocations(),
+            LivestockDetails.getStatistics(),
+        ]);
 
         res.status(200).json({
             status: 'success',
             message: 'Livestock statistics retrieved successfully',
-            data: { statistics: livestockStats }
+            data: { farmers, statistics: livestockStats }
         });
     } catch (error) {
         console.error('Error fetching livestock statistics:', error);

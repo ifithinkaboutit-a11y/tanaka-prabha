@@ -170,10 +170,18 @@ export default function Beneficiaries() {
                 <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
                     <Ionicons name="arrow-back" size={22} color="#1F2937" />
                 </TouchableOpacity>
-                <View>
+                <View style={s.headerTitle}>
                     <AppText style={s.title}>Beneficiaries</AppText>
                     <AppText style={s.subtitle}>{farmers.length} registered farmers</AppText>
                 </View>
+                <TouchableOpacity
+                    style={s.addBtn}
+                    onPress={() => router.push("/(admin)/add-beneficiary" as any)}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="person-add" size={18} color="#fff" />
+                    <AppText style={s.addBtnText}>Add</AppText>
+                </TouchableOpacity>
             </View>
 
             {/* Search bar */}
@@ -251,8 +259,19 @@ const s = StyleSheet.create({
         backgroundColor: "#F3F4F6",
         borderRadius: 12,
     },
+    headerTitle: { flex: 1 },
     title: { fontSize: 20, fontWeight: "800", color: "#111827" },
     subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    addBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        backgroundColor: "#10B981",
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        borderRadius: 12,
+    },
+    addBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 
     searchRow: {
         flexDirection: "row",

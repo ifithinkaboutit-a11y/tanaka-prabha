@@ -12,6 +12,7 @@ export default function AdminLayout() {
             <Stack.Screen name="send-notification" />
             <Stack.Screen name="beneficiaries" />
             <Stack.Screen name="beneficiary-detail" />
+            <Stack.Screen name="add-beneficiary" />
         </Stack>
 
     );

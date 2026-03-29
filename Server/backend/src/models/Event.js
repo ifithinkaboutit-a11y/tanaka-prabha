@@ -5,16 +5,18 @@ class Event {
         const {
             title, description, date, start_time, end_time,
             location_name, location_address, instructors,
-            guidelines_and_rules, requirements, hero_image_url, status
+            guidelines_and_rules, requirements, hero_image_url, status,
+            outcome, media_urls
         } = eventData;
 
         const text = `
             INSERT INTO public.events (
                 title, description, date, start_time, end_time,
                 location_name, location_address, instructors,
-                guidelines_and_rules, requirements, hero_image_url, status
+                guidelines_and_rules, requirements, hero_image_url, status,
+                outcome, media_urls
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
             )
             RETURNING *
         `;
@@ -24,7 +26,10 @@ class Event {
             location_name, location_address,
             instructors ? JSON.stringify(instructors) : '[]',
             guidelines_and_rules, requirements, hero_image_url,
-            status || 'upcoming'
+            status || 'upcoming',
+            outcome || null,
+            // media_urls is a TEXT[] column — pass the array directly
+            media_urls || null
         ];
 
         const result = await query(text, values);
@@ -39,7 +44,7 @@ class Event {
 
     static async findAll(limit = 200, offset = 0) {
         const text = `
-            SELECT * FROM public.events 
+            SELECT * FROM public.events
             ORDER BY date ASC, start_time ASC
             LIMIT $1 OFFSET $2
         `;
@@ -53,10 +58,11 @@ class Event {
         let paramCount = 1;
 
         Object.keys(eventData).forEach(key => {
-            fields.push(`${key} = $${paramCount}`);
+            fields.push(key + ' = $' + paramCount);
             if (key === 'instructors') {
                 values.push(JSON.stringify(eventData[key]));
             } else {
+                // media_urls is a TEXT[] column — pass the array directly (not JSON-stringified)
                 values.push(eventData[key]);
             }
             paramCount++;
@@ -64,15 +70,10 @@ class Event {
 
         if (fields.length === 0) return this.findById(id);
 
-        fields.push(`updated_at = timezone('utc', now())`);
+        fields.push("updated_at = timezone('utc', now())");
         values.push(id);
 
-        const text = `
-            UPDATE public.events 
-            SET ${fields.join(', ')} 
-            WHERE id = $${paramCount} 
-            RETURNING *
-        `;
+        const text = 'UPDATE public.events SET ' + fields.join(', ') + ' WHERE id = $' + paramCount + ' RETURNING *';
 
         const result = await query(text, values);
         return result.rows[0];

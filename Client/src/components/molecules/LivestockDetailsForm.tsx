@@ -4,12 +4,12 @@ import { useState } from "react";
 import {
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import {
   LivestockDetails,
   LivestockDetailsFormProps,
@@ -169,7 +169,7 @@ export default function LivestockDetailsForm({
   const totalAnimals = Object.values(formData).reduce((sum, v) => sum + v, 0);
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.content}
@@ -235,7 +235,7 @@ export default function LivestockDetailsForm({
           style={{ flex: 2, backgroundColor: "#EA580C" }}
         />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

@@ -11,13 +11,16 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tanakprabha.app",
-      "buildNumber": "2"
+      "buildNumber": "2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
-          "apiKey": "${EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}"
+          "apiKey": "AIzaSyBqQXk4v52ObNFDQ3OUUao4eDjAkqeRDUI"
         }
       },
       "adaptiveIcon": {
@@ -43,7 +46,10 @@
               "host": "attendance"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -84,7 +90,6 @@
           }
         }
       ],
-      "expo-video",
       [
         "expo-notifications",
         {
@@ -101,7 +106,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "44ac0997-c234-4a0c-82d4-c6eaa4052709"
+        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
       },
       "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.app"
     }

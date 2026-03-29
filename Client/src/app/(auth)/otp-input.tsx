@@ -2,6 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/services/apiService";
 import { validateOTP, validateMobileNumber } from "@/utils/validation";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,10 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
 
 const OTP_LENGTH = 6;
 
@@ -122,16 +122,24 @@ const OTPInput = () => {
     setValidationError(null);
     setLoading(true);
     try {
-      const { isNewUser: serverIsNewUser } = await signIn(phoneNumber, otpString, mode === "login");
-      const isNewUser = mode === "login" ? false : serverIsNewUser;
-
       if (mode === "forgot-password") {
-        // Go to set-password in reset mode
+        // Verify OTP without storing a session token
+        const cleanedNumber = phoneNumber.replace(/^\+91/, "");
+        const response = await authApi.verifyOtpOnly(cleanedNumber, otpString);
+        if (response.status !== "success") {
+          throw new Error(response.message || "Invalid OTP");
+        }
         router.replace({
           pathname: "/(auth)/set-password" as any,
           params: { phoneNumber, mode: "reset" },
         });
-      } else if (isNewUser) {
+        return;
+      }
+
+      const { isNewUser: serverIsNewUser } = await signIn(phoneNumber, otpString, mode === "login");
+      const isNewUser = mode === "login" ? false : serverIsNewUser;
+
+      if (isNewUser) {
         // New signup → set password first, then onboard
         router.replace({
           pathname: "/(auth)/set-password" as any,
@@ -178,10 +186,7 @@ const OTPInput = () => {
   const isComplete = filledCount === OTP_LENGTH;
 
   return (
-    <KeyboardAvoidingView
-      style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="#386641" />
       {/* Static Header */}
       <View style={s.header}>
@@ -193,7 +198,7 @@ const OTPInput = () => {
           <Text style={s.headerPhoneHighlight}>{maskedPhone}</Text>
         </Text>
       </View>
-      <ScrollView
+      <KeyboardAwareScrollView
         bounces={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -313,8 +318,8 @@ const OTPInput = () => {
             <Text style={s.securityText}>OTP is valid for 10 minutes only</Text>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };
 

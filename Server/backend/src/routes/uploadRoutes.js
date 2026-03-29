@@ -7,6 +7,7 @@ import {
     uploadProfessionalImageHandler,
     uploadUserPhotoHandler,
     uploadGeneralHandler,
+    uploadMediaHandler,
     deleteImageHandler,
     uploadFromUrlHandler,
 } from '../controllers/uploadController.js';
@@ -69,6 +70,15 @@ router.post('/user-photo', authMiddleware, ...uploadUserPhotoHandler);
  * @body    FormData with 'file' field
  */
 router.post('/general', authMiddleware, ...uploadGeneralHandler);
+
+/**
+ * @route   POST /api/upload/media
+ * @desc    Upload an image or video for programme logging to Cloudinary
+ * @access  Protected
+ * @body    FormData with 'file' field (image: JPEG/PNG/WebP/GIF; video: MP4/MOV/WebM, max 200MB)
+ * @returns { status: "success", data: { url, public_id } }
+ */
+router.post('/media', authMiddleware, ...uploadMediaHandler);
 
 /**
  * @route   DELETE /api/upload/delete

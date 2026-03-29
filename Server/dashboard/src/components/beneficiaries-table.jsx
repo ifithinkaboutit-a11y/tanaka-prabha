@@ -8,6 +8,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconDotsVertical,
+  IconDownload,
   IconFilter,
   IconPlus,
   IconSearch,
@@ -84,6 +85,7 @@ export function BeneficiariesTable() {
   const [pageIndex, setPageIndex] = React.useState(0)
   const [pageSize] = React.useState(50)
   const [totalCount, setTotalCount] = React.useState(0)
+  const [exportingCsv, setExportingCsv] = React.useState(false)
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [editUser, setEditUser] = React.useState(null)
@@ -391,6 +393,68 @@ export function BeneficiariesTable() {
   const canPrevPage = pageIndex > 0
   const canNextPage = pageIndex < totalPages - 1
 
+  function buildCsvRow(farmer) {
+    const ls = farmer.livestock_details
+    const livestockCount = ls
+      ? (ls.cow || 0) + (ls.buffalo || 0) + (ls.goat || 0) +
+        (ls.sheep || 0) + (ls.pig || 0) + (ls.poultry || 0) + (ls.others || 0)
+      : 0
+    const fields = [
+      farmer.name ?? "",
+      farmer.mobile_number ?? "",
+      farmer.district ?? "",
+      farmer.state ?? "",
+      farmer.village ?? "",
+      farmer.land_details?.total_land_area ?? "",
+      livestockCount,
+      farmer.created_at ?? "",
+      farmer.is_verified ? "true" : "false",
+    ]
+    return fields.map(f => `"${String(f).replace(/"/g, '""')}"`).join(",")
+  }
+
+  async function handleExportCsv() {
+    setExportingCsv(true)
+    try {
+      if (totalCount <= 1000) {
+        // Client-side export from filteredData
+        const header = "name,mobile_number,district,state,village,land_area,livestock_count,created_at,is_verified"
+        const rows = filteredData.map(buildCsvRow)
+        const csvString = [header, ...rows].join("\n")
+        const blob = new Blob([csvString], { type: "text/csv" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `beneficiaries-${new Date().toISOString().slice(0, 10)}.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else {
+        // Server-side export
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || ""}/users?format=csv`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
+        )
+        if (!response.ok) throw new Error("Export failed")
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `beneficiaries-${new Date().toISOString().slice(0, 10)}.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error("CSV export error:", error)
+      toast.error("Failed to export CSV. Please try again.")
+    } finally {
+      setExportingCsv(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -451,7 +515,21 @@ export function BeneficiariesTable() {
           </SelectContent>
         </Select>
 
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={handleExportCsv}
+            disabled={exportingCsv || filteredData.length === 0}
+          >
+            {exportingCsv ? (
+              <IconLoader2 className="size-4 animate-spin" />
+            ) : (
+              <IconDownload className="size-4" />
+            )}
+            {exportingCsv ? "Exporting..." : "Export CSV"}
+          </Button>
           <BeneficiaryDialog onSuccess={fetchFarmers} />
         </div>
       </div>

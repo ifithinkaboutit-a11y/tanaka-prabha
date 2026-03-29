@@ -11,10 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -22,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
 
 const PhoneInput = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -190,10 +189,7 @@ const PhoneInput = () => {
     : phoneNumber;
 
   return (
-    <KeyboardAvoidingView
-      style={s.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="#386641" />
       {/* Static Header */}
       <View style={s.header}>
@@ -206,7 +202,7 @@ const PhoneInput = () => {
             : (t("auth.phoneSubtitle") || "We'll send an OTP to verify your number")}
         </Text>
       </View>
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         bounces={false}
@@ -367,8 +363,8 @@ const PhoneInput = () => {
             <Text style={s.securityText}>Your number is encrypted and never shared</Text>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };
 

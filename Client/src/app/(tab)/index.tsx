@@ -2,8 +2,10 @@ import GreetingHeader from "@/components/molecules/GreetingHeader";
 import NotificationAlert from "@/components/molecules/NotificationAlert";
 import QuickActionGrid from "@/components/molecules/QuickActionGrid";
 import SchemePreviewList from "@/components/molecules/SchemePreviewList";
+import WeatherWidget from "@/components/molecules/WeatherWidget";
+import EventCard from "@/components/atoms/EventCard";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
-import { schemesApi, notificationsApi, Scheme, Notification } from "@/services/apiService";
+import { schemesApi, notificationsApi, eventsApi, Scheme, Notification, ApiEvent } from "@/services/apiService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useRouter } from "expo-router";
@@ -28,8 +30,10 @@ export default function Home() {
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [latestNotification, setLatestNotification] = useState<Notification | null>(null);
-  const [notificationDismissed, setNotificationDismissed] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [todayEvents, setTodayEvents] = useState<ApiEvent[]>([]);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
   // Fetch data on mount
   useEffect(() => {
@@ -38,16 +42,28 @@ export default function Home() {
         setLoading(true);
         const schemesData = await schemesApi.getAll({ limit: 5 });
         setSchemes(schemesData);
-        // Fetch latest unread notification
-        const unread = await notificationsApi.getMy({ unread_only: true, limit: 1 });
-        if (unread.length > 0) {
-          setLatestNotification(unread[0]);
-          setUnreadCount(1);
-        }
+        // Fetch latest unread notifications (up to 3)
+        const unread = await notificationsApi.getMy({ unread_only: true, limit: 3 });
+        setNotifications(unread);
+        setUnreadCount(unread.length);
       } catch (error) {
         console.error("Error fetching home data:", error);
       } finally {
         setLoading(false);
+      }
+
+      // Fetch today's events independently so failures don't affect other sections
+      try {
+        const todayString = new Date().toISOString().split("T")[0];
+        const allEvents = await eventsApi.getAll();
+        const filtered = allEvents.filter(
+          (event) => event.date && event.date.split("T")[0] === todayString
+        );
+        setTodayEvents(filtered);
+        setEventsError(null);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setEventsError("Unable to load today's programmes.");
       }
     };
 
@@ -122,12 +138,19 @@ export default function Home() {
         />
       </View>
 
-      {/* NotificationAlert placeholder — added in Task 4 */}
-      {latestNotification && !notificationDismissed && (
+      {/* NotificationAlert — stacked list of up to 3 unread notifications */}
+      {notifications.filter((n) => !dismissedIds.has(n.id)).length > 0 && (
         <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
           <NotificationAlert
-            notification={{ ...latestNotification, description: latestNotification.description ?? "" }}
-            onDismiss={() => setNotificationDismissed(true)}
+            notifications={notifications
+              .filter((n) => !dismissedIds.has(n.id))
+              .map((n) => ({
+                id: n.id,
+                title: n.title,
+                description: n.description ?? "",
+                createdAt: n.date ? new Date(n.date).toISOString() : new Date().toISOString(),
+              }))}
+            onDismiss={(id) => setDismissedIds((prev) => new Set([...prev, id]))}
             onViewAll={() => router.push("/notifications" as any)}
           />
         </View>
@@ -149,6 +172,9 @@ export default function Home() {
         </AppText>
         <QuickActionGrid actions={quickActions} />
       </View>
+
+      {/* Weather Widget */}
+      <WeatherWidget district={profile?.district} language={currentLanguage as "en" | "hi"} />
 
       {/* Popular Schemes Section */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
@@ -172,6 +198,35 @@ export default function Home() {
               router.push(`/scheme-details?schemeId=${scheme.id}` as any),
           })) as any}
         />
+      </View>
+
+      {/* Programme Happening Today Section */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+        <AppText
+          variant="h2"
+          style={{
+            fontSize: 22,
+            fontWeight: "700",
+            color: "#1F2937",
+            marginBottom: 12,
+          }}
+        >
+          Programme Happening Today
+        </AppText>
+
+        {eventsError ? (
+          <AppText style={{ color: "#EF4444", fontSize: 14 }}>{eventsError}</AppText>
+        ) : todayEvents.length === 0 ? (
+          <AppText style={{ color: "#6B7280", fontSize: 14 }}>No programmes today</AppText>
+        ) : (
+          todayEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              onPress={() => router.push(`/event-details?eventId=${event.id}` as any)}
+            />
+          ))
+        )}
       </View>
     </ScrollView>
   );

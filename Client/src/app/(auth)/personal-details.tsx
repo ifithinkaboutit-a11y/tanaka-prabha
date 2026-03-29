@@ -5,16 +5,14 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  KeyboardAvoidingView,
   Linking,
-  Platform,
   Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   View,
   TextInput,
 } from "react-native";
+import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollView";
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
@@ -334,10 +332,7 @@ const AuthPersonalDetailsScreen = () => {
   });
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar barStyle="light-content" backgroundColor="#386641" />
       {/* Static Header */}
       <View style={headerStyles.header}>
@@ -353,7 +348,7 @@ const AuthPersonalDetailsScreen = () => {
         </AppText>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
@@ -513,7 +508,7 @@ const AuthPersonalDetailsScreen = () => {
                     village: "",
                   })
                 }
-                options={getDistrictOptions("uttar_pradesh")}
+                options={getDistrictOptions(personalDetails.state || "uttar_pradesh")}
                 placeholder="Select District"
               />
             </FieldWrapper>
@@ -581,7 +576,7 @@ const AuthPersonalDetailsScreen = () => {
               </>
             ) : null}
           </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
         <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
@@ -605,7 +600,7 @@ const AuthPersonalDetailsScreen = () => {
             </AppText>
           </Pressable>
         </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

@@ -195,6 +195,57 @@ export const verifyOTP = async (req, res) => {
 };
 
 /**
+ * Verify OTP without issuing a JWT — used for forgot-password flow.
+ * POST /api/auth/verify-otp-only
+ *
+ * Validates the OTP for the given mobile number and deletes it on success,
+ * but does NOT create a user, does NOT generate a token.
+ * Returns { success: true } so the client can proceed to the set-password screen.
+ */
+export const verifyOtpOnly = async (req, res) => {
+    try {
+        const { mobile_number, otp } = req.body;
+
+        if (!mobile_number || !otp) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Mobile number and OTP are required'
+            });
+        }
+
+        const formattedNumber = formatPhoneNumber(mobile_number);
+
+        const verification = await OTP.verifyOTP(formattedNumber, otp);
+
+        if (!verification.valid) {
+            return res.status(401).json({
+                status: 'error',
+                message: verification.message,
+                success: false
+            });
+        }
+
+        // Delete the used OTP so it cannot be replayed
+        await OTP.deleteOTP(formattedNumber);
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'OTP verified',
+            success: true
+        });
+
+    } catch (error) {
+        console.error('Verify OTP Only Error:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Failed to verify OTP. Please try again.',
+            success: false,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
  * Resend OTP
  * POST /api/auth/resend-otp
  */

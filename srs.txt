@@ -1,0 +1,652 @@
+Tanak Prabha - Software Requirements Specification (SRS)
+
+Project Name: Tanak Prabha Platform Client: International Foundation for Innovations – Think About Prepared By: Vivax Version: 0.1.0 SPOC: Rahul Singh | ifithinkabout@gmail.com | 9312502305 Design: Click Here 
+
+
+
+
+
+1. Introduction
+
+1.1 Purpose
+
+This document outlines the software requirements for the IFI Farmer Data & Programme Management Platform, a custom application developed by Vivax for the International Foundation for Innovations (IFI). It aims to serve as a clear blueprint for the development, testing, and deployment of the platform.
+
+1.2 Scope
+
+This document defines the requirements for a digital platform to centralize farmer data, track field programmes, disseminate information, and manage appointments. The solution is divided into three primary components:
+
+Field Agent Mobile App: For on-the-ground data collection (Farmer Database, Programme Logging).
+
+Farmer Mobile App (or Web Portal): For information access and booking (Govt. Schemes, Appointments).
+
+Admin Dashboard: For complete platform control, data management, and monitoring.
+
+1.3 Audience
+
+This document is intended for:
+
+Vivax development and QA teams
+
+Project stakeholders at IFI
+
+Client-side decision-makers
+
+DevOps and support teams
+
+1.4 Definitions & Abbreviations
+
+IFI: International Foundation for Innovations
+
+Farmer: The end-beneficiary, user of the Farmer App.
+
+Field Agent: IFI staff member using the Agent App for data collection.
+
+Admin: IFI management staff overseeing the platform via the Admin Dashboard.
+
+CRUD: Create, Read, Update, Delete.
+
+RBAC: Role-Based Access Control.
+
+
+
+
+
+2. Project Overview
+
+2.1 Business Requirements
+
+To create a comprehensive and centralized database of farmers, including personal, land, and livestock details.
+
+To digitize the logging and tracking of all ongoing field programmes, including participants, media, and outcomes.
+
+To provide farmers with an accessible, up-to-date repository of government schemes.
+
+To streamline the process for farmers to contact IFI and book appointments.
+
+To enable data-driven reporting and monitoring for IFI management.
+
+2.2 Product Components
+
+Farmer Mobile App (Android/iOS)
+
+Field Agent Mobile App (Android/iOS)
+
+Admin Dashboard (Web)
+
+Backend Server
+
+Database
+
+2.3 User Roles & Personas
+
+Role
+
+Platform
+
+Description
+
+Farmer
+
+Farmer App
+
+Views government schemes, contacts IFI, and books appointments.
+
+Field Agent
+
+Field Agent App
+
+Enters and manages farmer data (Module 1). Logs details of ongoing programmes (Module 2).
+
+Admin
+
+Admin Dashboard
+
+Manages all platform data, oversees all modules, manages Agent accounts, and views analytics.
+
+
+
+
+
+3. System Features & Requirements
+
+3.1 Farmer App (The "Tanak Prabha" App)
+
+Based on the provided designs, this app is for farmer self-service.
+
+Language Selection & Onboarding:
+
+User must choose a language (e.g., English, Hindi) upon first launch.
+
+A welcome screen introduces the app.
+
+Authentication:
+
+Simple OTP-based login/registration using a mobile number.
+
+Module 1: Farmer Self-Onboarding & Profile Management:
+
+During onboarding, the farmer must enter their own data.
+
+Personal & Family Details: Input fields for Name, Photo, Father's Name, Aadhaar, Mobile Number, Family Details, etc.
+
+Land Holdings & Crop Details: A form to enter total land area (in Bighas) and the crops they grow in different seasons (Rabi, Kharif, Jayad).
+
+Livestock Details: A form to enter the numbers of animals they own (Cow, Buffalo, etc.).
+
+My Information: A profile section where farmers can view and edit all the data they have entered.
+
+Home Dashboard:
+
+A main screen showing weather , "Quick Actions" , "Latest Updates" , and "Programme Happening Today".
+
+Module 3: Information - Government Schemes:
+
+A searchable and filterable list of government schemes.
+
+Farmers can click a scheme to read details, eligibility, and benefits.
+
+Module 4: Contact & Book Appointment:
+
+A dedicated section to book an appointment with IFI staff.
+
+A "Contact" or "Support" page with IFI contact details.
+
+Notifications:
+
+Receive push notifications for appointment confirmations and new scheme alerts.
+
+3.2 Field Agent App
+
+This app is for IFI staff in the field. Offline capability is its most critical feature.
+
+Authentication:
+
+Secure login with a username and password (credentials created by Admin).
+
+Offline-First Design:
+
+All forms (especially Module 2) must be fillable and save locally without an internet connection.
+
+Data will auto-sync with the server when connectivity is restored.
+
+Module 2: Ongoing Programmes (Primary Role):
+
+This is the agent's main job.
+
+A form to create a new "Ongoing Programme" entry.
+
+Input fields for Programme Name, Subject, Trainers, Date, Location, etc.
+
+Participant List: Ability to search and add participants by searching the existing Farmer Database (who registered via the Farmer App).
+
+Media Upload: Use the phone's camera/gallery to upload photos (5-10) and videos (1-2 mins) for the event.
+
+Outcome: A rich-text field to enter the programme's outcome.
+
+Module 1: Farmer Assistance & Verification (Secondary Role):
+
+View Farmer Database: Search, filter, and view all farmers who have registered.
+
+Farmer Assistance: A dedicated flow for the agent to register a farmer who cannot do it themselves (e.g., no smartphone). This form will contain all the Module 1 fields (Personal, Land, Livestock).
+
+Data Verification: (Optional) An agent may have the permission to "verify" the data submitted by a farmer, marking it as "Approved" in the system.
+
+3.3 Admin Dashboard (All Modules)
+
+Secure Login: Admin username and password.
+
+Analytics Dashboard: Overview widgets (e.g., Total Farmers, Programmes This Month, Pending Appointments).
+
+Module 1: Farmer Database Management:
+
+Full CRUD operations on all farmer records.
+
+Advanced search and filtering (by Village, Block, District, etc.).
+
+View farmer geo-locations on an interactive map.
+
+Data Export: Ability to export farmer data (filtered or full list) to CSV/Excel.
+
+Module 2: Programme Management:
+
+Full CRUD operations on all programme entries.
+
+View all details, including participant lists.
+
+View uploaded photos and videos in a gallery.
+
+Search/filter programmes by location, trainer, or date.
+
+Module 3: Government Scheme Management (CMS):
+
+A Content Management System (CMS) to Add, Edit, and Delete government schemes that appear in the Farmer App.
+
+Module 4: Appointment Management:
+
+View all incoming appointment requests.
+
+Update appointment status (Confirm, Cancel, Mark as Completed).
+
+Assign appointments to specific staff/field agents (optional).
+
+User Management:
+
+Create, Edit, and Deactivate Field Agent accounts.
+
+View a list of all registered Farmers.
+
+
+
+
+
+4. Non-Functional Requirements
+
+Category
+
+Requirement
+
+Performance
+
+- API response time < 3 seconds.
+
+- Mobile app initial load < 5 seconds.
+
+- Efficient data sync for offline-first Agent App.
+
+Scalability
+
+- Start with a Monolithic backend for rapid development.
+
+- Backend will be containerized (Docker) to allow for horizontal scaling.
+
+Maintainability
+
+- Modular code structure with clear separation of concerns.
+
+- CI/CD pipelines for automated testing and deployment.
+
+Availability
+
+- 99% uptime SLA for all public-facing services.
+
+- Load balancing via NGINX.
+
+Security
+
+- Role-Based Access Control (Admin, Agent, Farmer).
+
+- JWT-based authentication for all APIs.
+
+- HTTPS/TLS encryption for all data in transit.
+
+- Secure storage of sensitive data (e.g., Aadhaar Number).
+
+Portability
+
+- Docker containers for all backend services, deployable on any major cloud (AWS, GCP, etc.) or on-prem server.
+
+Observability
+
+- Centralized logging for the backend application.
+
+- Basic monitoring of server health and API response times.
+
+Usability
+
+- Farmer App: Simple UI, large touch targets, minimal steps, multilingual support (Hindi/English).
+
+- Agent App: Offline-first design is paramount. Forms must be easy and fast to fill, with clear sync status.
+
+- Admin Panel: Clean, data-dense, and highly functional with powerful search and filtering.
+
+
+
+
+
+5. System Architecture
+
+5.1 Monolithic Architecture
+
+Overview:
+
+For the initial version, all modules—farmer management, programme logging, scheme info, and appointments—will reside in a single backend application (e.g., ExpressJS/Node.js). The mobile apps and the admin dashboard will all interact with this single backend and a shared database.
+
+Components:
+
+React Native Farmer App
+
+React Native Field Agent App
+
+Admin Dashboard (React)
+
+Single ExpressJS Backend
+
+Shared Database (PostgreSQL or MongoDB)
+
+SMS Gateway (e.g., Twilio, MSG91) for OTP
+
+File Storage (e.g., AWS S3, BunnyCDN) for photos/videos
+
+Advantages:
+
+Rapid development and deployment.
+
+Lower initial infrastructure complexity.
+
+Easier for a small team to manage.
+
+Limitations:
+
+Scaling is all-or-nothing (the entire app must be scaled).
+
+A failure in one module can potentially affect the entire system.
+
+Diagram:
+
+
+
+6. Required Dependencies To Be Used (Proposed)
+
+Category
+
+Purpose
+
+Tool / Service
+
+Free / Paid
+
+Frontend (Apps)
+
+UI/Navigation
+
+React Native, React Navigation
+
+Free
+
+State Management
+
+Redux Toolkit / Zustand
+
+Free
+
+API Communication
+
+Axios
+
+Free
+
+Forms (Agent App)
+
+React Hook Form
+
+Free
+
+Image/Video Upload
+
+react-native-image-picker
+
+Free
+
+Video Playback
+
+react-native-video
+
+Free
+
+Geolocation
+
+react-native-geolocation-service
+
+Free
+
+Offline Storage
+
+@react-native-async-storage
+
+Free
+
+Network Info
+
+@react-native-community/netinfo
+
+Free
+
+Multilingual
+
+i18next
+
+Free
+
+Admin Dashboard
+
+UI Framework
+
+TailwindCSS + ShadCN UI
+
+Free
+
+Charts & Stats
+
+Recharts / Chart.js
+
+Free
+
+Data Tables
+
+TanStack Table
+
+Free
+
+Rich Text Editor
+
+Tiptap (for Scheme/Outcome)
+
+Free
+
+Backend
+
+Web Framework
+
+ExpressJS
+
+Free
+
+Authentication
+
+JSON Web Tokens (JWT), bcrypt
+
+Free
+
+ORM / ODM
+
+Prisma / Mongoose
+
+Free
+
+File Uploads
+
+Multer
+
+Free
+
+File Storage
+
+AWS S3 / BunnyCDN
+
+Paid
+
+SMS / OTP
+
+Twilio / MSG91
+
+Paid
+
+Logging
+
+Winston / Morgan
+
+Free
+
+Database
+
+Relational DB
+
+PostgreSQL
+
+Free / Paid (Hosted)
+
+Document DB
+
+MongoDB
+
+Free / Paid (Hosted)
+
+DevOps
+
+CI/CD Pipelines
+
+GitHub Actions
+
+Free Tier / Paid
+
+Containerization
+
+Docker / Docker Compose
+
+Free
+
+Web Server / Proxy
+
+NGINX
+
+Free
+
+Hosting
+
+AWS / DigitalOcean / Vercel
+
+Paid
+
+
+
+
+
+7. Project Timeline (Estimated)
+
+SN.
+
+Phase / Module
+
+Key Tasks & Features
+
+Days
+
+1
+
+Phase 1: Discovery & UI/UX
+
+Polished UI/UX designs (not just wireframes). Prototyping and handoff for all 3 components (Admin, Agent, Farmer).
+
+10 days
+
+2
+
+Phase 2: Core Setup (Parallel)
+
+Backend: DB Schema, API auth (JWT, RBAC), CI/CD setup.
+
+Frontend: App/Admin project skeletons, auth screens, navigation.
+
+7 days
+
+3
+
+Phase 3: Backend Development
+
+-APIs for all 4 modules (Farmer, Programme, Scheme, Appt).
+
+-Secure file/video upload logic (S3/Cloudinary).
+
+-Logic for analytics hooks.
+
+18 days
+
+4
+
+Phase 4: Admin Dashboard
+
+(Parallel with Phase 3)
+
+Module 1 & 2: Farmer/Programme CRUD, data viewers, export.
+
+Module 3 & 4: Scheme CMS, Appointment Manager.
+
+Extras: Basic analytics dashboard (charts, counts).
+
+18 days234
+
+5
+
+Phase 5: Field Agent App
+
+(Parallel with Phase 3)
+
+Extra: Robust Offline-First Engine (crucial).
+
+Module 1: Farmer forms, photo/GPS capture, offline saving.
+
+Module 2: Programme forms, media upload, participant selection.
+
+22 days
+
+6
+
+Phase 6: Farmer App
+
+-(Parallel with Phase 3)
+
+-OTP Login.
+
+-Module 3: View/Search Government Schemes.
+
+-Module 4: Contact Form & Book Appointment.
+
+ 
+
+7
+
+Phase 7: QA & Integration
+
+-End-to-end (E2E) testing.
+
+-Heavy testing of Agent App offline sync.
+
+-User Acceptance Testing (UAT).
+
+-Bug logging.
+
+12 days
+
+8
+
+Phase 8: Polish & Deployment
+
+-Final bug fixing (P0/P1 bugs).
+
+-Production database and server setup.
+
+-Final deployment to app stores and web.
+
+-Handover and basic documentation.
+
+5 days
+
+Total Estimated Days
+
+~78 days
+
+The entire project is estimated to take approximately 90 to 100 days for completion, including UI/UX design and comprehensive testing.
+
+
+

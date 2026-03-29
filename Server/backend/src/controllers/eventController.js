@@ -5,7 +5,22 @@ import User from '../models/User.js';
 
 export const createEvent = async (req, res) => {
     try {
-        const eventData = req.body;
+        const {
+            title, description, date, start_time, end_time,
+            location_name, location_address, instructors,
+            guidelines_and_rules, requirements, hero_image_url, status,
+            outcome, media_urls
+        } = req.body;
+
+        const eventData = {
+            title, description, date, start_time, end_time,
+            location_name, location_address, instructors,
+            guidelines_and_rules, requirements, hero_image_url, status,
+            outcome,
+            // Ensure media_urls is passed as an array for the TEXT[] column
+            media_urls: Array.isArray(media_urls) ? media_urls : (media_urls ? [media_urls] : null)
+        };
+
         const newEvent = await Event.create(eventData);
 
         res.status(201).json({
@@ -55,7 +70,26 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
     try {
         const { id } = req.params;
-        const eventData = req.body;
+        const {
+            title, description, date, start_time, end_time,
+            location_name, location_address, instructors,
+            guidelines_and_rules, requirements, hero_image_url, status,
+            outcome, media_urls
+        } = req.body;
+
+        // Build eventData with only the fields that were provided
+        const eventData = {};
+        const fields = {
+            title, description, date, start_time, end_time,
+            location_name, location_address, instructors,
+            guidelines_and_rules, requirements, hero_image_url, status,
+            outcome,
+            // Ensure media_urls is passed as an array for the TEXT[] column
+            media_urls: Array.isArray(media_urls) ? media_urls : (media_urls ? [media_urls] : undefined)
+        };
+        Object.keys(fields).forEach(key => {
+            if (fields[key] !== undefined) eventData[key] = fields[key];
+        });
 
         const updatedEvent = await Event.update(id, eventData);
 

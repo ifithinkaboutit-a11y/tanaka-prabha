@@ -1,27 +1,12 @@
 // src/utils/locationUtils.ts
-// Shared utilities for location picking — reverse geocoding, address parsing,
-// and Places API search. Extracted from location-picker.tsx to keep the screen
-// thin and make these functions independently testable.
+// Shared utilities for location picking — reverse geocoding via Google Geocoding API,
+// address parsing, and Places API search.
 
 import { getClosestLocation } from "./reverseGeocode";
 
-const NOMINATIM_USER_AGENT = "TanakPrabha/1.0";
+const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface NominatimRawAddress {
-    state?: string;
-    state_district?: string;
-    county?: string;
-    suburb?: string;
-    city_district?: string;
-    town?: string;
-    village?: string;
-    hamlet?: string;
-    city?: string;
-    postcode?: string;
-    [key: string]: string | undefined;
-}
 
 export interface ParsedAddress {
     state: string;
@@ -30,6 +15,7 @@ export interface ParsedAddress {
     block: string;
     village: string;
     pinCode: string;
+    postOffice: string;
 }
 
 export interface PlacePrediction {
@@ -38,52 +24,82 @@ export interface PlacePrediction {
     subtitle: string;
 }
 
-// ─── Nominatim reverse geocode — display string ───────────────────────────────
-
-export async function nominatimReverseGeocode(lat: number, lng: number): Promise<string> {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16&addressdetails=1`;
-    const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_USER_AGENT } });
-    if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
-    const data = await res.json();
-    const a: NominatimRawAddress = data.address ?? {};
-    const parts: string[] = [];
-    const locality = a.village || a.hamlet || a.suburb || a.town || a.city || a.county;
-    if (locality) parts.push(locality);
-    if (a.state_district || a.district) parts.push((a.state_district || a.district)!);
-    if (a.state) parts.push(a.state);
-    if (a.postcode) parts.push(a.postcode);
-    return parts.length > 0 ? parts.join(", ") : (data.display_name ?? "Unknown location");
+interface GeoComponent {
+    long_name: string;
+    short_name: string;
+    types: string[];
 }
 
-// ─── Parse Nominatim address into structured fields ───────────────────────────
-// Nominatim is authoritative; local dataset fills gaps for block only.
+// ─── Google Geocoding — fetch raw address components ─────────────────────────
 
-export function parseNominatimAddress(
-    addr: NominatimRawAddress,
+async function fetchGoogleGeocode(lat: number, lng: number): Promise<GeoComponent[]> {
+    const params = new URLSearchParams({
+        latlng: `${lat},${lng}`,
+        key: MAPS_KEY,
+        language: "en",
+        result_type: "street_address|sublocality|locality|administrative_area_level_3|administrative_area_level_2|administrative_area_level_1|postal_code",
+    });
+    const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+    );
+    if (!res.ok) throw new Error(`Google Geocoding HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        throw new Error(`Google Geocoding: ${data.status}`);
+    }
+    // Use the most detailed result (first one)
+    return data.results?.[0]?.address_components ?? [];
+}
+
+function getComponent(components: GeoComponent[], ...types: string[]): string {
+    for (const type of types) {
+        const found = components.find(c => c.types.includes(type));
+        if (found) return found.long_name;
+    }
+    return "";
+}
+
+// ─── Google reverse geocode — human-readable display string ──────────────────
+
+export async function googleReverseGeocode(lat: number, lng: number): Promise<string> {
+    const components = await fetchGoogleGeocode(lat, lng);
+    if (components.length === 0) return "Unknown location";
+
+    const parts: string[] = [];
+    const locality = getComponent(components, "sublocality_level_1", "sublocality", "locality", "administrative_area_level_4");
+    const district = getComponent(components, "administrative_area_level_3", "administrative_area_level_2");
+    const state    = getComponent(components, "administrative_area_level_1");
+    const pinCode  = getComponent(components, "postal_code");
+
+    if (locality) parts.push(locality);
+    if (district) parts.push(district);
+    if (state)    parts.push(state);
+    if (pinCode)  parts.push(pinCode);
+    return parts.length > 0 ? parts.join(", ") : "Unknown location";
+}
+
+// ─── Parse Google address components into structured form fields ──────────────
+// Google is authoritative for state/district/pinCode/village.
+// Local DB fills block (Google rarely returns it for rural India).
+
+export async function parseGoogleAddress(
     lat: number,
     lng: number,
     existingValues: Partial<ParsedAddress> = {}
-): ParsedAddress {
+): Promise<ParsedAddress> {
+    const components = await fetchGoogleGeocode(lat, lng);
     const local = getClosestLocation(lat, lng);
 
-    return {
-        state:    addr.state                                                          || local.state    || existingValues.state    || "",
-        district: addr.state_district || addr.county                                 || local.district || existingValues.district || "",
-        tehsil:   addr.suburb         || addr.city_district || addr.town             || local.tehsil   || existingValues.tehsil   || "",
-        block:    /* Nominatim rarely has block */                                       local.block    || existingValues.block    || "",
-        village:  addr.village        || addr.hamlet        || addr.suburb || addr.town || addr.city   || local.village   || existingValues.village  || "",
-        pinCode:  addr.postcode                                                       || existingValues.pinCode  || "",
-    };
-}
+    const state      = getComponent(components, "administrative_area_level_1")                                                  || local.state    || existingValues.state      || "";
+    const district   = getComponent(components, "administrative_area_level_3", "administrative_area_level_2")                   || local.district || existingValues.district   || "";
+    const tehsil     = getComponent(components, "administrative_area_level_4", "administrative_area_level_3", "sublocality_level_1", "sublocality", "locality") || local.tehsil   || existingValues.tehsil     || "";
+    const block      = local.block                                                                                               || existingValues.block      || "";
+    const village    = getComponent(components, "sublocality_level_2", "sublocality_level_1", "sublocality", "neighborhood", "locality", "administrative_area_level_4") || local.village  || existingValues.village    || "";
+    const pinCode    = getComponent(components, "postal_code")                                                                  || existingValues.pinCode    || "";
+    // Google returns post_box or premise for post offices in some Indian results
+    const postOffice = getComponent(components, "post_box", "premise")                                                          || existingValues.postOffice || "";
 
-// ─── Fetch structured Nominatim address object ────────────────────────────────
-
-export async function fetchNominatimAddress(lat: number, lng: number): Promise<NominatimRawAddress> {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
-    const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_USER_AGENT } });
-    if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
-    const data = await res.json();
-    return data.address ?? {};
+    return { state, district, tehsil, block, village, pinCode, postOffice };
 }
 
 // ─── Google Places Autocomplete ───────────────────────────────────────────────

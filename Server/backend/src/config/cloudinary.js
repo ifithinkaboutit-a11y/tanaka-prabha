@@ -92,6 +92,16 @@ const generalStorage = new CloudinaryStorage({
     },
 });
 
+// Media storage for programme photos and videos
+const mediaStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'tanak-prabha/media',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'mov', 'webm'],
+        resource_type: 'auto',
+    },
+});
+
 // File filter for images only
 const imageFileFilter = (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -148,6 +158,27 @@ export const uploadGeneral = multer({
     storage: generalStorage,
     limits: {
         fileSize: 10 * 1024 * 1024, // 10MB max
+    },
+});
+
+// File filter for images and videos
+const mediaFileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+        'video/mp4', 'video/quicktime', 'video/webm',
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only images (JPEG, PNG, WebP, GIF) and videos (MP4, MOV, WebM) are allowed.'), false);
+    }
+};
+
+export const uploadMedia = multer({
+    storage: mediaStorage,
+    fileFilter: mediaFileFilter,
+    limits: {
+        fileSize: 200 * 1024 * 1024, // 200MB max (for videos)
     },
 });
 
@@ -260,6 +291,7 @@ export default {
     uploadProfessionalImage,
     uploadUserPhoto,
     uploadGeneral,
+    uploadMedia,
     deleteImage,
     uploadFromUrl,
     getOptimizedUrl,

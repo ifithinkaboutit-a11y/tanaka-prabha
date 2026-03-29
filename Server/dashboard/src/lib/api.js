@@ -578,6 +578,50 @@ export const uploadApi = {
         }),
 };
 
+// ============================================================
+// Appointments API
+// ============================================================
+
+export const appointmentsApi = {
+    getAll: (params = {}) => {
+        const queryString = new URLSearchParams(params).toString();
+        return apiRequest(`/admin/appointments${queryString ? `?${queryString}` : ''}`);
+    },
+
+    updateStatus: (id, status) =>
+        apiRequest(`/appointments/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        }),
+};
+
+// ============================================================
+// Admin Users API (RBAC — manage admin accounts)
+// ============================================================
+
+export const adminUsersApi = {
+    getAll: () =>
+        apiRequest('/admin/users'),
+
+    create: (userData) =>
+        apiRequest('/admin/users', {
+            method: 'POST',
+            body: JSON.stringify(userData),
+        }),
+
+    update: (id, userData) =>
+        apiRequest(`/admin/users/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(userData),
+        }),
+
+    setStatus: (id, isActive) =>
+        apiRequest(`/admin/users/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_active: isActive }),
+        }),
+};
+
 // Export default object with all APIs
 export default {
     admin: adminApi,
@@ -590,4 +634,6 @@ export default {
     notifications: notificationsApi,
     analytics: analyticsApi,
     upload: uploadApi,
+    adminUsers: adminUsersApi,
+    appointments: appointmentsApi,
 };

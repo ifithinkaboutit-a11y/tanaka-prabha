@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken';
 // Dashboard API Key for admin dashboard access
 const DASHBOARD_API_KEY = process.env.DASHBOARD_API_KEY || 'tanak-prabha-dashboard-secret-key-2024';
 
+if (!process.env.DASHBOARD_API_KEY) {
+    console.warn('[authMiddleware] WARNING: DASHBOARD_API_KEY env var is not set. Using hardcoded fallback — set this in production.');
+}
+
 /**
  * Check if request has valid dashboard API key
  */

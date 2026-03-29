@@ -29,9 +29,8 @@ import MapView, { Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import AppText from "../../components/atoms/AppText";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import {
-    nominatimReverseGeocode,
-    fetchNominatimAddress,
-    parseNominatimAddress,
+    googleReverseGeocode,
+    parseGoogleAddress,
     fetchPlacePredictions,
     fetchPlaceLatLng,
     formatAccuracyLabel,
@@ -96,6 +95,23 @@ export default function LocationPickerScreen() {
     // ── Save state ─────────────────────────────────────────────────────────────
     const [saving, setSaving] = useState(false);
 
+    // ── Pre-populate address override from profile when purpose === "profile" ──
+    useEffect(() => {
+        if (purpose !== "profile") return;
+        userApi.getProfile().then((res) => {
+            if (!isMountedRef.current) return;
+            const profile = res.data?.user;
+            if (!profile) return;
+            const initial: Record<string, string> = {};
+            if (profile.state)    initial.state    = profile.state;
+            if (profile.district) initial.district = profile.district;
+            if (Object.keys(initial).length > 0) {
+                setProfileAddressOverride(initial);
+            }
+        }).catch(() => { /* silently ignore — pre-population is best-effort */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [purpose]);
+
     // ── Refs ───────────────────────────────────────────────────────────────────
     const mapRef = useRef<MapView>(null);
     const geocodeRequestId = useRef(0);
@@ -140,7 +156,7 @@ export default function LocationPickerScreen() {
         setGeocodeLoading(true);
         setGeocodeError(false);
         try {
-            const result = await nominatimReverseGeocode(lat, lng);
+            const result = await googleReverseGeocode(lat, lng);
             if (requestId !== geocodeRequestId.current) return;
             setAddress(result);
         } catch {
@@ -345,16 +361,16 @@ export default function LocationPickerScreen() {
                 }
 
                 if (purpose === "profile") {
-                    let rawAddr = {};
-                    try { rawAddr = await fetchNominatimAddress(pinCoords.lat, pinCoords.lng); } catch { /* non-fatal */ }
-                    const parsed = parseNominatimAddress(rawAddr, pinCoords.lat, pinCoords.lng);
+                    let parsed;
+                    try { parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng); } catch { parsed = null; }
                     const override: Record<string, string> = {};
-                    if (parsed.state)    override.state    = parsed.state;
-                    if (parsed.district) override.district = parsed.district;
-                    if (parsed.tehsil)   override.tehsil   = parsed.tehsil;
-                    if (parsed.block)    override.block    = parsed.block;
-                    if (parsed.village)  override.village  = parsed.village;
-                    if (parsed.pinCode)  override.pinCode  = parsed.pinCode;
+                    if (parsed?.state)      override.state      = parsed.state;
+                    if (parsed?.district)   override.district   = parsed.district;
+                    if (parsed?.tehsil)     override.tehsil     = parsed.tehsil;
+                    if (parsed?.block)      override.block      = parsed.block;
+                    if (parsed?.village)    override.village    = parsed.village;
+                    if (parsed?.pinCode)    override.pinCode    = parsed.pinCode;
+                    if (parsed?.postOffice) override.postOffice = parsed.postOffice;
                     setProfileAddressOverride(override);
                     router.back();
                     return;
@@ -370,23 +386,26 @@ export default function LocationPickerScreen() {
             // Onboarding flow
             setLocationData(newLocInfo);
 
-            let rawAddr = {};
-            try { rawAddr = await fetchNominatimAddress(pinCoords.lat, pinCoords.lng); } catch { /* non-fatal */ }
-            const parsed = parseNominatimAddress(rawAddr, pinCoords.lat, pinCoords.lng, {
-                state:    personalDetails.state,
-                district: personalDetails.district,
-                tehsil:   personalDetails.tehsil,
-                block:    personalDetails.block,
-                village:  personalDetails.village,
-                pinCode:  personalDetails.pinCode,
-            });
+            let parsed;
+            try {
+                parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng, {
+                    state:      personalDetails.state,
+                    district:   personalDetails.district,
+                    tehsil:     personalDetails.tehsil,
+                    block:      personalDetails.block,
+                    village:    personalDetails.village,
+                    pinCode:    personalDetails.pinCode,
+                    postOffice: personalDetails.postOffice,
+                });
+            } catch { parsed = null; }
             const updates: Record<string, string> = {};
-            if (parsed.state)    updates.state    = parsed.state;
-            if (parsed.district) updates.district = parsed.district;
-            if (parsed.tehsil)   updates.tehsil   = parsed.tehsil;
-            if (parsed.block)    updates.block    = parsed.block;
-            if (parsed.village)  updates.village  = parsed.village;
-            if (parsed.pinCode)  updates.pinCode  = parsed.pinCode;
+            if (parsed?.state)      updates.state      = parsed.state;
+            if (parsed?.district)   updates.district   = parsed.district;
+            if (parsed?.tehsil)     updates.tehsil     = parsed.tehsil;
+            if (parsed?.block)      updates.block      = parsed.block;
+            if (parsed?.village)    updates.village    = parsed.village;
+            if (parsed?.pinCode)    updates.pinCode    = parsed.pinCode;
+            if (parsed?.postOffice) updates.postOffice = parsed.postOffice;
             if (Object.keys(updates).length > 0) updatePersonalDetails(updates);
 
             router.push("/(auth)/land-details" as any);
@@ -664,12 +683,6 @@ export default function LocationPickerScreen() {
                         {saving ? "Saving…" : "Confirm Location"}
                     </AppText>
                 </Pressable>
-
-                {isProfileMode && (
-                    <Pressable style={styles.skipBtn} onPress={handleSkip}>
-                        <AppText variant="bodySm" style={styles.skipText}>Skip for now</AppText>
-                    </Pressable>
-                )}
             </View>
         </View>
     );

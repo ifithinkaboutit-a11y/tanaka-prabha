@@ -3,16 +3,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   View,
   TextInput,
   Alert,
 } from "react-native";
+import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollView";
 import AppText from "../../components/atoms/AppText";
 import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
@@ -197,10 +195,7 @@ const AuthLandDetailsScreen = () => {
 
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar barStyle="light-content" backgroundColor="#386641" />
       {/* Static Header */}
       <View style={headerStyles.header}>
@@ -216,7 +211,7 @@ const AuthLandDetailsScreen = () => {
       </View>
 
       <View style={{ flex: 1 }}>
-          <ScrollView
+          <KeyboardAwareScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
@@ -346,7 +341,7 @@ const AuthLandDetailsScreen = () => {
 
               </>
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
         <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
@@ -370,7 +365,7 @@ const AuthLandDetailsScreen = () => {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

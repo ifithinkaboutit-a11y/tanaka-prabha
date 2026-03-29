@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { sendOTP, verifyOTP, resendOTP, verifyToken, setPassword, loginWithPassword, forgotPassword } from '../controllers/authController.js';
+import { sendOTP, verifyOTP, verifyOtpOnly, resendOTP, verifyToken, setPassword, loginWithPassword, forgotPassword } from '../controllers/authController.js';
 import { otpLimiter, verifyOTPLimiter } from '../middlewares/rateLimiter.js';
 import { validateSendOTP, validateVerifyOTP } from '../middlewares/validator.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
@@ -18,6 +18,13 @@ router.post('/send-otp', otpLimiter, validateSendOTP, sendOTP);
  * @access  Public
  */
 router.post('/verify-otp', verifyOTPLimiter, validateVerifyOTP, verifyOTP);
+
+/**
+ * @route   POST /api/auth/verify-otp-only
+ * @desc    Verify OTP without issuing a JWT (used for forgot-password flow)
+ * @access  Public
+ */
+router.post('/verify-otp-only', verifyOTPLimiter, validateVerifyOTP, verifyOtpOnly);
 
 /**
  * @route   POST /api/auth/resend-otp

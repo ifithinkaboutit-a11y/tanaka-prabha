@@ -72,7 +72,6 @@ const PersonalDetailsScreen = () => {
     daughtersMarried: profile?.daughtersMarried || 0,
     daughtersUnmarried: profile?.daughtersUnmarried || 0,
     otherFamilyMembers: profile?.otherFamilyMembers || 0,
-    // Location — prefer map override, fall back to normalised profile value
     state: ov.state ?? toSlug(profile?.state),
     district: ov.district ?? toSlug(profile?.district),
     tehsil: ov.tehsil ?? toSlug(profile?.tehsil),

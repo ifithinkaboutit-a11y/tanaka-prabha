@@ -289,6 +289,53 @@ class Appointment {
     }
 
     /**
+     * Get all appointments (admin) with farmer and professional names joined
+     */
+    static async findAll(options = {}) {
+        const { limit = 50, offset = 0, status, date_from, date_to } = options;
+
+        let text = `
+            SELECT
+                a.*,
+                u.name AS farmer_name,
+                u.mobile_number AS farmer_mobile,
+                p.name AS professional_name,
+                p.role AS professional_role,
+                p.department AS professional_department
+            FROM public.appointments a
+            LEFT JOIN public.users u ON a.user_id = u.id
+            LEFT JOIN public.professionals p ON a.professional_id = p.id
+            WHERE 1=1
+        `;
+        const values = [];
+        let paramCount = 1;
+
+        if (status) {
+            text += ` AND a.status = $${paramCount}`;
+            values.push(status);
+            paramCount++;
+        }
+
+        if (date_from) {
+            text += ` AND a.appointment_date >= $${paramCount}`;
+            values.push(date_from);
+            paramCount++;
+        }
+
+        if (date_to) {
+            text += ` AND a.appointment_date <= $${paramCount}`;
+            values.push(date_to);
+            paramCount++;
+        }
+
+        text += ` ORDER BY a.appointment_date DESC, a.appointment_time ASC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+        values.push(parseInt(limit), parseInt(offset));
+
+        const result = await query(text, values);
+        return result.rows;
+    }
+
+    /**
      * Get appointment statistics for a user
      */
     static async getStatsByUserId(user_id) {

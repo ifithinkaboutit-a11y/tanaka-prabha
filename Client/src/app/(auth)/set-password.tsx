@@ -11,10 +11,8 @@ import {
     ActivityIndicator,
     Alert,
     Animated,
-    KeyboardAvoidingView,
     Platform,
     Pressable,
-    ScrollView,
     StatusBar,
     StyleSheet,
     Text,
@@ -22,6 +20,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
 
 const SetPasswordScreen = () => {
     const [password, setPassword] = useState("");
@@ -84,7 +83,7 @@ const SetPasswordScreen = () => {
                         text: "OK",
                         onPress: () => {
                             if (mode === "reset") {
-                                router.replace("/(auth)/" as any);
+                                router.replace({ pathname: "/(auth)/phone-input", params: { mode: "login" } });
                             } else {
                                 // First-time signup: continue to onboarding
                                 router.replace("/(auth)/personal-details" as any);
@@ -106,10 +105,7 @@ const SetPasswordScreen = () => {
     const isReady = password.length >= 6 && confirmPassword.length >= 6;
 
     return (
-        <KeyboardAvoidingView
-            style={s.root}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+        <View style={s.root}>
             <StatusBar barStyle="light-content" backgroundColor="#386641" />
             {/* Static Header */}
             <View style={s.header}>
@@ -122,7 +118,7 @@ const SetPasswordScreen = () => {
                         : "Set a password to log in faster next time"}
                 </Text>
             </View>
-            <ScrollView
+            <KeyboardAwareScrollView
                 bounces={false}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
@@ -205,8 +201,8 @@ const SetPasswordScreen = () => {
                         <Text style={s.securityText}>Your password is encrypted and stored securely</Text>
                     </View>
                 </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+            </KeyboardAwareScrollView>
+        </View>
     );
 };
 

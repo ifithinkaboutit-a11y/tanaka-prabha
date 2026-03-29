@@ -3,21 +3,43 @@ import { TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AppText from "../atoms/AppText";
 
+interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string; // ISO timestamp
+}
+
 interface NotificationAlertProps {
-  notification: {
-    id: string;
-    title: string;
-    description: string;
-  };
-  onDismiss: () => void;
+  notifications: NotificationItem[];
+  onDismiss: (id: string) => void;
   onViewAll: () => void;
 }
 
+function relativeTime(isoString: string): string {
+  const now = Date.now();
+  const then = new Date(isoString).getTime();
+  const diffMs = now - then;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return "just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+  if (diffHour < 24) return `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
+  return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+}
+
 export default function NotificationAlert({
-  notification,
+  notifications,
   onDismiss,
   onViewAll,
 }: NotificationAlertProps) {
+  if (notifications.length === 0) return null;
+
+  const visible = notifications.slice(0, 3);
+
   return (
     <View
       style={{
@@ -25,7 +47,6 @@ export default function NotificationAlert({
         borderWidth: 1,
         borderColor: "#FDE68A",
         borderRadius: 12,
-        padding: 12,
         paddingLeft: 16,
         overflow: "hidden",
       }}
@@ -44,43 +65,56 @@ export default function NotificationAlert({
         }}
       />
 
-      {/* Top row: bell icon, title, dismiss button */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 4,
-        }}
-      >
-        <Ionicons
-          name="notifications-outline"
-          size={18}
-          color="#D97706"
-          style={{ marginRight: 6 }}
-        />
-        <AppText
-          variant="bodySm"
-          style={{ flex: 1, fontWeight: "600", color: "#92400E" }}
-          numberOfLines={1}
+      {visible.map((item, index) => (
+        <View
+          key={item.id}
+          style={{
+            paddingTop: 12,
+            paddingRight: 12,
+            paddingBottom: index < visible.length - 1 ? 10 : 8,
+            borderBottomWidth: index < visible.length - 1 ? 1 : 0,
+            borderBottomColor: "#FDE68A",
+          }}
         >
-          {notification.title}
-        </AppText>
-        <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="close-outline" size={18} color="#92400E" />
-        </TouchableOpacity>
-      </View>
+          {/* Row: bell icon, title, timestamp, dismiss */}
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+            <Ionicons
+              name="notifications-outline"
+              size={16}
+              color="#D97706"
+              style={{ marginRight: 6 }}
+            />
+            <AppText
+              variant="bodySm"
+              style={{ flex: 1, fontWeight: "600", color: "#92400E" }}
+              numberOfLines={1}
+            >
+              {item.title}
+            </AppText>
+            <AppText variant="caption" style={{ color: "#B45309", marginRight: 8 }}>
+              {relativeTime(item.createdAt)}
+            </AppText>
+            <TouchableOpacity
+              onPress={() => onDismiss(item.id)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-outline" size={18} color="#92400E" />
+            </TouchableOpacity>
+          </View>
 
-      {/* Body text — max 2 lines */}
-      <AppText
-        variant="caption"
-        style={{ color: "#78350F", marginBottom: 8 }}
-        numberOfLines={2}
-      >
-        {notification.description}
-      </AppText>
+          {/* Description — max 2 lines */}
+          <AppText
+            variant="caption"
+            style={{ color: "#78350F" }}
+            numberOfLines={2}
+          >
+            {item.description}
+          </AppText>
+        </View>
+      ))}
 
-      {/* Bottom row: View All link */}
-      <View style={{ alignItems: "flex-end" }}>
+      {/* View All link */}
+      <View style={{ alignItems: "flex-end", paddingRight: 12, paddingBottom: 10, paddingTop: 6 }}>
         <TouchableOpacity onPress={onViewAll}>
           <AppText variant="caption" style={{ color: "#386641", fontWeight: "600" }}>
             View All →

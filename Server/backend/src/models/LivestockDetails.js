@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { DISTRICT_COORDS } from '../data/districtCoords.js';
 
 class LivestockDetails {
     /**
@@ -76,6 +77,57 @@ class LivestockDetails {
         const text = 'DELETE FROM public.livestock_details WHERE user_id = $1 RETURNING id';
         const result = await query(text, [user_id]);
         return result.rows[0];
+    }
+
+    /**
+     * Get per-farmer livestock data with geographic coordinates.
+     * Uses PostGIS location if available, falls back to district centroid with jitter.
+     */
+    static async getFarmersWithLocations() {
+        // Farmers with GPS location
+        const gpsText = `
+            SELECT
+                ld.user_id as id,
+                u.name,
+                u.village,
+                u.district,
+                ST_Y(u.location::geometry) as lat,
+                ST_X(u.location::geometry) as lng,
+                ld.cow, ld.buffalo, ld.goat, ld.sheep, ld.pig, ld.poultry, ld.others
+            FROM public.livestock_details ld
+            JOIN public.users u ON ld.user_id = u.id
+            WHERE u.location IS NOT NULL
+        `;
+
+        // Farmers without GPS but with a district
+        const noGpsText = `
+            SELECT
+                ld.user_id as id,
+                u.name,
+                u.village,
+                u.district,
+                ld.cow, ld.buffalo, ld.goat, ld.sheep, ld.pig, ld.poultry, ld.others
+            FROM public.livestock_details ld
+            JOIN public.users u ON ld.user_id = u.id
+            WHERE u.location IS NULL AND u.district IS NOT NULL
+        `;
+
+        const [gpsResult, noGpsResult] = await Promise.all([
+            query(gpsText),
+            query(noGpsText),
+        ]);
+
+        const farmers = [...gpsResult.rows];
+
+        for (const row of noGpsResult.rows) {
+            const coords = DISTRICT_COORDS[row.district];
+            if (coords) {
+                const jitter = () => (Math.random() - 0.5) * 0.02;
+                farmers.push({ ...row, lat: coords[0] + jitter(), lng: coords[1] + jitter() });
+            }
+        }
+
+        return farmers;
     }
 
     /**

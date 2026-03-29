@@ -26,6 +26,9 @@ import {
 import { eventsApi } from "@/lib/api"
 import { toast } from "sonner"
 import { LocalizedContentEditor } from "@/components/cms/LocalizedContentEditor"
+import { ProgrammeGallery } from "@/components/programme-gallery"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { MediaUploader } from "@/components/media-uploader"
 
 const EVENT_FIELDS = [
     { key: "title", label: "Title", type: "text" },
@@ -70,6 +73,8 @@ const emptyForm = {
     requirements_hi: "",
     hero_image_url: "",
     status: "upcoming",
+    outcome: "",
+    media_urls: [],
 }
 
 export default function EventsPage() {
@@ -77,6 +82,7 @@ export default function EventsPage() {
     const [loading, setLoading] = React.useState(true)
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [formData, setFormData] = React.useState(emptyForm)
+    const [galleryEvent, setGalleryEvent] = React.useState(null)
     const router = useRouter()
 
     React.useEffect(() => {
@@ -207,6 +213,21 @@ export default function EventsPage() {
                         <Label>Image URL (optional)</Label>
                         <Input value={formData.hero_image_url} onChange={e => setFormData({ ...formData, hero_image_url: e.target.value })} />
                     </div>
+                    <div className="space-y-2">
+                        <Label>Outcome (optional)</Label>
+                        <RichTextEditor
+                            value={formData.outcome}
+                            onChange={v => setFormData({ ...formData, outcome: v })}
+                            placeholder="Describe the event outcome…"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Media (Photos &amp; Videos)</Label>
+                        <MediaUploader
+                            mediaUrls={formData.media_urls}
+                            onChange={urls => setFormData(prev => ({ ...prev, media_urls: urls }))}
+                        />
+                    </div>
                     <Button type="submit" className="w-full">Save Event</Button>
                 </form>
             </DialogContent>
@@ -264,7 +285,7 @@ export default function EventsPage() {
                                 </div>
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {upcomingEvents.map(event => (
-                                        <EventCard key={event.id} event={event} router={router} />
+                                        <EventCard key={event.id} event={event} router={router} onViewGallery={setGalleryEvent} />
                                     ))}
                                 </div>
                             </section>
@@ -282,7 +303,7 @@ export default function EventsPage() {
                                 </div>
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-75">
                                     {pastEvents.map(event => (
-                                        <EventCard key={event.id} event={event} router={router} />
+                                        <EventCard key={event.id} event={event} router={router} onViewGallery={setGalleryEvent} />
                                     ))}
                                 </div>
                             </section>
@@ -290,11 +311,17 @@ export default function EventsPage() {
                     </div>
                 )}
             </div>
+            <ProgrammeGallery
+                eventId={galleryEvent?.id}
+                mediaUrls={galleryEvent?.media_urls ?? []}
+                open={galleryEvent !== null}
+                onClose={() => setGalleryEvent(null)}
+            />
         </div>
     )
 }
 
-function EventCard({ event, router }) {
+function EventCard({ event, router, onViewGallery }) {
     const liveStatus = computeEventStatus(event)
     const sc = STATUS_BADGE[liveStatus] ?? STATUS_BADGE.upcoming
 
@@ -329,6 +356,9 @@ function EventCard({ event, router }) {
                 <Button variant="outline" className="flex-1" onClick={() => router.push(`/events/${event.id}`)}>
                     <IconUsers className="size-4 mr-2" />
                     Manage
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => onViewGallery(event)}>
+                    View Gallery
                 </Button>
             </CardFooter>
         </Card>

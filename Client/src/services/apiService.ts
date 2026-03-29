@@ -78,6 +78,10 @@ export interface VerifyOTPResponse {
   is_new_user: boolean;
 }
 
+export interface VerifyOTPOnlyResponse {
+  success: boolean;
+}
+
 // Error class for API errors
 export class ApiError extends Error {
   status: number;
@@ -282,6 +286,21 @@ export const authApi = {
     otp: string
   ): Promise<ApiResponse<VerifyOTPResponse>> {
     return fetchWithAuth<VerifyOTPResponse>("/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ mobile_number, otp }),
+    });
+  },
+
+  /**
+   * Verify OTP without issuing a JWT — used for forgot-password flow.
+   * @param mobile_number - Phone number that received OTP
+   * @param otp - 6-digit OTP code
+   */
+  async verifyOtpOnly(
+    mobile_number: string,
+    otp: string
+  ): Promise<ApiResponse<VerifyOTPOnlyResponse>> {
+    return fetchWithAuth<VerifyOTPOnlyResponse>("/auth/verify-otp-only", {
       method: "POST",
       body: JSON.stringify({ mobile_number, otp }),
     });

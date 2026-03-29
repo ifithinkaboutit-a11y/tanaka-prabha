@@ -96,39 +96,8 @@ export default function NotificationsPage() {
     }, [])
 
     async function loadBroadcasts() {
-        // For now, seed with mock data if empty — in production, you'd have an admin_broadcasts table
-        setTimeout(() => {
-            setBroadcasts([
-                {
-                    id: 1,
-                    title: "New Scheme Launched",
-                    message: "PM Kisan Samman Nidhi has been updated with new benefits. Apply now through the app!",
-                    type: "announcement",
-                    district: "all",
-                    sent_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    recipients_count: 24,
-                },
-                {
-                    id: 2,
-                    title: "Weather Alert — Heavy Rainfall",
-                    message: "Heavy rainfall expected in Kamrup and Jorhat districts over the next 48 hours. Take necessary precautions for crop protection.",
-                    type: "alert",
-                    district: "Kamrup, Jorhat",
-                    sent_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    recipients_count: 12,
-                },
-                {
-                    id: 3,
-                    title: "Free Agricultural Training",
-                    message: "Free agricultural training program starting next week at District Agricultural Office. Register through the app.",
-                    type: "info",
-                    district: "all",
-                    sent_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    recipients_count: 24,
-                },
-            ])
-            setLoading(false)
-        }, 400)
+        setBroadcasts([])
+        setLoading(false)
     }
 
     async function handleSendBroadcast() {
@@ -146,7 +115,7 @@ export default function NotificationsPage() {
                 district: formData.district === "all" ? null : formData.district,
             })
 
-            const sentCount = response.data?.sent_count || response.data?.count || 0
+            const sentCount = response.data?.db_count || response.data?.push_count || 0
 
             const newBroadcast = {
                 id: Date.now(),
@@ -197,7 +166,7 @@ export default function NotificationsPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col py-6 px-4 lg:px-6 gap-6">
+            <div role="status" aria-label="Loading" className="flex flex-col py-6 px-4 lg:px-6 gap-6">
                 <div className="flex items-center justify-between">
                     <Skeleton className="h-8 w-48" />
                     <Skeleton className="h-10 w-40" />
@@ -325,12 +294,12 @@ export default function NotificationsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Notification Type</Label>
+                                        <Label htmlFor="broadcast-type">Notification Type</Label>
                                         <Select
                                             value={formData.type}
                                             onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger id="broadcast-type">
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -342,12 +311,12 @@ export default function NotificationsPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Target Audience</Label>
+                                        <Label htmlFor="broadcast-district">Target Audience</Label>
                                         <Select
                                             value={formData.district}
                                             onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger id="broadcast-district">
                                                 <SelectValue placeholder="Select audience" />
                                             </SelectTrigger>
                                             <SelectContent>
