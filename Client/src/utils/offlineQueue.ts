@@ -11,26 +11,25 @@ export interface QueueEntry {
   lastAttemptAt?: string;
 }
 
-function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+function generateId(): string {
+  return (
+    Math.random().toString(36).slice(2, 10) +
+    Math.random().toString(36).slice(2, 10)
+  );
 }
 
 async function readQueue(): Promise<QueueEntry[]> {
+  const raw = await AsyncStorage.getItem(QUEUE_KEY);
+  if (!raw) return [];
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    if (!raw) return [];
     return JSON.parse(raw) as QueueEntry[];
   } catch {
     return [];
   }
 }
 
-async function writeQueue(queue: QueueEntry[]): Promise<void> {
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+async function writeQueue(entries: QueueEntry[]): Promise<void> {
+  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(entries));
 }
 
 export const offlineQueue = {
@@ -38,23 +37,23 @@ export const offlineQueue = {
     type: QueueEntry["type"],
     payload: object
   ): Promise<string> {
-    const queue = await readQueue();
+    const entries = await readQueue();
+    const id = generateId();
     const entry: QueueEntry = {
-      id: generateUUID(),
+      id,
       type,
       payload,
       savedAt: new Date().toISOString(),
       attempts: 0,
     };
-    queue.push(entry);
-    await writeQueue(queue);
-    return entry.id;
+    entries.push(entry);
+    await writeQueue(entries);
+    return id;
   },
 
   async dequeue(id: string): Promise<void> {
-    const queue = await readQueue();
-    const filtered = queue.filter((entry) => entry.id !== id);
-    await writeQueue(filtered);
+    const entries = await readQueue();
+    await writeQueue(entries.filter((e) => e.id !== id));
   },
 
   async getAll(): Promise<QueueEntry[]> {
@@ -62,20 +61,21 @@ export const offlineQueue = {
   },
 
   async getCount(): Promise<number> {
-    const queue = await readQueue();
-    return queue.length;
+    const entries = await readQueue();
+    return entries.length;
   },
 
   async markAttempt(id: string, success: boolean): Promise<void> {
-    const queue = await readQueue();
-    const updated = queue.map((entry) => {
-      if (entry.id !== id) return entry;
-      return {
-        ...entry,
-        attempts: entry.attempts + 1,
-        lastAttemptAt: new Date().toISOString(),
-      };
-    });
+    if (success) {
+      await offlineQueue.dequeue(id);
+      return;
+    }
+    const entries = await readQueue();
+    const updated = entries.map((e) =>
+      e.id === id
+        ? { ...e, attempts: e.attempts + 1, lastAttemptAt: new Date().toISOString() }
+        : e
+    );
     await writeQueue(updated);
   },
 };

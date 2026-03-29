@@ -8,6 +8,7 @@ import { Platform } from "react-native";
 import { AuthProvider } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
+import { useOfflineQueueSync } from "../hooks/useOfflineQueueSync";
 import "../i18n"; // Initialize i18n
 
 // Debug: log API URL at startup (remove after confirming production works)
@@ -19,6 +20,8 @@ if (Platform.OS !== "web") {
 }
 
 export default function RootLayout() {
+  useOfflineQueueSync();
+
   useEffect(() => {
     async function prepare() {
       try {

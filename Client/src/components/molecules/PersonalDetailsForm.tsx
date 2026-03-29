@@ -316,14 +316,19 @@ export default function PersonalDetailsForm({
     if (addressOverride === prevOverrideRef.current) return;
     prevOverrideRef.current = addressOverride;
 
+    // Normalize human-readable strings to slug form for dropdown matching
+    // e.g. "Uttar Pradesh" → "uttar_pradesh", "Bhadohi" → "bhadohi"
+    const toSlug = (val?: string) =>
+      val ? val.trim().toLowerCase().replace(/[\s-]+/g, "_") : "";
+
     setFormData((prev) => ({
       ...prev,
-      ...(addressOverride.state ? { state: addressOverride.state } : {}),
-      ...(addressOverride.district ? { district: addressOverride.district } : {}),
-      ...(addressOverride.tehsil ? { tehsil: addressOverride.tehsil } : {}),
-      ...(addressOverride.block ? { block: addressOverride.block } : {}),
-      ...(addressOverride.village ? { village: addressOverride.village } : {}),
-      ...(addressOverride.pinCode ? { pinCode: addressOverride.pinCode } : {}),
+      ...(addressOverride.state    ? { state:    toSlug(addressOverride.state) }    : {}),
+      ...(addressOverride.district ? { district: toSlug(addressOverride.district) } : {}),
+      ...(addressOverride.tehsil   ? { tehsil:   addressOverride.tehsil }   : {}),
+      ...(addressOverride.block    ? { block:    addressOverride.block }    : {}),
+      ...(addressOverride.village  ? { village:  addressOverride.village }  : {}),
+      ...(addressOverride.pinCode  ? { pinCode:  addressOverride.pinCode }  : {}),
     }));
   }, [addressOverride]);
 

@@ -2,8 +2,10 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService, { ApiEvent, UserProfile } from "@/services/apiService";
+import { offlineQueue } from "@/utils/offlineQueue";
 import { avatar } from "@/utils/cloudinaryUtils";
 import { Ionicons } from "@expo/vector-icons";
+import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -243,6 +245,23 @@ export default function MarkAttendance() {
                 foundUser && foundUser !== "not_found"
                     ? foundUser.name
                     : `Walk-in: ${mobileNumber}`;
+
+            const payload = {
+                eventId: selectedEvent.id,
+                mobileNumber,
+                status: "present",
+                name: resolvedName,
+            };
+
+            const netState = await NetInfo.fetch();
+            if (netState.isConnected === false) {
+                await offlineQueue.enqueue("mark-attendance", payload);
+                Alert.alert("Saved offline", "No internet connection. Attendance has been saved and will be submitted when you're back online.");
+                setMobileNumber("");
+                setFoundUser(null);
+                return;
+            }
+
             await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present", resolvedName);
             Alert.alert("✅ Done!", "Attendance marked as Present.", [
                 { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); } },

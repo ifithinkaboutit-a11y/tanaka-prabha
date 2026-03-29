@@ -211,13 +211,13 @@ export default function Home() {
             marginBottom: 12,
           }}
         >
-          Programme Happening Today
+          {t("home.programmesToday")}
         </AppText>
 
         {eventsError ? (
           <AppText style={{ color: "#EF4444", fontSize: 14 }}>{eventsError}</AppText>
         ) : todayEvents.length === 0 ? (
-          <AppText style={{ color: "#6B7280", fontSize: 14 }}>No programmes today</AppText>
+          <AppText style={{ color: "#6B7280", fontSize: 14 }}>{t("home.noProgrammesToday")}</AppText>
         ) : (
           todayEvents.map((event) => (
             <EventCard

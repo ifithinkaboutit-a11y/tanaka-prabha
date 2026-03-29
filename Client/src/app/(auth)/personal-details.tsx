@@ -16,7 +16,6 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
-import AddressDropdowns, { type AddressValue } from "../../components/molecules/AddressDropdowns";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -26,10 +25,10 @@ import {
 import {
   validateName,
 } from "../../utils/validation";
-import { getDistrictOptions } from "../../data/indianLocations";
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 
 export const unstable_settings = {
   headerShown: false,
@@ -494,87 +493,50 @@ const AuthPersonalDetailsScreen = () => {
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
 
-            {/* District */}
+            {/* Location — redirect to map picker instead of manual dropdowns */}
             <FieldWrapper>
-              <FieldLabel text={t("onboarding.district") || "District"} />
-              <Select
-                value={personalDetails.district}
-                onChange={(v) =>
-                  updatePersonalDetails({
-                    district: v,
-                    tehsil: "",
-                    nyayPanchayat: "",
-                    gramPanchayat: "",
-                    village: "",
-                  })
-                }
-                options={getDistrictOptions(personalDetails.state || "uttar_pradesh")}
-                placeholder="Select District"
-              />
+              <FieldLabel text={t("onboarding.district") || "Location"} />
+              {personalDetails.village || personalDetails.district ? (
+                <View style={{
+                  backgroundColor: "#F0FDF4",
+                  borderWidth: 1,
+                  borderColor: "#BBF7D0",
+                  borderRadius: 12,
+                  padding: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}>
+                  <Ionicons name="location" size={18} color="#16A34A" />
+                  <AppText variant="bodySm" style={{ color: "#166534", flex: 1, fontWeight: "600" }}>
+                    {[personalDetails.village, personalDetails.district, personalDetails.state].filter(Boolean).join(", ")}
+                  </AppText>
+                  <Pressable onPress={() => router.push("/(auth)/location-picker" as any)}>
+                    <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "700" }}>Change</AppText>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => router.push("/(auth)/location-picker" as any)}
+                  style={{
+                    backgroundColor: "#F9FAFB",
+                    borderWidth: 1,
+                    borderColor: "#E5E7EB",
+                    borderRadius: 12,
+                    padding: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <Ionicons name="map-outline" size={18} color="#6B7280" />
+                  <AppText variant="bodySm" style={{ color: "#9CA3AF" }}>
+                    {t("onboarding.tapToPickLocation") || "Tap to pick your location on map"}
+                  </AppText>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" style={{ marginLeft: "auto" }} />
+                </Pressable>
+              )}
             </FieldWrapper>
-
-            {/* Address sub-fields — cascading dropdowns for Bhadohi/Mirzapur, free-text otherwise */}
-            {personalDetails.district &&
-              (personalDetails.district.toLowerCase() === "bhadohi" ||
-                personalDetails.district.toLowerCase() === "mirzapur") ? (
-              <AddressDropdowns
-                district={personalDetails.district}
-                value={{
-                  tehsil: personalDetails.tehsil || "",
-                  nyayPanchayat: personalDetails.nyayPanchayat || "",
-                  gramPanchayat: personalDetails.gramPanchayat || "",
-                  village: personalDetails.village || "",
-                }}
-                onChange={(v: AddressValue) =>
-                  updatePersonalDetails({
-                    tehsil: v.tehsil,
-                    nyayPanchayat: v.nyayPanchayat,
-                    gramPanchayat: v.gramPanchayat,
-                    village: v.village,
-                  })
-                }
-                language={currentLanguage as "en" | "hi"}
-              />
-            ) : personalDetails.district ? (
-              <>
-                <FieldWrapper>
-                  <FieldLabel text={t("onboarding.tehsil") || "Tehsil"} />
-                  <TextInput
-                    style={{
-                      backgroundColor: "#F9FAFB",
-                      borderWidth: 1,
-                      borderColor: "#E5E7EB",
-                      borderRadius: 12,
-                      padding: 14,
-                      fontSize: 16,
-                      color: "#1F2937",
-                    }}
-                    value={personalDetails.tehsil}
-                    onChangeText={(text) => updatePersonalDetails({ tehsil: text })}
-                    placeholder="Enter Tehsil"
-                    placeholderTextColor="#9CA3AF"
-                  />
-                </FieldWrapper>
-                <FieldWrapper>
-                  <FieldLabel text={t("onboarding.village") || "Village"} />
-                  <TextInput
-                    style={{
-                      backgroundColor: "#F9FAFB",
-                      borderWidth: 1,
-                      borderColor: "#E5E7EB",
-                      borderRadius: 12,
-                      padding: 14,
-                      fontSize: 16,
-                      color: "#1F2937",
-                    }}
-                    value={personalDetails.village}
-                    onChangeText={(text) => updatePersonalDetails({ village: text })}
-                    placeholder="Enter Village"
-                    placeholderTextColor="#9CA3AF"
-                  />
-                </FieldWrapper>
-              </>
-            ) : null}
           </View>
       </KeyboardAwareScrollView>
 

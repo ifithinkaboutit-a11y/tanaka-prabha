@@ -120,7 +120,8 @@
     "finishMessage": "आपकी जानकारी सहेजी जा रही है। आप योजनाएं और कार्यक्रम खोजने के लिए तैयार हैं।",
     "remove": "हटाएं",
     "yes": "हाँ",
-    "no": "नहीं"
+    "no": "नहीं",
+    "tapToPickLocation": "मानचित्र पर अपना स्थान चुनें"
   },
   "schemesPage": {
     "title": "योजनाएं",
@@ -182,6 +183,8 @@
     "ongoingEvents": "चल रहे कार्यक्रम",
     "governmentSchemes": "सरकारी योजनाएं",
     "bookAppointment": "अपॉइंटमेंट बुक करें",
+    "programmesToday": "आज के कार्यक्रम",
+    "noProgrammesToday": "आज कोई कार्यक्रम नहीं",
     "greeting": {
       "morning": "सुप्रभात",
       "afternoon": "नमस्ते",

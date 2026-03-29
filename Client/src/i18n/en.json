@@ -120,7 +120,8 @@
     "enterCount": "Enter count",
     "remove": "Remove",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "tapToPickLocation": "Tap to pick your location on map"
   },
   "schemesPage": {
     "title": "Schemes",
@@ -182,6 +183,8 @@
     "ongoingEvents": "Ongoing Events",
     "governmentSchemes": "Government Schemes",
     "bookAppointment": "Book an Appointment",
+    "programmesToday": "Programme Happening Today",
+    "noProgrammesToday": "No programmes today",
     "greeting": {
       "morning": "Good Morning",
       "afternoon": "Good Afternoon",

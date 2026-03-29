@@ -3,9 +3,10 @@ import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import apiService, { DashboardStats } from "@/services/apiService";
+import { offlineQueue } from "@/utils/offlineQueue";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     RefreshControl,
@@ -118,6 +119,13 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [pendingCount, setPendingCount] = useState(0);
+
+    useFocusEffect(
+        useCallback(() => {
+            offlineQueue.getCount().then(setPendingCount);
+        }, [])
+    );
 
     async function fetchStats() {
         try {
@@ -155,6 +163,14 @@ export default function AdminDashboard() {
                     <Ionicons name="log-out-outline" size={20} color="#EF4444" />
                 </TouchableOpacity>
             </View>
+
+            {/* ── Offline Pending Badge ── */}
+            {pendingCount > 0 && (
+                <View style={s.pendingBanner}>
+                    <Ionicons name="cloud-upload-outline" size={18} color="#92400E" />
+                    <AppText style={s.pendingText}>{pendingCount} pending offline submission{pendingCount > 1 ? "s" : ""}</AppText>
+                </View>
+            )}
 
             {/* ── Quick Actions Row ── */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.pillRow} contentContainerStyle={s.pillContent}>
@@ -303,4 +319,14 @@ const s = StyleSheet.create({
     loadingText: { color: "#9CA3AF", fontSize: 14 },
 
     divider: { height: 1, backgroundColor: "#E5E7EB", marginVertical: 20, marginHorizontal: 20 },
+
+    // offline pending banner
+    pendingBanner: {
+        flexDirection: "row", alignItems: "center", gap: 8,
+        backgroundColor: "#FEF3C7",
+        borderRadius: 10, marginHorizontal: 20, marginBottom: 12,
+        paddingHorizontal: 14, paddingVertical: 10,
+        borderWidth: 1, borderColor: "#FCD34D",
+    },
+    pendingText: { fontSize: 13, fontWeight: "600", color: "#92400E", flex: 1 },
 });

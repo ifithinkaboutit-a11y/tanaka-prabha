@@ -3,7 +3,9 @@ import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService from "@/services/apiService";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { offlineQueue } from "@/utils/offlineQueue";
 import { Ionicons } from "@expo/vector-icons";
+import NetInfo from "@react-native-community/netinfo";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -382,32 +384,42 @@ export default function CreateEvent() {
             Alert.alert("Hindi Title Required", "Please enter the Hindi title (हिंदी शीर्षक आवश्यक है).");
             return;
         }
+
+        const payload = {
+            title,
+            title_hi: titleHi,
+            description,
+            description_hi: descriptionHi,
+            date,
+            start_time: startTime,
+            end_time: endTime,
+            location_name: locationName,
+            location_address: locationAddress,
+            guidelines_and_rules: guidelines,
+            guidelines_and_rules_hi: guidelinesHi,
+            requirements,
+            requirements_hi: requirementsHi,
+            hero_image_url: imageUrl || undefined,
+            status: "upcoming",
+            master_trainer_name: masterTrainerName || undefined,
+            master_trainer_phone: masterTrainerPhone || undefined,
+            trainer_name: trainerName || undefined,
+            trainer_phone: trainerPhone || undefined,
+            contact_number: contactNumber || undefined,
+            location_lat: locationLat ?? undefined,
+            location_lng: locationLng ?? undefined,
+        };
+
+        const netState = await NetInfo.fetch();
+        if (netState.isConnected === false) {
+            await offlineQueue.enqueue("create-event", payload);
+            Alert.alert("Saved offline", "No internet connection. Your event has been saved and will be submitted when you're back online.");
+            return;
+        }
+
         setLoading(true);
         try {
-            await apiService.events.create({
-                title,
-                title_hi: titleHi,
-                description,
-                description_hi: descriptionHi,
-                date,
-                start_time: startTime,
-                end_time: endTime,
-                location_name: locationName,
-                location_address: locationAddress,
-                guidelines_and_rules: guidelines,
-                guidelines_and_rules_hi: guidelinesHi,
-                requirements,
-                requirements_hi: requirementsHi,
-                hero_image_url: imageUrl || undefined,
-                status: "upcoming",
-                master_trainer_name: masterTrainerName || undefined,
-                master_trainer_phone: masterTrainerPhone || undefined,
-                trainer_name: trainerName || undefined,
-                trainer_phone: trainerPhone || undefined,
-                contact_number: contactNumber || undefined,
-                location_lat: locationLat ?? undefined,
-                location_lng: locationLng ?? undefined,
-            });
+            await apiService.events.create(payload);
             Alert.alert("✅ Success", "Event created successfully!", [
                 { text: "OK", onPress: () => router.back() },
             ]);

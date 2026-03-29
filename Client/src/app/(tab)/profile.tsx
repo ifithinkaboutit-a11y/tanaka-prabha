@@ -384,56 +384,35 @@ const Profile = () => {
         editLabel={t("profile.editLivestockDetails")}
       >
         {totalAnimals > 0 ? (
-          <View style={s.livestockGrid}>
-            {profile.livestockDetails?.cow ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐄</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.cow}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.cow")}</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.buffalo ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐃</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.buffalo}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.buffalo")}</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.goat ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐐</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.goat}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.goat")}</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.sheep ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐑</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.sheep}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.sheep")}</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.pig ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐷</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.pig}</Text>
-                <Text style={s.livestockLabel}>Pig</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.poultry ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐔</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.poultry}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.hen")}</Text>
-              </View>
-            ) : null}
-            {profile.livestockDetails?.others ? (
-              <View style={s.livestockItem}>
-                <Text style={s.livestockEmoji}>🐾</Text>
-                <Text style={s.livestockCount}>{profile.livestockDetails.others}</Text>
-                <Text style={s.livestockLabel}>{t("livestockDetails.others")}</Text>
-              </View>
-            ) : null}
+          <View>
+            {[
+              { key: "cow",     label: t("livestockDetails.cow"),     count: profile.livestockDetails?.cow },
+              { key: "buffalo", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo },
+              { key: "goat",    label: t("livestockDetails.goat"),    count: profile.livestockDetails?.goat },
+              { key: "sheep",   label: t("livestockDetails.sheep"),   count: profile.livestockDetails?.sheep },
+              { key: "pig",     label: t("livestockDetails.pig"),     count: profile.livestockDetails?.pig },
+              { key: "poultry", label: t("livestockDetails.hen"),     count: profile.livestockDetails?.poultry },
+              { key: "others",  label: t("livestockDetails.others"),  count: profile.livestockDetails?.others },
+            ]
+              .filter((item) => item.count && item.count > 0)
+              .map((item, idx, arr) => (
+                <View
+                  key={item.key}
+                  style={[
+                    s.livestockRow,
+                    idx === arr.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                >
+                  <Text style={s.livestockRowLabel}>{item.label}</Text>
+                  <View style={s.livestockCountBadge}>
+                    <Text style={s.livestockCountText}>{item.count}</Text>
+                  </View>
+                </View>
+              ))}
+            <View style={s.livestockTotal}>
+              <Text style={s.livestockTotalLabel}>Total</Text>
+              <Text style={s.livestockTotalCount}>{totalAnimals}</Text>
+            </View>
           </View>
         ) : (
           <View style={s.emptySection}>
@@ -677,26 +656,36 @@ const s = StyleSheet.create({
   infoValue: { color: "#1F2937", fontSize: 13, fontWeight: "600", maxWidth: "45%", textAlign: "right" },
   infoValueAccent: { color: "#386641" },
 
-  // Livestock grid
-  livestockGrid: {
+  // Livestock table
+  livestockRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    paddingVertical: 8,
-  },
-  livestockItem: {
+    justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#FEF3C7",
+  },
+  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500" },
+  livestockCountBadge: {
     backgroundColor: "#FFF7ED",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minWidth: 80,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderWidth: 1,
     borderColor: "#FED7AA",
   },
-  livestockEmoji: { fontSize: 24, marginBottom: 4 },
-  livestockCount: { fontSize: 18, fontWeight: "700", color: "#EA580C" },
-  livestockLabel: { fontSize: 11, color: "#9A3412", marginTop: 2 },
+  livestockCountText: { color: "#EA580C", fontSize: 14, fontWeight: "700" },
+  livestockTotal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 10,
+    marginTop: 4,
+    borderTopWidth: 1.5,
+    borderTopColor: "#EA580C",
+  },
+  livestockTotalLabel: { color: "#EA580C", fontSize: 14, fontWeight: "700" },
+  livestockTotalCount: { color: "#EA580C", fontSize: 16, fontWeight: "800" },
 
   // Empty state
   emptySection: { alignItems: "center", paddingVertical: 20, gap: 8 },

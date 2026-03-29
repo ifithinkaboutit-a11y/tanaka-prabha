@@ -64,9 +64,9 @@
   - [x] 13.2 Add a pre-registration search bar at the top of the add-beneficiary screen that calls `GET /users?search={query}` and shows matching farmers before the form starts
   - [x] 13.3 Add an "Add Beneficiary" `ActionCard` to `Client/src/app/(admin)/dashboard.tsx` and an "Add Beneficiary" button to `Client/src/app/(admin)/beneficiaries.tsx`
 
-- [ ] 14. Offline Caching System
-  - [ ] 14.1 Create `Client/src/utils/offlineQueue.ts` — AsyncStorage-backed queue with `enqueue(type, payload)`, `dequeue(id)`, `getAll()`, `getCount()`, `markAttempt(id, success)` methods; queue entries include `id`, `type`, `payload`, `savedAt`, `attempts`, `lastAttemptAt`
-  - [ ] 14.2 In `Client/src/app/(admin)/create-event.tsx`, wrap `handleCreate` to call `offlineQueue.enqueue("create-event", payload)` when `NetInfo.fetch()` returns `isConnected === false`, and show a "Saved offline" toast
-  - [ ] 14.3 In `Client/src/app/(admin)/mark-attendance.tsx`, wrap the attendance submit handler similarly to enqueue when offline
-  - [ ] 14.4 Add an `AppState` listener (on foreground) in `Client/src/app/_layout.tsx` or a dedicated hook that checks `NetInfo`, iterates queue entries with `savedAt` ≥6 hours ago, attempts upload, calls `dequeue` on success or `markAttempt(id, false)` on failure, and shows a failure notification
-  - [ ] 14.5 In `Client/src/app/(admin)/dashboard.tsx`, display a pending count badge on the dashboard using `offlineQueue.getCount()`
+- [x] 14. Offline Caching System
+  - [x] 14.1 Create `Client/src/utils/offlineQueue.ts` — AsyncStorage-backed queue with `enqueue(type, payload)`, `dequeue(id)`, `getAll()`, `getCount()`, `markAttempt(id, success)` methods; queue entries include `id`, `type`, `payload`, `savedAt`, `attempts`, `lastAttemptAt`
+  - [x] 14.2 In `Client/src/app/(admin)/create-event.tsx`, wrap `handleCreate` to call `offlineQueue.enqueue("create-event", payload)` when `NetInfo.fetch()` returns `isConnected === false`, and show a "Saved offline" toast
+  - [x] 14.3 In `Client/src/app/(admin)/mark-attendance.tsx`, wrap the attendance submit handler similarly to enqueue when offline
+  - [x] 14.4 Add an `AppState` listener (on foreground) in `Client/src/app/_layout.tsx` or a dedicated hook that checks `NetInfo`, iterates queue entries with `savedAt` ≥6 hours ago, attempts upload, calls `dequeue` on success or `markAttempt(id, false)` on failure, and shows a failure notification
+  - [x] 14.5 In `Client/src/app/(admin)/dashboard.tsx`, display a pending count badge on the dashboard using `offlineQueue.getCount()`
