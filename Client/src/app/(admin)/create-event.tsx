@@ -4,6 +4,7 @@ import Button from "@/components/atoms/Button";
 import apiService from "@/services/apiService";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { offlineQueue } from "@/utils/offlineQueue";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import * as ImagePicker from "expo-image-picker";
@@ -765,16 +766,16 @@ export default function CreateEvent() {
 
 // ─── styles ──────────────────────────────────────────────────
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
     scrollContent: { padding: 20, paddingTop: 56, paddingBottom: 48 },
 
     pageHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 },
-    backBtn: { padding: 8, backgroundColor: "#fff", borderRadius: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
-    pageTitle: { fontSize: 22, fontWeight: "800", color: "#111827" },
-    pageSubtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    backBtn: { padding: 8, backgroundColor: theme.background.input, borderRadius: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+    pageTitle: { fontSize: 22, fontWeight: "800", color: theme.text.primary },
+    pageSubtitle: { fontSize: 13, color: theme.text.muted, marginTop: 2 },
 
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderRadius: 20,
         padding: 20,
         shadowColor: "#000",
@@ -789,11 +790,11 @@ const s = StyleSheet.create({
         height: 180,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderStyle: "dashed",
         overflow: "hidden",
         marginBottom: 4,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: theme.background.neutralSubtle,
     },
     imageLoading: { flex: 1, justifyContent: "center", alignItems: "center" },
     imagePreview: { width: "100%", height: "100%" },
@@ -807,23 +808,23 @@ const s = StyleSheet.create({
     uploadedBadge: {
         position: "absolute", top: 8, right: 8,
         flexDirection: "row", alignItems: "center",
-        backgroundColor: "#D1FAE5",
+        backgroundColor: theme.semantic.successBackground,
         paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20,
     },
     imageEmpty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 6 },
-    imageEmptyText: { color: "#6B7280", fontSize: 14, fontWeight: "600" },
-    imageEmptyHint: { color: "#9CA3AF", fontSize: 12 },
+    imageEmptyText: { color: theme.text.muted, fontSize: 14, fontWeight: "600" },
+    imageEmptyHint: { color: theme.text.placeholder, fontSize: 12 },
 
     // inputs
     input: {
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderRadius: 12,
         padding: 14,
         fontSize: 15,
         marginBottom: 10,
-        color: "#1F2937",
-        backgroundColor: "#F9FAFB",
+        color: theme.text.secondary,
+        backgroundColor: theme.background.neutralSubtle,
     },
     textArea: { height: 90 },
 
@@ -833,28 +834,28 @@ const s = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 14,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: theme.background.neutralSubtle,
         marginBottom: 10,
     },
     pickerBtnLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-    pickerBtnText: { fontSize: 15, color: "#1F2937", fontWeight: "500" },
-    pickerBtnPlaceholder: { color: "#9CA3AF", fontWeight: "400" },
+    pickerBtnText: { fontSize: 15, color: theme.text.secondary, fontWeight: "500" },
+    pickerBtnPlaceholder: { color: theme.text.placeholder, fontWeight: "400" },
     timeRow: { flexDirection: "row" },
 
     // action buttons
     btn: { paddingVertical: 15, marginTop: 8 },
-    btnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16, textAlign: "center" },
+    btnText: { color: theme.text.onPrimary, fontWeight: "700", fontSize: 16, textAlign: "center" },
     clearLocationBtn: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10, marginTop: -4 },
-    clearLocationText: { color: "#EF4444", fontSize: 12 },
+    clearLocationText: { color: theme.semantic.error, fontSize: 12 },
 
     // language tab switcher
-    langTabRow: { flexDirection: "row", marginBottom: 12, borderRadius: 10, overflow: "hidden", borderWidth: 1.5, borderColor: "#E5E7EB" },
-    langTab: { flex: 1, paddingVertical: 10, alignItems: "center", backgroundColor: "#F9FAFB" },
-    langTabActive: { backgroundColor: "#3B82F6" },
-    langTabText: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
-    langTabTextActive: { color: "#FFFFFF" },
+    langTabRow: { flexDirection: "row", marginBottom: 12, borderRadius: 10, overflow: "hidden", borderWidth: 1.5, borderColor: theme.border.subtle },
+    langTab: { flex: 1, paddingVertical: 10, alignItems: "center", backgroundColor: theme.background.neutralSubtle },
+    langTabActive: { backgroundColor: theme.secondary.sky },
+    langTabText: { fontSize: 14, fontWeight: "600", color: theme.text.muted },
+    langTabTextActive: { color: theme.text.onPrimary },
 });

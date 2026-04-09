@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AppText from "../atoms/AppText";
+import { theme } from "@/styles/colors";
 
 interface NotificationItem {
   id: string;
@@ -87,8 +88,8 @@ export default function NotificationAlert({
             </View>
           ) : <View />}
           <TouchableOpacity onPress={onViewAll} style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <AppText style={{ color: "#386641", fontSize: 12, fontWeight: "700" }}>View All</AppText>
-            <Ionicons name="arrow-forward" size={12} color="#386641" />
+            <AppText style={{ color: theme.primary.green, fontSize: 12, fontWeight: "700" }}>View All</AppText>
+            <Ionicons name="arrow-forward" size={12} color={theme.primary.green} />
           </TouchableOpacity>
         </View>
       </View>

@@ -13,6 +13,7 @@ import {
 import LandDetailsForm from "../components/molecules/LandDetailsForm";
 import { useUserProfile } from "../contexts/UserProfileContext";
 import { useTranslation } from "../i18n";
+import { theme } from "../styles/colors";
 
 export const unstable_settings = { headerShown: false };
 
@@ -99,10 +100,10 @@ const LandDetailsScreen = () => {
 export default LandDetailsScreen;
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F1F5F9" },
+  root: { flex: 1, backgroundColor: theme.background.screen },
 
-  loader: { flex: 1, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center", gap: 12 },
-  loaderText: { color: "#6B7280", fontSize: 15 },
+  loader: { flex: 1, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", gap: 12 },
+  loaderText: { color: theme.text.muted, fontSize: 15 },
 
   header: {
     backgroundColor: HEADER_COLOR,

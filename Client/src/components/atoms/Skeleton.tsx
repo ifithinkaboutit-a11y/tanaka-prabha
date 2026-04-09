@@ -1,6 +1,7 @@
 // src/components/atoms/Skeleton.tsx
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View, ViewStyle } from "react-native";
+import { theme } from "../../styles/colors";
 
 interface SkeletonProps {
     width?: number | `${number}%`;
@@ -38,7 +39,7 @@ export function Skeleton({ width, height = 16, borderRadius = 8, style }: Skelet
                     width: width ?? "100%",
                     height,
                     borderRadius,
-                    backgroundColor: "#E5E7EB",
+                    backgroundColor: theme.border.subtle,
                     overflow: "hidden",
                 },
                 style,
@@ -238,7 +239,7 @@ export function DetailPageSkeleton() {
 
 export function NotificationItemSkeleton() {
     return (
-        <View style={{ flexDirection: "row", backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 10, elevation: 1 }}>
+        <View style={{ flexDirection: "row", backgroundColor: theme.background.input, borderRadius: 12, padding: 16, marginBottom: 10, elevation: 1 }}>
             <Skeleton width={48} height={48} borderRadius={24} style={{ marginRight: 14 }} />
             <View style={{ flex: 1 }}>
                 <Skeleton height={15} width="70%" borderRadius={6} style={{ marginBottom: 8 }} />
@@ -256,7 +257,7 @@ export function NotificationItemSkeleton() {
 
 export function AppointmentCardSkeleton() {
     return (
-        <View style={{ backgroundColor: "#fff", borderRadius: 18, padding: 18, marginBottom: 14, elevation: 2 }}>
+        <View style={{ backgroundColor: theme.background.input, borderRadius: 18, padding: 18, marginBottom: 14, elevation: 2 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
                 <View style={{ flex: 1, marginRight: 12 }}>
                     <Skeleton height={18} width="65%" borderRadius={6} style={{ marginBottom: 6 }} />
@@ -307,7 +308,7 @@ export function ProfileScreenSkeleton() {
 
 export function ListItemSkeleton() {
     return (
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 10, elevation: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: theme.background.input, borderRadius: 14, padding: 14, marginBottom: 10, elevation: 1 }}>
             <Skeleton width={64} height={64} borderRadius={12} style={{ marginRight: 14 }} />
             <View style={{ flex: 1 }}>
                 <Skeleton height={16} width="70%" borderRadius={6} style={{ marginBottom: 8 }} />
@@ -324,7 +325,7 @@ export function ListItemSkeleton() {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderRadius: 16,
         padding: 12,
         marginBottom: 16,
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     detailCard: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderRadius: 20,
         padding: 20,
         elevation: 2,

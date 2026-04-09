@@ -1,5 +1,6 @@
 // src/app/(admin)/send-notification.tsx
 import AppText from "@/components/atoms/AppText";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -266,22 +267,22 @@ export default function SendNotificationScreen() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
 
     // header
     header: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+        backgroundColor: theme.background.input,
+        borderBottomWidth: 1, borderBottomColor: theme.background.screen,
         shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 3,
     },
     backBtn: {
         width: 38, height: 38, borderRadius: 11,
-        backgroundColor: "#F3F4F6", justifyContent: "center", alignItems: "center",
+        backgroundColor: theme.background.screen, justifyContent: "center", alignItems: "center",
     },
-    headerTitle: { fontSize: 17, fontWeight: "800", color: "#111827" },
-    headerSub: { fontSize: 12, color: "#9CA3AF", marginTop: 1 },
+    headerTitle: { fontSize: 17, fontWeight: "800", color: theme.text.primary },
+    headerSub: { fontSize: 12, color: theme.text.placeholder, marginTop: 1 },
     typeBadge: {
         paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1,
     },
@@ -291,46 +292,46 @@ const s = StyleSheet.create({
 
     // preview
     previewCard: {
-        backgroundColor: "#fff", borderRadius: 16, padding: 16,
+        backgroundColor: theme.background.input, borderRadius: 16, padding: 16,
         shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 10, elevation: 3,
-        borderWidth: 1, borderColor: "#F3F4F6",
+        borderWidth: 1, borderColor: theme.background.screen,
     },
     previewIconRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
     previewIcon: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
     previewApp: { fontSize: 12, fontWeight: "700", color: "#374151", flex: 1 },
-    previewTime: { fontSize: 11, color: "#9CA3AF" },
-    previewTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 4 },
-    previewBody: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
+    previewTime: { fontSize: 11, color: theme.text.placeholder },
+    previewTitle: { fontSize: 14, fontWeight: "700", color: theme.text.primary, marginBottom: 4 },
+    previewBody: { fontSize: 13, color: theme.text.muted, lineHeight: 18 },
 
     // fields
     fieldGroup: { gap: 6 },
     fieldLabel: { fontSize: 13, fontWeight: "700", color: "#374151" },
     input: {
-        backgroundColor: "#fff", borderRadius: 12,
-        borderWidth: 1, borderColor: "#E5E7EB",
+        backgroundColor: theme.background.input, borderRadius: 12,
+        borderWidth: 1, borderColor: theme.border.subtle,
         paddingHorizontal: 14, paddingVertical: 13,
-        fontSize: 14, color: "#111827",
+        fontSize: 14, color: theme.text.primary,
         shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
     },
     inputMulti: { height: 100, paddingTop: 13 },
-    charCount: { fontSize: 11, color: "#9CA3AF", textAlign: "right" },
+    charCount: { fontSize: 11, color: theme.text.placeholder, textAlign: "right" },
 
     // type chips
     chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
     chip: {
         paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-        borderWidth: 1.5, borderColor: "#E5E7EB", backgroundColor: "#fff",
+        borderWidth: 1.5, borderColor: theme.border.subtle, backgroundColor: theme.background.input,
     },
-    chipText: { fontSize: 13, color: "#6B7280" },
+    chipText: { fontSize: 13, color: theme.text.muted },
 
     // audience
     audienceRow: { flexDirection: "row", gap: 10 },
     audienceCard: {
-        flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: "#E5E7EB",
-        backgroundColor: "#fff", padding: 14, alignItems: "center", gap: 6,
+        flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: theme.border.subtle,
+        backgroundColor: theme.background.input, padding: 14, alignItems: "center", gap: 6,
         shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
     },
-    audienceLabel: { fontSize: 13, color: "#6B7280", textAlign: "center" },
+    audienceLabel: { fontSize: 13, color: theme.text.muted, textAlign: "center" },
     audienceCheck: {
         position: "absolute", top: 8, right: 8,
         width: 18, height: 18, borderRadius: 9, justifyContent: "center", alignItems: "center",
@@ -347,15 +348,15 @@ const s = StyleSheet.create({
     // footer
     footer: {
         padding: 16, paddingBottom: 32,
-        backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#F3F4F6",
+        backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.background.screen,
     },
     sendBtn: {
         flexDirection: "row", alignItems: "center", justifyContent: "center",
-        gap: 10, backgroundColor: "#386641", borderRadius: 14,
+        gap: 10, backgroundColor: theme.primary.green, borderRadius: 14,
         paddingVertical: 16,
-        shadowColor: "#386641", shadowOffset: { width: 0, height: 4 },
+        shadowColor: theme.primary.green, shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
     },
-    sendBtnDisabled: { backgroundColor: "#9CA3AF", shadowOpacity: 0 },
+    sendBtnDisabled: { backgroundColor: theme.text.placeholder, shadowOpacity: 0 },
     sendBtnText: { fontSize: 16, fontWeight: "700", color: "#fff" },
 });

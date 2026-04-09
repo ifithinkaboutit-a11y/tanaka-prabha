@@ -5,9 +5,10 @@ import { Platform } from "react-native";
 import { useTranslation } from "../../i18n";
 import { registerForPushNotificationsAsync } from "../../utils/pushNotifications";
 import { notificationsApi } from "@/services/apiService";
+import { theme } from "@/styles/colors";
 
-const ACTIVE_COLOR = "#386641";
-const INACTIVE_COLOR = "#9E9E9E";
+const ACTIVE_COLOR = theme.primary.green;
+const INACTIVE_COLOR = theme.text.light;
 
 const TabNavigation = () => {
   const { t } = useTranslation();
@@ -41,7 +42,7 @@ const TabNavigation = () => {
           paddingTop: 8,
           paddingBottom: 8,
           borderTopWidth: 0.5,
-          borderTopColor: "#E0E0E0",
+          borderTopColor: theme.border.subtle,
         },
       }}
     >

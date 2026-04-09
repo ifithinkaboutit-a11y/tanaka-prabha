@@ -17,6 +17,7 @@ import AppText from "../components/atoms/AppText";
 import { professionalsApi, Professional } from "@/services/apiService";
 import { ProfessionalDetailSkeleton } from "../components/atoms/Skeleton";
 import { useTranslation } from "../i18n";
+import { theme } from "../styles/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HERO_HEIGHT = 300;
@@ -120,10 +121,10 @@ const ConnectDetailScreen = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-100">
-        <StatusBar barStyle="light-content" backgroundColor="#386641" />
-        <View className="bg-[#386641] pt-[52px] pb-4 px-5 flex-row items-center">
-          <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+      <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
+        <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
+        <View style={{ backgroundColor: theme.primary.green, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20, flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </View>
         </View>
@@ -134,7 +135,7 @@ const ConnectDetailScreen = () => {
 
   if (!professional) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-100 p-8">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.background.screen, padding: 32 }}>
         <View className="w-[88px] h-[88px] rounded-full bg-red-50 items-center justify-center mb-4">
           <Ionicons name="alert-circle" size={44} color="#DC2626" />
         </View>
@@ -192,7 +193,7 @@ const ConnectDetailScreen = () => {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&background=386641&color=fff&size=300&bold=true`;
 
   return (
-    <View className="flex-1 bg-slate-100">
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <ScrollView

@@ -16,6 +16,7 @@ import {
 } from "../../data/interfaces";
 import T from "../../i18n";
 import Button from "../atoms/Button";
+import { theme } from "@/styles/colors";
 
 // ─── Animal config — label abbreviation + accent color ────────────────────────
 const ANIMAL_DATA: {
@@ -67,7 +68,7 @@ const AnimalCounter = ({
           style={({ pressed }) => [ac.stepBtn, pressed && ac.stepBtnPressed]}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="remove" size={16} color="#374151" />
+          <Ionicons name="remove" size={16} color={theme.text.subtle} />
         </Pressable>
 
         <TextInput
@@ -77,7 +78,7 @@ const AnimalCounter = ({
           keyboardType="numeric"
           textAlign="center"
           placeholder="0"
-          placeholderTextColor="#D1D5DB"
+          placeholderTextColor={theme.border.card}
         />
 
         <Pressable
@@ -85,7 +86,7 @@ const AnimalCounter = ({
           style={({ pressed }) => [ac.stepBtn, ac.stepBtnAdd, pressed && ac.stepBtnPressed]}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="add" size={16} color="#386641" />
+          <Ionicons name="add" size={16} color={theme.primary.green} />
         </Pressable>
       </View>
     </View>
@@ -101,7 +102,7 @@ const ac = StyleSheet.create({
   },
   rowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: theme.border.subtle,
   },
   left: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
   badge: {
@@ -116,14 +117,14 @@ const ac = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.5,
   },
-  label: { fontSize: 15, fontWeight: "500", color: "#1F2937" },
+  label: { fontSize: 15, fontWeight: "500", color: theme.text.secondary },
   stepper: { flexDirection: "row", alignItems: "center", gap: 8 },
   stepBtn: {
     width: 34,
     height: 34,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     backgroundColor: "#F9FAFB",
     alignItems: "center",
     justifyContent: "center",
@@ -137,12 +138,12 @@ const ac = StyleSheet.create({
     width: 48,
     height: 34,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: theme.text.primary,
     padding: 0,
   },
 });
@@ -247,19 +248,19 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
   },
   summaryLeft: { flexDirection: "row", alignItems: "baseline", gap: 8 },
   summaryNumber: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#111827",
+    color: theme.text.primary,
     letterSpacing: -1,
   },
   summaryLabel: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
@@ -269,17 +270,17 @@ const s = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 20,
   },
-  summaryBadgeText: { fontSize: 12, fontWeight: "600", color: "#374151" },
+  summaryBadgeText: { fontSize: 12, fontWeight: "600", color: theme.text.subtle },
 
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 4,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
   },
   cardHeader: {
     flexDirection: "row",
@@ -287,8 +288,8 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 4,
   },
-  cardTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  cardHint: { fontSize: 11, color: "#9CA3AF" },
+  cardTitle: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
+  cardHint: { fontSize: 11, color: theme.text.placeholder },
 
   infoRow: {
     flexDirection: "row",

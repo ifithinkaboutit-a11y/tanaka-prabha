@@ -15,6 +15,7 @@ import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 import { cropsBySeason } from "../../data/content/onboardingOptions";
+import { theme } from "@/styles/colors";
 
 // "None" option allows the user to clear a previously selected crop
 const NONE_CROP_VALUE = "__none__";
@@ -70,7 +71,14 @@ export default function LandDetailsForm({
   onSave,
   onCancel,
 }: LandDetailsFormProps) {
-  const [formData, setFormData] = useState<LandDetails>(initialData);
+  // Normalize crop values to lowercase to match option values
+  const normalizedInitial: LandDetails = {
+    ...initialData,
+    rabiCrop: initialData.rabiCrop?.toLowerCase() || "",
+    kharifCrop: initialData.kharifCrop?.toLowerCase() || "",
+    zaidCrop: initialData.zaidCrop?.toLowerCase() || "",
+  };
+  const [formData, setFormData] = useState<LandDetails>(normalizedInitial);
   const [unit, setUnit] = useState("acre");
   const [areaFocused, setAreaFocused] = useState(false);
 
@@ -131,7 +139,7 @@ export default function LandDetailsForm({
 
         {/* Quick tips */}
         <View style={s.tipRow}>
-          <Ionicons name="information-circle-outline" size={14} color="#9CA3AF" />
+          <Ionicons name="information-circle-outline" size={14} color={theme.text.placeholder} />
           <Text style={s.tipText}>1 Bigha ≈ 0.4 Acres ≈ 0.16 Hectares</Text>
         </View>
       </View>
@@ -202,7 +210,7 @@ const s = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
 
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 16,
     padding: 20,
     marginBottom: 14,
@@ -217,22 +225,22 @@ const s = StyleSheet.create({
 
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 18 },
   sectionIconBg: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#111827" },
+  sectionTitle: { fontSize: 17, fontWeight: "700", color: theme.text.primary },
 
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 8 },
+  fieldLabel: { fontSize: 13, fontWeight: "600", color: theme.text.subtle, marginBottom: 8 },
 
   landAreaRow: { flexDirection: "row", gap: 12, alignItems: "center" },
   landAreaInput: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 18,
     fontWeight: "700",
-    color: "#1F2937",
+    color: theme.text.secondary,
   },
   landAreaInputFocused: {
     borderColor: "#16A34A",
@@ -252,7 +260,7 @@ const s = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     borderRadius: 8,
   },
-  tipText: { color: "#9CA3AF", fontSize: 12 },
+  tipText: { color: theme.text.placeholder, fontSize: 12 },
 
   seasonBlock: { marginBottom: 16 },
   seasonHeader: {
@@ -265,7 +273,7 @@ const s = StyleSheet.create({
   },
   seasonTextBlock: { flex: 1 },
   seasonLabel: { fontSize: 13, fontWeight: "700" },
-  seasonPeriod: { fontSize: 11, color: "#9CA3AF", marginTop: 1 },
+  seasonPeriod: { fontSize: 11, color: theme.text.placeholder, marginTop: 1 },
   seasonDot: { width: 8, height: 8, borderRadius: 4 },
 
   infoBanner: {

@@ -10,6 +10,7 @@ import {
 import AppText from "../../components/atoms/AppText";
 import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
+import { theme } from "@/styles/colors";
 
 export default function Connect() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function Connect() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+      style={{ flex: 1, backgroundColor: theme.background.screen }}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
@@ -79,7 +80,7 @@ export default function Connect() {
           paddingTop: 48,
           paddingBottom: 24,
           paddingHorizontal: 20,
-          backgroundColor: "#386641",
+          backgroundColor: theme.primary.green,
           borderBottomLeftRadius: 28,
           borderBottomRightRadius: 28,
         }}
@@ -88,7 +89,7 @@ export default function Connect() {
           <View style={{ flex: 1 }}>
             <AppText
               variant="h2"
-              style={{ fontWeight: "800", color: "#FFFFFF", fontSize: 28 }}
+              style={{ fontWeight: "800", color: theme.text.onPrimary, fontSize: 28 }}
             >
               {t("connect.title")}
             </AppText>
@@ -113,10 +114,10 @@ export default function Connect() {
               marginTop: 4,
             }}
           >
-            <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
+            <Ionicons name="calendar-outline" size={16} color={theme.text.onPrimary} />
             <AppText
               variant="bodySm"
-              style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 12, marginLeft: 6 }}
+              style={{ color: theme.text.onPrimary, fontWeight: "600", fontSize: 12, marginLeft: 6 }}
             >
               {t("connect.mySchedule")}
             </AppText>
@@ -130,7 +131,7 @@ export default function Connect() {
           variant="h3"
           style={{
             fontWeight: "700",
-            color: "#1F2937",
+            color: theme.text.secondary,
             marginBottom: 16,
             fontSize: 18,
           }}
@@ -147,12 +148,12 @@ export default function Connect() {
         style={{
           marginHorizontal: 10,
           marginTop: 34,
-          backgroundColor: "#FEF2F2",
+          backgroundColor: theme.semantic.errorBackground,
           borderRadius: 20,
           padding: 20,
           minHeight: 340,
           borderWidth: 1,
-          borderColor: "#FECACA",
+          borderColor: theme.semantic.likeSubtle,
         }}
         className="flex items-center"
       >
@@ -163,10 +164,10 @@ export default function Connect() {
             marginBottom: 8,
           }}
         >
-          <Ionicons name="alert-circle" size={24} color="#DC2626" />
+          <Ionicons name="alert-circle" size={24} color={theme.semantic.like} />
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#DC2626", marginLeft: 8, fontSize: 18 }}
+            style={{ fontWeight: "700", color: theme.semantic.like, marginLeft: 8, fontSize: 18 }}
           >
             {t("connect.emergencyTitle")}
           </AppText>
@@ -174,7 +175,7 @@ export default function Connect() {
         <AppText
           variant="bodySm"
           style={{
-            color: "#7F1D1D",
+            color: theme.semantic.errorDark,
             marginBottom: 20,
             textAlign: "center",
             fontSize: 13,
@@ -217,10 +218,10 @@ export default function Connect() {
               width: 140,
               height: 140,
               borderRadius: 70,
-              backgroundColor: "#DC2626",
+              backgroundColor: theme.semantic.like,
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: "#DC2626",
+              shadowColor: theme.semantic.like,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.4,
               shadowRadius: 16,
@@ -235,7 +236,7 @@ export default function Connect() {
         <AppText
           variant="bodySm"
           style={{
-            color: "#991B1B",
+            color: theme.semantic.errorDeep,
             marginTop: 16,
             fontWeight: "600",
             fontSize: 13,

@@ -1,5 +1,6 @@
 // src/components/atoms/AppText.tsx
-import { StyleSheet, Text, TextProps, TextStyle } from "react-native";
+import { Text, TextProps, TextStyle } from "react-native";
+import { theme } from "../../styles/colors";
 
 type Variant =
   | "h1"
@@ -18,13 +19,13 @@ type AppTextProps = TextProps & {
 };
 
 const variantStyles: Record<Variant, TextStyle> = {
-  h1: { fontSize: 36, fontWeight: "700", color: "#212121" },
-  h2: { fontSize: 30, fontWeight: "600", color: "#212121" },
-  h3: { fontSize: 24, fontWeight: "600", color: "#212121" },
-  bodyLg: { fontSize: 20, color: "#212121" },
-  bodyMd: { fontSize: 18, color: "#212121" },
-  bodySm: { fontSize: 16, color: "#616161" },
-  caption: { fontSize: 14, color: "#9E9E9E" },
+  h1: { fontSize: 36, fontWeight: "700", color: theme.text.dark },
+  h2: { fontSize: 30, fontWeight: "600", color: theme.text.dark },
+  h3: { fontSize: 24, fontWeight: "600", color: theme.text.dark },
+  bodyLg: { fontSize: 20, color: theme.text.dark },
+  bodyMd: { fontSize: 18, color: theme.text.dark },
+  bodySm: { fontSize: 16, color: theme.text.medium },
+  caption: { fontSize: 14, color: theme.text.light },
 };
 
 /**

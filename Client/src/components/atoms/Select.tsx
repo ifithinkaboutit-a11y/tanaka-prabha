@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "./AppText";
 
 interface SelectOption {
@@ -162,12 +162,12 @@ export default function Select({
             {/* Search bar — only shown when options exceed threshold */}
             {showSearch && (
               <View className="mx-4 mt-3 mb-1 flex-row items-center bg-gray-100 rounded-xl px-3 gap-2">
-                <Ionicons name="search" size={16} color="#9CA3AF" />
+                <Ionicons name="search" size={16} color={theme.text.placeholder} />
                 <TextInput
                   className="flex-1 py-2.5 text-gray-800"
                   style={{ fontSize: 15 }}
                   placeholder="Search..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.placeholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCapitalize="none"
@@ -175,7 +175,7 @@ export default function Select({
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery("")}>
-                    <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                    <Ionicons name="close-circle" size={16} color={theme.text.placeholder} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -189,7 +189,7 @@ export default function Select({
             >
               {filteredOptions.length === 0 ? (
                 <View className="py-8 items-center">
-                  <Ionicons name="search-outline" size={32} color="#D1D5DB" />
+                  <Ionicons name="search-outline" size={32} color={theme.border.card} />
                   <AppText
                     variant="bodySm"
                     className="text-gray-400 mt-2"
@@ -210,7 +210,7 @@ export default function Select({
                       style={
                         isSelected
                           ? {
-                              backgroundColor: "#E8F4EA",
+                              backgroundColor: theme.background.successSubtle,
                               borderRadius: 10,
                               marginHorizontal: -8,
                               paddingHorizontal: 16,

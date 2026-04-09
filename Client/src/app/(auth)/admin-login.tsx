@@ -16,6 +16,7 @@ import {
     ActivityIndicator,
     Alert
 } from "react-native";
+import { theme } from "@/styles/colors";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
@@ -65,7 +66,7 @@ export default function AdminLogin() {
         >
             <View style={s.card}>
                 <View style={s.header}>
-                    <Ionicons name="shield-checkmark" size={48} color="#386641" />
+                    <Ionicons name="shield-checkmark" size={48} color={theme.primary.green} />
                     <AppText variant="h2" style={s.title}>Admin Login</AppText>
                     <Text style={s.subtitle}>Restricted access</Text>
                 </View>
@@ -73,7 +74,7 @@ export default function AdminLogin() {
                 <TextInput
                     style={s.input}
                     placeholder="Email Address"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={theme.text.placeholder}
                     value={email}
                     onChangeText={setEmail}
                     autoCapitalize="none"
@@ -84,7 +85,7 @@ export default function AdminLogin() {
                     <TextInput
                         style={[s.input, { marginBottom: 0, flex: 1, borderWidth: 0 }]}
                         placeholder="Password"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={theme.text.placeholder}
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!showPassword}
@@ -96,7 +97,7 @@ export default function AdminLogin() {
                         <Ionicons
                             name={showPassword ? "eye-off-outline" : "eye-outline"}
                             size={20}
-                            color="#9CA3AF"
+                            color={theme.text.placeholder}
                         />
                     </Pressable>
                 </View>
@@ -127,12 +128,12 @@ export default function AdminLogin() {
 const s = StyleSheet.create({
     root: {
         flex: 1,
-        backgroundColor: "#F3F4F6",
+        backgroundColor: theme.background.neutralSubtle,
         justifyContent: "center",
         padding: 24,
     },
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderRadius: 24,
         padding: 32,
         shadowColor: "#000",
@@ -149,29 +150,29 @@ const s = StyleSheet.create({
         fontSize: 24,
         fontWeight: "700",
         marginTop: 16,
-        color: "#111827",
+        color: theme.text.primary,
     },
     subtitle: {
-        color: "#6B7280",
+        color: theme.text.muted,
         fontSize: 14,
         marginTop: 8,
     },
     input: {
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderRadius: 12,
         padding: 16,
         fontSize: 16,
         marginBottom: 16,
-        color: "#1F2937",
-        backgroundColor: "#F9FAFB",
+        color: theme.text.secondary,
+        backgroundColor: theme.background.neutralSubtle,
     },
     btn: {
         paddingVertical: 16,
         marginTop: 8,
     },
     btnText: {
-        color: "#FFFFFF",
+        color: theme.text.onPrimary,
         fontWeight: "700",
         fontSize: 16,
         textAlign: "center",
@@ -180,9 +181,9 @@ const s = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderRadius: 12,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: theme.background.neutralSubtle,
         marginBottom: 16,
         overflow: "hidden",
     },

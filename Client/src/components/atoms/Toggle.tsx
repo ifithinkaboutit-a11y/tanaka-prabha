@@ -1,20 +1,22 @@
 // src/components/atoms/Toggle.tsx
+// Adapted from uiverse.io/mrhyddenn
 import React, { useEffect, useRef } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from "../../styles/colors";
 
-// Track dimensions
-const TRACK_WIDTH = 52;
-const TRACK_HEIGHT = 30;
-const THUMB_SIZE = 24;
-const TRACK_PADDING = 3;
-const THUMB_TRAVEL = TRACK_WIDTH - THUMB_SIZE - TRACK_PADDING * 2; // 22
+// Dimensions matching the CSS (62px × 35px at 1:1, font-size=17px base)
+const TRACK_W = 62;
+const TRACK_H = 35;
+// thumb = 1.9em × 17 ≈ 32px, travel = 1.5em × 17 ≈ 25.5
+const THUMB = 32;
+const TRAVEL = 25.5;
 
 interface ToggleProps {
   label?: string;
   value?: boolean;
   checked?: boolean;
-  onChange?: (value: boolean) => void;
-  onValueChange?: (value: boolean) => void;
+  onChange?: (v: boolean) => void;
+  onValueChange?: (v: boolean) => void;
   disabled?: boolean;
 }
 
@@ -26,67 +28,97 @@ export default function Toggle({
   onValueChange,
   disabled = false,
 }: ToggleProps) {
-  const currentValue = checked ?? value ?? false;
+  const on = checked ?? value ?? false;
 
-  const thumbAnim = useRef(new Animated.Value(currentValue ? THUMB_TRAVEL : 0)).current;
+  const thumbX = useRef(new Animated.Value(on ? TRAVEL : 0)).current;
+  const trackColor = useRef(new Animated.Value(on ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(thumbAnim, {
-      toValue: currentValue ? THUMB_TRAVEL : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [currentValue, thumbAnim]);
+    Animated.parallel([
+      Animated.timing(thumbX, {
+        toValue: on ? TRAVEL : 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(trackColor, {
+        toValue: on ? 1 : 0,
+        duration: 400,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [on]);
 
-  const handleToggle = () => {
+  const fire = () => {
     if (disabled) return;
-    const newValue = !currentValue;
-    onValueChange?.(newValue);
-    onChange?.(newValue);
+    const next = !on;
+    onValueChange?.(next);
+    onChange?.(next);
   };
 
+  const bg = trackColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.background.input, theme.semantic.success],
+  });
+
+  const borderColor = trackColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.border.card, theme.semantic.success],
+  });
+
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
-      {label ? (
-        <Text style={{ color: "#212121", fontSize: 16, flex: 1 }}>{label}</Text>
-      ) : null}
+    <View style={[s.row, disabled && { opacity: 0.45 }]}>
+      {label ? <Text style={s.label}>{label}</Text> : null}
 
       <Pressable
-        onPress={disabled ? undefined : handleToggle}
+        onPress={fire}
         accessibilityRole="switch"
-        accessibilityState={{ checked: currentValue }}
-        style={{
-          width: TRACK_WIDTH,
-          height: TRACK_HEIGHT,
-          borderRadius: TRACK_HEIGHT / 2,
-          padding: TRACK_PADDING,
-          justifyContent: "center",
-          backgroundColor: currentValue ? "#386641" : "#FFFFFF",
-          borderColor: currentValue ? "#386641" : "#E5E7EB",
-          borderWidth: 1,
-          opacity: disabled ? 0.45 : 1,
-          minWidth: 44,
-          minHeight: 44,
-          alignItems: "center",
-        }}
+        accessibilityState={{ checked: on, disabled }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Animated.View
-          style={{
-            width: THUMB_SIZE,
-            height: THUMB_SIZE,
-            borderRadius: THUMB_SIZE / 2,
-            backgroundColor: "#FFFFFF",
-            transform: [{ translateX: thumbAnim }],
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.15,
-            shadowRadius: 2,
-            elevation: 2,
-            borderWidth: currentValue ? 0 : 1,
-            borderColor: "#E5E7EB",
-          }}
-        />
+        <Animated.View style={[s.track, { backgroundColor: bg, borderColor }]}>
+          <Animated.View
+            style={[
+              s.thumb,
+              { transform: [{ translateX: thumbX }] },
+            ]}
+          />
+        </Animated.View>
       </Pressable>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  label: {
+    flex: 1,
+    fontSize: 15,
+    color: theme.text.secondary,
+    fontWeight: "500",
+    marginRight: 12,
+  },
+  track: {
+    width: TRACK_W,
+    height: TRACK_H,
+    borderRadius: 30,
+    borderWidth: 1,
+    justifyContent: "center",
+    paddingLeft: 1.2,
+  },
+  thumb: {
+    width: THUMB,
+    height: THUMB,
+    borderRadius: 16,
+    backgroundColor: theme.background.input,
+    shadowColor: theme.text.light,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 2.5,
+    elevation: 3,
+  },
+});

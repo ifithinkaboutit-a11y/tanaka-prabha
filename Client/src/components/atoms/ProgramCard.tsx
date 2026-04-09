@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, Pressable, View } from "react-native";
 import { Scheme } from "@/services/apiService";
+import { theme } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import { cdn } from "@/utils/cloudinaryUtils";
 
@@ -26,7 +27,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
           marginBottom: 16,
           borderRadius: 16,
           overflow: "hidden",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.input,
           borderWidth: 1,
           borderColor: "rgba(0,0,0,0.05)",
           shadowColor: "#000",
@@ -40,7 +41,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
         {/* Large Image */}
         <View style={{ position: "relative" }}>
           <Image
-            source={{ uri: cdn(program.imageUrl) || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Program" }}
+            source={{ uri: cdn(program.imageUrl) || `https://via.placeholder.com/400x200/${theme.primary.green.replace("#", "")}/${theme.text.onPrimary.replace("#", "")}?text=Program` }}
             style={{ width: "100%", height: 180 }}
             resizeMode="cover"
           />
@@ -58,7 +59,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
           >
             <AppText
               variant="bodySm"
-              style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 12 }}
+              style={{ color: theme.text.onPrimary, fontWeight: "600", fontSize: 12 }}
             >
               {program.category}
             </AppText>
@@ -73,7 +74,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
               position: "absolute",
               top: 12,
               right: 12,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: theme.background.input,
               borderRadius: 20,
               padding: 8,
               shadowColor: "#000",
@@ -86,7 +87,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
               size={20}
-              color={isBookmarked ? "#386641" : "#1F2937"}
+              color={isBookmarked ? theme.primary.green : theme.text.secondary}
             />
           </Pressable>
         </View>
@@ -97,7 +98,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
             variant="bodyMd"
             style={{
               marginBottom: 8,
-              color: "#111827",
+              color: theme.text.primary,
               fontWeight: "800",
               fontSize: 17,
               lineHeight: 24,
@@ -113,7 +114,7 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
             <AppText
               variant="bodySm"
               style={{
-                color: "#6B7280",
+                color: theme.text.subtle,
                 fontSize: 14,
                 lineHeight: 20,
                 marginBottom: 12,
@@ -129,10 +130,10 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
             {/* Location */}
             {program.location && (
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="location-outline" size={15} color="#16A34A" />
+                <Ionicons name="location-outline" size={15} color={theme.semantic.success} />
                 <AppText
                   variant="bodySm"
-                  style={{ marginLeft: 4, color: "#4B5563", fontSize: 13, fontWeight: "500" }}
+                  style={{ marginLeft: 4, color: theme.text.subtle, fontSize: 13, fontWeight: "500" }}
                 >
                   {program.location}
                 </AppText>
@@ -142,10 +143,10 @@ export default function ProgramCard({ program, onPress }: ProgramCardProps) {
             {/* Date */}
             {program.eventDate && (
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="calendar-outline" size={15} color="#16A34A" />
+                <Ionicons name="calendar-outline" size={15} color={theme.semantic.success} />
                 <AppText
                   variant="bodySm"
-                  style={{ marginLeft: 4, color: "#4B5563", fontSize: 13, fontWeight: "500" }}
+                  style={{ marginLeft: 4, color: theme.text.subtle, fontSize: 13, fontWeight: "500" }}
                 >
                   {program.eventDate}
                 </AppText>

@@ -9,6 +9,7 @@ import Card from "../components/atoms/Card";
 import { eventsApi, ApiEvent } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 import { useAuth } from "../contexts/AuthContext";
+import { theme } from "@/styles/colors";
 
 export const options = {
     headerShown: false,
@@ -103,21 +104,21 @@ const EventDetails = () => {
 
     if (loading) {
         return (
-            <View style={{ flex: 1, backgroundColor: "#F9FAFB", alignItems: "center", justifyContent: "center" }}>
-                <ActivityIndicator size="large" color="#386641" />
-                <AppText variant="bodySm" style={{ marginTop: 12, color: "#6B7280" }}>{t("common.loading")}</AppText>
+            <View style={{ flex: 1, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center" }}>
+                <ActivityIndicator size="large" color={theme.primary.green} />
+                <AppText variant="bodySm" style={{ marginTop: 12, color: theme.text.muted }}>{t("common.loading")}</AppText>
             </View>
         );
     }
 
     if (!event) {
         return (
-            <View style={{ flex: 1, backgroundColor: "#F9FAFB", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
-                <Ionicons name="calendar-outline" size={64} color="#D1D5DB" />
-                <AppText variant="h2" style={{ color: "#374151", marginTop: 16, marginBottom: 8 }}>
+            <View style={{ flex: 1, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+                <Ionicons name="calendar-outline" size={64} color={theme.border.card} />
+                <AppText variant="h2" style={{ color: theme.text.secondary, marginTop: 16, marginBottom: 8 }}>
                     {t("events.notFound")}
                 </AppText>
-                <AppText variant="bodySm" style={{ color: "#6B7280", marginBottom: 24, textAlign: "center" }}>
+                <AppText variant="bodySm" style={{ color: theme.text.muted, marginBottom: 24, textAlign: "center" }}>
                     {t("events.notFoundMessage")}
                 </AppText>
                 <Button label={t("common.goBack") || "Go Back"} onPress={() => router.back()} />
@@ -144,22 +145,22 @@ const EventDetails = () => {
     }) : "";
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                 {/* Navigation Header */}
                 <View style={{
                     flexDirection: "row", alignItems: "center",
                     paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16,
-                    backgroundColor: "#FFFFFF",
-                    borderBottomWidth: 1, borderBottomColor: "#F3F4F6"
+                    backgroundColor: theme.background.header,
+                    borderBottomWidth: 1, borderBottomColor: theme.background.screen
                 }}>
                     <Pressable onPress={() => router.back()} style={{
                         marginRight: 12, padding: 8,
-                        backgroundColor: "#F3F4F6", borderRadius: 12,
+                        backgroundColor: theme.background.screen, borderRadius: 12,
                     }}>
-                        <Ionicons name="arrow-back" size={20} color="#374151" />
+                        <Ionicons name="arrow-back" size={20} color={theme.text.secondary} />
                     </Pressable>
-                    <AppText variant="h3" style={{ color: "#111827", flex: 1, fontSize: 18, fontWeight: "700" }} numberOfLines={1}>
+                    <AppText variant="h3" style={{ color: theme.text.primary, flex: 1, fontSize: 18, fontWeight: "700" }} numberOfLines={1}>
                         {t("events.eventDetails")}
                     </AppText>
                 </View>
@@ -176,8 +177,8 @@ const EventDetails = () => {
                 {/* Event Header Card */}
                 <View style={{
                     paddingHorizontal: 16, paddingVertical: 20,
-                    backgroundColor: "#FFFFFF", marginBottom: 12,
-                    borderBottomWidth: 1, borderBottomColor: "#F3F4F6"
+                    backgroundColor: theme.background.header, marginBottom: 12,
+                    borderBottomWidth: 1, borderBottomColor: theme.background.screen
                 }}>
                     {/* Status Badge */}
                     <View style={{
@@ -195,7 +196,7 @@ const EventDetails = () => {
                     </View>
 
                     {/* Title */}
-                    <AppText variant="h1" style={{ color: "#111827", marginBottom: 16, fontSize: 22, fontWeight: "800", lineHeight: 28 }}>
+                    <AppText variant="h1" style={{ color: theme.text.primary, marginBottom: 16, fontSize: 22, fontWeight: "800", lineHeight: 28 }}>
                         {event.title}
                     </AppText>
 
@@ -204,15 +205,15 @@ const EventDetails = () => {
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                             <View style={{
                                 width: 36, height: 36, borderRadius: 10,
-                                backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center"
+                                backgroundColor: theme.background.card, alignItems: "center", justifyContent: "center"
                             }}>
-                                <Ionicons name="calendar-outline" size={18} color="#3B82F6" />
+                                <Ionicons name="calendar-outline" size={18} color={theme.secondary.sky} />
                             </View>
                             <View style={{ marginLeft: 12 }}>
-                                <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600" }}>
+                                <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600" }}>
                                     {t("events.date")}
                                 </AppText>
-                                <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>
+                                <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14 }}>
                                     {formattedDate}
                                 </AppText>
                             </View>
@@ -221,15 +222,15 @@ const EventDetails = () => {
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                             <View style={{
                                 width: 36, height: 36, borderRadius: 10,
-                                backgroundColor: "#F0FDF4", alignItems: "center", justifyContent: "center"
+                                backgroundColor: theme.background.successSubtle, alignItems: "center", justifyContent: "center"
                             }}>
                                 <Ionicons name="time-outline" size={18} color="#16A34A" />
                             </View>
                             <View style={{ marginLeft: 12 }}>
-                                <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600" }}>
+                                <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600" }}>
                                     {t("events.time")}
                                 </AppText>
-                                <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>
+                                <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14 }}>
                                     {fmtTime(event.start_time)} — {fmtTime(event.end_time)}
                                 </AppText>
                             </View>
@@ -240,13 +241,13 @@ const EventDetails = () => {
                                 width: 36, height: 36, borderRadius: 10,
                                 backgroundColor: "#FDF2F8", alignItems: "center", justifyContent: "center"
                             }}>
-                                <Ionicons name="location-outline" size={18} color="#DB2777" />
+                                <Ionicons name="location-outline" size={18} color={theme.secondary.soil} />
                             </View>
                             <View style={{ marginLeft: 12, flex: 1 }}>
-                                <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600" }}>
+                                <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600" }}>
                                     {t("events.location")}
                                 </AppText>
-                                <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }} numberOfLines={2}>
+                                <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14 }} numberOfLines={2}>
                                     {event.location_name}{event.location_address ? `, ${event.location_address}` : ""}
                                 </AppText>
                                 {event.location_lat && event.location_lng && (
@@ -254,8 +255,8 @@ const EventDetails = () => {
                                         onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_lng}`)}
                                         style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}
                                     >
-                                        <Ionicons name="navigate-outline" size={14} color="#16A34A" />
-                                        <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                        <Ionicons name="navigate-outline" size={14} color={theme.primary.green} />
+                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
                                             {t("events.getDirections") || "Get Directions"}
                                         </AppText>
                                     </Pressable>
@@ -267,63 +268,63 @@ const EventDetails = () => {
 
                 {/* Details */}
                 <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-                    <Card style={{ padding: 18, marginBottom: 12, backgroundColor: "#FFFFFF", borderRadius: 16 }}>
+                    <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.input, borderRadius: 16 }}>
                         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                            <Ionicons name="document-text-outline" size={18} color="#386641" />
-                            <AppText variant="h3" style={{ color: "#111827", marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
+                            <Ionicons name="document-text-outline" size={18} color={theme.primary.green} />
+                            <AppText variant="h3" style={{ color: theme.text.primary, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
                                 {t("events.aboutEvent")}
                             </AppText>
                         </View>
-                        <AppText variant="bodyMd" style={{ color: "#4B5563", lineHeight: 22, fontSize: 14 }}>
+                        <AppText variant="bodyMd" style={{ color: theme.text.subtle, lineHeight: 22, fontSize: 14 }}>
                             {event.description}
                         </AppText>
                     </Card>
 
                     {event.requirements && (
-                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: "#FFFFFF", borderRadius: 16 }}>
+                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.input, borderRadius: 16 }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                                 <Ionicons name="checkmark-circle-outline" size={18} color="#D97706" />
-                                <AppText variant="h3" style={{ color: "#111827", marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
+                                <AppText variant="h3" style={{ color: theme.text.primary, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
                                     {t("events.requirements")}
                                 </AppText>
                             </View>
-                            <AppText variant="bodyMd" style={{ color: "#4B5563", lineHeight: 22, fontSize: 14 }}>
+                            <AppText variant="bodyMd" style={{ color: theme.text.subtle, lineHeight: 22, fontSize: 14 }}>
                                 {event.requirements}
                             </AppText>
                         </Card>
                     )}
 
                     {event.guidelines_and_rules && (
-                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: "#FFFBEB", borderRadius: 16, borderWidth: 1, borderColor: "#FDE68A" }}>
+                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.warningSubtle, borderRadius: 16, borderWidth: 1, borderColor: theme.semantic.warningBackground }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                                <Ionicons name="warning-outline" size={18} color="#B45309" />
-                                <AppText variant="h3" style={{ color: "#92400E", marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
+                                <Ionicons name="warning-outline" size={18} color={theme.semantic.warningText} />
+                                <AppText variant="h3" style={{ color: theme.semantic.warningText, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
                                     {t("events.guidelines")}
                                 </AppText>
                             </View>
-                            <AppText variant="bodyMd" style={{ color: "#78350F", lineHeight: 22, fontSize: 14 }}>
+                            <AppText variant="bodyMd" style={{ color: theme.text.secondary, lineHeight: 22, fontSize: 14 }}>
                                 {event.guidelines_and_rules}
                             </AppText>
                         </Card>
                     )}
 
                     {(event.master_trainer_name || event.master_trainer_phone || event.trainer_name || event.trainer_phone || event.contact_number) && (
-                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: "#FFFFFF", borderRadius: 16 }}>
+                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.input, borderRadius: 16 }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                                <Ionicons name="people-outline" size={18} color="#386641" />
-                                <AppText variant="h3" style={{ color: "#111827", marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
+                                <Ionicons name="people-outline" size={18} color={theme.primary.green} />
+                                <AppText variant="h3" style={{ color: theme.text.primary, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
                                     {t("events.trainerAndContact") || "Trainer & Contact"}
                                 </AppText>
                             </View>
 
                             {(event.master_trainer_name || event.master_trainer_phone) && (
                                 <View style={{ marginBottom: 10 }}>
-                                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
                                         {t("events.masterTrainer") || "Master Trainer"}
                                     </AppText>
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                                         {event.master_trainer_name && (
-                                            <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14, flex: 1 }}>
+                                            <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14, flex: 1 }}>
                                                 {event.master_trainer_name}
                                             </AppText>
                                         )}
@@ -332,8 +333,8 @@ const EventDetails = () => {
                                                 onPress={() => Linking.openURL(`tel:${event.master_trainer_phone}`)}
                                                 style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}
                                             >
-                                                <Ionicons name="call-outline" size={16} color="#386641" />
-                                                <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                                <Ionicons name="call-outline" size={16} color={theme.primary.green} />
+                                                <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
                                                     {event.master_trainer_phone}
                                                 </AppText>
                                             </Pressable>
@@ -344,12 +345,12 @@ const EventDetails = () => {
 
                             {(event.trainer_name || event.trainer_phone) && (
                                 <View style={{ marginBottom: 10 }}>
-                                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
                                         {t("events.trainer") || "Trainer"}
                                     </AppText>
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                                         {event.trainer_name && (
-                                            <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600", fontSize: 14, flex: 1 }}>
+                                            <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14, flex: 1 }}>
                                                 {event.trainer_name}
                                             </AppText>
                                         )}
@@ -358,8 +359,8 @@ const EventDetails = () => {
                                                 onPress={() => Linking.openURL(`tel:${event.trainer_phone}`)}
                                                 style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}
                                             >
-                                                <Ionicons name="call-outline" size={16} color="#386641" />
-                                                <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                                <Ionicons name="call-outline" size={16} color={theme.primary.green} />
+                                                <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
                                                     {event.trainer_phone}
                                                 </AppText>
                                             </Pressable>
@@ -370,15 +371,15 @@ const EventDetails = () => {
 
                             {event.contact_number && (
                                 <View>
-                                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
                                         {t("events.contactNumber") || "Contact"}
                                     </AppText>
                                     <Pressable
                                         onPress={() => Linking.openURL(`tel:${event.contact_number}`)}
                                         style={{ flexDirection: "row", alignItems: "center" }}
                                     >
-                                        <Ionicons name="call-outline" size={16} color="#386641" />
-                                        <AppText variant="bodySm" style={{ color: "#386641", fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                        <Ionicons name="call-outline" size={16} color={theme.primary.green} />
+                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
                                             {event.contact_number}
                                         </AppText>
                                     </Pressable>
@@ -391,16 +392,16 @@ const EventDetails = () => {
 
             {/* ─── CTA Bar ─── */}
             <View style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: theme.background.header,
                 paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28,
-                borderTopWidth: 1, borderTopColor: "#E5E7EB",
+                borderTopWidth: 1, borderTopColor: theme.border.subtle,
                 shadowColor: "#000", shadowOffset: { width: 0, height: -4 },
                 shadowOpacity: 0.04, shadowRadius: 8, elevation: 8,
             }}>
                 {alreadyRegistered ? (
                     /* Already registered */
                     <View style={{
-                        backgroundColor: "#F0FDF4", borderRadius: 14,
+                        backgroundColor: theme.background.successSubtle, borderRadius: 14,
                         paddingVertical: 16, borderWidth: 1, borderColor: "#86EFAC",
                     }}>
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
@@ -418,9 +419,9 @@ const EventDetails = () => {
                                 onPress={() => router.push(`/scan-attendance?eventId=${eventId}`)}
                                 style={({ pressed }) => ({
                                     borderRadius: 14, paddingVertical: 14,
-                                    backgroundColor: pressed ? "#1E3A2F" : "#14532D",
+                                    backgroundColor: pressed ? theme.primary.greenDark : theme.primary.greenDark,
                                     flexDirection: "row", alignItems: "center", justifyContent: "center",
-                                    shadowColor: "#14532D", shadowOffset: { width: 0, height: 4 },
+                                    shadowColor: theme.primary.greenDark, shadowOffset: { width: 0, height: 4 },
                                     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
                                 })}
                             >
@@ -434,8 +435,8 @@ const EventDetails = () => {
                             onPress={handleApplyNow}
                             style={({ pressed }) => ({
                                 borderRadius: 14, paddingVertical: 16,
-                                backgroundColor: pressed ? "#2D5231" : "#386641",
-                                shadowColor: "#386641", shadowOffset: { width: 0, height: 4 },
+                                backgroundColor: pressed ? "#2D5231" : theme.primary.green,
+                                shadowColor: theme.primary.green, shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
                             })}
                         >
@@ -450,17 +451,17 @@ const EventDetails = () => {
                 ) : (
                     /* Disabled — completed / cancelled */
                     <View style={{
-                        backgroundColor: liveStatus === "cancelled" ? "#FEF2F2" : "#F3F4F6",
+                        backgroundColor: liveStatus === "cancelled" ? theme.semantic.errorBackground : theme.background.screen,
                         borderRadius: 14, paddingVertical: 16,
                     }}>
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
                             <Ionicons
                                 name={liveStatus === "cancelled" ? "close-circle" : "checkmark-done-circle"}
                                 size={22}
-                                color={liveStatus === "cancelled" ? "#F87171" : "#9CA3AF"}
+                                color={liveStatus === "cancelled" ? theme.semantic.errorLighter : theme.text.placeholder}
                             />
                             <AppText variant="bodyMd" style={{
-                                color: liveStatus === "cancelled" ? "#EF4444" : "#9CA3AF",
+                                color: liveStatus === "cancelled" ? theme.semantic.error : theme.text.placeholder,
                                 fontWeight: "700", fontSize: 16, marginLeft: 10,
                             }}>
                                 {liveStatus === "cancelled"
@@ -476,7 +477,7 @@ const EventDetails = () => {
             <Modal visible={showModal} transparent animationType="slide">
                 <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
                     <View style={{
-                        backgroundColor: "#FFFFFF",
+                        backgroundColor: theme.background.input,
                         borderTopLeftRadius: 28, borderTopRightRadius: 28,
                         maxHeight: "85%",
                     }}>
@@ -484,16 +485,16 @@ const EventDetails = () => {
                         <View style={{
                             flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                             paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16,
-                            borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+                            borderBottomWidth: 1, borderBottomColor: theme.background.screen,
                         }}>
-                            <AppText variant="h2" style={{ fontSize: 20, fontWeight: "800", color: "#111827" }}>
+                            <AppText variant="h2" style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>
                                 {t("events.confirmApplication")}
                             </AppText>
                             <Pressable onPress={() => setShowModal(false)} style={{
                                 width: 32, height: 32, borderRadius: 16,
-                                backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center"
+                                backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center"
                             }}>
-                                <Ionicons name="close" size={18} color="#6B7280" />
+                                <Ionicons name="close" size={18} color={theme.text.muted} />
                             </Pressable>
                         </View>
 
@@ -501,7 +502,7 @@ const EventDetails = () => {
                         <ScrollView style={{ paddingHorizontal: 24, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
                             {/* Applying for */}
                             <View style={{
-                                backgroundColor: "#F0FDF4", borderRadius: 14, padding: 14,
+                                backgroundColor: theme.background.successSubtle, borderRadius: 14, padding: 14,
                                 marginBottom: 16, borderWidth: 1, borderColor: "#BBF7D0"
                             }}>
                                 <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "600", fontSize: 11, marginBottom: 4 }}>
@@ -513,19 +514,19 @@ const EventDetails = () => {
                             </View>
 
                             {/* Applicant info */}
-                            <View style={{ backgroundColor: "#F9FAFB", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#E5E7EB" }}>
-                                <AppText variant="bodySm" style={{ color: "#6B7280", fontWeight: "600", fontSize: 11, marginBottom: 8 }}>
+                            <View style={{ backgroundColor: theme.background.neutralSubtle, borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: theme.border.subtle }}>
+                                <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "600", fontSize: 11, marginBottom: 8 }}>
                                     {t("events.yourDetails")}
                                 </AppText>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.name")}</AppText>
-                                    <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.name")}</AppText>
+                                    <AppText variant="bodySm" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 13 }}>
                                         {user?.name || "—"}
                                     </AppText>
                                 </View>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                    <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.mobile")}</AppText>
-                                    <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.mobile")}</AppText>
+                                    <AppText variant="bodySm" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 13 }}>
                                         {user?.mobileNumber || (user as any)?.mobile_number || "—"}
                                     </AppText>
                                 </View>
@@ -534,11 +535,11 @@ const EventDetails = () => {
                             {/* Guidelines */}
                             {event.guidelines_and_rules && (
                                 <View style={{ marginBottom: 16 }}>
-                                    <AppText variant="h3" style={{ color: "#111827", fontSize: 15, fontWeight: "700", marginBottom: 8 }}>
+                                    <AppText variant="h3" style={{ color: theme.text.primary, fontSize: 15, fontWeight: "700", marginBottom: 8 }}>
                                         {t("events.guidelinesAndRules")}
                                     </AppText>
-                                    <View style={{ backgroundColor: "#FFFBEB", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#FDE68A" }}>
-                                        <AppText variant="bodyMd" style={{ color: "#78350F", lineHeight: 22, fontSize: 13 }}>
+                                    <View style={{ backgroundColor: theme.background.warningSubtle, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: theme.semantic.warningBackground }}>
+                                        <AppText variant="bodyMd" style={{ color: theme.text.secondary, lineHeight: 22, fontSize: 13 }}>
                                             {event.guidelines_and_rules}
                                         </AppText>
                                     </View>
@@ -550,22 +551,22 @@ const EventDetails = () => {
                                 onPress={() => setConsentGiven(!consentGiven)}
                                 style={{
                                     flexDirection: "row", alignItems: "center",
-                                    backgroundColor: consentGiven ? "#F0FDF4" : "#F9FAFB",
+                                    backgroundColor: consentGiven ? theme.background.successSubtle : theme.background.neutralSubtle,
                                     borderRadius: 14, padding: 14, marginBottom: 24,
-                                    borderWidth: 1, borderColor: consentGiven ? "#86EFAC" : "#E5E7EB",
+                                    borderWidth: 1, borderColor: consentGiven ? "#86EFAC" : theme.border.subtle,
                                 }}
                             >
                                 <View style={{
                                     width: 24, height: 24, borderRadius: 6,
-                                    backgroundColor: consentGiven ? "#16A34A" : "#FFFFFF",
+                                    backgroundColor: consentGiven ? "#16A34A" : theme.background.input,
                                     borderWidth: consentGiven ? 0 : 2,
-                                    borderColor: "#D1D5DB",
+                                    borderColor: theme.border.card,
                                     alignItems: "center", justifyContent: "center",
                                     marginRight: 12,
                                 }}>
                                     {consentGiven && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
                                 </View>
-                                <AppText variant="bodySm" style={{ color: "#374151", flex: 1, fontSize: 13, lineHeight: 18 }}>
+                                <AppText variant="bodySm" style={{ color: theme.text.secondary, flex: 1, fontSize: 13, lineHeight: 18 }}>
                                     {t("events.consentText")}
                                 </AppText>
                             </Pressable>
@@ -575,7 +576,7 @@ const EventDetails = () => {
                         <View style={{
                             flexDirection: "row", paddingHorizontal: 24,
                             paddingTop: 12, paddingBottom: 28,
-                            borderTopWidth: 1, borderTopColor: "#F3F4F6",
+                            borderTopWidth: 1, borderTopColor: theme.background.screen,
                             gap: 12,
                         }}>
                             <Button
@@ -588,7 +589,7 @@ const EventDetails = () => {
                                 onPress={handleConfirmApplication}
                                 variant="primary"
                                 disabled={registering || !consentGiven}
-                                style={{ flex: 1, backgroundColor: consentGiven ? "#386641" : "#9CA3AF" }}
+                                style={{ flex: 1, backgroundColor: consentGiven ? theme.primary.green : theme.text.placeholder }}
                             >
                                 {registering && <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 6 }} />}
                                 <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "700" }}>

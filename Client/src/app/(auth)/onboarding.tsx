@@ -1,5 +1,6 @@
 // src/app/(auth)/onboarding.tsx
 import Button from "@/components/atoms/Button";
+import AppText from "@/components/atoms/AppText";
 import FormInput from "@/components/atoms/FormInput";
 import Select from "@/components/atoms/Select";
 import Toggle from "@/components/atoms/Toggle";
@@ -28,6 +29,7 @@ import {
   View,
 } from "react-native";
 import { colors } from "../../styles/colors";
+import { theme } from "../../styles/colors";
 
 const TOTAL_STEPS = 3;
 
@@ -220,11 +222,11 @@ const Onboarding = () => {
             {landEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                style={{ backgroundColor: "#FFFFFF", borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#D9D9D9" }}
+                style={{ backgroundColor: theme.background.input, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: theme.border.default }}
               >
                 {landEntries.length > 1 && (
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121" }}>
+                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: theme.text.dark }}>
                       {t("onboarding.land.title")} #{index + 1}
                     </AppText>
                     <TouchableOpacity onPress={() => removeLandEntry(entry.id)}>
@@ -293,7 +295,7 @@ const Onboarding = () => {
                 alignSelf: "flex-start",
               }}
             >
-              <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "500", marginRight: 8 }}>
+              <AppText variant="bodySm" style={{ color: theme.text.onPrimary, fontWeight: "500", marginRight: 8 }}>
                 {t("onboarding.land.addLand")}
               </AppText>
               <Ionicons name="add" size={20} color="white" />
@@ -331,11 +333,11 @@ const Onboarding = () => {
             {livestockEntries.map((entry, index) => (
               <View
                 key={entry.id}
-                style={{ backgroundColor: "#FFFFFF", borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#D9D9D9" }}
+                style={{ backgroundColor: theme.background.input, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: theme.border.default }}
               >
                 {livestockEntries.length > 1 && (
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: "#212121" }}>
+                    <AppText variant="bodyMd" style={{ fontWeight: "600", color: theme.text.dark }}>
                       {t("onboarding.livestock.animal")} #{index + 1}
                     </AppText>
                     <TouchableOpacity
@@ -392,7 +394,7 @@ const Onboarding = () => {
                 alignSelf: "flex-start",
               }}
             >
-              <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "500", marginRight: 8 }}>
+              <AppText variant="bodySm" style={{ color: theme.text.onPrimary, fontWeight: "500", marginRight: 8 }}>
                 {t("onboarding.livestock.addAnimal")}
               </AppText>
               <Ionicons name="add" size={20} color="white" />
@@ -418,16 +420,16 @@ const Onboarding = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.neutral.surface }}
+      style={{ flex: 1, backgroundColor: theme.background.screen }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {renderStep()}
 
       {/* Bottom Navigation */}
-      <View style={{ paddingHorizontal: 24, paddingVertical: 16, backgroundColor: colors.neutral.surface }}>
+      <View style={{ paddingHorizontal: 24, paddingVertical: 16, backgroundColor: theme.background.screen }}>
         {/* Skip for now link */}
         <TouchableOpacity onPress={handleSkip} style={{ alignItems: "center", marginBottom: 16 }}>
-          <AppText variant="bodySm" style={{ color: colors.neutral.textMedium }}>
+          <AppText variant="bodySm" style={{ color: theme.text.medium }}>
             {t("onboarding.skip")}
           </AppText>
         </TouchableOpacity>
@@ -439,7 +441,7 @@ const Onboarding = () => {
           disabled={!isStepValid()}
           style={{ width: "100%", paddingVertical: 16 }}
         >
-          <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+          <AppText variant="bodyMd" style={{ color: theme.text.onPrimary, fontWeight: "600" }}>
             {currentStep === TOTAL_STEPS - 1
               ? t("onboarding.finish")
               : t("onboarding.next")}

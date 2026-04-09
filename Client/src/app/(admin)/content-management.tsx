@@ -3,6 +3,7 @@ import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import apiService, { Banner, Scheme } from "@/services/apiService";
 import { cdn } from "@/utils/cloudinaryUtils";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -93,8 +94,8 @@ const ir = StyleSheet.create({
     thumb: { width: 72, height: 48, borderRadius: 8, backgroundColor: "#E5E7EB" },
     placeholder: {
         width: 72, height: 48, borderRadius: 8,
-        backgroundColor: "#F3F4F6", justifyContent: "center", alignItems: "center",
-        borderWidth: 1, borderColor: "#E5E7EB",
+        backgroundColor: theme.background.neutralSubtle, justifyContent: "center", alignItems: "center",
+        borderWidth: 1, borderColor: theme.border.subtle,
     },
     btn: {
         flexDirection: "row", alignItems: "center", gap: 6,
@@ -774,22 +775,22 @@ const cms = StyleSheet.create({
 
 // ─── page styles ──────────────────────────────────────────────
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
     header: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+        backgroundColor: theme.background.input,
+        borderBottomWidth: 1, borderBottomColor: theme.background.screen,
     },
     backBtn: {
-        padding: 8, backgroundColor: "#F3F4F6", borderRadius: 12,
+        padding: 8, backgroundColor: theme.background.screen, borderRadius: 12,
     },
-    title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-    subtitle: { fontSize: 12, color: "#9CA3AF", marginTop: 1 },
+    title: { fontSize: 20, fontWeight: "800", color: theme.text.primary },
+    subtitle: { fontSize: 12, color: theme.text.placeholder, marginTop: 1 },
 
     tabRow: {
-        flexDirection: "row", backgroundColor: "#fff",
-        borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+        flexDirection: "row", backgroundColor: theme.background.input,
+        borderBottomWidth: 1, borderBottomColor: theme.border.subtle,
     },
     tab: {
         flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",

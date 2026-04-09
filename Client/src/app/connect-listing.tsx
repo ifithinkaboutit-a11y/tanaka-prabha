@@ -16,6 +16,7 @@ import { ProfessionalCardSkeleton } from "../components/atoms/Skeleton";
 import { connectServices } from "../data/content/connectServices";
 import { professionalsApi, Professional } from "@/services/apiService";
 import { useTranslation } from "../i18n";
+import { theme } from "../styles/colors";
 
 const ProfessionalCard = ({
   professional,
@@ -178,14 +179,14 @@ const ConnectListingScreen = () => {
   const availableCount = professionals.filter((p) => p.isAvailable).length;
 
   return (
-    <View className="flex-1 bg-slate-100">
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
 
       {/* Header */}
-      <View className="bg-[#386641] pt-[52px] pb-4 px-5 flex-row items-center">
+      <View style={{ backgroundColor: theme.primary.green, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20, flexDirection: "row", alignItems: "center" }}>
         <Pressable
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3.5"
+          style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", marginRight: 14 }}
           hitSlop={8}
         >
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
@@ -205,7 +206,7 @@ const ConnectListingScreen = () => {
 
       {/* Stats strip */}
       {!loading && professionals.length > 0 && (
-        <View className="flex-row bg-white py-3 px-6 border-b border-slate-200 items-center">
+        <View style={{ flexDirection: "row", backgroundColor: theme.background.input, paddingVertical: 12, paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: theme.border.subtle, alignItems: "center" }}>
           <View className="flex-1 items-center">
             <AppText style={{ fontSize: 18, fontWeight: "800", color: "#1F2937" }}>
               {professionals.length}
@@ -233,14 +234,14 @@ const ConnectListingScreen = () => {
 
       {/* Content */}
       {loading ? (
-        <View className="flex-row flex-wrap justify-between p-4">
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", padding: 16 }}>
           {[0, 1, 2, 3].map((i) => (
             <ProfessionalCardSkeleton key={i} />
           ))}
         </View>
       ) : professionals.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8 pt-16">
-          <View className="w-[88px] h-[88px] rounded-full bg-slate-100 items-center justify-center mb-4">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32, paddingTop: 64 }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <Ionicons name="people-outline" size={44} color="#9CA3AF" />
           </View>
           <AppText style={{ fontSize: 16, fontWeight: "700", color: "#374151", textAlign: "center" }}>

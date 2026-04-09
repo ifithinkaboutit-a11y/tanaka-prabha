@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native";
 import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
+import { theme } from "@/styles/colors";
 
 const OTP_LENGTH = 6;
 
@@ -187,7 +188,7 @@ const OTPInput = () => {
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={s.header}>
         <AppText variant="h2" style={s.headerTitle}>
@@ -291,7 +292,7 @@ const OTPInput = () => {
                 style={s.footerBtn}
                 activeOpacity={0.65}
               >
-                <Ionicons name="refresh-outline" size={14} color="#386641" />
+                <Ionicons name="refresh-outline" size={14} color={theme.primary.green} />
                 <Text style={s.switchLink}>{" "}{t("auth.resendOTP") || "Resend OTP"}</Text>
               </TouchableOpacity>
             ) : (
@@ -326,11 +327,11 @@ const OTPInput = () => {
 export default OTPInput;
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#fff" },
+  root: { flex: 1, backgroundColor: theme.background.input },
 
   // ── Static Header ──
   header: {
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingTop: 60,
     paddingBottom: 32,
     paddingHorizontal: 24,
@@ -356,13 +357,13 @@ const s = StyleSheet.create({
   // ── Card ──
   card: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: theme.background.input,
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
   },
   inputLabel: {
-    color: "#374151",
+    color: theme.text.subtle,
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 10,
@@ -381,33 +382,33 @@ const s = StyleSheet.create({
     flex: 1,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     overflow: "hidden",
   },
-  otpBoxOuterFilled: { borderColor: "#386641" },
-  otpBoxOuterError: { borderColor: "#EF4444" },
+  otpBoxOuterFilled: { borderColor: theme.primary.green },
+  otpBoxOuterError: { borderColor: theme.semantic.errorLight },
   otpBox: {
     height: 58,
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    backgroundColor: "#F9FAFB",
-    color: "#111827",
+    backgroundColor: theme.background.neutralSubtle,
+    color: theme.text.primary,
   },
   otpBoxFilled: {
     backgroundColor: "rgba(56,102,65,0.07)",
-    color: "#386641",
+    color: theme.primary.green,
   },
   otpBoxError: {
     backgroundColor: "rgba(239,68,68,0.05)",
-    color: "#EF4444",
+    color: theme.semantic.errorLight,
   },
 
   // ── Progress bar ──
   progressTrack: {
     width: "100%",
     height: 3,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: theme.background.screen,
     borderRadius: 2,
     marginBottom: 8,
     overflow: "hidden",
@@ -420,31 +421,31 @@ const s = StyleSheet.create({
   // ── Helper — identical to phone-input ──
   helperRow: { minHeight: 22, marginTop: 0, marginBottom: 18 },
   errorRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  errorText: { color: "#EF4444", fontSize: 13, flex: 1 },
-  charCount: { color: "#9CA3AF", fontSize: 12 },
-  countdownInline: { color: "#386641", fontWeight: "600" },
+  errorText: { color: theme.semantic.errorLight, fontSize: 13, flex: 1 },
+  charCount: { color: theme.text.placeholder, fontSize: 12 },
+  countdownInline: { color: theme.primary.green, fontWeight: "600" },
 
   // ── CTA button — identical to phone-input ──
   ctaBtn: {
     width: "100%",
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 18,
-    shadowColor: "#386641",
+    shadowColor: theme.primary.green,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
   ctaBtnDisabled: {
-    backgroundColor: "#D1D5DB",
+    backgroundColor: theme.border.card,
     shadowOpacity: 0,
     elevation: 0,
   },
   loadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  ctaText: { color: "#fff", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
+  ctaText: { color: theme.text.onPrimary, fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
 
   // ── Footer — mirrors phone-input switchRow ──
   footerRow: {
@@ -455,9 +456,9 @@ const s = StyleSheet.create({
     gap: 10,
   },
   footerBtn: { flexDirection: "row", alignItems: "center" },
-  footerDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: "#D1D5DB" },
-  switchLink: { color: "#386641", fontWeight: "700", fontSize: 14 },
-  switchText: { color: "#6B7280", fontSize: 13 },
+  footerDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: theme.border.card },
+  switchLink: { color: theme.primary.green, fontWeight: "700", fontSize: 14 },
+  switchText: { color: theme.text.muted, fontSize: 13 },
 
   // ── Security — identical to phone-input ──
   securityRow: {
@@ -466,5 +467,5 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 5,
   },
-  securityText: { color: "#9CA3AF", fontSize: 11 },
+  securityText: { color: theme.text.placeholder, fontSize: 11 },
 });

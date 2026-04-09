@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import { appointmentsApi } from "../services/apiService";
+import { theme } from "../styles/colors";
 
 function generateDays() {
     const days: { label: string; value: string; dayName: string }[] = [];
@@ -97,7 +98,7 @@ export default function BookAppointment() {
         const successDate = days.find((d) => d.value === selectedDay);
         return (
             <View style={styles.successScreen}>
-                <StatusBar barStyle="dark-content" backgroundColor="#F0FDF4" />
+                <StatusBar barStyle="dark-content" backgroundColor={theme.background.successSubtle} />
                 <View style={styles.successCircle}>
                     <View style={styles.successInner}>
                         <Ionicons name="checkmark" size={52} color="#FFFFFF" />
@@ -106,7 +107,7 @@ export default function BookAppointment() {
                 <AppText style={styles.successTitle}>Appointment Booked!</AppText>
                 <AppText style={styles.successSub}>
                     Your appointment with{" "}
-                    <AppText style={{ fontWeight: "700", color: "#1F2937" }}>{professionalName}</AppText>
+                    <AppText style={{ fontWeight: "700", color: theme.text.secondary }}>{professionalName}</AppText>
                     {" "}has been confirmed.
                 </AppText>
 
@@ -118,7 +119,7 @@ export default function BookAppointment() {
                     ].map((row) => (
                         <View key={row.label} style={styles.successRow}>
                             <View style={styles.successRowIcon}>
-                                <Ionicons name={row.icon} size={16} color="#386641" />
+                                <Ionicons name={row.icon} size={16} color={theme.primary.green} />
                             </View>
                             <View>
                                 <AppText style={styles.successRowLabel}>{row.label}</AppText>
@@ -129,7 +130,7 @@ export default function BookAppointment() {
                 </View>
 
                 <View style={styles.reminderBox}>
-                    <Ionicons name="notifications" size={16} color="#1D4ED8" style={{ marginRight: 8 }} />
+                    <Ionicons name="notifications" size={16} color={theme.secondary.sky} style={{ marginRight: 8 }} />
                     <AppText style={styles.reminderText}>
                         You'll receive a reminder before your appointment.
                     </AppText>
@@ -140,7 +141,7 @@ export default function BookAppointment() {
                     onPress={() => router.replace("/(tab)/connect" as any)}
                     className="w-full bg-[#386641] rounded-2xl py-4 items-center active:opacity-90 mb-3"
                 >
-                    <AppText style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
+                    <AppText style={{ color: theme.text.onPrimary, fontSize: 16, fontWeight: "800" }}>
                         Back to Connect
                     </AppText>
                 </Pressable>
@@ -149,7 +150,7 @@ export default function BookAppointment() {
                     onPress={() => router.push("/my-schedule" as any)}
                     className="mt-1 py-2"
                 >
-                    <AppText style={{ color: "#386641", fontWeight: "600", fontSize: 14 }}>
+                    <AppText style={{ color: theme.primary.green, fontWeight: "600", fontSize: 14 }}>
                         View My Schedule →
                     </AppText>
                 </Pressable>
@@ -160,7 +161,7 @@ export default function BookAppointment() {
     // ── Main Booking Screen ────────────────────────────────────────────────────
     return (
         <View style={styles.screen}>
-            <StatusBar barStyle="light-content" backgroundColor="#386641" />
+            <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
 
             {/* Header */}
             <View style={styles.header}>
@@ -169,7 +170,7 @@ export default function BookAppointment() {
                     className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
                     hitSlop={8}
                 >
-                    <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                    <Ionicons name="arrow-back" size={22} color={theme.text.onPrimary} />
                 </Pressable>
                 <View style={{ flex: 1, marginLeft: 14 }}>
                     <AppText style={styles.headerTitle}>Book Appointment</AppText>
@@ -216,7 +217,7 @@ export default function BookAppointment() {
 
                 {loadingSlots ? (
                     <View style={styles.slotsLoading}>
-                        <ActivityIndicator size="large" color="#386641" />
+                        <ActivityIndicator size="large" color={theme.primary.green} />
                         <AppText style={styles.loadingText}>Fetching available slots…</AppText>
                     </View>
                 ) : isFullyBooked ? (
@@ -325,79 +326,79 @@ export default function BookAppointment() {
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: "#F1F5F9" },
+    screen: { flex: 1, backgroundColor: theme.background.screen },
 
     header: {
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingTop: 52,
         paddingBottom: 18,
         paddingHorizontal: 20,
         flexDirection: "row",
         alignItems: "center",
     },
-    headerTitle: { color: "#FFFFFF", fontSize: 20, fontWeight: "800" },
+    headerTitle: { color: theme.text.onPrimary, fontSize: 20, fontWeight: "800" },
     headerSub: { color: "rgba(255,255,255,0.75)", fontSize: 13, marginTop: 2 },
 
     scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 160 },
-    sectionLabel: { fontSize: 14, fontWeight: "700", color: "#374151", marginBottom: 12, letterSpacing: 0.2 },
+    sectionLabel: { fontSize: 14, fontWeight: "700", color: theme.text.secondary, marginBottom: 12, letterSpacing: 0.2 },
 
     dateStrip: { marginBottom: 4 },
     dayCard: {
-        width: 60, height: 78, borderRadius: 16, backgroundColor: "#FFFFFF",
+        width: 60, height: 78, borderRadius: 16, backgroundColor: theme.background.input,
         alignItems: "center", justifyContent: "center",
-        borderWidth: 1.5, borderColor: "#E2E8F0",
+        borderWidth: 1.5, borderColor: theme.border.subtle,
         elevation: 1, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 4,
     },
-    dayCardSel: { backgroundColor: "#386641", borderColor: "#386641", elevation: 4, shadowOpacity: 0.15 },
-    dayName: { fontSize: 10, fontWeight: "600", color: "#9CA3AF" },
+    dayCardSel: { backgroundColor: theme.primary.green, borderColor: theme.primary.green, elevation: 4, shadowOpacity: 0.15 },
+    dayName: { fontSize: 10, fontWeight: "600", color: theme.text.placeholder },
     dayNameSel: { color: "rgba(255,255,255,0.8)" },
-    dayNum: { fontSize: 22, fontWeight: "900", color: "#1F2937", marginVertical: 1 },
-    dayNumSel: { color: "#FFFFFF" },
-    dayMon: { fontSize: 10, color: "#9CA3AF" },
+    dayNum: { fontSize: 22, fontWeight: "900", color: theme.text.secondary, marginVertical: 1 },
+    dayNumSel: { color: theme.text.onPrimary },
+    dayMon: { fontSize: 10, color: theme.text.placeholder },
     dayMonSel: { color: "rgba(255,255,255,0.7)" },
 
     slotsLoading: { alignItems: "center", paddingVertical: 40, gap: 12 },
-    loadingText: { color: "#9CA3AF", fontSize: 13 },
+    loadingText: { color: theme.text.placeholder, fontSize: 13 },
     fullyBookedCard: {
-        backgroundColor: "#FEF2F2", borderRadius: 16, padding: 24,
-        alignItems: "center", gap: 8, borderWidth: 1, borderColor: "#FECACA",
+        backgroundColor: theme.semantic.errorBackground, borderRadius: 16, padding: 24,
+        alignItems: "center", gap: 8, borderWidth: 1, borderColor: theme.semantic.likeSubtle,
     },
-    fullyBookedTitle: { fontSize: 16, fontWeight: "800", color: "#DC2626" },
-    fullyBookedSub: { fontSize: 13, color: "#7F1D1D", textAlign: "center" },
+    fullyBookedTitle: { fontSize: 16, fontWeight: "800", color: theme.semantic.like },
+    fullyBookedSub: { fontSize: 13, color: theme.semantic.errorDark, textAlign: "center" },
     slotsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
     slotChip: {
         flexDirection: "row", alignItems: "center",
         paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
-        backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: "#E2E8F0",
+        backgroundColor: theme.background.input, borderWidth: 1.5, borderColor: theme.border.subtle,
         elevation: 1, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 3,
     },
-    slotChipSel: { backgroundColor: "#386641", borderColor: "#386641", elevation: 3, shadowOpacity: 0.14 },
-    slotText: { fontSize: 14, fontWeight: "700", color: "#374151" },
-    slotTextSel: { color: "#FFFFFF" },
+    slotChipSel: { backgroundColor: theme.primary.green, borderColor: theme.primary.green, elevation: 3, shadowOpacity: 0.14 },
+    slotText: { fontSize: 14, fontWeight: "700", color: theme.text.secondary },
+    slotTextSel: { color: theme.text.onPrimary },
     noSlots: { alignItems: "center", paddingVertical: 24, width: "100%", gap: 8 },
-    noSlotsText: { color: "#9CA3AF", fontSize: 14 },
+    noSlotsText: { color: theme.text.placeholder, fontSize: 14 },
 
     summaryCard: {
-        marginTop: 24, backgroundColor: "#EFF6FF", borderRadius: 16,
-        padding: 18, borderWidth: 1, borderColor: "#BFDBFE", gap: 10,
+        marginTop: 24, backgroundColor: theme.background.input, borderRadius: 16,
+        padding: 18, borderWidth: 1, borderColor: theme.border.subtle, gap: 10,
     },
-    summaryTitle: { fontSize: 14, fontWeight: "800", color: "#1E40AF", marginBottom: 4 },
+    summaryTitle: { fontSize: 14, fontWeight: "800", color: theme.text.secondary, marginBottom: 4 },
     summaryRow: { flexDirection: "row", alignItems: "center" },
-    summaryRowText: { fontSize: 14, color: "#1E3A8A", fontWeight: "500", flex: 1 },
+    summaryRowText: { fontSize: 14, color: theme.text.secondary, fontWeight: "500", flex: 1 },
 
     footer: {
         position: "absolute", bottom: 0, left: 0, right: 0,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
-        borderTopWidth: 1, borderTopColor: "#E2E8F0",
+        borderTopWidth: 1, borderTopColor: theme.border.subtle,
         elevation: 14, shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12,
         alignItems: "stretch",
     },
-    footerHint: { textAlign: "center", color: "#9CA3AF", fontSize: 12, marginTop: 8 },
+    footerHint: { textAlign: "center", color: theme.text.placeholder, fontSize: 12, marginTop: 8 },
 
     successScreen: {
-        flex: 1, backgroundColor: "#F0FDF4",
+        flex: 1, backgroundColor: theme.background.successSubtle,
         alignItems: "center", justifyContent: "center", paddingHorizontal: 32,
     },
     successCircle: {
@@ -407,27 +408,27 @@ const styles = StyleSheet.create({
     },
     successInner: {
         width: 88, height: 88, borderRadius: 44,
-        backgroundColor: "#386641", alignItems: "center", justifyContent: "center",
+        backgroundColor: theme.primary.green, alignItems: "center", justifyContent: "center",
     },
-    successTitle: { fontSize: 28, fontWeight: "900", color: "#1F2937", marginBottom: 10 },
-    successSub: { fontSize: 15, color: "#6B7280", textAlign: "center", lineHeight: 22, marginBottom: 24 },
+    successTitle: { fontSize: 28, fontWeight: "900", color: theme.text.secondary, marginBottom: 10 },
+    successSub: { fontSize: 15, color: theme.text.muted, textAlign: "center", lineHeight: 22, marginBottom: 24 },
     successCard: {
-        backgroundColor: "#FFFFFF", borderRadius: 20, padding: 20,
+        backgroundColor: theme.background.input, borderRadius: 20, padding: 20,
         width: "100%", gap: 14, elevation: 3,
         shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 8, marginBottom: 20,
     },
     successRow: { flexDirection: "row", alignItems: "center", gap: 12 },
     successRowIcon: {
         width: 36, height: 36, borderRadius: 10,
-        backgroundColor: "#F0FDF4", alignItems: "center", justifyContent: "center",
+        backgroundColor: theme.background.successSubtle, alignItems: "center", justifyContent: "center",
     },
-    successRowLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.4 },
-    successRowValue: { fontSize: 14, color: "#1F2937", fontWeight: "700" },
+    successRowLabel: { fontSize: 11, color: theme.text.placeholder, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.4 },
+    successRowValue: { fontSize: 14, color: theme.text.secondary, fontWeight: "700" },
     reminderBox: {
         flexDirection: "row", alignItems: "center",
-        backgroundColor: "#DBEAFE", borderRadius: 12,
+        backgroundColor: theme.background.card, borderRadius: 12,
         paddingHorizontal: 16, paddingVertical: 12,
         width: "100%", marginBottom: 28,
     },
-    reminderText: { flex: 1, color: "#1D4ED8", fontSize: 13, lineHeight: 18 },
+    reminderText: { flex: 1, color: theme.text.secondary, fontSize: 13, lineHeight: 18 },
 });

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { theme } from "@/styles/colors";
 import AppText from "../atoms/AppText";
 import AnimatedPressable from "../atoms/AnimatedPressable";
 import { cdn } from "@/utils/cloudinaryUtils";
@@ -94,8 +95,7 @@ export default function BannerSlideshow({
   return (
     <View>
       <AnimatedPressable onPress={handleBannerPress} scaleOnPress={0.97}>
-        <View className="h-[200px] rounded-[20px] overflow-hidden bg-[#386641]">
-          {/* Animated content layer — fades in on each slide change */}
+        <View className="h-[200px] rounded-[20px] overflow-hidden bg-[#386641]">          {/* Animated content layer — fades in on each slide change */}
           <Animated.View
             className="absolute inset-0"
             style={{ opacity: fadeAnim }}
@@ -204,7 +204,7 @@ export default function BannerSlideshow({
                   width: animatedWidths[index],
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: index === currentIndex ? "#386641" : "#D1D5DB",
+                  backgroundColor: index === currentIndex ? theme.primary.green : theme.border.card,
                 }}
               />
             </AnimatedPressable>

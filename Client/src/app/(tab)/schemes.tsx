@@ -21,6 +21,7 @@ import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
 import { cdn } from "@/utils/cloudinaryUtils";
+import { theme } from "@/styles/colors";
 
 // Scheme Card Component
 const SchemeCard = ({
@@ -48,7 +49,7 @@ const SchemeCard = ({
         style={{
           borderRadius: 20,
           overflow: "hidden",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.input,
           borderWidth: 1,
           borderColor: "rgba(0,0,0,0.05)",
           shadowColor: "#000",
@@ -107,14 +108,14 @@ const SchemeCard = ({
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
               size={18}
-              color={isBookmarked ? "#386641" : "#1F2937"}
+              color={isBookmarked ? theme.primary.green : theme.text.secondary}
             />
           </Pressable>
         </View>
         <View style={{ padding: 14 }}>
           <AppText
             variant="bodyMd"
-            style={{ fontWeight: "800", color: "#111827", fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
+            style={{ fontWeight: "800", color: theme.text.primary, fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
             numberOfLines={2}
           >
             {displayTitle}
@@ -165,7 +166,7 @@ const CategoryItem = ({
       <View style={{ flex: 1 }}>
         <AppText
           variant="bodyMd"
-          style={{ fontWeight: "700", color: "#111827", fontSize: 16, marginBottom: 4, letterSpacing: -0.2 }}
+          style={{ fontWeight: "700", color: theme.text.primary, fontSize: 16, marginBottom: 4, letterSpacing: -0.2 }}
         >
           {t(category.titleKey)}
         </AppText>
@@ -182,7 +183,7 @@ const CategoryItem = ({
           </View>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={22} color="#9CA3AF" />
+      <Ionicons name="chevron-forward" size={22} color={theme.text.placeholder} />
     </Pressable>
   );
 };
@@ -300,14 +301,17 @@ export default function Schemes() {
 
   const isSearchActive = searchQuery.trim().length > 0;
 
-  // Featured scheme (first one)
-  const featuredScheme = schemes[0];
-  // Recommended schemes (first 3 from filtered results)
-  const recommendedSchemes = filteredSchemes.slice(0, 3);
+  // Featured scheme (first featured one, or first overall)
+  const featuredScheme = schemes.find((s) => s.isFeatured) || schemes[0];
+  // Recommended schemes (featured ones first, then fill up to 5)
+  const recommendedSchemes = [
+    ...filteredSchemes.filter((s) => s.isFeatured),
+    ...filteredSchemes.filter((s) => !s.isFeatured),
+  ].slice(0, 5);
 
   if (loading) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: theme.background.screen }} showsVerticalScrollIndicator={false}>
         <View style={{ padding: 16, paddingTop: 24 }}>
           <SchemeCardSkeleton />
           <View style={{ flexDirection: "row", gap: 12 }}>
@@ -322,21 +326,21 @@ export default function Schemes() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+      style={{ flex: 1, backgroundColor: theme.background.screen }}
       showsVerticalScrollIndicator={false}
       stickyHeaderIndices={[0]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={["#386641"]}
-          tintColor="#386641"
+          colors={[theme.primary.green]}
+          tintColor={theme.primary.green}
         />
       }
     >
       {/* Elevated Header */}
       <View style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.header,
         paddingBottom: 16,
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
@@ -357,13 +361,13 @@ export default function Schemes() {
         >
           <AppText
             variant="h2"
-            style={{ fontWeight: "700", color: "#111827", fontSize: 26, letterSpacing: -0.3 }}
+            style={{ fontWeight: "700", color: theme.text.primary, fontSize: 26, letterSpacing: -0.3 }}
           >
             {t("schemesPage.title")}
           </AppText>
           <AppText
             variant="bodySm"
-            style={{ color: "#6B7280", marginTop: 4, fontSize: 13, fontWeight: "500" }}
+            style={{ color: theme.text.muted, marginTop: 4, fontSize: 13, fontWeight: "500" }}
           >
             {t("schemesPage.subtitle")}
           </AppText>
@@ -394,7 +398,7 @@ export default function Schemes() {
       )}
 
       {/* Recommended Schemes */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: "#F8FAFC" }}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: theme.background.screen }}>
         <View
           style={{
             flexDirection: "row",
@@ -406,7 +410,7 @@ export default function Schemes() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <AppText
               variant="h3"
-              style={{ fontWeight: "700", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
+              style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20, letterSpacing: -0.2 }}
             >
               {t("schemesPage.recommendedSchemes")}
             </AppText>
@@ -470,10 +474,10 @@ export default function Schemes() {
             marginHorizontal: 16,
             marginBottom: 24,
             padding: 20,
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.input,
             borderRadius: 24,
             borderWidth: 1,
-            borderColor: "#E5E7EB",
+            borderColor: theme.border.subtle,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.06,
@@ -487,17 +491,17 @@ export default function Schemes() {
                 width: 40,
                 height: 40,
                 borderRadius: 12,
-                backgroundColor: "#386641",
+                backgroundColor: theme.primary.green,
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
               }}
             >
-              <Ionicons name="grid-outline" size={20} color="#FFFFFF" />
+              <Ionicons name="grid-outline" size={20} color={theme.text.onPrimary} />
             </View>
             <AppText
               variant="h3"
-              style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
+              style={{ fontWeight: "700", color: theme.text.secondary, fontSize: 20 }}
             >
               {t("schemesPage.categories")}
             </AppText>

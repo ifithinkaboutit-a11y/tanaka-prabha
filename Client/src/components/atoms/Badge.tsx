@@ -1,7 +1,7 @@
 // src/components/atoms/Badge.tsx
 import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "./AppText";
 
 type BadgeProps = {
@@ -18,8 +18,8 @@ const variantBg: Record<string, string> = {
 
 const variantText: Record<string, string> = {
   default: colors.neutral.textDark,
-  success: "#FFFFFF",
-  warning: "#FFFFFF",
+  success: theme.text.onPrimary,
+  warning: theme.text.onPrimary,
 };
 
 export default function Badge({ label, variant = "default", style }: BadgeProps) {

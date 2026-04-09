@@ -4,6 +4,7 @@ import Button from "@/components/atoms/Button";
 import apiService, { ApiEvent, UserProfile } from "@/services/apiService";
 import { offlineQueue } from "@/utils/offlineQueue";
 import { avatar } from "@/utils/cloudinaryUtils";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
@@ -128,8 +129,8 @@ const uc = StyleSheet.create({
         backgroundColor: "#F9FAFB",
         borderRadius: 10, padding: 10,
     },
-    detailLabel: { fontSize: 10, color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase" },
-    detailValue: { fontSize: 13, color: "#1F2937", fontWeight: "600", marginTop: 1 },
+    detailLabel: { fontSize: 10, color: theme.text.placeholder, fontWeight: "600", textTransform: "uppercase" },
+    detailValue: { fontSize: 13, color: theme.text.secondary, fontWeight: "600", marginTop: 1 },
 
     markBtn: {
         flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -178,7 +179,7 @@ const nf = StyleSheet.create({
     },
     title: { fontSize: 16, fontWeight: "700", color: "#374151", textAlign: "center" },
     subtitle: { fontSize: 13, color: "#6B7280", textAlign: "center", marginTop: 6, marginBottom: 16, lineHeight: 20 },
-    mobile: { fontWeight: "700", color: "#1F2937" },
+    mobile: { fontWeight: "700", color: theme.text.secondary },
     markBtn: {
         flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
         backgroundColor: "#F59E0B", borderRadius: 12, paddingVertical: 12, paddingHorizontal: 20,
@@ -290,7 +291,7 @@ export default function MarkAttendance() {
             <View style={s.root}>
                 <View style={s.header}>
                     <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-                        <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                        <Ionicons name="arrow-back" size={22} color={theme.text.secondary} />
                     </TouchableOpacity>
                     <View>
                         <AppText style={s.title}>Mark Attendance</AppText>
@@ -343,7 +344,7 @@ export default function MarkAttendance() {
             {/* header */}
             <View style={s.header}>
                 <TouchableOpacity onPress={() => { setSelectedEvent(null); setMobileNumber(""); setFoundUser(null); }} style={s.backBtn}>
-                    <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                    <Ionicons name="arrow-back" size={22} color={theme.text.secondary} />
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
                     <AppText style={s.title}>Mark Attendance</AppText>
@@ -430,46 +431,46 @@ export default function MarkAttendance() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
-    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
+    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background.screen },
 
     header: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20,
     },
     backBtn: {
-        padding: 8, backgroundColor: "#fff", borderRadius: 12,
+        padding: 8, backgroundColor: theme.background.input, borderRadius: 12,
         shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
     },
-    title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-    subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    title: { fontSize: 20, fontWeight: "800", color: theme.text.primary },
+    subtitle: { fontSize: 13, color: theme.text.muted, marginTop: 2 },
 
     // event picker
     eventCard: {
         flexDirection: "row", alignItems: "center", gap: 12,
-        backgroundColor: "#fff", borderRadius: 14, padding: 14, marginBottom: 10,
+        backgroundColor: theme.background.input, borderRadius: 14, padding: 14, marginBottom: 10,
         shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
     },
     eventIconBox: {
         width: 44, height: 44, borderRadius: 12,
         backgroundColor: "#EFF6FF", justifyContent: "center", alignItems: "center",
     },
-    eventTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
+    eventTitle: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
     eventMeta: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-    eventDate: { fontSize: 12, color: "#9CA3AF" },
-    dot: { width: 3, height: 3, borderRadius: 9, backgroundColor: "#D1D5DB" },
+    eventDate: { fontSize: 12, color: theme.text.placeholder },
+    dot: { width: 3, height: 3, borderRadius: 9, backgroundColor: theme.border.card },
     emptyState: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
-    emptyText: { fontSize: 16, color: "#9CA3AF" },
+    emptyText: { fontSize: 16, color: theme.text.placeholder },
 
     // attendance card
     attendanceCard: {
         marginHorizontal: 20,
-        backgroundColor: "#fff", borderRadius: 20, padding: 20,
+        backgroundColor: theme.background.input, borderRadius: 20, padding: 20,
         shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
     },
     eventStrip: {
         flexDirection: "row", gap: 12, flexWrap: "wrap",
-        paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F3F4F6", marginBottom: 16,
+        paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.background.screen, marginBottom: 16,
     },
     stripItem: { flexDirection: "row", alignItems: "center", gap: 5 },
     stripText: { fontSize: 13, color: "#374151" },
@@ -477,26 +478,26 @@ const s = StyleSheet.create({
     inputLabel: { fontSize: 13, color: "#374151", fontWeight: "600", marginBottom: 10 },
     mobileInputRow: {
         flexDirection: "row", alignItems: "center",
-        borderWidth: 1.5, borderColor: "#E5E7EB", borderRadius: 12,
-        backgroundColor: "#F9FAFB", overflow: "hidden",
+        borderWidth: 1.5, borderColor: theme.border.subtle, borderRadius: 12,
+        backgroundColor: theme.background.screen, overflow: "hidden",
     },
     mobilePrefix: {
         paddingHorizontal: 12, paddingVertical: 14,
-        backgroundColor: "#F3F4F6", borderRightWidth: 1, borderRightColor: "#E5E7EB",
+        backgroundColor: theme.background.screen, borderRightWidth: 1, borderRightColor: theme.border.subtle,
     },
     mobilePrefixText: { fontSize: 15, color: "#374151", fontWeight: "600" },
     mobileInput: {
         flex: 1, paddingHorizontal: 12, paddingVertical: 14,
-        fontSize: 18, color: "#1F2937", fontWeight: "600", letterSpacing: 1.5,
+        fontSize: 18, color: theme.text.secondary, fontWeight: "600", letterSpacing: 1.5,
     },
     clearBtn: { paddingHorizontal: 12 },
 
     progressBar: {
-        height: 3, backgroundColor: "#E5E7EB", borderRadius: 2, marginTop: 8, overflow: "hidden",
+        height: 3, backgroundColor: theme.border.subtle, borderRadius: 2, marginTop: 8, overflow: "hidden",
     },
     progressFill: { height: "100%", backgroundColor: "#3B82F6", borderRadius: 2 },
-    progressText: { fontSize: 11, color: "#9CA3AF", textAlign: "right", marginTop: 4 },
+    progressText: { fontSize: 11, color: theme.text.placeholder, textAlign: "right", marginTop: 4 },
 
     lookupLoading: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 16, justifyContent: "center" },
-    lookupLoadingText: { color: "#6B7280", fontSize: 14 },
+    lookupLoadingText: { color: theme.text.muted, fontSize: 14 },
 });

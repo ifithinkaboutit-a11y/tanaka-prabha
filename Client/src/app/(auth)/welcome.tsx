@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, Text, View, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { theme } from "@/styles/colors";
 
 export default function Welcome() {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ export default function Welcome() {
 
           {/* Title */}
           <AppText variant="h2" style={s.title}>
-            {t("auth.welcomeTitle") || "Kisan Mitra"}
+            {t("auth.welcomeTitle") || "Tanaka Prabha"}
           </AppText>
 
           {/* Subtitle */}
@@ -89,11 +90,11 @@ export default function Welcome() {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
   },
   card: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 28,
@@ -119,14 +120,14 @@ const s = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    color: "#111827",
+    color: theme.text.primary,
     fontWeight: "700",
     fontSize: 26,
     marginBottom: 8,
   },
   subtitle: {
     textAlign: "center",
-    color: "#6B7280",
+    color: theme.text.muted,
     fontSize: 15,
     marginBottom: 32,
     lineHeight: 22,
@@ -150,14 +151,14 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   btnTextPrimary: {
-    color: "#FFFFFF",
+    color: theme.text.onPrimary,
     textAlign: "center",
     fontWeight: "700",
     fontSize: 16,
     letterSpacing: 0.3,
   },
   btnTextOutline: {
-    color: "#386641",
+    color: theme.primary.green,
     textAlign: "center",
     fontWeight: "700",
     fontSize: 16,
@@ -171,7 +172,7 @@ const s = StyleSheet.create({
     paddingVertical: 8,
   },
   adminText: {
-    color: "#6B7280",
+    color: theme.text.muted,
     fontSize: 14,
     fontWeight: "500",
   },

@@ -28,6 +28,7 @@ import {
 import MapView, { Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import AppText from "../../components/atoms/AppText";
 import { useOnboardingStore } from "../../stores/onboardingStore";
+import { theme } from "../../styles/colors";
 import {
     googleReverseGeocode,
     parseGoogleAddress,
@@ -456,7 +457,7 @@ export default function LocationPickerScreen() {
                 </View>
                 <View style={styles.deniedContainer}>
                     <View style={styles.deniedIconBg}>
-                        <Ionicons name="location-outline" size={40} color="#F59E0B" />
+                        <Ionicons name="location-outline" size={40} color={theme.secondary.harvest} />
                     </View>
                     <AppText variant="h3" style={styles.deniedTitle}>Location Access Needed</AppText>
                     <AppText variant="bodySm" style={styles.deniedBody}>
@@ -482,7 +483,7 @@ export default function LocationPickerScreen() {
         return (
             <View style={[styles.root, styles.centred]}>
                 <StatusBar barStyle="dark-content" />
-                <Ionicons name="locate-outline" size={44} color="#386641" />
+                <Ionicons name="locate-outline" size={44} color={theme.primary.green} />
                 <AppText variant="bodyMd" style={styles.loadingText}>Finding your location…</AppText>
             </View>
         );
@@ -517,7 +518,7 @@ export default function LocationPickerScreen() {
                     <Circle
                         center={{ latitude: pinCoords.lat, longitude: pinCoords.lng }}
                         radius={gpsAccuracy}
-                        strokeColor="#386641"
+                        strokeColor={theme.primary.green}
                         fillColor="rgba(56,102,65,0.12)"
                         strokeWidth={1.5}
                     />
@@ -550,7 +551,7 @@ export default function LocationPickerScreen() {
                         autoCapitalize="none"
                     />
                     {searchLoading && (
-                        <ActivityIndicator size="small" color="#386641" style={{ marginLeft: 4 }} />
+                        <ActivityIndicator size="small" color={theme.primary.green} style={{ marginLeft: 4 }} />
                     )}
                     {searchText.length > 0 && !searchLoading && (
                         <Pressable
@@ -580,7 +581,7 @@ export default function LocationPickerScreen() {
                     <View style={styles.resultsCard} pointerEvents="auto">
                         {searchLoading && predictions.length === 0 ? (
                             <View style={[styles.resultRow, { justifyContent: "center" }]}>
-                                <ActivityIndicator size="small" color="#386641" />
+                                <ActivityIndicator size="small" color={theme.primary.green} />
                                 <AppText variant="bodySm" style={[styles.noResultsText, { marginLeft: 8 }]}>
                                     Searching…
                                 </AppText>
@@ -599,7 +600,7 @@ export default function LocationPickerScreen() {
                                     ]}
                                     onPress={() => handleSearchSelect(p)}
                                 >
-                                    <Ionicons name="location-outline" size={16} color="#386641" style={{ marginRight: 10 }} />
+                                    <Ionicons name="location-outline" size={16} color={theme.primary.green} style={{ marginRight: 10 }} />
                                     <View style={{ flex: 1 }}>
                                         <AppText variant="bodySm" style={styles.resultPrimaryText} numberOfLines={1}>
                                             {p.primaryName}
@@ -636,8 +637,8 @@ export default function LocationPickerScreen() {
                 accessibilityRole="button"
             >
                 {myLocationLoading
-                    ? <ActivityIndicator size="small" color="#386641" />
-                    : <Ionicons name="locate" size={22} color="#386641" />
+                    ? <ActivityIndicator size="small" color={theme.primary.green} />
+                    : <Ionicons name="locate" size={22} color={theme.primary.green} />
                 }
             </Pressable>
             {myLocationError && (
@@ -702,17 +703,17 @@ export default function LocationPickerScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F8FAFC" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
     centred: { justifyContent: "center", alignItems: "center", gap: 16 },
-    loadingText: { color: "#6B7280" },
+    loadingText: { color: theme.text.muted },
 
     centrePin: {
         position: "absolute", top: "50%", left: "50%",
         transform: [{ translateX: -13 }, { translateY: -42 }],
         alignItems: "center", zIndex: 10,
     },
-    pinHead: { width: 26, height: 26, borderRadius: 13, backgroundColor: "#386641", borderWidth: 3, borderColor: "#fff" },
-    pinStem: { width: 3, height: 16, backgroundColor: "#386641", marginTop: -2 },
+    pinHead: { width: 26, height: 26, borderRadius: 13, backgroundColor: theme.primary.green, borderWidth: 3, borderColor: "#fff" },
+    pinStem: { width: 3, height: 16, backgroundColor: theme.primary.green, marginTop: -2 },
     pinDot: { width: 10, height: 5, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.18)", marginTop: 2 },
 
     topOverlay: {
@@ -725,83 +726,83 @@ const styles = StyleSheet.create({
 
     searchCard: {
         flexDirection: "row", alignItems: "center",
-        backgroundColor: "#fff", borderRadius: 16,
+        backgroundColor: theme.background.input, borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: Platform.OS === "ios" ? 14 : 10,
         shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12,
         elevation: 6, marginBottom: 6,
     },
-    searchInput: { flex: 1, fontSize: 15, color: "#111827", padding: 0 },
+    searchInput: { flex: 1, fontSize: 15, color: theme.text.primary, padding: 0 },
 
     searchErrorBanner: {
         flexDirection: "row", alignItems: "center", gap: 6,
-        backgroundColor: "#FEF3C7", borderRadius: 10,
+        backgroundColor: theme.background.warningSubtle, borderRadius: 10,
         paddingHorizontal: 12, paddingVertical: 8, marginBottom: 4,
     },
-    searchErrorText: { flex: 1, color: "#92400E", fontSize: 12 },
+    searchErrorText: { flex: 1, color: theme.semantic.warningText, fontSize: 12 },
 
     resultsCard: {
-        backgroundColor: "#fff", borderRadius: 16, overflow: "hidden",
+        backgroundColor: theme.background.input, borderRadius: 16, overflow: "hidden",
         shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
     resultRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14 },
-    resultRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-    resultPrimaryText: { color: "#374151", fontWeight: "600", lineHeight: 20 },
-    resultSubtitleText: { color: "#6B7280", fontSize: 12, lineHeight: 18, marginTop: 1 },
-    noResultsText: { color: "#9CA3AF", fontStyle: "italic" },
+    resultRowBorder: { borderBottomWidth: 1, borderBottomColor: theme.background.screen },
+    resultPrimaryText: { color: theme.text.secondary, fontWeight: "600", lineHeight: 20 },
+    resultSubtitleText: { color: theme.text.muted, fontSize: 12, lineHeight: 18, marginTop: 1 },
+    noResultsText: { color: theme.text.placeholder, fontStyle: "italic" },
 
     fallbackBanner: {
         position: "absolute",
         top: Platform.OS === "android" ? (StatusBar.currentHeight ?? 24) + 80 : 130,
         alignSelf: "center",
         flexDirection: "row", alignItems: "center", gap: 6,
-        backgroundColor: "#FEF3C7", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+        backgroundColor: theme.background.warningSubtle, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
         zIndex: 10, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
     },
-    fallbackText: { color: "#92400E", fontSize: 12 },
+    fallbackText: { color: theme.semantic.warningText, fontSize: 12 },
 
     myLocationBtn: {
         position: "absolute", bottom: 230, right: 16,
         width: 48, height: 48, borderRadius: 24,
-        backgroundColor: "#fff", alignItems: "center", justifyContent: "center",
+        backgroundColor: theme.background.input, alignItems: "center", justifyContent: "center",
         shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4, zIndex: 10,
     },
     myLocationErrorBanner: {
         position: "absolute", bottom: 286, right: 16,
         flexDirection: "row", alignItems: "center", gap: 5,
-        backgroundColor: "#FEF3C7", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16,
+        backgroundColor: theme.background.warningSubtle, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16,
         maxWidth: SCREEN_WIDTH - 32,
         shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, elevation: 4, zIndex: 10,
     },
-    myLocationErrorText: { color: "#92400E", fontSize: 12, flexShrink: 1 },
+    myLocationErrorText: { color: theme.semantic.warningText, fontSize: 12, flexShrink: 1 },
 
     bottomSheet: {
         position: "absolute", bottom: 0, left: 0, right: 0,
-        backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        backgroundColor: theme.background.input, borderTopLeftRadius: 24, borderTopRightRadius: 24,
         paddingHorizontal: 24, paddingTop: 12,
         paddingBottom: Platform.OS === "ios" ? 40 : 24,
         shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20, elevation: 12, zIndex: 15,
     },
-    sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: "#E5E7EB", alignSelf: "center", marginBottom: 14 },
-    sheetLabel: { fontSize: 10, letterSpacing: 1.2, color: "#9CA3AF", textTransform: "uppercase", marginBottom: 6 },
-    sheetHint: { color: "#9CA3AF", fontStyle: "italic", marginBottom: 12 },
-    sheetAddress: { color: "#111827", fontWeight: "600", lineHeight: 22, marginBottom: 12 },
+    sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
+    sheetLabel: { fontSize: 10, letterSpacing: 1.2, color: theme.text.placeholder, textTransform: "uppercase", marginBottom: 6 },
+    sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 12 },
+    sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 12 },
     geocodeErrorRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 },
-    geocodeErrorText: { color: "#EF4444", flex: 1 },
-    accuracyLabel: { color: "#386641", fontSize: 12, marginBottom: 8 },
+    geocodeErrorText: { color: theme.semantic.error, flex: 1 },
+    accuracyLabel: { color: theme.primary.green, fontSize: 12, marginBottom: 8 },
 
     nudgeRow: {
         flexDirection: "row", alignItems: "flex-start", gap: 6,
-        backgroundColor: "#F0FDF4", borderRadius: 10,
+        backgroundColor: theme.background.successSubtle, borderRadius: 10,
         paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
     },
-    nudgeText: { color: "#374151", flex: 1, lineHeight: 18 },
+    nudgeText: { color: theme.text.secondary, flex: 1, lineHeight: 18 },
 
-    confirmBtn: { backgroundColor: "#386641", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginBottom: 12 },
-    confirmBtnDisabled: { backgroundColor: "#D1D5DB" },
+    confirmBtn: { backgroundColor: theme.primary.green, borderRadius: 14, paddingVertical: 16, alignItems: "center", marginBottom: 12 },
+    confirmBtnDisabled: { backgroundColor: theme.border.card },
     confirmBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     skipBtn: { alignItems: "center", paddingVertical: 4 },
-    skipText: { color: "#9CA3AF" },
+    skipText: { color: theme.text.placeholder },
 
     topProgress: {
         height: 4, backgroundColor: "rgba(0,0,0,0.08)",
@@ -810,11 +811,11 @@ const styles = StyleSheet.create({
     },
     topProgressFill: { height: "100%", borderRadius: 2, backgroundColor: "#FBBF24" },
     deniedContainer: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32, gap: 12 },
-    deniedIconBg: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#FEF3C7", alignItems: "center", justifyContent: "center", marginBottom: 8 },
-    deniedTitle: { fontWeight: "700", color: "#1F2937", textAlign: "center" },
-    deniedBody: { color: "#6B7280", textAlign: "center", lineHeight: 20 },
-    settingsBtn: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#386641", paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14, marginTop: 8 },
+    deniedIconBg: { width: 80, height: 80, borderRadius: 40, backgroundColor: theme.background.warningSubtle, alignItems: "center", justifyContent: "center", marginBottom: 8 },
+    deniedTitle: { fontWeight: "700", color: theme.text.secondary, textAlign: "center" },
+    deniedBody: { color: theme.text.muted, textAlign: "center", lineHeight: 20 },
+    settingsBtn: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: theme.primary.green, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14, marginTop: 8 },
     settingsBtnText: { color: "#fff", fontWeight: "700" },
     skipLinkBtn: { marginTop: 12 },
-    skipLinkText: { color: "#9CA3AF", textDecorationLine: "underline" },
+    skipLinkText: { color: theme.text.placeholder, textDecorationLine: "underline" },
 });

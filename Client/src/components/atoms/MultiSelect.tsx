@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 
 interface SelectOption {
   label: string;
@@ -74,7 +74,7 @@ export default function MultiSelect({
         <Text
           style={[
             s.triggerText,
-            { color: selectedOptions.length > 0 ? "#212121" : "#9E9E9E" },
+            { color: selectedOptions.length > 0 ? theme.text.dark : theme.text.light },
           ]}
           numberOfLines={1}
         >
@@ -148,7 +148,7 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    color: "#616161",
+    color: theme.text.medium,
     fontSize: 14,
     marginBottom: 8,
   },
@@ -157,11 +157,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#D9D9D9",
+    borderColor: theme.border.default,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
   },
   triggerText: {
     fontSize: 16,
@@ -173,7 +173,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "60%",
@@ -181,7 +181,7 @@ const s = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#D9D9D9",
+    borderBottomColor: theme.border.default,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -197,18 +197,18 @@ const s = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#D9D9D9",
+    borderBottomColor: theme.border.default,
   },
   optionText: {
     fontSize: 16,
-    color: "#212121",
+    color: theme.text.dark,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: "#D9D9D9",
+    borderColor: theme.border.default,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -13,6 +13,7 @@ export default function AdminLayout() {
             <Stack.Screen name="beneficiaries" />
             <Stack.Screen name="beneficiary-detail" />
             <Stack.Screen name="add-beneficiary" />
+            <Stack.Screen name="location-picker" options={{ headerShown: false }} />
         </Stack>
 
     );

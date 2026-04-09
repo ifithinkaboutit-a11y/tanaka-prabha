@@ -28,5 +28,21 @@
     --color-semantic-error: #F44336;
     --color-semantic-warning: #FF9800;
     --color-semantic-info: #0275D8;
+
+    /* Background */
+    --color-background-screen: #F0F4F1;
+    --color-background-card: #EBF0EC;
+    --color-background-input: #FFFFFF;
+    --color-background-header: #FFFFFF;
+
+    /* Text */
+    --color-text-primary: #111827;
+    --color-text-secondary: #1F2937;
+    --color-text-muted: #666D7B;
+
+    /* Border */
+    --color-border-default: #D9D9D9;
+    --color-border-subtle: #E5E7EB;
+    --color-border-card: #D1D5DB;
   }
 }

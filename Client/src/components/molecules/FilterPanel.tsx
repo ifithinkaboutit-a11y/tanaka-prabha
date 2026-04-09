@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { theme } from "@/styles/colors";
 import AppText from "../atoms/AppText";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ const TYPE_OPTIONS: { label: string; value: TypeFilter }[] = [
 ];
 
 const GREEN = "#166534";
-const GREEN_LIGHT = "#DCFCE7";
+const GREEN_LIGHT = "#DCFCE7"; // intentional: filter active state, not a brand token
 
 const DEFAULT_FILTERS: FilterState = {
   categories: [],
@@ -104,7 +105,7 @@ export default function FilterPanel({
         {/* Sheet */}
         <View
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.input,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             maxHeight: "80%",
@@ -117,7 +118,7 @@ export default function FilterPanel({
                 width: 40,
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: "#D1D5DB",
+                backgroundColor: theme.border.card,
               }}
             />
           </View>
@@ -136,7 +137,7 @@ export default function FilterPanel({
           >
             <AppText
               variant="h3"
-              style={{ fontWeight: "700", color: "#111827", fontSize: 20 }}
+              style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20 }}
             >
               Filters
             </AppText>
@@ -152,7 +153,7 @@ export default function FilterPanel({
                 justifyContent: "center",
               })}
             >
-              <AppText variant="bodyMd" style={{ color: "#6B7280", fontSize: 18 }}>
+              <AppText variant="bodyMd" style={{ color: theme.text.muted, fontSize: 18 }}>
                 ✕
               </AppText>
             </Pressable>
@@ -168,7 +169,7 @@ export default function FilterPanel({
                 variant="bodySm"
                 style={{
                   fontWeight: "700",
-                  color: "#374151",
+                  color: theme.text.subtle,
                   fontSize: 13,
                   letterSpacing: 0.5,
                   textTransform: "uppercase",
@@ -200,8 +201,8 @@ export default function FilterPanel({
                         height: 22,
                         borderRadius: 6,
                         borderWidth: 2,
-                        borderColor: isSelected ? GREEN : "#D1D5DB",
-                        backgroundColor: isSelected ? GREEN : "#FFFFFF",
+                        borderColor: isSelected ? GREEN : theme.border.card,
+                        backgroundColor: isSelected ? GREEN : theme.background.input,
                         alignItems: "center",
                         justifyContent: "center",
                         marginRight: 14,
@@ -210,7 +211,7 @@ export default function FilterPanel({
                       {isSelected && (
                         <AppText
                           variant="caption"
-                          style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "700" }}
+                          style={{ color: theme.text.onPrimary, fontSize: 13, fontWeight: "700" }}
                         >
                           ✓
                         </AppText>
@@ -219,7 +220,7 @@ export default function FilterPanel({
                     <AppText
                       variant="bodyMd"
                       style={{
-                        color: isSelected ? GREEN : "#374151",
+                        color: isSelected ? GREEN : theme.text.subtle,
                         fontWeight: isSelected ? "600" : "400",
                         fontSize: 15,
                       }}
@@ -237,7 +238,7 @@ export default function FilterPanel({
                 variant="bodySm"
                 style={{
                   fontWeight: "700",
-                  color: "#374151",
+                  color: theme.text.subtle,
                   fontSize: 13,
                   letterSpacing: 0.5,
                   textTransform: "uppercase",
@@ -260,15 +261,15 @@ export default function FilterPanel({
                         paddingVertical: 10,
                         borderRadius: 20,
                         alignItems: "center",
-                        backgroundColor: isActive ? GREEN : "#FFFFFF",
+                        backgroundColor: isActive ? GREEN : theme.background.input,
                         borderWidth: 1.5,
-                        borderColor: isActive ? GREEN : "#D1D5DB",
+                        borderColor: isActive ? GREEN : theme.border.card,
                       }}
                     >
                       <AppText
                         variant="bodySm"
                         style={{
-                          color: isActive ? "#FFFFFF" : "#4B5563",
+                          color: isActive ? theme.text.onPrimary : theme.text.subtle,
                           fontWeight: isActive ? "700" : "500",
                           fontSize: 14,
                         }}
@@ -304,13 +305,13 @@ export default function FilterPanel({
                 borderRadius: 25,
                 alignItems: "center",
                 borderWidth: 1.5,
-                borderColor: "#D1D5DB",
-                backgroundColor: "#FFFFFF",
+                borderColor: theme.border.card,
+                backgroundColor: theme.background.input,
               }}
             >
               <AppText
                 variant="bodyMd"
-                style={{ color: "#374151", fontWeight: "600", fontSize: 15 }}
+                style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 15 }}
               >
                 Clear Filters
               </AppText>
@@ -330,7 +331,7 @@ export default function FilterPanel({
             >
               <AppText
                 variant="bodyMd"
-                style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 15 }}
+                style={{ color: theme.text.onPrimary, fontWeight: "700", fontSize: 15 }}
               >
                 Apply
               </AppText>

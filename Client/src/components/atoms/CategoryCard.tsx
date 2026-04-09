@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, View, StyleSheet } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "./AppText";
 import Card from "./Card";
 
@@ -39,7 +39,7 @@ export default function CategoryCard({
               </AppText>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          <Ionicons name="chevron-forward" size={18} color={theme.text.placeholder} />
         </View>
       </Card>
     </Pressable>

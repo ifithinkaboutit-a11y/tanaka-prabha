@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AppText from './AppText';
+import { theme } from '../../styles/colors';
 
 interface ExpandableTextProps {
     text: string;
@@ -25,7 +26,7 @@ export default function ExpandableText({ text, wordLimit = 100, style }: Expanda
             {isTooLong && (
                 <AppText
                     variant="bodyMd"
-                    style={{ color: "#2563EB", fontWeight: "600" }}
+                    style={{ color: theme.semantic.info, fontWeight: "600" }}
                     onPress={() => setExpanded(!expanded)}
                 >
                     {expanded ? "Show less" : "Read more"}

@@ -7,6 +7,7 @@ import { useLanguageStore } from "@/stores/languageStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from "@/styles/colors";
 
 export default function LanguageSelection() {
   const router = useRouter();
@@ -48,13 +49,13 @@ export default function LanguageSelection() {
       <View style={s.header}>
         <AppText
           variant="h2"
-          style={{ color: "#212121", fontWeight: "700" }}
+          style={{ color: theme.text.dark, fontWeight: "700" }}
         >
           {t("language.selectLanguage")}
         </AppText>
         <AppText
           variant="bodySm"
-          style={{ color: "#616161", marginTop: 8, textAlign: "center" }}
+          style={{ color: theme.text.medium, marginTop: 8, textAlign: "center" }}
         >
           {t("language.selectSubtitle")}
         </AppText>
@@ -76,7 +77,7 @@ export default function LanguageSelection() {
               <Text
                 style={[
                   s.symbol,
-                  { color: isSelected ? "#FFFFFF" : "#212121" },
+                  { color: isSelected ? theme.text.onPrimary : theme.text.dark },
                 ]}
               >
                 {language.symbol}
@@ -84,7 +85,7 @@ export default function LanguageSelection() {
               <Text
                 style={[
                   s.nativeLabel,
-                  { color: isSelected ? "#FFFFFF" : "#616161" },
+                  { color: isSelected ? theme.text.onPrimary : theme.text.medium },
                 ]}
               >
                 {language.nativeLabel}
@@ -92,7 +93,7 @@ export default function LanguageSelection() {
               <Text
                 style={[
                   s.label,
-                  { color: isSelected ? "rgba(255,255,255,0.8)" : "#9E9E9E" },
+                  { color: isSelected ? "rgba(255,255,255,0.8)" : theme.text.light },
                 ]}
               >
                 ({language.label})
@@ -116,7 +117,7 @@ export default function LanguageSelection() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E8F4EA",
+    backgroundColor: theme.background.screen,
     justifyContent: "center",
     paddingHorizontal: 24,
   },
@@ -139,12 +140,12 @@ const s = StyleSheet.create({
     borderWidth: 2,
   },
   cardSelected: {
-    backgroundColor: "#386641",
-    borderColor: "#005005",
+    backgroundColor: theme.primary.green,
+    borderColor: theme.primary.greenDark,
   },
   cardDefault: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#D9D9D9",
+    backgroundColor: theme.background.input,
+    borderColor: theme.border.default,
   },
   symbol: {
     fontSize: 32,

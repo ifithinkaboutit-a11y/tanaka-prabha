@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
+import { theme } from "@/styles/colors";
 
 type SearchBarProps = {
   placeholder?: string;
@@ -35,7 +36,7 @@ export default function SearchBar({
         alignItems: "center",
         backgroundColor: "#F3F4F6",
         borderWidth: 1.5,
-        borderColor: isFocused ? "#386641" : "#E5E7EB",
+        borderColor: isFocused ? theme.primary.green : theme.border.subtle,
         borderRadius: 16,
         paddingHorizontal: 16,
         paddingVertical: 14,
@@ -49,7 +50,7 @@ export default function SearchBar({
       <Ionicons
         name="search"
         size={22}
-        color={isFocused ? "#386641" : "#9CA3AF"}
+        color={isFocused ? theme.primary.green : theme.text.placeholder}
       />
 
       <TextInput
@@ -60,10 +61,10 @@ export default function SearchBar({
           flex: 1,
           marginLeft: 12,
           fontSize: 16,
-          color: "#1F2937",
+          color: theme.text.secondary,
           fontWeight: "400",
         }}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={theme.text.placeholder}
         onSubmitEditing={handleSubmit}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -72,7 +73,7 @@ export default function SearchBar({
 
       {searchQuery.length > 0 ? (
         <Pressable onPress={() => setSearchQuery("")}>
-          <Ionicons name="close-circle" size={30} color="#9CA3AF" />
+          <Ionicons name="close-circle" size={30} color={theme.text.placeholder} />
         </Pressable>
       ) : (
         <></>

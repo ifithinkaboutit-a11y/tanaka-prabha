@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useWindowDimensions, View } from "react-native";
 import AppText from "../atoms/AppText";
 import AnimatedPressable from "../atoms/AnimatedPressable";
+import { theme } from "@/styles/colors";
 
 type QuickActionItem = {
   title: string;
@@ -74,7 +75,7 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                   <Ionicons
                     name={action.icon}
                     size={iconSize}
-                    color={action.iconColor ?? "#386641"}
+                    color={action.iconColor ?? theme.primary.green}
                   />
                 </View>
 
@@ -83,7 +84,7 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                   numberOfLines={2}
                   style={{
                     textAlign: "center",
-                    color: "#1F2937",
+                    color: theme.text.secondary,
                     fontWeight: "700",
                     fontSize,
                     lineHeight,

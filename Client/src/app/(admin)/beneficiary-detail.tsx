@@ -1,6 +1,7 @@
 // src/app/(admin)/beneficiary-detail.tsx
 import AppText from "@/components/atoms/AppText";
 import apiService, { ApiUserProfile } from "@/services/apiService";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -26,7 +27,7 @@ function SectionCard({ title, children }: { title: string; children: React.React
 
 const sc = StyleSheet.create({
     card: {
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 16,
         padding: 16,
         marginBottom: 14,
@@ -38,7 +39,7 @@ const sc = StyleSheet.create({
     title: {
         fontSize: 14,
         fontWeight: "700",
-        color: "#6B7280",
+        color: theme.text.muted,
         textTransform: "uppercase",
         letterSpacing: 0.5,
         marginBottom: 12,
@@ -63,10 +64,10 @@ const ir = StyleSheet.create({
         alignItems: "flex-start",
         paddingVertical: 6,
         borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
+        borderBottomColor: theme.background.screen,
     },
-    label: { fontSize: 13, color: "#9CA3AF", flex: 1 },
-    value: { fontSize: 13, color: "#111827", fontWeight: "600", flex: 2, textAlign: "right" },
+    label: { fontSize: 13, color: theme.text.placeholder, flex: 1 },
+    value: { fontSize: 13, color: theme.text.primary, fontWeight: "600", flex: 2, textAlign: "right" },
 });
 
 // ─── Season Row ───────────────────────────────────────────────
@@ -92,7 +93,7 @@ const sr = StyleSheet.create({
         gap: 12,
         paddingVertical: 8,
         borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
+        borderBottomColor: theme.background.screen,
     },
     badge: {
         backgroundColor: "#EFF6FF",
@@ -102,10 +103,10 @@ const sr = StyleSheet.create({
         minWidth: 60,
         alignItems: "center",
     },
-    badgeText: { fontSize: 12, fontWeight: "700", color: "#3B82F6" },
+    badgeText: { fontSize: 12, fontWeight: "700", color: theme.secondary.sky },
     info: { flex: 1 },
-    crop: { fontSize: 13, fontWeight: "600", color: "#111827" },
-    area: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+    crop: { fontSize: 13, fontWeight: "600", color: theme.text.primary },
+    area: { fontSize: 12, color: theme.text.muted, marginTop: 2 },
 });
 
 // ─── Livestock Item ───────────────────────────────────────────
@@ -126,10 +127,10 @@ const li = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 6,
         borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
+        borderBottomColor: theme.background.screen,
     },
     label: { fontSize: 13, color: "#374151" },
-    count: { fontSize: 13, fontWeight: "700", color: "#111827" },
+    count: { fontSize: 13, fontWeight: "700", color: theme.text.primary },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────
@@ -159,7 +160,7 @@ export default function BeneficiaryDetail() {
     if (loading) {
         return (
             <View style={s.center}>
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={theme.secondary.sky} />
                 <AppText style={s.loadingText}>Loading profile…</AppText>
             </View>
         );
@@ -266,9 +267,9 @@ export default function BeneficiaryDetail() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
-    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F3F4F6", gap: 12 },
-    loadingText: { color: "#9CA3AF", fontSize: 14 },
+    root: { flex: 1, backgroundColor: theme.background.screen },
+    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background.screen, gap: 12 },
+    loadingText: { color: theme.text.placeholder, fontSize: 14 },
 
     header: {
         flexDirection: "row",
@@ -277,7 +278,7 @@ const s = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 56,
         paddingBottom: 16,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
         shadowColor: "#000",
@@ -286,11 +287,11 @@ const s = StyleSheet.create({
         elevation: 3,
         marginBottom: 12,
     },
-    backBtn: { padding: 8, backgroundColor: "#F3F4F6", borderRadius: 12 },
+    backBtn: { padding: 8, backgroundColor: theme.background.screen, borderRadius: 12 },
     headerInfo: { flex: 1 },
-    headerName: { fontSize: 18, fontWeight: "800", color: "#111827" },
+    headerName: { fontSize: 18, fontWeight: "800", color: theme.text.primary },
     headerMeta: { flexDirection: "row", gap: 4, marginTop: 2 },
-    headerMetaText: { fontSize: 12, color: "#6B7280" },
+    headerMetaText: { fontSize: 12, color: theme.text.muted },
 
     badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
     badgeVerified: { backgroundColor: "#D1FAE5" },
@@ -303,7 +304,7 @@ const s = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 14,
         padding: 14,
         marginBottom: 14,
@@ -313,12 +314,12 @@ const s = StyleSheet.create({
         elevation: 1,
     },
     callInfo: { flexDirection: "row", alignItems: "center", gap: 8 },
-    callNumber: { fontSize: 15, fontWeight: "600", color: "#111827" },
+    callNumber: { fontSize: 15, fontWeight: "600", color: theme.text.primary },
     callBtn: {
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: "#22C55E",
+        backgroundColor: theme.semantic.success,
         borderRadius: 10,
         paddingHorizontal: 16,
         paddingVertical: 9,

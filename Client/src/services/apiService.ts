@@ -836,6 +836,7 @@ export interface Scheme {
   supportContact?: string;
   applyUrl?: string;
   isActive?: boolean;
+  isFeatured?: boolean;
   createdAt?: string;
   interestCount?: number;
 }
@@ -875,7 +876,9 @@ export const bannersApi = {
 export interface ApiEvent {
   id: string;
   title: string;
+  title_hi?: string;
   description: string;
+  description_hi?: string;
   date: string;
   start_time: string;
   end_time: string;

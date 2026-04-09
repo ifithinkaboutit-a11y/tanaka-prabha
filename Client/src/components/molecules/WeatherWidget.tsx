@@ -5,6 +5,7 @@ import { TouchableOpacity, View } from "react-native";
 import AppText from "../atoms/AppText";
 import { Skeleton } from "../atoms/Skeleton";
 import { DISTRICT_COORDS } from "@/data/districtCoords";
+import { theme } from "@/styles/colors";
 
 const UP_FALLBACK: [number, number] = [26.8467, 80.9462];
 
@@ -151,8 +152,8 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
     return (
       <View style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 20, backgroundColor: "#F8FAFC", padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Ionicons name="cloud-offline-outline" size={28} color="#9CA3AF" />
-          <AppText style={{ color: "#6B7280", fontSize: 14 }}>
+          <Ionicons name="cloud-offline-outline" size={28} color={theme.text.placeholder} />
+          <AppText style={{ color: theme.text.muted, fontSize: 14 }}>
             {language === "hi" ? "मौसम उपलब्ध नहीं" : "Weather unavailable"}
           </AppText>
         </View>

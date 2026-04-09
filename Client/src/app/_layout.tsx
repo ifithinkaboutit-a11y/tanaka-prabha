@@ -9,6 +9,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
 import { useOfflineQueueSync } from "../hooks/useOfflineQueueSync";
+import { theme } from "@/styles/colors";
 import "../i18n"; // Initialize i18n
 
 // Debug: log API URL at startup (remove after confirming production works)
@@ -58,7 +59,7 @@ export default function RootLayout() {
         <UserProfileProvider>
           <StatusBar hidden />
           <Stack
-            screenOptions={{ headerShown: false }}
+            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.background.screen } }}
             initialRouteName="(auth)"
           >
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -111,6 +112,14 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="book-appointment"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="scan-attendance"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="all-events"
               options={{ headerShown: false }}
             />
             <Stack.Screen

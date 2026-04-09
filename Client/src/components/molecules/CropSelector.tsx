@@ -2,6 +2,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { cropsBySeason, SelectOption } from "../../data/content/onboardingOptions";
+import { theme } from "@/styles/colors";
 
 interface CropSelectorProps {
   value: string[];
@@ -86,10 +87,10 @@ export default function CropSelector({ value, onValueChange, language }: CropSel
 const s = StyleSheet.create({
   container: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
   },
   section: {
     borderBottomWidth: 1,
@@ -123,16 +124,16 @@ const s = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: "#D1D5DB",
+    borderColor: theme.border.card,
     backgroundColor: "#F9FAFB",
   },
   chipText: {
     fontSize: 13,
-    color: "#374151",
+    color: theme.text.subtle,
     fontWeight: "500",
   },
   chipTextSelected: {
-    color: "#FFFFFF",
+    color: theme.text.onPrimary,
     fontWeight: "700",
   },
 });

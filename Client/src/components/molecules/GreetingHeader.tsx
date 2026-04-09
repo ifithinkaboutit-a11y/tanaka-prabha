@@ -6,6 +6,7 @@ import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import Avatar from "../atoms/Avatar";
 import AnimatedPressable from "../atoms/AnimatedPressable";
+import { theme } from "@/styles/colors";
 
 type GreetingHeaderProps = {
   name: string;
@@ -91,7 +92,7 @@ export default function GreetingHeader({
               style={{
                 fontSize: 21,
                 fontWeight: "700",
-                color: "#111827",
+                color: theme.text.primary,
                 letterSpacing: -0.3,
               }}
               numberOfLines={1}
@@ -111,7 +112,7 @@ export default function GreetingHeader({
           accessibilityRole="button"
         >
           <Animated.View style={{ transform: [{ rotate: bellRotateDeg }] }}>
-            <Ionicons name="notifications-outline" size={28} color="#1F2937" />
+            <Ionicons name="notifications-outline" size={28} color={theme.text.secondary} />
           </Animated.View>
 
           {/* Pulsing red dot */}

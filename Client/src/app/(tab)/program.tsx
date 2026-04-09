@@ -7,14 +7,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AppText from "../../components/atoms/AppText";
-import ProgramSection from "../../components/molecules/ProgramSection";
 import EventSection from "../../components/molecules/EventSection";
 import SearchBar from "../../components/molecules/SearchBar";
-import { schemesApi, eventsApi, Scheme, ApiEvent } from "@/services/apiService";
-import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
-import { EventCardSkeleton, ProgramCardSkeleton } from "@/components/atoms/Skeleton";
+import { eventsApi, ApiEvent } from "@/services/apiService";
+import { EventCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguageStore } from "../../stores/languageStore";
+import { theme } from "@/styles/colors";
 
 // Compute live status based on current date/time (same logic as EventCard)
 function computeEventStatus(event: ApiEvent): "upcoming" | "ongoing" | "completed" | "cancelled" {
@@ -33,10 +33,10 @@ const Program = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { currentLanguage } = useLanguageStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState<ApiEvent[]>([]);
-  const [trainingPrograms, setTrainingPrograms] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,12 +47,7 @@ const Program = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [allSchemes, allEvents] = await Promise.all([
-        fetchWithCache(CACHE_KEYS.PROGRAMS, () => schemesApi.getAll({ limit: 100 })),
-        eventsApi.getAll(),
-      ]);
-      // Case-insensitive match so "training" set from dashboard also shows here
-      setTrainingPrograms(allSchemes.filter((s) => s.category?.toLowerCase() === "training"));
+      const allEvents = await eventsApi.getAll();
       setEvents(allEvents);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -73,15 +68,6 @@ const Program = () => {
     await fetchData();
     setRefreshing(false);
   };
-
-  const filteredTrainingPrograms = useMemo(() => {
-    if (!searchQuery.trim()) return trainingPrograms;
-    return trainingPrograms.filter(
-      (p) =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.description || "").toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, trainingPrograms]);
 
   // All filtered events (search applied)
   const allFilteredEvents = useMemo(() => {
@@ -122,10 +108,6 @@ const Program = () => {
       });
   }, [allFilteredEvents]);
 
-  const handleProgramPress = (program: any) => {
-    router.push({ pathname: "/program-details", params: { programId: program.id } });
-  };
-
   const handleEventPress = (ev: ApiEvent) => {
     router.push({ pathname: "/event-details" as any, params: { eventId: ev.id } });
   };
@@ -165,33 +147,48 @@ const Program = () => {
 
   if (loading) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: theme.background.screen }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: 24 }}>
-          {[0, 1].map((i) => <EventCardSkeleton key={i} />)}
-          {[0, 1, 2].map((i) => <ProgramCardSkeleton key={i} />)}
+          {[0, 1, 2, 3].map((i) => <EventCardSkeleton key={i} />)}
         </View>
       </ScrollView>
     );
   }
 
+  // Localise event title/description based on language
+  const localise = (ev: ApiEvent) => ({
+    ...ev,
+    title: currentLanguage === "hi" && ev.title_hi ? ev.title_hi : ev.title,
+    description: currentLanguage === "hi" && ev.description_hi ? ev.description_hi : ev.description,
+  });
+
+  // Priority: ongoing first, then upcoming — cap at 4
+  const displayUpcoming = [
+    ...upcomingEvents.filter((e) => computeEventStatus(e) === "ongoing"),
+    ...upcomingEvents.filter((e) => computeEventStatus(e) === "upcoming"),
+  ].slice(0, 4).map(localise);
+
+  // Past: show 3, rest go to all-events screen
+  const displayPast = pastEvents.slice(0, 3).map(localise);
+
   return (
     <>
       <ScrollView
-        style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+        style={{ flex: 1, backgroundColor: theme.background.screen }}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#386641"]}
-            tintColor="#386641"
+            colors={[theme.primary.green]}
+            tintColor={theme.primary.green}
           />
         }
       >
         {/* Elevated Header */}
         <View style={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.header,
           paddingBottom: 16,
           borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
           shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
@@ -199,10 +196,10 @@ const Program = () => {
           marginBottom: 20,
         }}>
           <View style={{ paddingTop: 48, paddingBottom: 8, paddingHorizontal: 20 }}>
-            <AppText variant="h2" style={{ fontWeight: "700", color: "#111827", fontSize: 26, letterSpacing: -0.3 }}>
+            <AppText variant="h2" style={{ fontWeight: "700", color: theme.text.primary, fontSize: 26, letterSpacing: -0.3 }}>
               {t("programs.title")}
             </AppText>
-            <AppText variant="bodySm" style={{ color: "#6B7280", marginTop: 4, fontSize: 13, fontWeight: "500" }}>
+            <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 4, fontSize: 13, fontWeight: "500" }}>
               {t("programs.subtitle")}
             </AppText>
           </View>
@@ -214,24 +211,17 @@ const Program = () => {
         {/* Upcoming Events Section */}
         <EventSection
           title={t("programs.upcomingEvents") || "Upcoming Events"}
-          events={upcomingEvents}
+          events={displayUpcoming}
           onEventPress={handleEventPress}
           onParticipate={handleParticipate}
         />
 
-        {/* Training Programs */}
-        <ProgramSection
-          title={t("programs.trainingPrograms")}
-          programs={filteredTrainingPrograms}
-          onViewAll={() => { }}
-          onProgramPress={handleProgramPress}
-        />
-
-        {/* Past Events Section */}
+        {/* Past Events Section — capped at 3 with View All */}
         <EventSection
           title={t("programs.pastEvents") || "Past Events"}
-          events={pastEvents}
+          events={displayPast}
           onEventPress={handleEventPress}
+          onViewAll={pastEvents.length > 3 ? () => router.push("/all-events" as any) : undefined}
         />
 
         <View style={{ height: 24 }} />
@@ -246,7 +236,7 @@ const Program = () => {
       >
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
           <View style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.input,
             borderTopLeftRadius: 28, borderTopRightRadius: 28,
             maxHeight: "75%",
           }}>
@@ -254,16 +244,16 @@ const Program = () => {
             <View style={{
               flexDirection: "row", alignItems: "center", justifyContent: "space-between",
               paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16,
-              borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+              borderBottomWidth: 1, borderBottomColor: theme.background.neutralSubtle,
             }}>
-              <AppText variant="h2" style={{ fontSize: 20, fontWeight: "800", color: "#111827" }}>
+              <AppText variant="h2" style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>
                 {t("events.confirmApplication") || "Confirm Participation"}
               </AppText>
               <Pressable
                 onPress={() => setParticipateEvent(null)}
-                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }}
+                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.background.neutralSubtle, alignItems: "center", justifyContent: "center" }}
               >
-                <Ionicons name="close" size={18} color="#6B7280" />
+                <Ionicons name="close" size={18} color={theme.text.muted} />
               </Pressable>
             </View>
 
@@ -284,19 +274,19 @@ const Program = () => {
 
               {/* User info */}
               <View style={{
-                backgroundColor: "#F9FAFB", borderRadius: 14, padding: 14,
-                marginBottom: 16, borderWidth: 1, borderColor: "#E5E7EB",
+                backgroundColor: theme.background.neutralSubtle, borderRadius: 14, padding: 14,
+                marginBottom: 16, borderWidth: 1, borderColor: theme.border.subtle,
               }}>
-                <AppText variant="bodySm" style={{ color: "#6B7280", fontWeight: "600", fontSize: 11, marginBottom: 8 }}>
+                <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "600", fontSize: 11, marginBottom: 8 }}>
                   {t("events.yourDetails") || "Your Details"}
                 </AppText>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                  <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.name") || "Name"}</AppText>
-                  <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>{user?.name || "—"}</AppText>
+                  <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.name") || "Name"}</AppText>
+                  <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 13 }}>{user?.name || "—"}</AppText>
                 </View>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <AppText variant="bodySm" style={{ color: "#9CA3AF", fontSize: 13 }}>{t("profile.mobile") || "Mobile"}</AppText>
-                  <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 13 }}>{user?.mobileNumber || "—"}</AppText>
+                  <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.mobile") || "Mobile"}</AppText>
+                  <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 13 }}>{user?.mobileNumber || "—"}</AppText>
                 </View>
               </View>
 
@@ -328,13 +318,13 @@ const Program = () => {
             <View style={{
               flexDirection: "row", paddingHorizontal: 24,
               paddingTop: 12, paddingBottom: 28,
-              borderTopWidth: 1, borderTopColor: "#F3F4F6", gap: 12,
+              borderTopWidth: 1, borderTopColor: theme.background.neutralSubtle, gap: 12,
             }}>
               <Pressable
                 onPress={() => setParticipateEvent(null)}
-                style={{ flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: "#D1D5DB", paddingVertical: 14, alignItems: "center" }}
+                style={{ flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: theme.border.card, paddingVertical: 14, alignItems: "center" }}
               >
-                <AppText variant="bodyMd" style={{ color: "#374151", fontWeight: "600" }}>
+                <AppText variant="bodyMd" style={{ color: theme.text.subtle, fontWeight: "600" }}>
                   {t("common.cancel") || "Cancel"}
                 </AppText>
               </Pressable>
@@ -343,7 +333,7 @@ const Program = () => {
                 disabled={registering || !consentGiven}
                 style={{
                   flex: 1, borderRadius: 12, paddingVertical: 14,
-                  backgroundColor: consentGiven ? "#386641" : "#9CA3AF",
+                  backgroundColor: consentGiven ? theme.primary.green : theme.text.placeholder,
                   alignItems: "center", flexDirection: "row", justifyContent: "center",
                 }}
               >

@@ -18,6 +18,7 @@ import {
 } from "../data/content/schemeCategories";
 import { useTranslation } from "../i18n";
 import FilterPanel, { FilterState, TypeFilter } from "../components/molecules/FilterPanel";
+import { theme } from "../styles/colors";
 
 const CategoryListing = () => {
   const router = useRouter();
@@ -156,10 +157,10 @@ const CategoryListing = () => {
       : category;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       {/* Sticky Top Header Area */}
       <View style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         paddingBottom: 16,
       }}>
         {/* Navigation Header */}
@@ -174,13 +175,13 @@ const CategoryListing = () => {
             marginRight: 16,
             padding: 8,
             borderRadius: 20,
-            backgroundColor: pressed ? "#F3F4F6" : "transparent"
+            backgroundColor: pressed ? theme.background.screen : "transparent"
           })}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
+            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
           </Pressable>
           <AppText
             variant="h3"
-            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 18, letterSpacing: -0.2 }}
+            style={{ color: theme.text.primary, flex: 1, fontWeight: "700", fontSize: 18, letterSpacing: -0.2 }}
             numberOfLines={1}
           >
             {displayTitle}
@@ -193,12 +194,12 @@ const CategoryListing = () => {
             flex: 1,
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.input,
             borderRadius: 12,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderWidth: 1,
-            borderColor: "#E5E7EB",
+            borderColor: theme.border.subtle,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.05,
@@ -207,7 +208,7 @@ const CategoryListing = () => {
           }}>
             <Ionicons name="search" size={20} color="#9CA3AF" />
             <TextInput
-              style={{ flex: 1, marginLeft: 10, fontSize: 15, color: "#111827", fontWeight: "400" }}
+              style={{ flex: 1, marginLeft: 10, fontSize: 15, color: theme.text.primary, fontWeight: "400" }}
               placeholder={t("schemesPage.searchPlaceholder") || "Search for schemes"}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
@@ -231,8 +232,8 @@ const CategoryListing = () => {
               paddingVertical: 12,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: activeFilterCount > 0 ? "#166534" : "#E5E7EB",
-              backgroundColor: activeFilterCount > 0 ? "#DCFCE7" : "#FFFFFF",
+              borderColor: activeFilterCount > 0 ? theme.primary.greenDark : theme.border.subtle,
+              backgroundColor: activeFilterCount > 0 ? theme.background.successSubtle : theme.background.input,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.05,
@@ -240,11 +241,11 @@ const CategoryListing = () => {
               elevation: 1,
             }}
           >
-            <Ionicons name="options-outline" size={18} color={activeFilterCount > 0 ? "#166534" : "#6B7280"} />
+            <Ionicons name="options-outline" size={18} color={activeFilterCount > 0 ? theme.primary.greenDark : theme.text.muted} />
             {activeFilterCount > 0 && (
               <View style={{
                 marginLeft: 6,
-                backgroundColor: "#166534",
+                backgroundColor: theme.primary.greenDark,
                 borderRadius: 10,
                 minWidth: 20,
                 height: 20,
@@ -297,11 +298,11 @@ const CategoryListing = () => {
                     paddingVertical: 10,
                     borderRadius: 20,
                     borderWidth: 1.5,
-                    borderColor: "#166534",
-                    backgroundColor: "#FFFFFF",
+                    borderColor: theme.primary.greenDark,
+                    backgroundColor: theme.background.input,
                   }}
                 >
-                  <AppText variant="bodyMd" style={{ color: "#166534", fontWeight: "600" }}>
+                  <AppText variant="bodyMd" style={{ color: theme.primary.greenDark, fontWeight: "600" }}>
                     Clear Filters
                   </AppText>
                 </TouchableOpacity>
@@ -319,12 +320,12 @@ const CategoryListing = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.background.input,
         flexDirection: 'row',
         paddingVertical: 12,
         paddingBottom: 28,
         borderTopWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: theme.border.subtle,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.05,
@@ -350,16 +351,16 @@ const CategoryListing = () => {
                 paddingHorizontal: 4,
                 marginHorizontal: 6,
                 borderRadius: 20,
-                backgroundColor: isActive ? '#166534' : 'transparent',
+                backgroundColor: isActive ? theme.primary.greenDark : 'transparent',
                 borderWidth: isActive ? 0 : 1,
-                borderColor: '#E5E7EB',
+                borderColor: theme.border.subtle,
               }}
               onPress={() => setSortBy(key)}
             >
               <AppText
                 variant="bodyMd"
                 style={{
-                  color: isActive ? '#FFFFFF' : '#4B5563',
+                  color: isActive ? theme.text.onPrimary : theme.text.subtle,
                   fontWeight: isActive ? '700' : '500',
                   fontSize: 12,
                   textAlign: 'center',

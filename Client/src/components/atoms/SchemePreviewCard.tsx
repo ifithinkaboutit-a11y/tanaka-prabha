@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import Card from "../atoms/Card";
 
@@ -73,7 +73,7 @@ export default function SchemePreviewCard({
           </View>
           {interestCount !== undefined && (
             <View style={styles.interestBadge}>
-              <Ionicons name="heart" size={12} color="#EF4444" />
+              <Ionicons name="heart" size={12} color={theme.semantic.like} />
               <AppText variant="caption" style={styles.interestText}>
                 {interestCount}
               </AppText>
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     padding: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.neutral.border,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: theme.background.successSubtle,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
@@ -138,13 +138,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: theme.background.errorSubtle,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
   },
   interestText: {
-    color: "#EF4444",
+    color: theme.semantic.like,
     fontWeight: "500",
   },
 });

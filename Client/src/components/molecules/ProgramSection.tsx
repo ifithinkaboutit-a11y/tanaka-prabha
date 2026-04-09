@@ -5,6 +5,7 @@ import { Scheme } from "@/services/apiService";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import ProgramCard from "../atoms/ProgramCard";
+import { theme } from "@/styles/colors";
 
 type ProgramSectionProps = {
   title: string;
@@ -26,7 +27,7 @@ export default function ProgramSection({
       <View style={{ marginBottom: 24, paddingHorizontal: 16 }}>
         <AppText
           variant="h3"
-          style={{ fontWeight: "700", color: "#1F2937", fontSize: 20, marginBottom: 12 }}
+          style={{ fontWeight: "700", color: theme.text.secondary, fontSize: 20, marginBottom: 12 }}
         >
           {title}
         </AppText>
@@ -38,7 +39,7 @@ export default function ProgramSection({
             alignItems: "center",
           }}
         >
-          <Ionicons name="folder-open-outline" size={48} color="#9CA3AF" />
+          <Ionicons name="folder-open-outline" size={48} color={theme.text.placeholder} />
           <AppText
             variant="bodyMd"
             style={{ color: "#6B7280", marginTop: 12, textAlign: "center" }}
@@ -51,7 +52,7 @@ export default function ProgramSection({
   }
 
   return (
-    <View style={{ marginBottom: 24, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+    <View style={{ marginBottom: 24, paddingHorizontal: 16, backgroundColor: theme.background.input }}>
       {/* Section Header */}
       <View
         style={{
@@ -64,7 +65,7 @@ export default function ProgramSection({
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <AppText
             variant="h3"
-            style={{ fontWeight: "700", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
+            style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20, letterSpacing: -0.2 }}
           >
             {title}
           </AppText>

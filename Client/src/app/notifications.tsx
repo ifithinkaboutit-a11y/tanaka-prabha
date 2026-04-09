@@ -14,7 +14,7 @@ import Card from "../components/atoms/Card";
 import { useTranslation } from "../i18n";
 import { notificationsApi, Notification } from "../services/apiService";
 import { NotificationItemSkeleton } from "../components/atoms/Skeleton";
-import { colors } from "../styles/colors";
+import { colors, theme } from "../styles/colors";
 
 // Helper to group notifications by date
 const groupNotificationsByDate = (notifs: Notification[]) => {
@@ -90,7 +90,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
     <View style={{
       marginBottom: 12,
       flexDirection: "row",
-      backgroundColor: "#FFFFFF",
+      backgroundColor: theme.background.input,
       borderRadius: 12,
       padding: 16,
       shadowColor: "#000",
@@ -117,7 +117,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <AppText
             variant="bodyMd"
-            style={{ fontWeight: "700", color: "#111827", flex: 1, marginRight: 16, fontSize: 15 }}
+            style={{ fontWeight: "700", color: theme.text.primary, flex: 1, marginRight: 16, fontSize: 15 }}
           >
             {title}
           </AppText>
@@ -129,7 +129,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
         {description ? (
           <AppText
             variant="bodySm"
-            style={{ color: "#6B7280", fontSize: 13, lineHeight: 18, marginTop: 4 }}
+            style={{ color: theme.text.muted, fontSize: 13, lineHeight: 18, marginTop: 4 }}
             numberOfLines={2}
           >
             {description}
@@ -186,11 +186,11 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+      <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}>
-          <View style={{ width: 40, height: 24, borderRadius: 6, backgroundColor: "#E5E7EB", marginRight: 16 }} />
-          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: theme.border.subtle, backgroundColor: theme.background.header }}>
+          <View style={{ width: 40, height: 24, borderRadius: 6, backgroundColor: theme.border.subtle, marginRight: 16 }} />
+          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: theme.border.subtle }} />
         </View>
         <View style={{ padding: 16, paddingTop: 20 }}>
           {[0, 1, 2, 3, 4].map((i) => <NotificationItemSkeleton key={i} />)}
@@ -200,7 +200,7 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Custom Header */}
@@ -211,15 +211,15 @@ export default function NotificationsScreen() {
         paddingBottom: 16,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
-        backgroundColor: "#FFFFFF",
+        borderBottomColor: theme.border.subtle,
+        backgroundColor: theme.background.header,
       }}>
         <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          <Ionicons name="arrow-back" size={24} color={theme.text.secondary} />
         </TouchableOpacity>
         <AppText
           variant="h3"
-          style={{ color: "#1F2937", flex: 1, fontWeight: "700", fontSize: 18 }}
+          style={{ color: theme.text.secondary, flex: 1, fontWeight: "700", fontSize: 18 }}
           numberOfLines={1}
         >
           {t("notifications.title") || "Notifications"}
@@ -235,8 +235,8 @@ export default function NotificationsScreen() {
       >
         {groupedNotifications.length === 0 ? (
           <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80, opacity: 0.6 }}>
-            <Ionicons name="notifications-off-outline" size={64} color={colors.neutral.textLight} />
-            <AppText style={{ marginTop: 16, color: "#616161", textAlign: "center" }}>
+            <Ionicons name="notifications-off-outline" size={64} color={theme.text.light} />
+            <AppText style={{ marginTop: 16, color: theme.text.medium, textAlign: "center" }}>
               {t("notifications.empty") || "No notifications yet"}
             </AppText>
           </View>
@@ -245,10 +245,10 @@ export default function NotificationsScreen() {
             {groupedNotifications.map((group, index) => (
               <View key={index} style={{ marginBottom: 28 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-                  <AppText variant="h3" style={{ fontSize: 13, fontWeight: "700", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  <AppText variant="h3" style={{ fontSize: 13, fontWeight: "700", color: theme.text.placeholder, textTransform: "uppercase", letterSpacing: 0.5 }}>
                     {t(group.titleKey) || group.title}
                   </AppText>
-                  <View style={{ flex: 1, height: 1, backgroundColor: "#E5E7EB", marginLeft: 12 }} />
+                  <View style={{ flex: 1, height: 1, backgroundColor: theme.border.subtle, marginLeft: 12 }} />
                 </View>
                 {group.data.map((notification) => (
                   <NotificationItem key={notification.id} notification={notification} />

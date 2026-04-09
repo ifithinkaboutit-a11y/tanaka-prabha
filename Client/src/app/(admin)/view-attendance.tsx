@@ -1,6 +1,7 @@
 // src/app/(admin)/view-attendance.tsx
 import AppText from "@/components/atoms/AppText";
 import apiService, { ApiEvent } from "@/services/apiService";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -60,7 +61,7 @@ export default function ViewAttendance() {
             <View style={s.root}>
                 <View style={s.header}>
                     <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-                        <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                        <Ionicons name="arrow-back" size={22} color={theme.text.secondary} />
                     </TouchableOpacity>
                     <View>
                         <AppText style={s.title}>Attendance Records</AppText>
@@ -117,7 +118,7 @@ export default function ViewAttendance() {
         <View style={s.root}>
             <View style={s.header}>
                 <TouchableOpacity onPress={() => { setSelectedEvent(null); setAttendees([]); }} style={s.backBtn}>
-                    <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                    <Ionicons name="arrow-back" size={22} color={theme.text.secondary} />
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
                     <AppText style={s.title}>Attendance Records</AppText>
@@ -203,37 +204,37 @@ export default function ViewAttendance() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
     center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
-    loadingText: { color: "#6B7280", fontSize: 14 },
+    loadingText: { color: theme.text.muted, fontSize: 14 },
 
     header: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20,
     },
     backBtn: {
-        padding: 8, backgroundColor: "#fff", borderRadius: 12,
+        padding: 8, backgroundColor: theme.background.input, borderRadius: 12,
         shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
     },
-    title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-    subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    title: { fontSize: 20, fontWeight: "800", color: theme.text.primary },
+    subtitle: { fontSize: 13, color: theme.text.muted, marginTop: 2 },
 
     // event list
     eventCard: {
         flexDirection: "row", alignItems: "center", gap: 12,
-        backgroundColor: "#fff", borderRadius: 14, padding: 14, marginBottom: 10,
+        backgroundColor: theme.background.input, borderRadius: 14, padding: 14, marginBottom: 10,
         shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
     },
     eventIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#F5F3FF", justifyContent: "center", alignItems: "center" },
-    eventTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
+    eventTitle: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
     eventMeta: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-    eventDate: { fontSize: 12, color: "#9CA3AF" },
-    dot: { width: 3, height: 3, borderRadius: 9, backgroundColor: "#D1D5DB" },
+    eventDate: { fontSize: 12, color: theme.text.placeholder },
+    dot: { width: 3, height: 3, borderRadius: 9, backgroundColor: theme.border.card },
     statusBadge: { backgroundColor: "#F5F3FF", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     statusText: { fontSize: 11, color: "#7C3AED", fontWeight: "600", textTransform: "capitalize" },
 
     empty: { alignItems: "center", paddingVertical: 40, gap: 12 },
-    emptyText: { color: "#9CA3AF", fontSize: 15 },
+    emptyText: { color: theme.text.placeholder, fontSize: 15 },
 
     // stats
     statsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
@@ -244,14 +245,14 @@ const s = StyleSheet.create({
     // attendee cards
     attendeeCard: {
         flexDirection: "row", alignItems: "center", gap: 12,
-        backgroundColor: "#fff", borderRadius: 14, padding: 14, marginBottom: 8,
+        backgroundColor: theme.background.input, borderRadius: 14, padding: 14, marginBottom: 8,
         shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
     },
     initials: { width: 42, height: 42, borderRadius: 21, justifyContent: "center", alignItems: "center" },
     initialsText: { fontWeight: "700", fontSize: 16 },
-    attendeeName: { fontSize: 14, fontWeight: "700", color: "#111827" },
+    attendeeName: { fontSize: 14, fontWeight: "700", color: theme.text.primary },
     mobileMeta: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
-    attendeeMobile: { fontSize: 12, color: "#9CA3AF" },
+    attendeeMobile: { fontSize: 12, color: theme.text.placeholder },
     badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
     badgeText: { fontSize: 12, fontWeight: "600" },
 });

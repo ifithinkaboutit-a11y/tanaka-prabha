@@ -19,6 +19,7 @@ import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 import AddressDropdowns, { type AddressValue } from "./AddressDropdowns";
+import { theme } from "@/styles/colors";
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 const educationOptions = [
@@ -84,17 +85,17 @@ const FormInput = ({
 const fi = StyleSheet.create({
   wrap: { marginBottom: 18 },
   labelRow: { flexDirection: "row", alignItems: "center", marginBottom: 7 },
-  label: { color: "#374151", fontSize: 13, fontWeight: "600" },
+  label: { color: theme.text.subtle, fontSize: 13, fontWeight: "600" },
   required: { color: "#EF4444", fontSize: 13 },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 15,
-    color: "#1F2937",
+    color: theme.text.secondary,
   },
   inputFocused: {
     borderColor: "#2563EB",
@@ -156,18 +157,18 @@ const ci = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1.5,
   },
-  btnMinus: { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" },
+  btnMinus: { borderColor: theme.border.subtle, backgroundColor: "#F9FAFB" },
   btnPlus: { borderColor: "#BFDBFE", backgroundColor: "#EFF6FF" },
   input: {
     flex: 1,
     height: 40,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.subtle,
     borderRadius: 10,
     fontSize: 15,
     fontWeight: "700",
-    color: "#1F2937",
+    color: theme.text.secondary,
     textAlign: "center",
   },
 });
@@ -195,7 +196,7 @@ const SectionHeader = ({
 const sh = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", marginBottom: 20, gap: 12 },
   iconBox: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 17, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 17, fontWeight: "700", color: theme.text.primary },
 });
 
 // ─── Map Card (address auto-fill button) ─────────────────────────────────────
@@ -609,14 +610,6 @@ export default function PersonalDetailsForm({
 
         <View style={s.twoCol}>
           <View style={{ flex: 1 }}>
-            <FormInput
-              label={String(T.translate("personalDetails.postOffice"))}
-              value={formData.postOffice}
-              onChangeText={(v) => update("postOffice", v)}
-              placeholder="Post office"
-            />
-          </View>
-          <View style={{ flex: 1 }}>
             <View style={fi.labelRow}>
               <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
               <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
@@ -629,14 +622,21 @@ export default function PersonalDetailsForm({
               maxLength={6}
               placeholder="000000"
               placeholderTextColor="#C4C9D4"
+              returnKeyType="next"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label={String(T.translate("personalDetails.postOffice"))}
+              value={formData.postOffice}
+              onChangeText={(v) => update("postOffice", v)}
+              placeholder="Post office"
             />
           </View>
         </View>
-
-
+        {/* Extra space so keyboard doesn't cover the last field */}
+        <View style={{ height: 100 }} />
       </View>
-
-      {/* ── Action Buttons ── */}
       <View style={s.btnRow}>
         <Button
           variant="outline"
@@ -660,7 +660,7 @@ const s = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
 
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 16,
     padding: 20,
     marginBottom: 14,
@@ -677,7 +677,7 @@ const s = StyleSheet.create({
   subGroupLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: theme.text.subtle,
     marginBottom: 10,
   },
   thinRow: { flexDirection: "row" },

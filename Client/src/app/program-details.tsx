@@ -11,6 +11,7 @@ import InterestButton from "../components/atoms/InterestButton";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 import { useInterest } from "../hooks/useInterest";
+import { theme } from "@/styles/colors";
 
 export const options = {
   headerShown: false,
@@ -51,12 +52,12 @@ const ProgramDetails = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+      <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: theme.background.header }}>
           <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
-            <Ionicons name="arrow-back" size={24} color="#386641" />
+            <Ionicons name="arrow-back" size={24} color={theme.primary.green} />
           </Pressable>
-          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+          <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: theme.border.subtle }} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
           <DetailPageSkeleton />
@@ -67,8 +68,8 @@ const ProgramDetails = () => {
 
   if (!program) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
-        <AppText variant="h2" style={{ color: "#212121", marginBottom: 16 }}>
+      <View style={{ flex: 1, backgroundColor: theme.background.card, alignItems: "center", justifyContent: "center" }}>
+        <AppText variant="h2" style={{ color: theme.text.dark, marginBottom: 16 }}>
           Program Not Found
         </AppText>
         <Button label="Go Back" onPress={() => router.back()} />
@@ -89,22 +90,22 @@ const ProgramDetails = () => {
           <View>
             <AppText
               variant="bodyLg"
-              style={{ color: "#212121", marginBottom: 24, lineHeight: 24 }}
+              style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}
             >
               {program.overview}
             </AppText>
 
             {/* Key Objectives */}
-            <AppText variant="h3" style={{ color: "#212121", marginBottom: 16 }}>
+            <AppText variant="h3" style={{ color: theme.text.dark, marginBottom: 16 }}>
               {t("programReader.keyObjectives")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
               {program.keyObjectives?.map((objective, index) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
                     •
                   </AppText>
-                  <AppText variant="bodyMd" style={{ color: "#212121", flex: 1 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
                     {objective}
                   </AppText>
                 </View>
@@ -114,13 +115,13 @@ const ProgramDetails = () => {
         );
       case "process":
         return (
-          <AppText variant="bodyLg" style={{ color: "#212121", lineHeight: 24 }}>
+          <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {program.process}
           </AppText>
         );
       case "support":
         return (
-          <AppText variant="bodyLg" style={{ color: "#212121", lineHeight: 24 }}>
+          <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {program.supportContact}
           </AppText>
         );
@@ -130,16 +131,16 @@ const ProgramDetails = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Navigation Header */}
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: theme.background.header }}>
           <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
-            <Ionicons name="arrow-back" size={24} color="#386641" />
+            <Ionicons name="arrow-back" size={24} color={theme.primary.green} />
           </Pressable>
           <AppText
             variant="h2"
-            style={{ color: "#212121", flex: 1 }}
+            style={{ color: theme.text.dark, flex: 1 }}
             numberOfLines={1}
           >
             {program.title}
@@ -158,7 +159,7 @@ const ProgramDetails = () => {
         {/* Program Title & Description */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-            <AppText variant="h1" style={{ color: "#212121", flex: 1, marginRight: 12 }}>
+            <AppText variant="h1" style={{ color: theme.text.dark, flex: 1, marginRight: 12 }}>
               {program.title}
             </AppText>
             <InterestButton
@@ -168,7 +169,7 @@ const ProgramDetails = () => {
               loading={interestLoading}
             />
           </View>
-          <AppText variant="bodyLg" style={{ color: "#616161", lineHeight: 24 }}>
+          <AppText variant="bodyLg" style={{ color: theme.text.medium, lineHeight: 24 }}>
             {program.description}
           </AppText>
         </View>
@@ -178,7 +179,7 @@ const ProgramDetails = () => {
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "#F3F4F6",
+              backgroundColor: theme.background.screen,
               borderRadius: 25,
               padding: 4,
             }}
@@ -196,7 +197,7 @@ const ProgramDetails = () => {
                   paddingVertical: 12,
                   paddingHorizontal: 16,
                   borderRadius: 22,
-                  backgroundColor: activeTab === tab.key ? "#386641" : "transparent",
+                  backgroundColor: activeTab === tab.key ? theme.primary.green : "transparent",
                 }}
               >
                 <AppText
@@ -222,12 +223,12 @@ const ProgramDetails = () => {
       {/* Fixed Apply Now CTA */}
       <View
         style={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.header,
           paddingHorizontal: 16,
           paddingVertical: 16,
           paddingBottom: 24,
           borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
+          borderTopColor: theme.border.subtle,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.08,

@@ -1,7 +1,7 @@
 // src/components/molecules/OnboardingHeader.tsx
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import ProgressBar from "../atoms/ProgressBar";
 
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   title: {
-    color: "#FFFFFF",
+    color: theme.text.onPrimary,
     textAlign: "center",
     fontWeight: "700",
     fontSize: 24,

@@ -4,6 +4,7 @@ import { View } from "react-native";
 import AppText from "../atoms/AppText";
 import SchemePreviewCard from "../atoms/SchemePreviewCard";
 import { Ionicons } from "@expo/vector-icons";
+import { theme } from "@/styles/colors";
 
 type Scheme = {
   id: string;
@@ -25,8 +26,8 @@ export default function SchemePreviewList({
   if (!schemes || schemes.length === 0) {
     return (
       <View style={{ alignItems: "center", paddingVertical: 24, gap: 8 }}>
-        <Ionicons name="folder-open-outline" size={40} color="#D1D5DB" />
-        <AppText variant="bodySm" style={{ color: "#9CA3AF", textAlign: "center" }}>
+        <Ionicons name="folder-open-outline" size={40} color={theme.border.card} />
+        <AppText variant="bodySm" style={{ color: theme.text.placeholder, textAlign: "center" }}>
           No schemes available right now
         </AppText>
       </View>

@@ -2,6 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import apiService, { ApiUserProfile } from "@/services/apiService";
 import { filterFarmers } from "@/utils/filterFarmers";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -72,7 +73,7 @@ const fr = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 14,
         padding: 14,
         marginBottom: 10,
@@ -85,16 +86,16 @@ const fr = StyleSheet.create({
         width: 46,
         height: 46,
         borderRadius: 23,
-        backgroundColor: "#3B82F6",
+        backgroundColor: theme.secondary.sky,
         justifyContent: "center",
         alignItems: "center",
     },
     avatarText: { color: "#fff", fontSize: 16, fontWeight: "700" },
     info: { flex: 1, gap: 3 },
-    name: { fontSize: 15, fontWeight: "700", color: "#111827" },
+    name: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
     metaRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
     metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-    metaText: { fontSize: 12, color: "#6B7280" },
+    metaText: { fontSize: 12, color: theme.text.muted },
     right: { alignItems: "flex-end" },
     badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     badgeVerified: { backgroundColor: "#D1FAE5" },
@@ -121,8 +122,8 @@ function EmptyState({ query }: { query: string }) {
 
 const es = StyleSheet.create({
     container: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 12 },
-    title: { fontSize: 16, fontWeight: "700", color: "#374151", textAlign: "center" },
-    subtitle: { fontSize: 13, color: "#9CA3AF", textAlign: "center" },
+    title: { fontSize: 16, fontWeight: "700", color: theme.text.secondary, textAlign: "center" },
+    subtitle: { fontSize: 13, color: theme.text.placeholder, textAlign: "center" },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────
@@ -157,7 +158,7 @@ export default function Beneficiaries() {
     if (loading) {
         return (
             <View style={s.center}>
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={theme.secondary.sky} />
                 <AppText style={s.loadingText}>Loading farmers…</AppText>
             </View>
         );
@@ -224,7 +225,7 @@ export default function Beneficiaries() {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#3B82F6"
+                        tintColor={theme.secondary.sky}
                     />
                 }
                 showsVerticalScrollIndicator={false}
@@ -234,9 +235,9 @@ export default function Beneficiaries() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
-    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F3F4F6", gap: 12 },
-    loadingText: { color: "#9CA3AF", fontSize: 14 },
+    root: { flex: 1, backgroundColor: theme.background.screen },
+    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background.screen, gap: 12 },
+    loadingText: { color: theme.text.placeholder, fontSize: 14 },
 
     header: {
         flexDirection: "row",
@@ -245,7 +246,7 @@ const s = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 56,
         paddingBottom: 16,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
         shadowColor: "#000",
@@ -256,17 +257,17 @@ const s = StyleSheet.create({
     },
     backBtn: {
         padding: 8,
-        backgroundColor: "#F3F4F6",
+        backgroundColor: theme.background.screen,
         borderRadius: 12,
     },
     headerTitle: { flex: 1 },
-    title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-    subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    title: { fontSize: 20, fontWeight: "800", color: theme.text.primary },
+    subtitle: { fontSize: 13, color: theme.text.muted, marginTop: 2 },
     addBtn: {
         flexDirection: "row",
         alignItems: "center",
         gap: 5,
-        backgroundColor: "#10B981",
+        backgroundColor: theme.semantic.success,
         paddingHorizontal: 14,
         paddingVertical: 9,
         borderRadius: 12,
@@ -276,7 +277,7 @@ const s = StyleSheet.create({
     searchRow: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 14,
         marginHorizontal: 16,
         marginBottom: 12,
@@ -291,7 +292,7 @@ const s = StyleSheet.create({
         flex: 1,
         paddingVertical: 13,
         fontSize: 15,
-        color: "#1F2937",
+        color: theme.text.secondary,
     },
     clearBtn: { paddingLeft: 8 },
 

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AppText from "../components/atoms/AppText";
 import { ApiError, eventsApi } from "@/services/apiService";
+import { theme } from "../styles/colors";
 
 export const options = {
     headerShown: false,
@@ -330,7 +331,7 @@ const ScanAttendance = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
     },
     centered: {
         flex: 1,
@@ -344,18 +345,18 @@ const styles = StyleSheet.create({
         paddingTop: 48,
         paddingBottom: 16,
         paddingHorizontal: 16,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
+        borderBottomColor: theme.background.screen,
     },
     backBtn: {
         marginRight: 12,
         padding: 8,
-        backgroundColor: "#F3F4F6",
+        backgroundColor: theme.background.screen,
         borderRadius: 12,
     },
     headerTitle: {
-        color: "#111827",
+        color: theme.text.primary,
         flex: 1,
         fontSize: 18,
         fontWeight: "700",
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
         width: 240,
         height: 240,
         borderWidth: 3,
-        borderColor: "#386641",
+        borderColor: theme.primary.green,
         borderRadius: 16,
         backgroundColor: "transparent",
     },
@@ -417,14 +418,14 @@ const styles = StyleSheet.create({
     settingsBtn: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingHorizontal: 24,
         paddingVertical: 14,
         borderRadius: 14,
         gap: 8,
     },
     settingsBtnText: {
-        color: "#FFFFFF",
+        color: theme.text.onPrimary,
         fontWeight: "700",
         fontSize: 15,
     },
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     successEventName: {
-        color: "#386641",
+        color: theme.primary.green,
         fontWeight: "700",
         fontSize: 16,
         marginBottom: 8,
@@ -462,13 +463,13 @@ const styles = StyleSheet.create({
         marginBottom: 28,
     },
     doneBtn: {
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingHorizontal: 48,
         paddingVertical: 14,
         borderRadius: 14,
     },
     doneBtnText: {
-        color: "#FFFFFF",
+        color: theme.text.onPrimary,
         fontWeight: "700",
         fontSize: 16,
     },
@@ -492,13 +493,13 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     retryBtn: {
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingHorizontal: 32,
         paddingVertical: 14,
         borderRadius: 14,
     },
     retryBtnText: {
-        color: "#FFFFFF",
+        color: theme.text.onPrimary,
         fontWeight: "700",
         fontSize: 15,
     },

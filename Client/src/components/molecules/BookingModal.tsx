@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import AppText from "../atoms/AppText";
 import { useTranslation } from "../../i18n";
+import { theme } from "@/styles/colors";
 
 type BookingModalProps = {
   visible: boolean;
@@ -191,7 +192,7 @@ export default function BookingModal({
 
         <View
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.input,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             maxHeight: "92%",
@@ -205,13 +206,13 @@ export default function BookingModal({
               justifyContent: "space-between",
               padding: 20,
               borderBottomWidth: 1,
-              borderBottomColor: "#E5E7EB",
+              borderBottomColor: theme.border.subtle,
             }}
           >
             <View>
               <AppText
                 variant="h3"
-                style={{ fontWeight: "700", color: "#1F2937", fontSize: 20 }}
+                style={{ fontWeight: "700", color: theme.text.secondary, fontSize: 20 }}
               >
                 {t("connect.booking.title")}
               </AppText>
@@ -262,11 +263,11 @@ export default function BookingModal({
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="chevron-back" size={20} color="#1F2937" />
+                <Ionicons name="chevron-back" size={20} color={theme.text.secondary} />
               </Pressable>
               <AppText
                 variant="h3"
-                style={{ fontWeight: "600", color: "#1F2937", fontSize: 18 }}
+                style={{ fontWeight: "600", color: theme.text.secondary, fontSize: 18 }}
               >
                 {MONTHS[currentMonth]} {currentYear}
               </AppText>
@@ -281,7 +282,7 @@ export default function BookingModal({
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="chevron-forward" size={20} color="#1F2937" />
+                <Ionicons name="chevron-forward" size={20} color={theme.text.secondary} />
               </Pressable>
             </View>
 
@@ -353,7 +354,7 @@ export default function BookingModal({
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: isSelected
-                          ? "#386641"
+                          ? theme.primary.green
                           : isFullyBooked
                             ? "#FEE2E2"
                             : isToday
@@ -367,12 +368,12 @@ export default function BookingModal({
                         variant="bodySm"
                         style={{
                           color: isSelected
-                            ? "#FFFFFF"
+                            ? theme.text.onPrimary
                             : isPast
-                              ? "#D1D5DB"
+                              ? theme.border.card
                               : isFullyBooked
                                 ? "#DC2626"
-                                : "#1F2937",
+                                : theme.text.secondary,
                           fontWeight: isSelected || isToday ? "600" : "400",
                           fontSize: 14,
                         }}
@@ -446,7 +447,7 @@ export default function BookingModal({
                   variant="h3"
                   style={{
                     fontWeight: "600",
-                    color: "#1F2937",
+                    color: theme.text.secondary,
                     marginBottom: 12,
                     fontSize: 16,
                   }}
@@ -475,26 +476,26 @@ export default function BookingModal({
                           paddingHorizontal: 16,
                           borderRadius: 12,
                           backgroundColor: isTimeSelected
-                            ? "#386641"
+                            ? theme.primary.green
                             : isBooked
                               ? "#F3F4F6"
-                              : "#FFFFFF",
+                              : theme.background.input,
                           borderWidth: 1,
                           borderColor: isTimeSelected
-                            ? "#386641"
+                            ? theme.primary.green
                             : isBooked
-                              ? "#E5E7EB"
-                              : "#D1D5DB",
+                              ? theme.border.subtle
+                              : theme.border.card,
                         }}
                       >
                         <AppText
                           variant="bodySm"
                           style={{
                             color: isTimeSelected
-                              ? "#FFFFFF"
+                              ? theme.text.onPrimary
                               : isBooked
-                                ? "#9CA3AF"
-                                : "#1F2937",
+                                ? theme.text.placeholder
+                                : theme.text.secondary,
                             fontWeight: isTimeSelected ? "600" : "500",
                             fontSize: 14,
                             textDecorationLine: isBooked ? "line-through" : "none",
@@ -517,7 +518,7 @@ export default function BookingModal({
               paddingBottom: 28,
               borderTopWidth: 1,
               borderTopColor: "#F3F4F6",
-              backgroundColor: "#FFFFFF",
+              backgroundColor: theme.background.input,
             }}
           >
             <Pressable
@@ -525,7 +526,7 @@ export default function BookingModal({
               disabled={!selectedDate || !selectedTime}
               style={({ pressed }) => ({
                 backgroundColor:
-                  selectedDate && selectedTime ? "#386641" : "#D1D5DB",
+                  selectedDate && selectedTime ? theme.primary.green : theme.border.card,
                 borderRadius: 25,
                 paddingVertical: 16,
                 alignItems: "center",
@@ -537,13 +538,13 @@ export default function BookingModal({
               <Ionicons
                 name="checkmark-circle"
                 size={20}
-                color={selectedDate && selectedTime ? "#FFFFFF" : "#9CA3AF"}
+                color={selectedDate && selectedTime ? theme.text.onPrimary : theme.text.placeholder}
                 style={{ marginRight: 8 }}
               />
               <AppText
                 variant="bodyMd"
                 style={{
-                  color: selectedDate && selectedTime ? "#FFFFFF" : "#9CA3AF",
+                  color: selectedDate && selectedTime ? theme.text.onPrimary : theme.text.placeholder,
                   fontWeight: "700",
                   fontSize: 16,
                 }}
@@ -554,7 +555,7 @@ export default function BookingModal({
             {!selectedDate && (
               <AppText
                 variant="bodySm"
-                style={{ color: "#9CA3AF", textAlign: "center", marginTop: 8, fontSize: 12 }}
+                style={{ color: theme.text.placeholder, textAlign: "center", marginTop: 8, fontSize: 12 }}
               >
                 {t("connect.booking.selectDate")} {"&"} {t("connect.booking.selectTime")}
               </AppText>
@@ -562,7 +563,7 @@ export default function BookingModal({
             {selectedDate && !selectedTime && (
               <AppText
                 variant="bodySm"
-                style={{ color: "#9CA3AF", textAlign: "center", marginTop: 8, fontSize: 12 }}
+                style={{ color: theme.text.placeholder, textAlign: "center", marginTop: 8, fontSize: 12 }}
               >
                 {t("connect.booking.selectTime")}
               </AppText>

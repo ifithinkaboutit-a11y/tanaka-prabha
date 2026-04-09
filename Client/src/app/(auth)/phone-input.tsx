@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native";
 import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
+import { theme } from "@/styles/colors";
 
 const PhoneInput = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -190,7 +191,7 @@ const PhoneInput = () => {
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={s.header}>
         <AppText variant="h2" style={s.headerTitle}>
@@ -240,7 +241,7 @@ const PhoneInput = () => {
               onBlur={() => setIsFocused(false)}
             />
             {phoneNumber.length === 10 && (
-              <Ionicons name="checkmark-circle" size={22} color="#386641" style={s.checkIcon} />
+              <Ionicons name="checkmark-circle" size={22} color={theme.primary.green} style={s.checkIcon} />
             )}
             {validationError && (
               <Ionicons name="alert-circle" size={22} color="#EF4444" style={s.checkIcon} />
@@ -371,9 +372,9 @@ const PhoneInput = () => {
 export default PhoneInput;
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#fff" },
+  root: { flex: 1, backgroundColor: theme.background.input },
   header: {
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingTop: 60,
     paddingBottom: 32,
     paddingHorizontal: 24,
@@ -423,7 +424,7 @@ const s = StyleSheet.create({
   // ── Card ──
   card: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: theme.background.input,
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
@@ -432,12 +433,12 @@ const s = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: theme.border.subtle,
     alignSelf: "center",
     marginBottom: 24,
   },
   inputLabel: {
-    color: "#374151",
+    color: theme.text.subtle,
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 10,
@@ -459,37 +460,37 @@ const s = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1.5,
     borderRadius: 16,
-    backgroundColor: "#F9FAFB",
-    borderColor: "#E5E7EB",
+    backgroundColor: theme.background.neutralSubtle,
+    borderColor: theme.border.subtle,
     overflow: "hidden",
   },
   inputRowFocused: {
-    borderColor: "#386641",
-    backgroundColor: "#fff",
-    shadowColor: "#386641",
+    borderColor: theme.primary.green,
+    backgroundColor: theme.background.input,
+    shadowColor: theme.primary.green,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
   },
-  inputRowError: { borderColor: "#EF4444" },
+  inputRowError: { borderColor: theme.semantic.errorLight },
   countryCode: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 18,
     gap: 6,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: theme.background.neutralSubtle,
   },
   flag: { fontSize: 20 },
-  divider: { width: 1, height: 26, backgroundColor: "#E5E7EB" },
-  countryCodeText: { color: "#374151", fontWeight: "700", fontSize: 15 },
+  divider: { width: 1, height: 26, backgroundColor: theme.border.subtle },
+  countryCodeText: { color: theme.text.subtle, fontWeight: "700", fontSize: 15 },
   phoneInput: {
     flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 18,
     fontSize: 20,
-    color: "#111827",
+    color: theme.text.primary,
     letterSpacing: 2,
     fontWeight: "600",
   },
@@ -498,42 +499,42 @@ const s = StyleSheet.create({
   // ── Helper ──
   helperRow: { minHeight: 22, marginTop: 8, marginBottom: 4 },
   errorRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  errorText: { color: "#EF4444", fontSize: 13, flex: 1 },
-  charCount: { color: "#9CA3AF", fontSize: 12 },
+  errorText: { color: theme.semantic.errorLight, fontSize: 13, flex: 1 },
+  charCount: { color: theme.text.placeholder, fontSize: 12 },
 
   // ── CTA button ──
   ctaBtn: {
     width: "100%",
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 18,
-    shadowColor: "#386641",
+    shadowColor: theme.primary.green,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
   ctaBtnDisabled: {
-    backgroundColor: "#D1D5DB",
+    backgroundColor: theme.border.card,
     shadowOpacity: 0,
     elevation: 0,
   },
   loadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  ctaText: { color: "#fff", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
+  ctaText: { color: theme.text.onPrimary, fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
 
   // ── Switch / footer ──
   switchRow: { alignItems: "center", marginBottom: 16 },
-  switchText: { textAlign: "center", color: "#6B7280", fontSize: 14 },
-  switchLink: { color: "#386641", fontWeight: "700" },
+  switchText: { textAlign: "center", color: theme.text.muted, fontSize: 14 },
+  switchLink: { color: theme.primary.green, fontWeight: "700" },
   securityRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
   },
-  securityText: { color: "#9CA3AF", fontSize: 11 },
+  securityText: { color: theme.text.placeholder, fontSize: 11 },
 
   // ── Duplicate phone banner ──
   duplicateBanner: {

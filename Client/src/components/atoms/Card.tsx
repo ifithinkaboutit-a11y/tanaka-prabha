@@ -1,7 +1,7 @@
 // src/components/atoms/Card.tsx
 import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
-import { colors } from "../../styles/colors";
+import { theme } from "../../styles/colors";
 
 type CardProps = {
   children: React.ReactNode;
@@ -14,10 +14,10 @@ export default function Card({ children, style }: CardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.neutral.surface,
+    backgroundColor: theme.background.card,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: theme.border.card,
   },
 });

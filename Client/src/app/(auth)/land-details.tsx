@@ -23,6 +23,7 @@ import {
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
 import { colors } from "../../styles/colors";
+import { theme } from "../../styles/colors";
 import { validateLandEntry, validateLandArea } from "../../utils/validation";
 
 export const unstable_settings = {
@@ -195,8 +196,8 @@ const AuthLandDetailsScreen = () => {
 
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+    <View style={{ flex: 1, backgroundColor: theme.background.input }}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={headerStyles.header}>
         <View style={headerStyles.progressTrack}>
@@ -252,7 +253,7 @@ const AuthLandDetailsScreen = () => {
                           onPress={() => removeLandEntry(entry.id)}
                           className="p-2 active:opacity-70"
                         >
-                          <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                          <Ionicons name="trash-outline" size={20} color={theme.semantic.like} />
                         </Pressable>
                       )}
                     </View>
@@ -266,20 +267,20 @@ const AuthLandDetailsScreen = () => {
                         <View className="flex-1">
                           <TextInput
                             style={{
-                              backgroundColor: "#F9FAFB",
+                              backgroundColor: theme.background.neutralSubtle,
                               borderWidth: 1,
-                              borderColor: errors[entry.id]?.area && touched[entry.id]?.area ? "#EF4444" : "#E5E7EB",
+                      borderColor: errors[entry.id]?.area && touched[entry.id]?.area ? theme.semantic.errorLight : theme.border.subtle,
                               borderRadius: 12,
                               padding: 14,
                               fontSize: 16,
-                              color: "#1F2937",
+                              color: theme.text.secondary,
                             }}
                             value={entry.area > 0 ? String(entry.area) : ""}
                             onChangeText={(text) => handleAreaChange(entry.id, text)}
                             onBlur={() => handleAreaBlur(entry.id, entry.area)}
                             keyboardType="numeric"
                             placeholder="0"
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={theme.text.placeholder}
                           />
                         </View>
                         <View style={{ width: 120 }}>
@@ -308,7 +309,7 @@ const AuthLandDetailsScreen = () => {
                       <View
                         style={{
                           borderWidth: errors[entry.id]?.crops && touched[entry.id]?.crops ? 1 : 0,
-                          borderColor: "#EF4444",
+                          borderColor: errors[entry.id]?.crops && touched[entry.id]?.crops ? theme.semantic.errorLight : "transparent",
                           borderRadius: 12,
                         }}
                       >
@@ -332,7 +333,7 @@ const AuthLandDetailsScreen = () => {
                   onPress={() => addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })}
                   className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-green-300 border-dashed active:bg-green-100 bg-green-50"
                 >
-                  <Ionicons name="add-circle-outline" size={20} color="#16A34A" />
+                  <Ionicons name="add-circle-outline" size={20} color={theme.semantic.successText} />
                   <AppText variant="bodySm" className="text-green-600 font-semibold ml-2">
                     {t("onboarding.addAnotherLand")}
                   </AppText>
@@ -344,12 +345,12 @@ const AuthLandDetailsScreen = () => {
           </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
-        <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
+        <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
           <Pressable
             onPress={handleSkip}
-            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: "#fff", borderWidth: 1, borderColor: "#D1D5DB", alignItems: "center" }}
+            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: theme.background.input, borderWidth: 1, borderColor: theme.border.card, alignItems: "center" }}
           >
-            <AppText variant="bodyMd" style={{ color: "#6B7280", fontWeight: "600" }}>
+            <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
               {t("common.skip")}
             </AppText>
           </Pressable>
@@ -357,9 +358,9 @@ const AuthLandDetailsScreen = () => {
           <Pressable
             onPress={handleNext}
             disabled={!isValid()}
-            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
+            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
           >
-            <AppText variant="bodyMd" style={{ color: "#fff", fontWeight: "700" }}>
+            <AppText variant="bodyMd" style={{ color: theme.text.onPrimary, fontWeight: "700" }}>
               {t("common.next")}
             </AppText>
           </Pressable>
@@ -373,7 +374,7 @@ export default AuthLandDetailsScreen;
 
 const headerStyles = StyleSheet.create({
   header: {
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingTop: 56,
     paddingBottom: 28,
     paddingHorizontal: 24,
@@ -387,11 +388,11 @@ const headerStyles = StyleSheet.create({
   },
   progressFill: {
     height: 4,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.text.onPrimary,
     borderRadius: 2,
   },
   headerTitle: {
-    color: "#fff",
+    color: theme.text.onPrimary,
     fontSize: 24,
     fontWeight: "900",
     letterSpacing: -0.5,

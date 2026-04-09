@@ -12,6 +12,7 @@ import { schemesApi, Scheme } from "@/services/apiService";
 import { useTranslation } from "../i18n";
 import { useLanguageStore } from "../stores/languageStore";
 import { useInterest } from "../hooks/useInterest";
+import { theme } from "@/styles/colors";
 
 export const options = {
   headerShown: false,
@@ -53,12 +54,12 @@ const SchemeDetailsScreen = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#F3F4F6" }}>
+      <View style={{ flex: 1, backgroundColor: theme.background.header }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: theme.background.header, borderBottomWidth: 1, borderBottomColor: theme.background.screen }}>
           <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
+            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
           </Pressable>
-          <View style={{ width: 160, height: 20, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+          <View style={{ width: 160, height: 20, borderRadius: 6, backgroundColor: theme.border.subtle }} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
           <DetailPageSkeleton />
@@ -69,8 +70,8 @@ const SchemeDetailsScreen = () => {
 
   if (!scheme) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F6F6F6", alignItems: "center", justifyContent: "center" }}>
-        <AppText variant="h2" style={{ color: "#212121", marginBottom: 16 }}>
+      <View style={{ flex: 1, backgroundColor: theme.background.card, alignItems: "center", justifyContent: "center" }}>
+        <AppText variant="h2" style={{ color: theme.text.dark, marginBottom: 16 }}>
           {t("schemesPage.schemeNotFound")}
         </AppText>
         <Button label={t("common.goBack")} onPress={() => router.back()} />
@@ -102,22 +103,22 @@ const SchemeDetailsScreen = () => {
           <View>
             <AppText
               variant="bodyLg"
-              style={{ color: "#212121", marginBottom: 24, lineHeight: 24 }}
+              style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}
             >
               {overviewText}
             </AppText>
 
             {/* Key Objectives */}
-            <AppText variant="h3" style={{ color: "#212121", marginBottom: 16 }}>
+            <AppText variant="h3" style={{ color: theme.text.dark, marginBottom: 16 }}>
               {t("programReader.keyObjectives")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
               {keyObjectives?.map((objective: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
                     •
                   </AppText>
-                  <AppText variant="bodyMd" style={{ color: "#212121", flex: 1 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
                     {objective}
                   </AppText>
                 </View>
@@ -128,16 +129,16 @@ const SchemeDetailsScreen = () => {
       case "eligibility":
         return (
           <View>
-            <AppText variant="h3" style={{ color: "#212121", marginBottom: 12 }}>
+            <AppText variant="h3" style={{ color: theme.text.dark, marginBottom: 12 }}>
               {t("schemesPage.eligibility")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
               {eligibility?.map((criterion: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: "#212121", marginRight: 8 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
                     •
                   </AppText>
-                  <AppText variant="bodyMd" style={{ color: "#212121", flex: 1 }}>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
                     {criterion}
                   </AppText>
                 </View>
@@ -147,7 +148,7 @@ const SchemeDetailsScreen = () => {
         );
       case "process":
         return (
-          <AppText variant="bodyLg" style={{ color: "#212121", lineHeight: 24 }}>
+          <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {processText}
           </AppText>
         );
@@ -157,7 +158,7 @@ const SchemeDetailsScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background.header }}>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Navigation Header */}
         <View style={{
@@ -166,21 +167,21 @@ const SchemeDetailsScreen = () => {
           paddingTop: 52,
           paddingBottom: 16,
           paddingHorizontal: 16,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.header,
           borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
+          borderBottomColor: theme.background.screen,
         }}>
           <Pressable onPress={() => router.back()} style={({ pressed }) => ({
             marginRight: 16,
             padding: 8,
             borderRadius: 20,
-            backgroundColor: pressed ? "#F3F4F6" : "transparent"
+            backgroundColor: pressed ? theme.background.screen : "transparent"
           })}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
+            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
           </Pressable>
           <AppText
             variant="h3"
-            style={{ color: "#111827", flex: 1, fontWeight: "700", fontSize: 20, letterSpacing: -0.2 }}
+            style={{ color: theme.text.primary, flex: 1, fontWeight: "700", fontSize: 20, letterSpacing: -0.2 }}
             numberOfLines={1}
           >
             {t("schemesPage.schemeDetails")}
@@ -199,20 +200,20 @@ const SchemeDetailsScreen = () => {
         {/* Scheme Title & Description */}
         <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
           <View style={{ marginBottom: 12 }}>
-            <AppText variant="h2" style={{ color: "#111827", fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
+            <AppText variant="h2" style={{ color: theme.text.primary, fontWeight: "800", fontSize: 24, letterSpacing: -0.5, lineHeight: 32 }}>
               {currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title}
             </AppText>
           </View>
           <ExpandableText
             text={(currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) ?? ""}
-            style={{ color: "#4B5563", lineHeight: 24, fontSize: 15 }}
+            style={{ color: theme.text.subtle, lineHeight: 24, fontSize: 15 }}
             wordLimit={100}
           />
         </View>
 
         {/* Segmented Tab Buttons */}
         <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
-          <View style={{ flexDirection: "row", backgroundColor: "#F1F5F9", borderRadius: 12, padding: 4 }}>
+          <View style={{ flexDirection: "row", backgroundColor: theme.background.screen, borderRadius: 12, padding: 4 }}>
             {[
               { key: "overview", label: t("programReader.tabs.overview") },
               { key: "eligibility", label: t("schemesPage.eligibility") },
@@ -226,7 +227,7 @@ const SchemeDetailsScreen = () => {
                   paddingVertical: 10,
                   alignItems: "center",
                   borderRadius: 10,
-                  backgroundColor: activeTab === tab.key ? "#FFFFFF" : "transparent",
+                  backgroundColor: activeTab === tab.key ? theme.background.input : "transparent",
                   shadowColor: activeTab === tab.key ? "#000" : "transparent",
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: activeTab === tab.key ? 0.05 : 0,
@@ -238,7 +239,7 @@ const SchemeDetailsScreen = () => {
                   variant="bodyMd"
                   style={{
                     fontWeight: activeTab === tab.key ? "700" : "500",
-                    color: activeTab === tab.key ? "#111827" : "#6B7280",
+                    color: activeTab === tab.key ? theme.text.primary : theme.text.muted,
                     fontSize: 14,
                   }}
                 >
@@ -257,9 +258,9 @@ const SchemeDetailsScreen = () => {
       <View style={{
         paddingHorizontal: 20,
         paddingVertical: 16,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.header,
         borderTopWidth: 1,
-        borderTopColor: "#F3F4F6",
+        borderTopColor: theme.background.screen,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.05,
@@ -278,7 +279,7 @@ const SchemeDetailsScreen = () => {
           variant="primary"
           size="lg"
           onPress={handleApplyNow}
-          style={{ width: "100%", borderRadius: 16, backgroundColor: "#16A34A" }}
+          style={{ width: "100%", borderRadius: 16, backgroundColor: theme.semantic.success }}
         />
       </View>
     </View>

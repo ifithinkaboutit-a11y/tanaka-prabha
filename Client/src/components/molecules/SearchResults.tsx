@@ -5,6 +5,7 @@ import React from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
+import { theme } from "@/styles/colors";
 
 interface SearchResult {
   id: string;
@@ -73,7 +74,7 @@ export default function SearchResults({
         style={({ pressed }) => ({
           marginHorizontal: 16,
           marginBottom: 16,
-          backgroundColor: pressed ? "#F9FAFB" : "#FFFFFF",
+          backgroundColor: pressed ? "#F9FAFB" : theme.background.input,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.06,
@@ -111,7 +112,7 @@ export default function SearchResults({
                 paddingHorizontal: 10, paddingVertical: 5,
                 borderRadius: 8,
               }}>
-                <AppText variant="caption" style={{ color: "#4B5563", fontWeight: "600", fontSize: 11 }}>
+                <AppText variant="caption" style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 11 }}>
                   {item.category}
                 </AppText>
               </View>
@@ -124,7 +125,7 @@ export default function SearchResults({
           <AppText
             variant="h3"
             style={{
-              fontWeight: "700", color: "#111827",
+              fontWeight: "700", color: theme.text.primary,
               fontSize: 18, lineHeight: 26, marginBottom: 8,
             }}
             numberOfLines={2}
@@ -135,8 +136,7 @@ export default function SearchResults({
           {item.description ? (
             <AppText
               variant="bodyMd"
-              style={{ color: "#6B7280", fontSize: 14, lineHeight: 22 }}
-              numberOfLines={3}
+              style={{ color: "#6B7280", fontSize: 14, lineHeight: 22 }}              numberOfLines={3}
             >
               {item.description}
             </AppText>

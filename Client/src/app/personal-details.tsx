@@ -14,6 +14,7 @@ import PersonalDetailsForm from "../components/molecules/PersonalDetailsForm";
 import { useUserProfile } from "../contexts/UserProfileContext";
 import { useTranslation } from "../i18n";
 import { useOnboardingStore } from "../stores/onboardingStore";
+import { theme } from "../styles/colors";
 
 // ── Normalise a human-readable location string to its slug (snake_case) form ──
 // Backend may store "Uttar Pradesh" or "uttar pradesh" – dropdowns need "uttar_pradesh"
@@ -170,10 +171,10 @@ export default PersonalDetailsScreen;
 const HEADER_COLOR = "#2563EB";
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F1F5F9" },
+  root: { flex: 1, backgroundColor: theme.background.screen },
 
-  loader: { flex: 1, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center", gap: 12 },
-  loaderText: { color: "#6B7280", fontSize: 15 },
+  loader: { flex: 1, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", gap: 12 },
+  loaderText: { color: theme.text.muted, fontSize: 15 },
 
   header: {
     backgroundColor: HEADER_COLOR,

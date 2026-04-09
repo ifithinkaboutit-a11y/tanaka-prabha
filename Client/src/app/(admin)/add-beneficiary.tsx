@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { genderOptions, cropTypes } from "@/data/content/onboardingOptions";
 import { ApiUserProfile, uploadApi } from "@/services/apiService";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -182,7 +183,7 @@ const ph = StyleSheet.create({
     img: { width: 96, height: 96, borderRadius: 48, backgroundColor: "#E5E7EB" },
     placeholder: {
         width: 96, height: 96, borderRadius: 48,
-        backgroundColor: "#F3F4F6", borderWidth: 2, borderColor: "#E5E7EB",
+        backgroundColor: theme.background.neutralSubtle, borderWidth: 2, borderColor: theme.border.subtle,
         borderStyle: "dashed", alignItems: "center", justifyContent: "center",
     },
     badge: {
@@ -207,68 +208,86 @@ function Step2({
     errors: Partial<Record<keyof LocationForm, string>>;
     onPickOnMap: () => void;
 }) {
+    const hasMapPin = form.lat !== null;
+
     return (
         <>
-            {/* Map picker button */}
-            <Pressable onPress={onPickOnMap} style={lc.mapBtn}>
-                <View style={lc.mapBtnIcon}>
-                    <Ionicons name="map" size={22} color="#386641" />
+            {/* Map picker button — changes appearance once a pin is set */}
+            <Pressable onPress={onPickOnMap} style={[lc.mapBtn, hasMapPin && lc.mapBtnPinned]}>
+                <View style={[lc.mapBtnIcon, hasMapPin && lc.mapBtnIconPinned]}>
+                    <Ionicons name={hasMapPin ? "location" : "map"} size={22} color={hasMapPin ? "#FFFFFF" : "#386641"} />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <AppText style={lc.mapBtnTitle}>Pick Location on Map</AppText>
+                    <AppText style={[lc.mapBtnTitle, hasMapPin && { color: "#FFFFFF" }]}>
+                        {hasMapPin ? "Location Pinned ✓" : "Pick Location on Map"}
+                    </AppText>
                     {form.address ? (
-                        <AppText style={lc.mapBtnAddress} numberOfLines={2}>{form.address}</AppText>
+                        <AppText style={[lc.mapBtnAddress, hasMapPin && { color: "rgba(255,255,255,0.85)" }]} numberOfLines={2}>
+                            {form.address}
+                        </AppText>
                     ) : (
                         <AppText style={lc.mapBtnHint}>Tap to open map and drop a pin</AppText>
                     )}
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                <AppText style={[lc.changeText, hasMapPin && { color: "rgba(255,255,255,0.8)" }]}>
+                    {hasMapPin ? "Change" : "Open"}
+                </AppText>
             </Pressable>
 
-            {form.lat !== null && (
-                <View style={lc.coordsRow}>
-                    <Ionicons name="location" size={13} color="#16A34A" />
+            {/* When map pin is set — show coords and a clear button, hide manual fields */}
+            {hasMapPin ? (
+                <View style={lc.pinnedInfo}>
+                    <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
                     <AppText style={lc.coordsText}>
-                        {form.lat.toFixed(5)}, {form.lng?.toFixed(5)}
+                        {form.lat!.toFixed(5)}, {form.lng!.toFixed(5)}
                     </AppText>
+                    <Pressable
+                        onPress={() => setForm({ ...form, lat: null, lng: null, address: "", state: "", district: "" })}
+                        hitSlop={8}
+                    >
+                        <AppText style={lc.clearText}>Clear</AppText>
+                    </Pressable>
                 </View>
+            ) : (
+                /* Manual fallback — only shown when no map pin */
+                <>
+                    <View style={lc.divider}>
+                        <View style={lc.dividerLine} />
+                        <AppText style={lc.dividerLabel}>or enter manually</AppText>
+                        <View style={lc.dividerLine} />
+                    </View>
+
+                    <View style={{ marginBottom: 16 }}>
+                        <FieldLabel text="State *" />
+                        <TextInput style={inputStyle(!!errors.state)} value={form.state}
+                            onChangeText={(v) => setForm({ ...form, state: v })}
+                            placeholder="e.g. Uttar Pradesh" placeholderTextColor="#9CA3AF" />
+                        <FieldError message={errors.state} />
+                    </View>
+
+                    <View style={{ marginBottom: 16 }}>
+                        <FieldLabel text="District *" />
+                        <TextInput style={inputStyle(!!errors.district)} value={form.district}
+                            onChangeText={(v) => setForm({ ...form, district: v })}
+                            placeholder="e.g. Lucknow" placeholderTextColor="#9CA3AF" />
+                        <FieldError message={errors.district} />
+                    </View>
+
+                    <View style={{ marginBottom: 16 }}>
+                        <FieldLabel text="Tehsil" />
+                        <TextInput style={inputStyle()} value={form.tehsil}
+                            onChangeText={(v) => setForm({ ...form, tehsil: v })}
+                            placeholder="Enter tehsil (optional)" placeholderTextColor="#9CA3AF" />
+                    </View>
+
+                    <View style={{ marginBottom: 16 }}>
+                        <FieldLabel text="Village" />
+                        <TextInput style={inputStyle()} value={form.village}
+                            onChangeText={(v) => setForm({ ...form, village: v })}
+                            placeholder="Enter village (optional)" placeholderTextColor="#9CA3AF" />
+                    </View>
+                </>
             )}
-
-            <View style={lc.divider}>
-                <View style={lc.dividerLine} />
-                <AppText style={lc.dividerLabel}>or enter manually</AppText>
-                <View style={lc.dividerLine} />
-            </View>
-
-            <View style={{ marginBottom: 16 }}>
-                <FieldLabel text="State *" />
-                <TextInput style={inputStyle(!!errors.state)} value={form.state}
-                    onChangeText={(v) => setForm({ ...form, state: v })}
-                    placeholder="e.g. Uttar Pradesh" placeholderTextColor="#9CA3AF" />
-                <FieldError message={errors.state} />
-            </View>
-
-            <View style={{ marginBottom: 16 }}>
-                <FieldLabel text="District *" />
-                <TextInput style={inputStyle(!!errors.district)} value={form.district}
-                    onChangeText={(v) => setForm({ ...form, district: v })}
-                    placeholder="e.g. Lucknow" placeholderTextColor="#9CA3AF" />
-                <FieldError message={errors.district} />
-            </View>
-
-            <View style={{ marginBottom: 16 }}>
-                <FieldLabel text="Tehsil" />
-                <TextInput style={inputStyle()} value={form.tehsil}
-                    onChangeText={(v) => setForm({ ...form, tehsil: v })}
-                    placeholder="Enter tehsil (optional)" placeholderTextColor="#9CA3AF" />
-            </View>
-
-            <View style={{ marginBottom: 16 }}>
-                <FieldLabel text="Village" />
-                <TextInput style={inputStyle()} value={form.village}
-                    onChangeText={(v) => setForm({ ...form, village: v })}
-                    placeholder="Enter village (optional)" placeholderTextColor="#9CA3AF" />
-            </View>
         </>
     );
 }
@@ -279,18 +298,27 @@ const lc = StyleSheet.create({
         backgroundColor: "#F0FDF4", borderWidth: 1.5, borderColor: "#86EFAC",
         borderRadius: 14, padding: 14, marginBottom: 12,
     },
+    mapBtnPinned: {
+        backgroundColor: "#386641", borderColor: "#386641",
+    },
     mapBtnIcon: {
         width: 44, height: 44, borderRadius: 12,
         backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center",
     },
+    mapBtnIconPinned: {
+        backgroundColor: "rgba(255,255,255,0.2)",
+    },
     mapBtnTitle: { fontSize: 14, fontWeight: "700", color: "#166534" },
     mapBtnAddress: { fontSize: 12, color: "#15803D", marginTop: 2 },
     mapBtnHint: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-    coordsRow: {
-        flexDirection: "row", alignItems: "center", gap: 4,
-        marginBottom: 12,
+    changeText: { fontSize: 12, fontWeight: "700", color: "#16A34A" },
+    pinnedInfo: {
+        flexDirection: "row", alignItems: "center", gap: 6,
+        backgroundColor: "#F0FDF4", borderRadius: 10,
+        paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8,
     },
-    coordsText: { fontSize: 11, color: "#16A34A", fontWeight: "500" },
+    coordsText: { flex: 1, fontSize: 11, color: "#16A34A", fontWeight: "500" },
+    clearText: { fontSize: 12, color: "#EF4444", fontWeight: "600" },
     divider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 16 },
     dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
     dividerLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
@@ -555,16 +583,36 @@ export default function AddBeneficiary() {
     });
 
     // Consume beneficiary location pick when screen comes back into focus
+    // Also reverse-geocode to extract state/district for the payload
     useFocusEffect(useCallback(() => {
-        if (beneficiaryLocationPick) {
-            setLocation((prev) => ({
-                ...prev,
-                lat: beneficiaryLocationPick.lat,
-                lng: beneficiaryLocationPick.lng,
-                address: beneficiaryLocationPick.address,
-            }));
-            setBeneficiaryLocationPick(null);
-        }
+        if (!beneficiaryLocationPick) return;
+        const pick = beneficiaryLocationPick;
+        setBeneficiaryLocationPick(null);
+
+        setLocation((prev) => ({
+            ...prev,
+            lat: pick.lat,
+            lng: pick.lng,
+            address: pick.address,
+        }));
+
+        // Best-effort: parse state/district from the address string
+        // so the backend payload has location context even without manual entry
+        (async () => {
+            try {
+                const { parseGoogleAddress } = await import("@/utils/locationUtils");
+                const parsed = await parseGoogleAddress(pick.lat, pick.lng);
+                if (parsed) {
+                    setLocation((prev) => ({
+                        ...prev,
+                        state: parsed.state || prev.state,
+                        district: parsed.district || prev.district,
+                        tehsil: parsed.tehsil || prev.tehsil,
+                        village: parsed.village || prev.village,
+                    }));
+                }
+            } catch { /* silent — lat/lng is enough */ }
+        })();
     }, [beneficiaryLocationPick, setBeneficiaryLocationPick]));
 
     // ── Photo capture ─────────────────────────────────────────
@@ -609,6 +657,8 @@ export default function AddBeneficiary() {
     }
 
     function validateStep2(): boolean {
+        // If a map pin was set, lat/lng is sufficient — no manual fields required
+        if (location.lat !== null) return true;
         const errs: Partial<Record<keyof LocationForm, string>> = {};
         if (!location.state.trim()) errs.state = "State is required";
         if (!location.district.trim()) errs.district = "District is required";
@@ -772,7 +822,7 @@ export default function AddBeneficiary() {
                         )}
                         {step === 1 && (
                             <Step2 form={location} setForm={setLocation} errors={locationErrors}
-                                onPickOnMap={() => router.push({ pathname: "/location-picker", params: { purpose: "beneficiary" } } as any)} />
+                                onPickOnMap={() => router.push({ pathname: "/(admin)/location-picker", params: { purpose: "beneficiary" } } as any)} />
                         )}
                         {step === 2 && <Step3 form={land} setForm={setLand} />}
                         {step === 3 && <Step4 form={livestock} setForm={setLivestock} />}
@@ -807,20 +857,20 @@ export default function AddBeneficiary() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
-    header: { backgroundColor: "#386641", paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, gap: 12 },
+    root: { flex: 1, backgroundColor: theme.background.screen },
+    header: { backgroundColor: theme.primary.green, paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, gap: 12 },
     headerTop: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
     backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.2)", justifyContent: "center", alignItems: "center", marginTop: 2 },
     stepLabel: { fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" },
-    stepTitle: { fontSize: 22, fontWeight: "900", color: "#FFFFFF", marginTop: 2 },
+    stepTitle: { fontSize: 22, fontWeight: "900", color: theme.text.onPrimary, marginTop: 2 },
     stepSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 2 },
     progressTrack: { height: 4, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 2, overflow: "hidden" },
-    progressFill: { height: 4, backgroundColor: "#FFFFFF", borderRadius: 2 },
+    progressFill: { height: 4, backgroundColor: theme.text.onPrimary, borderRadius: 2 },
     scrollContent: { padding: 20, paddingBottom: 40 },
-    footer: { flexDirection: "row", gap: 10, padding: 16, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#E5E7EB" },
-    backFooterBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" },
-    backFooterText: { fontSize: 14, color: "#6B7280", fontWeight: "600" },
-    nextBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#386641", borderRadius: 12, paddingVertical: 14 },
-    submitBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#386641", borderRadius: 12, paddingVertical: 14 },
-    nextBtnText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+    footer: { flexDirection: "row", gap: 10, padding: 16, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle },
+    backFooterBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: theme.border.subtle, backgroundColor: theme.background.neutralSubtle },
+    backFooterText: { fontSize: 14, color: theme.text.muted, fontWeight: "600" },
+    nextBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: theme.primary.green, borderRadius: 12, paddingVertical: 14 },
+    submitBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: theme.primary.green, borderRadius: 12, paddingVertical: 14 },
+    nextBtnText: { fontSize: 15, fontWeight: "700", color: theme.text.onPrimary },
 });

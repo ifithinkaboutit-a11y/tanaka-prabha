@@ -12,6 +12,7 @@ import {
 import AppText from "../components/atoms/AppText";
 import { AppointmentCardSkeleton } from "../components/atoms/Skeleton";
 import { Appointment, appointmentsApi } from "../services/apiService";
+import { theme } from "../styles/colors";
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string; dot: string; icon: keyof typeof Ionicons.glyphMap }> = {
     pending:   { color: "#D97706", bg: "#FEF3C7", label: "Pending",   dot: "#F59E0B", icon: "time-outline" },
@@ -78,10 +79,10 @@ export default function MySchedule() {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+        <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
 
             {/* ── Header ── */}
-            <View style={{ backgroundColor: "#386641", paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20 }}>
+            <View style={{ backgroundColor: theme.primary.green, paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20 }}>
                 <Pressable onPress={() => router.back()} className="mb-3 w-9 h-9 rounded-full bg-white/20 items-center justify-center">
                     <Ionicons name="arrow-back" size={22} color="#fff" />
                 </Pressable>
@@ -126,19 +127,19 @@ export default function MySchedule() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={["#386641"]}
-                            tintColor="#386641"
+                            colors={[theme.primary.green]}
+                            tintColor={theme.primary.green}
                         />
                     }
                     ListEmptyComponent={() => (
                         <View className="items-center pt-20">
                             <View className="w-24 h-24 rounded-full bg-slate-100 items-center justify-center mb-4">
-                                <Ionicons name="calendar-outline" size={44} color="#D1D5DB" />
+                                <Ionicons name="calendar-outline" size={44} color={theme.border.card} />
                             </View>
-                            <AppText style={{ color: "#6B7280", fontSize: 16, fontWeight: "700" }}>
+                            <AppText style={{ color: theme.text.muted, fontSize: 16, fontWeight: "700" }}>
                                 No {tab} appointments
                             </AppText>
-                            <AppText style={{ color: "#9CA3AF", fontSize: 13, marginTop: 4 }}>
+                            <AppText style={{ color: theme.text.placeholder, fontSize: 13, marginTop: 4 }}>
                                 {tab === "upcoming" ? "Book a session with an expert" : "Your past sessions will appear here"}
                             </AppText>
                             {tab === "upcoming" && (
@@ -146,7 +147,7 @@ export default function MySchedule() {
                                     onPress={() => router.push("/(tab)/connect" as any)}
                                     className="mt-5 bg-[#386641] rounded-xl px-6 py-3 active:opacity-90"
                                 >
-                                    <AppText style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                                    <AppText style={{ color: theme.text.onPrimary, fontWeight: "700", fontSize: 14 }}>
                                         Book an Appointment
                                     </AppText>
                                 </Pressable>

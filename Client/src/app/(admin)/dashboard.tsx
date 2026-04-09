@@ -4,6 +4,7 @@ import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import apiService, { DashboardStats } from "@/services/apiService";
 import { offlineQueue } from "@/utils/offlineQueue";
+import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -36,7 +37,7 @@ function StatCard({ icon, title, value, color }: {
 const st = StyleSheet.create({
     card: {
         width: "48%",
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 14,
         padding: 14,
         flexDirection: "row",
@@ -49,8 +50,8 @@ const st = StyleSheet.create({
         elevation: 2,
     },
     iconBox: { width: 42, height: 42, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-    value: { fontSize: 20, fontWeight: "800", color: "#111827" },
-    title: { fontSize: 11, color: "#6B7280", marginTop: 1, fontWeight: "500" },
+    value: { fontSize: 20, fontWeight: "800", color: theme.text.primary },
+    title: { fontSize: 11, color: theme.text.muted, marginTop: 1, fontWeight: "500" },
 });
 
 // ─── Action Card ──────────────────────────────────────────────
@@ -76,14 +77,14 @@ function ActionCard({ icon, title, description, color, onPress }: {
 const ac = StyleSheet.create({
     card: {
         flexDirection: "row", alignItems: "center", gap: 14,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderRadius: 16, padding: 16, marginBottom: 10,
         shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
     },
     iconBox: { width: 50, height: 50, borderRadius: 14, justifyContent: "center", alignItems: "center" },
     text: { flex: 1 },
-    title: { fontSize: 15, fontWeight: "700", color: "#111827" },
-    description: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+    title: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
+    description: { fontSize: 12, color: theme.text.muted, marginTop: 2 },
     arrow: { width: 32, height: 32, borderRadius: 10, justifyContent: "center", alignItems: "center" },
 });
 
@@ -109,7 +110,7 @@ function SectionHeader({ label }: { label: string }) {
     return <AppText style={sh.label}>{label}</AppText>;
 }
 const sh = StyleSheet.create({
-    label: { fontSize: 18, fontWeight: "800", color: "#111827", marginBottom: 14 },
+    label: { fontSize: 18, fontWeight: "800", color: theme.text.primary, marginBottom: 14 },
 });
 
 // ─── Main Dashboard ───────────────────────────────────────────
@@ -149,7 +150,7 @@ export default function AdminDashboard() {
         <ScrollView
             style={s.root}
             contentContainerStyle={s.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.secondary.sky} />}
             showsVerticalScrollIndicator={false}
         >
             {/* ── Hero Header ── */}
@@ -285,24 +286,24 @@ export default function AdminDashboard() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F3F4F6" },
+    root: { flex: 1, backgroundColor: theme.background.screen },
     content: { paddingBottom: 48 },
 
     // hero
     heroHeader: {
         flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between",
         paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
         shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 8, elevation: 4,
         marginBottom: 16,
     },
-    greeting: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
-    heroTitle: { fontSize: 28, fontWeight: "900", color: "#111827", marginTop: 2 },
-    heroSubtitle: { fontSize: 14, color: "#9CA3AF", marginTop: 2 },
+    greeting: { fontSize: 13, color: theme.text.muted, fontWeight: "500" },
+    heroTitle: { fontSize: 28, fontWeight: "900", color: theme.text.primary, marginTop: 2 },
+    heroSubtitle: { fontSize: 14, color: theme.text.placeholder, marginTop: 2 },
     logoutBtn: {
         width: 40, height: 40, borderRadius: 12,
-        backgroundColor: "#FEF2F2",
+        backgroundColor: theme.semantic.errorBackground,
         justifyContent: "center", alignItems: "center",
     },
 
@@ -316,17 +317,17 @@ const s = StyleSheet.create({
         gap: 10, paddingHorizontal: 20, marginBottom: 8,
     },
     loadingBox: { alignItems: "center", paddingVertical: 32, gap: 10 },
-    loadingText: { color: "#9CA3AF", fontSize: 14 },
+    loadingText: { color: theme.text.placeholder, fontSize: 14 },
 
-    divider: { height: 1, backgroundColor: "#E5E7EB", marginVertical: 20, marginHorizontal: 20 },
+    divider: { height: 1, backgroundColor: theme.border.subtle, marginVertical: 20, marginHorizontal: 20 },
 
     // offline pending banner
     pendingBanner: {
         flexDirection: "row", alignItems: "center", gap: 8,
-        backgroundColor: "#FEF3C7",
+        backgroundColor: theme.background.warningSubtle,
         borderRadius: 10, marginHorizontal: 20, marginBottom: 12,
         paddingHorizontal: 14, paddingVertical: 10,
-        borderWidth: 1, borderColor: "#FCD34D",
+        borderWidth: 1, borderColor: theme.semantic.warningBackground,
     },
-    pendingText: { fontSize: 13, fontWeight: "600", color: "#92400E", flex: 1 },
+    pendingText: { fontSize: 13, fontWeight: "600", color: theme.semantic.warningText, flex: 1 },
 });

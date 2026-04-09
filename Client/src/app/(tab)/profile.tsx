@@ -21,6 +21,7 @@ import { useThemeStore } from "../../stores/themeStore";
 import { useAuth } from "../../contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { uploadApi } from "../../services/apiService";
+import { theme } from "@/styles/colors";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -101,7 +102,6 @@ const Profile = () => {
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const { currentLanguage, setLanguage } = useLanguageStore();
-  const { theme, setTheme } = useThemeStore();
   const { profile, loading, refreshProfile, updateProfile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -195,7 +195,7 @@ const Profile = () => {
   if (!profile) {
     return (
       <View style={s.center}>
-        <ActivityIndicator size="large" color="#386641" />
+        <ActivityIndicator size="large" color={theme.primary.green} />
         <Text style={s.centerText}>{t("common.loading")}</Text>
       </View>
     );
@@ -207,7 +207,7 @@ const Profile = () => {
       contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#386641"]} tintColor="#386641" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary.green]} tintColor={theme.primary.green} />
       }
     >
       {/* ── Hero Header ── */}
@@ -480,13 +480,13 @@ export default Profile;
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F1F5F9" },
+  root: { flex: 1, backgroundColor: theme.background.screen },
   content: { paddingBottom: 16 },
 
   // States
-  center: { flex: 1, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center", gap: 12 },
-  centerText: { color: "#6B7280", fontSize: 15 },
-  emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  center: { flex: 1, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", gap: 12 },
+  centerText: { color: theme.text.muted, fontSize: 15 },
+  emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center" },
   retryBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#386641", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24 },
   retryBtnText: { color: "#FFFFFF", fontWeight: "600", fontSize: 14 },
 
@@ -596,7 +596,7 @@ const s = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     marginBottom: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     borderRadius: 20,
     overflow: "hidden",
     shadowColor: "#000",
@@ -605,7 +605,7 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: theme.background.screen,
   },
   cardHeader: {
     flexDirection: "row",
@@ -615,7 +615,7 @@ const s = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F8FAFC",
+    borderBottomColor: theme.background.screen,
   },
   cardHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   cardIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
@@ -640,21 +640,21 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F8FAFC",
+    borderBottomColor: theme.background.screen,
   },
   infoLeft: { flexDirection: "row", alignItems: "center", gap: 8, flex: 1 },
   infoIconBox: {
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: theme.background.neutralSubtle,
     alignItems: "center",
     justifyContent: "center",
   },
-  infoIconBoxAccent: { backgroundColor: "#F0FDF4" },
-  infoLabel: { color: "#6B7280", fontSize: 13, flex: 1 },
-  infoValue: { color: "#1F2937", fontSize: 13, fontWeight: "600", maxWidth: "45%", textAlign: "right" },
-  infoValueAccent: { color: "#386641" },
+  infoIconBoxAccent: { backgroundColor: theme.background.successSubtle },
+  infoLabel: { color: theme.text.muted, fontSize: 13, flex: 1 },
+  infoValue: { color: theme.text.secondary, fontSize: 13, fontWeight: "600", maxWidth: "45%", textAlign: "right" },
+  infoValueAccent: { color: theme.primary.green },
 
   // Livestock table
   livestockRow: {
@@ -711,12 +711,12 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F8FAFC",
+    borderBottomColor: theme.background.screen,
   },
   logoutRow: { borderBottomWidth: 0 },
   settingLeft: { flexDirection: "row", alignItems: "center" },
   settingIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  settingLabel: { fontSize: 15, color: "#1F2937", fontWeight: "500" },
+  settingLabel: { fontSize: 15, color: theme.text.secondary, fontWeight: "500" },
   settingRight: { flexDirection: "row", alignItems: "center" },
   settingBadge: {
     fontSize: 13,

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { ApiEvent } from "@/services/apiService";
+import { theme } from "../../styles/colors";
 import AppText from "./AppText";
 
 type EventCardProps = {
@@ -18,23 +19,23 @@ const STATUS_CONFIG: Record<string, {
     btnIcon: string; disabled: boolean;
 }> = {
     upcoming: {
-        badgeBg: "#DCFCE7", badgeText: "#15803D", badgeLabel: "Upcoming",
-        btnBg: "#386641", btnText: "#FFFFFF", btnLabel: "Participate Now",
+        badgeBg: theme.semantic.successBackground, badgeText: theme.semantic.successText, badgeLabel: "Upcoming",
+        btnBg: theme.primary.green, btnText: theme.text.onPrimary, btnLabel: "Participate Now",
         btnIcon: "paper-plane-outline", disabled: false,
     },
     ongoing: {
-        badgeBg: "#FEF3C7", badgeText: "#B45309", badgeLabel: "Ongoing",
-        btnBg: "#D97706", btnText: "#FFFFFF", btnLabel: "Join Now",
+        badgeBg: theme.semantic.warningBackground, badgeText: theme.semantic.warningText, badgeLabel: "Ongoing",
+        btnBg: theme.semantic.ongoingAction, btnText: theme.text.onPrimary, btnLabel: "Join Now",
         btnIcon: "flash-outline", disabled: false,
     },
     completed: {
-        badgeBg: "#F3F4F6", badgeText: "#6B7280", badgeLabel: "Completed",
-        btnBg: "#E5E7EB", btnText: "#9CA3AF", btnLabel: "Event Completed",
+        badgeBg: theme.background.neutralSubtle, badgeText: theme.text.muted, badgeLabel: "Completed",
+        btnBg: theme.border.subtle, btnText: theme.text.placeholder, btnLabel: "Event Completed",
         btnIcon: "checkmark-done-circle-outline", disabled: true,
     },
     cancelled: {
-        badgeBg: "#FEF2F2", badgeText: "#EF4444", badgeLabel: "Cancelled",
-        btnBg: "#FEF2F2", btnText: "#F87171", btnLabel: "Event Cancelled",
+        badgeBg: theme.semantic.errorBackground, badgeText: theme.semantic.errorLight, badgeLabel: "Cancelled",
+        btnBg: theme.semantic.errorBackground, btnText: theme.semantic.errorLighter, btnLabel: "Event Cancelled",
         btnIcon: "close-circle-outline", disabled: true,
     },
 };
@@ -76,7 +77,7 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                 {/* ── Hero Image ── */}
                 <View style={styles.imageContainer}>
                     <Image
-                        source={{ uri: event.hero_image_url || "https://via.placeholder.com/400x180/386641/FFFFFF?text=Event" }}
+                        source={{ uri: event.hero_image_url || `https://via.placeholder.com/400x180/${theme.primary.green.replace("#", "")}/FFFFFF?text=Event` }}
                         style={styles.image}
                         resizeMode="cover"
                     />
@@ -94,7 +95,7 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                         <Ionicons
                             name={isBookmarked ? "bookmark" : "bookmark-outline"}
                             size={18}
-                            color={isBookmarked ? "#386641" : "#1F2937"}
+                            color={isBookmarked ? theme.primary.green : theme.text.secondary}
                         />
                     </Pressable>
                 </View>
@@ -112,7 +113,7 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                     {/* ── Meta rows — each row: icon + text side by side ── */}
                     {event.location_name ? (
                         <View style={styles.metaRow}>
-                            <Ionicons name="location-outline" size={14} color="#16A34A" />
+                            <Ionicons name="location-outline" size={14} color={theme.semantic.success} />
                             <AppText style={styles.metaText} numberOfLines={1}>
                                 {event.location_name}
                             </AppText>
@@ -120,11 +121,11 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                     ) : null}
 
                     <View style={styles.metaRow}>
-                        <Ionicons name="calendar-outline" size={14} color="#16A34A" />
+                        <Ionicons name="calendar-outline" size={14} color={theme.semantic.success} />
                         <AppText style={styles.metaText}>{formattedDate}</AppText>
                         {event.start_time ? (
                             <>
-                                <Ionicons name="time-outline" size={14} color="#16A34A" style={{ marginLeft: 10 }} />
+                                <Ionicons name="time-outline" size={14} color={theme.semantic.success} style={{ marginLeft: 10 }} />
                                 <AppText style={styles.metaText}>
                                     {fmtTime(event.start_time)} — {fmtTime(event.end_time)}
                                 </AppText>
@@ -151,7 +152,7 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                         >
                             {({ pressed }) => (
                                 <View style={[styles.ctaRow, {
-                                    backgroundColor: pressed ? "#2D5231" : sc.btnBg,
+                                    backgroundColor: pressed ? theme.primary.greenDark : sc.btnBg,
                                 }]}>
                                     <Ionicons name={sc.btnIcon as any} size={16} color={sc.btnText} />
                                     <AppText style={[styles.ctaText, { color: sc.btnText, marginLeft: 8 }]}>
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderRadius: 16,
         overflow: "hidden",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderWidth: 1,
         borderColor: "rgba(0,0,0,0.05)",
         shadowColor: "#000",
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 10,
         right: 10,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.input,
         borderRadius: 20,
         padding: 8,
         shadowColor: "#000",
@@ -219,25 +220,25 @@ const styles = StyleSheet.create({
     },
     title: {
         marginBottom: 8,
-        color: "#111827",
+        color: theme.text.primary,
         fontWeight: "800",
         fontSize: 16,
         lineHeight: 22,
         letterSpacing: -0.2,
     },
     metaRow: {
-        flexDirection: "row",   // ← explicit: icon + text horizontal
+        flexDirection: "row",
         alignItems: "center",
         marginBottom: 6,
     },
     metaText: {
         marginLeft: 5,
-        color: "#4B5563",
+        color: theme.text.subtle,
         fontSize: 12,
         fontWeight: "500",
     },
     ctaRow: {
-        flexDirection: "row",   // ← explicit: icon + label horizontal
+        flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 10,

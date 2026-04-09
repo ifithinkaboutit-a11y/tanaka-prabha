@@ -16,6 +16,7 @@ import { HomeScreenSkeleton } from "@/components/atoms/Skeleton";
 import AppText from "../../components/atoms/AppText";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
+import { theme } from "@/styles/colors";
 
 export default function Home() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: theme.background.screen }} showsVerticalScrollIndicator={false}>
         <HomeScreenSkeleton />
       </ScrollView>
     );
@@ -116,13 +117,13 @@ export default function Home() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+      style={{ flex: 1, backgroundColor: theme.background.screen }}
       showsVerticalScrollIndicator={false}
       stickyHeaderIndices={[0]}
     >
       {/* Top Header Section (Greeting only) */}
       <View style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.background.header,
         paddingBottom: 16,
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
@@ -170,7 +171,7 @@ export default function Home() {
           style={{
             fontSize: 18,
             fontWeight: "700",
-            color: "#111827",
+            color: theme.text.primary,
             marginBottom: 16,
             letterSpacing: -0.2,
           }}
@@ -187,7 +188,7 @@ export default function Home() {
           style={{
             fontSize: 22,
             fontWeight: "700",
-            color: "#1F2937",
+            color: theme.text.secondary,
             marginBottom: 12,
           }}
         >
@@ -211,7 +212,7 @@ export default function Home() {
           style={{
             fontSize: 22,
             fontWeight: "700",
-            color: "#1F2937",
+            color: theme.text.secondary,
             marginBottom: 12,
           }}
         >
@@ -219,9 +220,9 @@ export default function Home() {
         </AppText>
 
         {eventsError ? (
-          <AppText style={{ color: "#EF4444", fontSize: 14 }}>{eventsError}</AppText>
+          <AppText style={{ color: theme.semantic.error, fontSize: 14 }}>{eventsError}</AppText>
         ) : todayEvents.length === 0 ? (
-          <AppText style={{ color: "#6B7280", fontSize: 14 }}>{t("home.noProgrammesToday")}</AppText>
+          <AppText style={{ color: theme.text.muted, fontSize: 14 }}>{t("home.noProgrammesToday")}</AppText>
         ) : (
           todayEvents.map((event) => (
             <EventCard

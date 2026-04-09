@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Image, Text, View } from "react-native";
 import { cdn } from "../../utils/cloudinaryUtils";
+import { theme } from "../../styles/colors";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 
@@ -32,19 +33,19 @@ const textSizeClasses: Record<AvatarSize, string> = {
 };
 
 const getColorFromName = (name?: string): string => {
-  const colors = [
-    "#386641",
-    "#6A994E",
-    "#2563EB",
-    "#7F5539",
-    "#DC2626",
-    "#9333EA",
-    "#EA580C",
-    "#0891B2",
+  const avatarColors = [
+    theme.primary.green,
+    theme.secondary.greenMedium,
+    theme.semantic.info,
+    theme.secondary.soil,
+    theme.semantic.like,
+    theme.secondary.purple,
+    theme.secondary.clay,
+    theme.secondary.sky,
   ];
-  if (!name) return colors[0];
+  if (!name) return avatarColors[0];
   const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
+  return avatarColors[hash % avatarColors.length];
 };
 
 export default function Avatar({
@@ -74,7 +75,7 @@ export default function Avatar({
   // When showing an image, bgColor is used as the container background (for borders/loading state).
   // When showing initials, always use the name-based color so initials are always legible.
   const initialsBackgroundColor = getColorFromName(name);
-  const imageBackgroundColor = bgColor || "#F3F4F6";
+  const imageBackgroundColor = bgColor || theme.background.input;
   const backgroundColor = showInitials ? initialsBackgroundColor : imageBackgroundColor;
 
   return (
@@ -91,7 +92,7 @@ export default function Avatar({
       {showInitials ? (
         <Text
           className={`font-bold ${textSizeClasses[size]}`}
-          style={{ color: "#FFFFFF" }}
+          style={{ color: theme.text.onPrimary }}
         >
           {initials}
         </Text>

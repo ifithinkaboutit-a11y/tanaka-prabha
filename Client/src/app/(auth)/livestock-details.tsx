@@ -24,8 +24,10 @@ import {
   getLocalizedOptions,
   indianStates as stateOptions,
 } from "../../data/content/onboardingOptions";
+import { theme } from "../../styles/colors";
 import { indianDistricts } from "../../data/indianLocations";
 import { validateLivestockEntry, validateLivestockCount } from "../../utils/validation";
+
 import { userApi } from "../../services/apiService";
 
 // ── helpers: resolve slug value → human-readable label ──────────────────────
@@ -347,8 +349,8 @@ const AuthLivestockDetailsScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+    <View style={{ flex: 1, backgroundColor: theme.background.input }}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={headerStyles.header}>
         <View style={headerStyles.progressTrack}>
@@ -404,7 +406,7 @@ const AuthLivestockDetailsScreen = () => {
                           onPress={() => removeLivestockEntry(entry.id)}
                           className="p-2 active:opacity-70"
                         >
-                          <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                          <Ionicons name="trash-outline" size={20} color={theme.semantic.like} />
                         </Pressable>
                       )}
                     </View>
@@ -417,7 +419,7 @@ const AuthLivestockDetailsScreen = () => {
                       <View
                         style={{
                           borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
-                          borderColor: "#EF4444",
+                          borderColor: errors[entry.id]?.type && touched[entry.id]?.type ? theme.semantic.errorLight : "transparent",
                           borderRadius: 12,
                         }}
                       >
@@ -442,20 +444,20 @@ const AuthLivestockDetailsScreen = () => {
                       </AppText>
                       <TextInput
                         style={{
-                          backgroundColor: "#F9FAFB",
+                          backgroundColor: theme.background.neutralSubtle,
                           borderWidth: 1,
-                          borderColor: errors[entry.id]?.count && touched[entry.id]?.count ? "#EF4444" : "#E5E7EB",
+                          borderColor: errors[entry.id]?.count && touched[entry.id]?.count ? theme.semantic.errorLight : theme.border.subtle,
                           borderRadius: 12,
                           padding: 14,
                           fontSize: 16,
-                          color: "#1F2937",
+                          color: theme.text.secondary,
                         }}
                         value={entry.count > 0 ? String(entry.count) : ""}
                         onChangeText={(text) => handleCountChange(entry.id, text)}
                         onBlur={() => handleCountBlur(entry.id, entry.count)}
                         keyboardType="numeric"
                         placeholder="0"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={theme.text.placeholder}
                       />
                       {errors[entry.id]?.count && touched[entry.id]?.count && (
                         <AppText variant="bodySm" className="text-red-500 mt-1">
@@ -471,7 +473,7 @@ const AuthLivestockDetailsScreen = () => {
                   onPress={() => addLivestockEntry({ type: "", count: 0 })}
                   className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-yellow-300 border-dashed active:bg-yellow-100 bg-yellow-50"
                 >
-                  <Ionicons name="add-circle-outline" size={20} color="#D97706" />
+                  <Ionicons name="add-circle-outline" size={20} color={theme.semantic.ongoingAction} />
                   <AppText variant="bodySm" className="text-amber-600 font-semibold ml-2">
                     {t("onboarding.addAnotherLivestock")}
                   </AppText>
@@ -480,15 +482,15 @@ const AuthLivestockDetailsScreen = () => {
             )}
 
             {/* Completion Message */}
-            <View style={{ backgroundColor: "#F0FDF4", borderRadius: 14, padding: 16, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#BBF7D0" }}>
-              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="checkmark" size={20} color="#16A34A" />
+            <View style={{ backgroundColor: theme.background.successSubtle, borderRadius: 14, padding: 16, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: theme.semantic.successBackground }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: theme.semantic.successBackground, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="checkmark" size={20} color={theme.semantic.successText} />
               </View>
               <View style={{ flex: 1 }}>
-                <AppText variant="bodyMd" style={{ color: "#15803D", fontWeight: "700" }}>
+                <AppText variant="bodyMd" style={{ color: theme.semantic.successText, fontWeight: "700" }}>
                   {t("onboarding.almostDone")}
                 </AppText>
-                <AppText variant="bodySm" style={{ color: "#166534", marginTop: 2 }}>
+                <AppText variant="bodySm" style={{ color: theme.semantic.successText, marginTop: 2 }}>
                   {t("onboarding.finishMessage")}
                 </AppText>
               </View>
@@ -496,13 +498,13 @@ const AuthLivestockDetailsScreen = () => {
           </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
-        <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
+        <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
           <Pressable
             onPress={handleSkip}
             disabled={isSubmitting}
-            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: "#fff", borderWidth: 1, borderColor: "#D1D5DB", alignItems: "center", opacity: isSubmitting ? 0.5 : 1 }}
+            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: theme.background.input, borderWidth: 1, borderColor: theme.border.card, alignItems: "center", opacity: isSubmitting ? 0.5 : 1 }}
           >
-            <AppText variant="bodyMd" style={{ color: "#6B7280", fontWeight: "600" }}>
+            <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
               {t("common.skip")}
             </AppText>
           </Pressable>
@@ -510,16 +512,16 @@ const AuthLivestockDetailsScreen = () => {
           <Pressable
             onPress={handleFinish}
             disabled={!isValid() || isSubmitting}
-            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", flexDirection: "row", justifyContent: "center", backgroundColor: isValid() && !isSubmitting ? "#386641" : "#D1D5DB" }}
+            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", flexDirection: "row", justifyContent: "center", backgroundColor: isValid() && !isSubmitting ? theme.primary.green : theme.border.card }}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={theme.text.onPrimary} size="small" />
             ) : (
               <>
                 <AppText variant="bodyMd" style={{ color: "#fff", fontWeight: "700" }}>
                   {t("onboarding.finish")}
                 </AppText>
-                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                <Ionicons name="checkmark-circle" size={20} color={theme.text.onPrimary} style={{ marginLeft: 8 }} />
               </>
             )}
           </Pressable>
@@ -533,7 +535,7 @@ export default AuthLivestockDetailsScreen;
 
 const headerStyles = StyleSheet.create({
   header: {
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingTop: 56,
     paddingBottom: 28,
     paddingHorizontal: 24,
@@ -547,11 +549,11 @@ const headerStyles = StyleSheet.create({
   },
   progressFill: {
     height: 4,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.text.onPrimary,
     borderRadius: 2,
   },
   headerTitle: {
-    color: "#fff",
+    color: theme.text.onPrimary,
     fontSize: 24,
     fontWeight: "900",
     letterSpacing: -0.5,

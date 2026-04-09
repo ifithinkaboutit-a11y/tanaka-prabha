@@ -29,6 +29,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { theme } from "../../styles/colors";
 
 export const unstable_settings = {
   headerShown: false,
@@ -45,14 +46,14 @@ const FieldWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const FieldLabel = ({ text }: { text: string }) => (
-  <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
+  <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", marginBottom: 8 }}>
     {text}
   </AppText>
 );
 
 const FieldError = ({ message }: { message?: string }) =>
   message ? (
-    <AppText variant="bodySm" style={{ color: "#EF4444", marginTop: 4 }}>
+    <AppText variant="bodySm" style={{ color: theme.semantic.errorLight, marginTop: 4 }}>
       {message}
     </AppText>
   ) : null;
@@ -321,18 +322,18 @@ const AuthPersonalDetailsScreen = () => {
   };
 
   const inputStyle = (field: keyof FieldErrors) => ({
-    backgroundColor: "#F9FAFB",
+    backgroundColor: theme.background.neutralSubtle,
     borderWidth: 1,
-    borderColor: errors[field] && touched[field] ? "#EF4444" : "#E5E7EB",
+    borderColor: errors[field] && touched[field] ? theme.semantic.errorLight : theme.border.subtle,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
-    color: "#1F2937",
+    color: theme.text.secondary,
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#386641" />
+    <View style={{ flex: 1, backgroundColor: theme.background.input }}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={headerStyles.header}>
         {/* Progress bar at 25% (step 1 of 4) */}
@@ -369,22 +370,22 @@ const AuthPersonalDetailsScreen = () => {
                 resizeMode="cover"
               />
             ) : (
-              <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor="#386641" />
+              <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor={theme.primary.green} />
             )}
             {/* Camera badge */}
             {!photoUploading && (
               <View style={photoStyles.cameraBadge}>
-                <Ionicons name="camera" size={13} color="#FFFFFF" />
+                <Ionicons name="camera" size={13} color={theme.text.onPrimary} />
               </View>
             )}
             {/* Upload spinner overlay */}
             {photoUploading && (
               <View style={photoStyles.loadingOverlay}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={theme.text.onPrimary} />
               </View>
             )}
           </Pressable>
-          <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? "#059669" : "#6B7280", marginTop: 8, fontWeight: "600" }}>
+          <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? theme.semantic.successText : theme.text.muted, marginTop: 8, fontWeight: "600" }}>
             {personalDetails.photoUrl ? "✓ Photo uploaded" : "Tap to add profile photo *"}
           </AppText>
         </View>
@@ -398,7 +399,7 @@ const AuthPersonalDetailsScreen = () => {
                 onChangeText={(text) => handleFieldChange("name", text)}
                 onBlur={() => handleFieldBlur("name")}
                 placeholder={t("onboarding.enterFullName")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.text.placeholder}
               />
               <FieldError message={touched.name ? errors.name : undefined} />
             </FieldWrapper>
@@ -418,7 +419,7 @@ const AuthPersonalDetailsScreen = () => {
                   }}
                   onBlur={() => handleFieldBlur("age")}
                   placeholder={t("onboarding.enterAge")}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.placeholder}
                   keyboardType="numeric"
                   maxLength={3}
                 />
@@ -431,7 +432,7 @@ const AuthPersonalDetailsScreen = () => {
                 <View
                   style={{
                     borderWidth: errors.gender && touched.gender ? 1 : 0,
-                    borderColor: "#EF4444",
+                    borderColor: errors.gender && touched.gender ? theme.semantic.errorLight : "transparent",
                     borderRadius: 12,
                   }}
                 >
@@ -458,7 +459,7 @@ const AuthPersonalDetailsScreen = () => {
                 }}
                 onBlur={() => handleFieldBlur("aadhaar")}
                 placeholder={t("onboarding.enterAadhaar")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.text.placeholder}
                 keyboardType="numeric"
                 maxLength={14}
               />
@@ -474,7 +475,7 @@ const AuthPersonalDetailsScreen = () => {
                 onChangeText={(text) => handleFieldChange("fathersName", text)}
                 onBlur={() => handleFieldBlur("fathersName")}
                 placeholder={t("onboarding.enterFathersName")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.text.placeholder}
               />
               <FieldError message={touched.fathersName ? errors.fathersName : undefined} />
             </FieldWrapper>
@@ -488,7 +489,7 @@ const AuthPersonalDetailsScreen = () => {
                 onChangeText={(text) => handleFieldChange("mothersName", text)}
                 onBlur={() => handleFieldBlur("mothersName")}
                 placeholder={t("onboarding.enterMothersName")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.text.placeholder}
               />
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
@@ -498,30 +499,30 @@ const AuthPersonalDetailsScreen = () => {
               <FieldLabel text={t("onboarding.district") || "Location"} />
               {personalDetails.village || personalDetails.district ? (
                 <View style={{
-                  backgroundColor: "#F0FDF4",
+                  backgroundColor: theme.background.successSubtle,
                   borderWidth: 1,
-                  borderColor: "#BBF7D0",
+                  borderColor: theme.semantic.successBackground,
                   borderRadius: 12,
                   padding: 14,
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 10,
                 }}>
-                  <Ionicons name="location" size={18} color="#16A34A" />
+                  <Ionicons name="location" size={18} color={theme.semantic.successText} />
                   <AppText variant="bodySm" style={{ color: "#166534", flex: 1, fontWeight: "600" }}>
                     {[personalDetails.village, personalDetails.district, personalDetails.state].filter(Boolean).join(", ")}
                   </AppText>
                   <Pressable onPress={() => router.push("/(auth)/location-picker" as any)}>
-                    <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "700" }}>Change</AppText>
+                    <AppText variant="bodySm" style={{ color: theme.semantic.successText, fontWeight: "700" }}>Change</AppText>
                   </Pressable>
                 </View>
               ) : (
                 <Pressable
                   onPress={() => router.push("/(auth)/location-picker" as any)}
                   style={{
-                    backgroundColor: "#F9FAFB",
+                    backgroundColor: theme.background.neutralSubtle,
                     borderWidth: 1,
-                    borderColor: "#E5E7EB",
+                    borderColor: theme.border.subtle,
                     borderRadius: 12,
                     padding: 14,
                     flexDirection: "row",
@@ -529,11 +530,11 @@ const AuthPersonalDetailsScreen = () => {
                     gap: 10,
                   }}
                 >
-                  <Ionicons name="map-outline" size={18} color="#6B7280" />
-                  <AppText variant="bodySm" style={{ color: "#9CA3AF" }}>
+                  <Ionicons name="map-outline" size={18} color={theme.text.muted} />
+                  <AppText variant="bodySm" style={{ color: theme.text.placeholder }}>
                     {t("onboarding.tapToPickLocation") || "Tap to pick your location on map"}
                   </AppText>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" style={{ marginLeft: "auto" }} />
+                  <Ionicons name="chevron-forward" size={16} color={theme.text.placeholder} style={{ marginLeft: "auto" }} />
                 </Pressable>
               )}
             </FieldWrapper>
@@ -541,7 +542,7 @@ const AuthPersonalDetailsScreen = () => {
       </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
-        <View style={{ padding: 20, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#E5E7EB", flexDirection: "row", gap: 12 }}>
+        <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
           <Pressable
             onPress={handleSkip}
             className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
@@ -555,7 +556,7 @@ const AuthPersonalDetailsScreen = () => {
             onPress={handleNext}
             disabled={!isValid()}
             className="flex-[2] py-4 rounded-full items-center"
-            style={{ backgroundColor: isValid() ? "#386641" : "#D1D5DB" }}
+            style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
           >
             <AppText variant="bodyMd" className="text-white font-bold">
               {t("onboarding.next")}
@@ -580,7 +581,7 @@ const photoStyles = StyleSheet.create({
     height: 92,
     borderRadius: 46,
     borderWidth: 3,
-    borderColor: "#386641",
+    borderColor: theme.primary.green,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -594,14 +595,14 @@ const photoStyles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     width: 26,
     height: 26,
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: theme.background.input,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -615,7 +616,7 @@ const photoStyles = StyleSheet.create({
 // ─── Header styles ────────────────────────────────────────────────────────────
 const headerStyles = StyleSheet.create({
   header: {
-    backgroundColor: "#386641",
+    backgroundColor: theme.primary.green,
     paddingTop: 56,
     paddingBottom: 28,
     paddingHorizontal: 24,
@@ -629,7 +630,7 @@ const headerStyles = StyleSheet.create({
   },
   progressFill: {
     height: 4,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.text.onPrimary,
     borderRadius: 2,
   },
   headerTitle: {

@@ -1,7 +1,7 @@
 // src/components/atoms/FormInput.tsx
 import React from "react";
 import { TextInput, TextInputProps, View, StyleSheet, ViewStyle } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors, theme } from "../../styles/colors";
 import AppText from "./AppText";
 
 interface FormInputProps extends Omit<TextInputProps, "style"> {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.input,
     fontSize: 16,
     color: colors.neutral.textDark,
   },

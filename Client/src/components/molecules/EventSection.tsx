@@ -4,6 +4,9 @@ import { Pressable, View } from "react-native";
 import { ApiEvent } from "@/services/apiService";
 import AppText from "../atoms/AppText";
 import EventCard from "../atoms/EventCard";
+import { useTranslation } from "../../i18n";
+import { theme } from "@/styles/colors";
+
 
 type EventSectionProps = {
     title: string;
@@ -21,10 +24,11 @@ export default function EventSection({
     onParticipate,
 }: EventSectionProps) {
 
+    const { t } = useTranslation();
     if (events.length === 0) return null;
 
     return (
-        <View style={{ marginBottom: 24, paddingHorizontal: 16, backgroundColor: "#FFFFFF" }}>
+        <View style={{ marginBottom: 24, paddingHorizontal: 16, backgroundColor: theme.background.input }}>
             {/* Section Header */}
             <View
                 style={{
@@ -37,7 +41,7 @@ export default function EventSection({
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <AppText
                         variant="h3"
-                        style={{ fontWeight: "700", color: "#111827", fontSize: 20, letterSpacing: -0.2 }}
+                        style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20, letterSpacing: -0.2 }}
                     >
                         {title}
                     </AppText>
@@ -60,21 +64,22 @@ export default function EventSection({
                 </View>
                 {onViewAll && (
                     <Pressable
-                        onPress={onViewAll}
-                        style={({ pressed }) => ({
-                            flexDirection: "row",
-                            alignItems: "center",
-                            opacity: pressed ? 0.7 : 1,
-                        })}
-                    >
-                        <AppText
-                            variant="bodySm"
-                            style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
-                        >
-                            View All
-                        </AppText>
-                        <Ionicons name="chevron-forward" size={16} color="#16A34A" style={{ marginLeft: 2 }} />
-                    </Pressable>
+                                onPress={onViewAll}
+                                style={({ pressed }) => ({
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  opacity: pressed ? 0.7 : 1,
+                                })}
+                                className="flex flex-row items-center justify-center"
+                              >
+                                <AppText
+                                  variant="bodySm"
+                                  style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
+                                >
+                                  {t("schemesPage.viewAll")}
+                                </AppText>
+                                <Ionicons name="chevron-forward" size={16} color="#16A34A" style={{ marginLeft: 2 }} />
+                              </Pressable>
                 )}
             </View>
 

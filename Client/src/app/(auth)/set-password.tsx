@@ -21,6 +21,7 @@ import {
     View,
 } from "react-native";
 import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
+import { theme } from "@/styles/colors";
 
 const SetPasswordScreen = () => {
     const [password, setPassword] = useState("");
@@ -106,7 +107,7 @@ const SetPasswordScreen = () => {
 
     return (
         <View style={s.root}>
-            <StatusBar barStyle="light-content" backgroundColor="#386641" />
+            <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
             {/* Static Header */}
             <View style={s.header}>
                 <AppText variant="h2" style={s.headerTitle}>
@@ -210,17 +211,17 @@ export default SetPasswordScreen;
 
 // ─── Styles — intentionally mirror otp-input.tsx exactly ──────────────────────
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#fff" },
+    root: { flex: 1, backgroundColor: theme.background.input },
 
     // ── Static Header ──
     header: {
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingTop: 60,
         paddingBottom: 32,
         paddingHorizontal: 24,
     },
     headerTitle: {
-        color: "#fff",
+        color: theme.text.onPrimary,
         fontSize: 26,
         fontWeight: "900",
         letterSpacing: -0.5,
@@ -235,13 +236,13 @@ const s = StyleSheet.create({
 
     card: {
         flex: 1,
-        backgroundColor: "#fff",
+        backgroundColor: theme.background.input,
         paddingHorizontal: 24,
         paddingTop: 28,
         paddingBottom: Platform.OS === "ios" ? 48 : 32,
     },
     inputLabel: {
-        color: "#374151",
+        color: theme.text.subtle,
         fontSize: 13,
         fontWeight: "700",
         marginBottom: 10,
@@ -253,18 +254,18 @@ const s = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1.5,
-        borderColor: "#E5E7EB",
+        borderColor: theme.border.subtle,
         borderRadius: 14,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: theme.background.neutralSubtle,
         overflow: "hidden",
     },
-    inputRowError: { borderColor: "#EF4444" },
+    inputRowError: { borderColor: theme.semantic.errorLight },
     input: {
         flex: 1,
         height: 58,
         paddingHorizontal: 16,
         fontSize: 16,
-        color: "#111827",
+        color: theme.text.primary,
         fontWeight: "600",
     },
     eyeBtn: {
@@ -276,29 +277,29 @@ const s = StyleSheet.create({
 
     helperRow: { minHeight: 22, marginTop: 8, marginBottom: 18 },
     errorRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-    errorText: { color: "#EF4444", fontSize: 13, flex: 1 },
-    charCount: { color: "#9CA3AF", fontSize: 12 },
+    errorText: { color: theme.semantic.errorLight, fontSize: 13, flex: 1 },
+    charCount: { color: theme.text.placeholder, fontSize: 12 },
 
     ctaBtn: {
         width: "100%",
-        backgroundColor: "#386641",
+        backgroundColor: theme.primary.green,
         paddingVertical: 18,
         borderRadius: 16,
         alignItems: "center",
         marginBottom: 18,
-        shadowColor: "#386641",
+        shadowColor: theme.primary.green,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 10,
         elevation: 5,
     },
     ctaBtnDisabled: {
-        backgroundColor: "#D1D5DB",
+        backgroundColor: theme.border.card,
         shadowOpacity: 0,
         elevation: 0,
     },
     loadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
-    ctaText: { color: "#fff", fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
+    ctaText: { color: theme.text.onPrimary, fontWeight: "700", fontSize: 16, letterSpacing: 0.3 },
 
     securityRow: {
         flexDirection: "row",
@@ -306,5 +307,5 @@ const s = StyleSheet.create({
         justifyContent: "center",
         gap: 5,
     },
-    securityText: { color: "#9CA3AF", fontSize: 11 },
+    securityText: { color: theme.text.placeholder, fontSize: 11 },
 });

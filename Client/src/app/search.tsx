@@ -7,6 +7,7 @@ import AppText from "../components/atoms/AppText";
 import SearchResults from "../components/molecules/SearchResults";
 import { useSearch } from "../hooks/useSearch";
 import { useTranslation } from "../i18n";
+import { theme } from "../styles/colors";
 
 export default function SearchScreen() {
   const { t } = useTranslation();
@@ -28,17 +29,16 @@ export default function SearchScreen() {
   const showEmpty = hasQuery && totalResults === 0 && !isSearching && !loading;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
 
       {/* ── Header ── */}
-      <View className="pt-12 pb-3 px-4 bg-white border-b border-gray-100">
+      <View style={{ paddingTop: 48, paddingBottom: 12, paddingHorizontal: 16, backgroundColor: theme.background.input, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
 
         {/* Back + Title */}
-        <View className="flex-row items-center mb-3.5">
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
           <Pressable
             onPress={() => router.back()}
-            className="mr-3 bg-gray-100 rounded-xl"
-            style={{ padding: 12, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+            style={{ marginRight: 12, backgroundColor: theme.background.screen, borderRadius: 12, padding: 12, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
@@ -50,7 +50,7 @@ export default function SearchScreen() {
         </View>
 
         {/* Search Input */}
-        <View className="flex-row items-center bg-gray-100 rounded-2xl px-3.5 h-12 border border-gray-200">
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: theme.background.screen, borderRadius: 16, paddingHorizontal: 14, height: 48, borderWidth: 1, borderColor: theme.border.subtle }}>
           <Ionicons name="search-outline" size={20} color="#9CA3AF" />
           <TextInput
             ref={inputRef}
@@ -105,16 +105,16 @@ export default function SearchScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 6,
                   borderRadius: 20,
-                  backgroundColor: active ? "#166534" : "#F3F4F6",
+                  backgroundColor: active ? theme.primary.greenDark : theme.background.screen,
                   borderWidth: 1,
-                  borderColor: active ? "#166534" : "#E5E7EB",
+                  borderColor: active ? theme.primary.greenDark : theme.border.subtle,
                 }}
               >
                 <AppText
                   style={{
                     fontSize: 13,
                     fontWeight: "600",
-                    color: active ? "#FFFFFF" : "#6B7280",
+                    color: active ? theme.text.onPrimary : theme.text.muted,
                   }}
                 >
                   {label}
@@ -157,8 +157,8 @@ export default function SearchScreen() {
         </View>
 
       ) : showEmpty ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <View className="w-18 h-18 rounded-full bg-gray-100 items-center justify-center mb-4">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <Ionicons name="search-outline" size={32} color="#D1D5DB" />
           </View>
           <AppText style={{ color: "#374151", fontSize: 17, fontWeight: "700", textAlign: "center", marginBottom: 6 }}>
@@ -170,8 +170,8 @@ export default function SearchScreen() {
         </View>
 
       ) : !hasQuery ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <View className="w-18 h-18 rounded-full bg-green-50 items-center justify-center mb-4">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: theme.background.successSubtle, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <Ionicons name="search-outline" size={32} color="#16A34A" />
           </View>
           <AppText style={{ color: "#374151", fontSize: 17, fontWeight: "700", textAlign: "center", marginBottom: 6 }}>

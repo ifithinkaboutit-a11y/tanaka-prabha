@@ -174,6 +174,16 @@ export function SchemesGrid() {
     }
   }
 
+  async function toggleFeatured(id, currentFeatured) {
+    try {
+      await schemesApi.update(id, { is_featured: !currentFeatured })
+      setSchemes(prev => prev.map(s => s.id === id ? { ...s, is_featured: !currentFeatured } : s))
+      toast.success(!currentFeatured ? "Marked as Recommended" : "Removed from Recommended")
+    } catch (error) {
+      toast.error("Failed to update")
+    }
+  }
+
   function resetForm() {
     setFormData({
       title: "",
@@ -306,6 +316,11 @@ export function SchemesGrid() {
                       {scheme.category}
                     </Badge>
                   )}
+                  {scheme.is_featured && (
+                    <Badge className="bg-amber-500/90 text-white border-amber-600">
+                      ⭐ Recommended
+                    </Badge>
+                  )}
                   <Badge
                     variant="outline"
                     className={scheme.is_active
@@ -352,6 +367,9 @@ export function SchemesGrid() {
                           Activate
                         </>
                       )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toggleFeatured(scheme.id, scheme.is_featured)}>
+                      {scheme.is_featured ? "★ Remove Recommended" : "☆ Mark Recommended"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
