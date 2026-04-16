@@ -20,6 +20,7 @@ export default function ProfessionalDetail() {
     const router = useRouter();
     const [professional, setProfessional] = useState<Professional | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showMore, setShowMore] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -90,56 +91,70 @@ export default function ProfessionalDetail() {
                     </View>
                 </View>
 
+                {/* Progressive disclosure toggle */}
+                <Pressable
+                    onPress={() => setShowMore(prev => !prev)}
+                    style={{ alignItems: "center", paddingVertical: 12 }}
+                >
+                    <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>
+                        {showMore ? "See less ↑" : "See more details ↓"}
+                    </AppText>
+                </Pressable>
+
                 <View style={{ padding: 20 }}>
-                    {/* Availability Badge */}
-                    <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20 }}>
-                        <View style={{
-                            flexDirection: "row", alignItems: "center",
-                            backgroundColor: isAvailable ? "#DCFCE7" : "#FEE2E2",
-                            borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
-                        }}>
-                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isAvailable ? "#16A34A" : "#DC2626", marginRight: 8 }} />
-                            <AppText variant="bodySm" style={{ color: isAvailable ? "#16A34A" : "#DC2626", fontWeight: "700" }}>
-                                {isAvailable ? "Currently Available" : "Currently Unavailable"}
-                            </AppText>
-                        </View>
-                    </View>
-
-                    {/* Location */}
-                    {(professional.district || serviceArea) && (
-                        <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-                                <Ionicons name="location" size={18} color={theme.primary.green} />
-                                <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Service Area</AppText>
-                            </View>
-                            {professional.district && (
-                                <AppText variant="bodySm" style={{ color: theme.text.secondary }}>District: {professional.district}</AppText>
-                            )}
-                            {serviceArea?.state && (
-                                <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 2 }}>State: {serviceArea.state}</AppText>
-                            )}
-                            {serviceArea?.blocks && serviceArea.blocks.length > 0 && (
-                                <AppText variant="bodySm" style={{ color: theme.text.placeholder, marginTop: 4 }}>
-                                    Blocks: {serviceArea.blocks.join(", ")}
-                                </AppText>
-                            )}
-                        </View>
-                    )}
-
-                    {/* Specializations */}
-                    {specializations.length > 0 && (
-                        <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                                <Ionicons name="ribbon" size={18} color={theme.primary.green} />
-                                <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Specializations</AppText>
-                            </View>
-                            {specializations.map((spec, i) => (
-                                <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primary.green, marginRight: 10 }} />
-                                    <AppText variant="bodySm" style={{ color: theme.text.secondary, flex: 1 }}>{spec}</AppText>
+                    {showMore && (
+                        <>
+                            {/* Availability Badge */}
+                            <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20 }}>
+                                <View style={{
+                                    flexDirection: "row", alignItems: "center",
+                                    backgroundColor: isAvailable ? "#DCFCE7" : "#FEE2E2",
+                                    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
+                                }}>
+                                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isAvailable ? "#16A34A" : "#DC2626", marginRight: 8 }} />
+                                    <AppText variant="bodySm" style={{ color: isAvailable ? "#16A34A" : "#DC2626", fontWeight: "700" }}>
+                                        {isAvailable ? "Currently Available" : "Currently Unavailable"}
+                                    </AppText>
                                 </View>
-                            ))}
-                        </View>
+                            </View>
+
+                            {/* Location */}
+                            {(professional.district || serviceArea) && (
+                                <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
+                                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                                        <Ionicons name="location" size={18} color={theme.primary.green} />
+                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Service Area</AppText>
+                                    </View>
+                                    {professional.district && (
+                                        <AppText variant="bodySm" style={{ color: theme.text.secondary }}>District: {professional.district}</AppText>
+                                    )}
+                                    {serviceArea?.state && (
+                                        <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 2 }}>State: {serviceArea.state}</AppText>
+                                    )}
+                                    {serviceArea?.blocks && serviceArea.blocks.length > 0 && (
+                                        <AppText variant="bodySm" style={{ color: theme.text.placeholder, marginTop: 4 }}>
+                                            Blocks: {serviceArea.blocks.join(", ")}
+                                        </AppText>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* Specializations */}
+                            {specializations.length > 0 && (
+                                <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
+                                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                                        <Ionicons name="ribbon" size={18} color={theme.primary.green} />
+                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Specializations</AppText>
+                                    </View>
+                                    {specializations.map((spec, i) => (
+                                        <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                                            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primary.green, marginRight: 10 }} />
+                                            <AppText variant="bodySm" style={{ color: theme.text.secondary, flex: 1 }}>{spec}</AppText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                        </>
                     )}
 
                     {/* Contact Quick Actions */}

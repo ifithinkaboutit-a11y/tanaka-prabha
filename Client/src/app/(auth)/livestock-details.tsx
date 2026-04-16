@@ -15,6 +15,7 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
+import TextArea from "../../components/atoms/TextArea";
 import { useOnboardingStore, LivestockEntry } from "../../stores/onboardingStore";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "../../i18n";
@@ -46,9 +47,25 @@ function resolveCropLabel(value: string): string {
   return found ? found.label : value;
 }
 
+function resolveAnimalLabel(type: string, lang: string): string {
+  const item = animalTypes.find((a) => a.value === type);
+  if (!item) return type;
+  return lang === "hi" ? (item.labelHi ?? item.label) : item.label;
+}
+
 export const unstable_settings = {
   headerShown: false,
 };
+
+// Unique accent colors for each livestock entry (cycles if more than 6 entries)
+const ENTRY_ACCENT_COLORS = [
+  "#16A34A", // green
+  "#2563EB", // blue
+  "#D97706", // amber
+  "#9333EA", // purple
+  "#DC2626", // red
+  "#0891B2", // cyan
+];
 
 interface EntryErrors {
   [entryId: string]: {
@@ -79,6 +96,7 @@ const AuthLivestockDetailsScreen = () => {
   const [errors, setErrors] = useState<EntryErrors>({});
   const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otherTypeText, setOtherTypeText] = useState<Record<string, string>>({});
 
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
 
@@ -391,16 +409,49 @@ const AuthLivestockDetailsScreen = () => {
             {/* Livestock Entries */}
             {hasLivestock && (
               <>
-                {livestockEntries.map((entry, index) => (
+                {livestockEntries.map((entry, index) => {
+                  const accentColor = ENTRY_ACCENT_COLORS[index % ENTRY_ACCENT_COLORS.length];
+                  return (
                   <View
                     key={entry.id}
-                    className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
+                    style={{
+                      backgroundColor: "#fff",
+                      borderRadius: 16,
+                      padding: 20,
+                      marginBottom: 16,
+                      shadowColor: "#000",
+                      shadowOpacity: 0.06,
+                      shadowRadius: 4,
+                      elevation: 2,
+                      borderLeftWidth: 4,
+                      borderLeftColor: accentColor,
+                    }}
                   >
                     {/* Entry Header */}
                     <View className="flex-row justify-between items-center mb-4">
-                      <AppText variant="bodyMd" className="font-bold text-gray-800">
-                        {t("onboarding.livestockEntry")} {index + 1}
-                      </AppText>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        {/* Numbered badge */}
+                        <View
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            backgroundColor: accentColor,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <AppText
+                            variant="bodySm"
+                            style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}
+                          >
+                            {index + 1}
+                          </AppText>
+                        </View>
+                        <AppText variant="bodyMd" className="font-bold text-gray-800">
+                          {entry.type ? resolveAnimalLabel(entry.type, currentLanguage) : t("onboarding.livestockEntry") + " " + (index + 1)}
+                        </AppText>
+                      </View>
                       {livestockEntries.length > 1 && (
                         <Pressable
                           onPress={() => removeLivestockEntry(entry.id)}
@@ -435,6 +486,17 @@ const AuthLivestockDetailsScreen = () => {
                           {errors[entry.id].type}
                         </AppText>
                       )}
+                      {entry.type === "other" && (
+                        <TextArea
+                          value={otherTypeText[entry.id] || ""}
+                          onChangeText={(text) =>
+                            setOtherTypeText((prev) => ({ ...prev, [entry.id]: text }))
+                          }
+                          placeholder={t("onboarding.specifyOther") || "Please specify…"}
+                          numberOfLines={3}
+                          style={{ marginTop: 8 }}
+                        />
+                      )}
                     </View>
 
                     {/* Count Input */}
@@ -466,7 +528,8 @@ const AuthLivestockDetailsScreen = () => {
                       )}
                     </View>
                   </View>
-                ))}
+                  );
+                })}
 
                 {/* Add Another Entry */}
                 <Pressable

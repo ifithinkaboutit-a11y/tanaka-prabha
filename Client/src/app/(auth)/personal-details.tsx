@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -16,6 +15,7 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
+import TextArea from "../../components/atoms/TextArea";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -30,6 +30,7 @@ import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { theme } from "../../styles/colors";
+import { indianStates, indianDistricts } from "../../data/indianLocations";
 
 export const unstable_settings = {
   headerShown: false,
@@ -76,58 +77,39 @@ const AuthPersonalDetailsScreen = () => {
   const { personalDetails, updatePersonalDetails, setOnboardingStep, onboardingStep } = useOnboardingStore();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [genderOtherText, setGenderOtherText] = useState("");
 
   // ── Photo upload state (same pattern as profile.tsx) ────────────────────────
   const [photoUploading, setPhotoUploading] = useState(false);
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
 
-  const handlePhotoUpload = async () => {
-    // 1. Request camera permission first
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Camera Required",
-        "Please allow camera access to take your profile photo.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => Linking.openSettings() },
-        ]
-      );
-      return;
-    }
+  const launchCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.75,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    await processPhoto(result.assets[0].uri);
+  };
 
-    // 2. Try to launch camera
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.75,
-      });
-      if (result.canceled || !result.assets?.[0]) return;
-      await processPhoto(result.assets[0].uri);
-    } catch {
-      // 3. No-camera device fallback — show alert then open library
-      Alert.alert(
-        "No Camera Found",
-        "A live photo is preferred. Opening your photo library instead.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Open Library",
-            onPress: async () => {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ["images"],
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.75,
-              });
-              if (result.canceled || !result.assets?.[0]) return;
-              await processPhoto(result.assets[0].uri);
-            },
-          },
-        ]
-      );
-    }
+  const launchGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.75,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    await processPhoto(result.assets[0].uri);
+  };
+
+  const handlePhotoUpload = async () => {
+    Alert.alert("Choose Photo", "", [
+      { text: "Camera", onPress: launchCamera },
+      { text: "Gallery", onPress: launchGallery },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const processPhoto = async (uri: string) => {
@@ -267,12 +249,6 @@ const AuthPersonalDetailsScreen = () => {
       fathersName: true, mothersName: true,
     });
 
-    // Photo is mandatory
-    if (!personalDetails.photoUrl) {
-      Alert.alert("Photo Required", "Please upload a profile photo to continue.");
-      return;
-    }
-
     let hasErrors = false;
     const newErrors: FieldErrors = {};
 
@@ -312,7 +288,6 @@ const AuthPersonalDetailsScreen = () => {
 
   const isValid = () => {
     return (
-      !!personalDetails.photoUrl &&        // photo is mandatory
       personalDetails.name?.trim() !== "" &&
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&
@@ -444,6 +419,15 @@ const AuthPersonalDetailsScreen = () => {
                   />
                 </View>
                 <FieldError message={touched.gender ? errors.gender : undefined} />
+                {personalDetails.gender === "other" && (
+                  <TextArea
+                    value={genderOtherText}
+                    onChangeText={setGenderOtherText}
+                    placeholder={t("onboarding.specifyOther") || "Please specify…"}
+                    numberOfLines={3}
+                    style={{ marginTop: 8 }}
+                  />
+                )}
               </View>
             </View>
 
@@ -494,75 +478,174 @@ const AuthPersonalDetailsScreen = () => {
               <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
             </FieldWrapper>
 
-            {/* Location — redirect to map picker instead of manual dropdowns */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.district") || "Location"} />
-              {personalDetails.village || personalDetails.district ? (
-                <View style={{
-                  backgroundColor: theme.background.successSubtle,
-                  borderWidth: 1,
-                  borderColor: theme.semantic.successBackground,
-                  borderRadius: 12,
-                  padding: 14,
+            {/* ── Address Section ─────────────────────────────────────── */}
+            <View style={{ marginBottom: 8 }}>
+              <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "700", marginBottom: 4, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {t("onboarding.address") || "Address"}
+              </AppText>
+              {/* Optional "Use my location" helper */}
+              <Pressable
+                onPress={() => router.push("/(auth)/location-picker" as any)}
+                style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10,
-                }}>
-                  <Ionicons name="location" size={18} color={theme.semantic.successText} />
-                  <AppText variant="bodySm" style={{ color: "#166534", flex: 1, fontWeight: "600" }}>
-                    {[personalDetails.village, personalDetails.district, personalDetails.state].filter(Boolean).join(", ")}
-                  </AppText>
-                  <Pressable onPress={() => router.push("/(auth)/location-picker" as any)}>
-                    <AppText variant="bodySm" style={{ color: theme.semantic.successText, fontWeight: "700" }}>Change</AppText>
-                  </Pressable>
-                </View>
-              ) : (
-                <Pressable
-                  onPress={() => router.push("/(auth)/location-picker" as any)}
-                  style={{
-                    backgroundColor: theme.background.neutralSubtle,
-                    borderWidth: 1,
-                    borderColor: theme.border.subtle,
-                    borderRadius: 12,
-                    padding: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <Ionicons name="map-outline" size={18} color={theme.text.muted} />
-                  <AppText variant="bodySm" style={{ color: theme.text.placeholder }}>
-                    {t("onboarding.tapToPickLocation") || "Tap to pick your location on map"}
-                  </AppText>
-                  <Ionicons name="chevron-forward" size={16} color={theme.text.placeholder} style={{ marginLeft: "auto" }} />
-                </Pressable>
-              )}
+                  gap: 6,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: theme.background.neutralSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border.subtle,
+                  borderRadius: 10,
+                  marginBottom: 16,
+                  alignSelf: "flex-start",
+                }}
+                accessibilityLabel="Use my location to pre-fill address"
+                accessibilityRole="button"
+              >
+                <Ionicons name="locate-outline" size={15} color={theme.primary.green} />
+                <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600" }}>
+                  {t("onboarding.useMyLocation") || "Use my location"}
+                </AppText>
+              </Pressable>
+            </View>
+
+            {/* State */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.state") || "State"} />
+              <Select
+                value={personalDetails.state}
+                onChange={(value) => {
+                  // Clear district when state changes
+                  updatePersonalDetails({ state: value, district: "" });
+                }}
+                options={indianStates.map((s) => ({ label: s.label, value: s.value }))}
+                placeholder={t("onboarding.selectState") || "Select state"}
+              />
+            </FieldWrapper>
+
+            {/* District */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.district") || "District"} />
+              <Select
+                value={personalDetails.district}
+                onChange={(value) => updatePersonalDetails({ district: value })}
+                options={indianDistricts
+                  .filter((d) => !personalDetails.state || d.stateValue === personalDetails.state)
+                  .map((d) => ({ label: d.label, value: d.value }))}
+                placeholder={t("onboarding.selectDistrict") || "Select district"}
+                disabled={!personalDetails.state}
+              />
+            </FieldWrapper>
+
+            {/* Block / Tehsil */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.block") || "Block / Tehsil"} />
+              <TextInput
+                style={{
+                  backgroundColor: theme.background.neutralSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border.subtle,
+                  borderRadius: 12,
+                  padding: 14,
+                  fontSize: 16,
+                  color: theme.text.secondary,
+                }}
+                value={personalDetails.block || personalDetails.tehsil || ""}
+                onChangeText={(text) => updatePersonalDetails({ block: text, tehsil: text })}
+                placeholder={t("onboarding.enterBlock") || "Enter block / tehsil"}
+                placeholderTextColor={theme.text.placeholder}
+              />
+            </FieldWrapper>
+
+            {/* Village */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.village") || "Village"} />
+              <TextInput
+                style={{
+                  backgroundColor: theme.background.neutralSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border.subtle,
+                  borderRadius: 12,
+                  padding: 14,
+                  fontSize: 16,
+                  color: theme.text.secondary,
+                }}
+                value={personalDetails.village || ""}
+                onChangeText={(text) => updatePersonalDetails({ village: text })}
+                placeholder={t("onboarding.enterVillage") || "Enter village"}
+                placeholderTextColor={theme.text.placeholder}
+              />
+            </FieldWrapper>
+
+            {/* PIN Code */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
+              <TextInput
+                style={{
+                  backgroundColor: theme.background.neutralSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border.subtle,
+                  borderRadius: 12,
+                  padding: 14,
+                  fontSize: 16,
+                  color: theme.text.secondary,
+                }}
+                value={personalDetails.pinCode || ""}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/\D/g, "").slice(0, 6);
+                  updatePersonalDetails({ pinCode: cleaned });
+                }}
+                placeholder={t("onboarding.enterPinCode") || "Enter 6-digit PIN code"}
+                placeholderTextColor={theme.text.placeholder}
+                keyboardType="numeric"
+                maxLength={6}
+              />
+            </FieldWrapper>
+
+            {/* Post Office */}
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.postOffice") || "Post Office"} />
+              <TextInput
+                style={{
+                  backgroundColor: theme.background.neutralSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border.subtle,
+                  borderRadius: 12,
+                  padding: 14,
+                  fontSize: 16,
+                  color: theme.text.secondary,
+                }}
+                value={personalDetails.postOffice || ""}
+                onChangeText={(text) => updatePersonalDetails({ postOffice: text })}
+                placeholder={t("onboarding.enterPostOffice") || "Enter post office"}
+                placeholderTextColor={theme.text.placeholder}
+              />
             </FieldWrapper>
           </View>
+
+          {/* Bottom Buttons */}
+          <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
+            <Pressable
+              onPress={handleSkip}
+              className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
+            >
+              <AppText variant="bodyMd" className="text-gray-500 font-semibold">
+                {t("onboarding.skip")}
+              </AppText>
+            </Pressable>
+
+            <Pressable
+              onPress={handleNext}
+              disabled={!isValid()}
+              className="flex-[2] py-4 rounded-full items-center"
+              style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
+            >
+              <AppText variant="bodyMd" className="text-white font-bold">
+                {t("onboarding.next")}
+              </AppText>
+            </Pressable>
+          </View>
       </KeyboardAwareScrollView>
-
-        {/* Bottom Buttons */}
-        <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
-          <Pressable
-            onPress={handleSkip}
-            className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
-          >
-            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
-              {t("onboarding.skip")}
-            </AppText>
-          </Pressable>
-
-          <Pressable
-            onPress={handleNext}
-            disabled={!isValid()}
-            className="flex-[2] py-4 rounded-full items-center"
-            style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
-          >
-            <AppText variant="bodyMd" className="text-white font-bold">
-              {t("onboarding.next")}
-            </AppText>
-          </Pressable>
-        </View>
     </View>
   );
 };

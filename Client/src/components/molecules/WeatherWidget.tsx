@@ -168,7 +168,7 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
   }
 
   const { label, icon } = weatherCodeToInfo(data.weathercode, language);
-  const theme = getWeatherTheme(data.temperature, data.weathercode);
+  const weatherTheme = getWeatherTheme(data.temperature, data.weathercode);
   const tempStr = `${Math.round(data.temperature)}°C`;
   const hour = new Date().getHours();
   const timeLabel = hour < 12
@@ -182,28 +182,28 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
   return (
     <View style={{
       marginHorizontal: 16, marginBottom: 16, borderRadius: 20,
-      backgroundColor: theme.bg,
-      shadowColor: theme.shadowColor,
+      backgroundColor: weatherTheme.bg,
+      shadowColor: weatherTheme.shadowColor,
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.35, shadowRadius: 14, elevation: 5,
       overflow: "hidden",
     }}>
       {/* Decorative blobs */}
-      <View style={{ position: "absolute", top: -18, right: -18, width: 90, height: 90, borderRadius: 45, backgroundColor: theme.iconBg, opacity: 0.45 }} />
-      <View style={{ position: "absolute", bottom: -24, left: -8, width: 70, height: 70, borderRadius: 35, backgroundColor: theme.iconBg, opacity: 0.25 }} />
+      <View style={{ position: "absolute", top: -18, right: -18, width: 90, height: 90, borderRadius: 45, backgroundColor: weatherTheme.iconBg, opacity: 0.45 }} />
+      <View style={{ position: "absolute", bottom: -24, left: -8, width: 70, height: 70, borderRadius: 35, backgroundColor: weatherTheme.iconBg, opacity: 0.25 }} />
 
       <View style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 14 }}>
         {/* Icon circle */}
-        <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: theme.iconBg, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name={icon} size={32} color={theme.iconColor} />
+        <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: weatherTheme.iconBg, alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name={icon} size={32} color={weatherTheme.iconColor} />
         </View>
 
         {/* Temp + condition */}
         <View style={{ flex: 1 }}>
-          <AppText style={{ fontSize: 28, fontWeight: "800", color: theme.tempColor, lineHeight: 32, letterSpacing: -0.5 }}>
+          <AppText style={{ fontSize: 28, fontWeight: "800", color: weatherTheme.tempColor, lineHeight: 32, letterSpacing: -0.5 }}>
             {tempStr}
           </AppText>
-          <AppText style={{ fontSize: 13, color: theme.labelColor, fontWeight: "600", marginTop: 2 }}>
+          <AppText style={{ fontSize: 13, color: weatherTheme.labelColor, fontWeight: "600", marginTop: 2 }}>
             {label}
           </AppText>
         </View>
@@ -211,17 +211,17 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
         {/* District + time + refresh */}
         <View style={{ alignItems: "flex-end", gap: 5 }}>
           {district ? (
-            <View style={{ backgroundColor: theme.iconBg, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
-              <AppText style={{ fontSize: 11, color: theme.iconColor, fontWeight: "700" }} numberOfLines={1}>
+            <View style={{ backgroundColor: weatherTheme.iconBg, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+              <AppText style={{ fontSize: 11, color: weatherTheme.iconColor, fontWeight: "700" }} numberOfLines={1}>
                 {district}
               </AppText>
             </View>
           ) : null}
-          <AppText style={{ fontSize: 11, color: theme.accentColor, fontWeight: "500" }}>
+          <AppText style={{ fontSize: 11, color: weatherTheme.accentColor, fontWeight: "500" }}>
             {timeLabel}
           </AppText>
           <TouchableOpacity onPress={fetchWeather} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="refresh-outline" size={16} color={theme.accentColor} />
+            <Ionicons name="refresh-outline" size={16} color={weatherTheme.accentColor} />
           </TouchableOpacity>
         </View>
       </View>

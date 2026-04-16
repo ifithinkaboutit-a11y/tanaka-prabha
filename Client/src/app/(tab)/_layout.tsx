@@ -42,7 +42,7 @@ const TabNavigation = () => {
           paddingTop: 8,
           paddingBottom: 8,
           borderTopWidth: 0.5,
-          borderTopColor: theme.border.subtle,
+          borderTopColor: "#E0E0E0",
         },
       }}
     >

@@ -13,6 +13,7 @@ import AppText from "../components/atoms/AppText";
 import { AppointmentCardSkeleton } from "../components/atoms/Skeleton";
 import { Appointment, appointmentsApi } from "../services/apiService";
 import { theme } from "../styles/colors";
+import { useTranslation } from "../i18n";
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string; dot: string; icon: keyof typeof Ionicons.glyphMap }> = {
     pending:   { color: "#D97706", bg: "#FEF3C7", label: "Pending",   dot: "#F59E0B", icon: "time-outline" },
@@ -30,6 +31,7 @@ function formatDate(dateStr: string): string {
 
 export default function MySchedule() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -86,7 +88,7 @@ export default function MySchedule() {
                 <Pressable onPress={() => router.back()} className="mb-3 w-9 h-9 rounded-full bg-white/20 items-center justify-center">
                     <Ionicons name="arrow-back" size={22} color="#fff" />
                 </Pressable>
-                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>My Schedule</AppText>
+                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("connect.mySchedule")}</AppText>
                 <AppText style={{ color: "rgba(255,255,255,0.75)", marginTop: 4, fontSize: 13 }}>
                     Your appointments & sessions
                 </AppText>

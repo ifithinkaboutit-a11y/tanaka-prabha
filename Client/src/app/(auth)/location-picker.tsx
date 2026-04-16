@@ -534,10 +534,6 @@ export default function LocationPickerScreen() {
 
             {/* ── Top overlay: progress bar + search ──────────────────────── */}
             <View style={styles.topOverlay} pointerEvents="box-none">
-                <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: "50%" }]} />
-                </View>
-
                 <View style={styles.searchCard} pointerEvents="auto">
                     <Ionicons name="search-outline" size={18} color="#6B7280" style={{ marginRight: 8 }} />
                     <TextInput
@@ -647,6 +643,27 @@ export default function LocationPickerScreen() {
                     <AppText variant="bodySm" style={styles.myLocationErrorText}>
                         {myLocationError}
                     </AppText>
+                </View>
+            )}
+
+            {/* Reset position button — zIndex above bottom sheet so it is always tappable */}
+            {initialPos && (
+                <View style={styles.resetPositionContainer}>
+                    <Pressable
+                        style={styles.resetPositionBtn}
+                        onPress={() => {
+                            if (!initialPos) return;
+                            flyTo(initialPos.lat, initialPos.lng, 15);
+                            setPinCoords({ lat: initialPos.lat, lng: initialPos.lng });
+                            geocodeCoords(initialPos.lat, initialPos.lng);
+                            setAccuracyCircleVisible(true);
+                        }}
+                        accessibilityLabel="Reset position"
+                        accessibilityRole="button"
+                    >
+                        <Ionicons name="refresh-outline" size={16} color={theme.primary.green} />
+                        <AppText variant="bodySm" style={styles.resetPositionText}>Reset position</AppText>
+                    </Pressable>
                 </View>
             )}
 
@@ -776,6 +793,18 @@ const styles = StyleSheet.create({
     },
     myLocationErrorText: { color: theme.semantic.warningText, fontSize: 12, flexShrink: 1 },
 
+    resetPositionContainer: {
+        position: "absolute", bottom: 190, left: 16,
+        zIndex: 20, elevation: 20,
+    },
+    resetPositionBtn: {
+        flexDirection: "row", alignItems: "center", gap: 6,
+        backgroundColor: theme.background.input,
+        paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20,
+        shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
+    },
+    resetPositionText: { color: theme.primary.green, fontWeight: "600", fontSize: 13 },
+
     bottomSheet: {
         position: "absolute", bottom: 0, left: 0, right: 0,
         backgroundColor: theme.background.input, borderTopLeftRadius: 24, borderTopRightRadius: 24,
@@ -783,7 +812,7 @@ const styles = StyleSheet.create({
         paddingBottom: Platform.OS === "ios" ? 40 : 24,
         shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20, elevation: 12, zIndex: 15,
     },
-    sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
+    sheetHandle: { width: 40, height: 6, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
     sheetLabel: { fontSize: 10, letterSpacing: 1.2, color: theme.text.placeholder, textTransform: "uppercase", marginBottom: 6 },
     sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 12 },
     sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 12 },

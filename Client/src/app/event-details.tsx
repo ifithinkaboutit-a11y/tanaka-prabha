@@ -251,15 +251,26 @@ const EventDetails = () => {
                                     {event.location_name}{event.location_address ? `, ${event.location_address}` : ""}
                                 </AppText>
                                 {event.location_lat && event.location_lng && (
-                                    <Pressable
-                                        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_lng}`)}
-                                        style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}
-                                    >
-                                        <Ionicons name="navigate-outline" size={14} color={theme.primary.green} />
-                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
-                                            {t("events.getDirections") || "Get Directions"}
-                                        </AppText>
-                                    </Pressable>
+                                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 12 }}>
+                                        <Pressable
+                                            onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_lng}`)}
+                                            style={{ flexDirection: "row", alignItems: "center" }}
+                                        >
+                                            <Ionicons name="navigate-outline" size={14} color={theme.primary.green} />
+                                            <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                                {t("events.getDirections") || "Get Directions"}
+                                            </AppText>
+                                        </Pressable>
+                                        <Pressable
+                                            onPress={() => Linking.openURL(`https://maps.google.com/?q=${event.location_lat},${event.location_lng}`)}
+                                            style={{ flexDirection: "row", alignItems: "center" }}
+                                        >
+                                            <Ionicons name="map-outline" size={14} color={theme.secondary.sky} />
+                                            <AppText variant="bodySm" style={{ color: theme.secondary.sky, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
+                                                {t("events.viewOnMap") || "View on Map"}
+                                            </AppText>
+                                        </Pressable>
+                                    </View>
                                 )}
                             </View>
                         </View>
@@ -384,6 +395,23 @@ const EventDetails = () => {
                                         </AppText>
                                     </Pressable>
                                 </View>
+                            )}
+
+                            {(event.contact_number || event.master_trainer_phone || event.trainer_phone) && (
+                                <Pressable
+                                    onPress={() => Linking.openURL(`tel:${event.contact_number || event.master_trainer_phone || event.trainer_phone}`)}
+                                    style={{
+                                        flexDirection: "row", alignItems: "center", justifyContent: "center",
+                                        marginTop: 14, paddingVertical: 12, borderRadius: 12,
+                                        backgroundColor: theme.background.successSubtle,
+                                        borderWidth: 1, borderColor: "#86EFAC",
+                                    }}
+                                >
+                                    <Ionicons name="call" size={18} color="#16A34A" />
+                                    <AppText variant="bodyMd" style={{ color: "#15803D", fontWeight: "700", fontSize: 14, marginLeft: 8 }}>
+                                        {t("events.callTrainer") || "Call Trainer"}
+                                    </AppText>
+                                </Pressable>
                             )}
                         </Card>
                     )}

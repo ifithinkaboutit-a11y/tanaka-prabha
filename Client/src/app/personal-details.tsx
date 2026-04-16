@@ -82,6 +82,7 @@ const PersonalDetailsScreen = () => {
     nyayPanchayat: profile?.nyayPanchayat || "",
     postOffice: profile?.postOffice || "",
     pinCode: ov.pinCode ?? (profile?.pinCode || ""),
+    photoUrl: profile?.photoUrl || "",
   };
 
   const handleSave = async (data: typeof initialData) => {

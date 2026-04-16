@@ -5,6 +5,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Linking,
     Pressable,
     ScrollView,
     StatusBar,
@@ -12,6 +13,7 @@ import {
     View,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
+import { useAuth } from "../contexts/AuthContext";
 import { appointmentsApi } from "../services/apiService";
 import { theme } from "../styles/colors";
 
@@ -36,6 +38,7 @@ export default function BookAppointment() {
         professionalName: string;
     }>();
     const router = useRouter();
+    const { user } = useAuth();
 
     const [days] = useState(generateDays);
     const [selectedDay, setSelectedDay] = useState<string>(generateDays()[0].value);
@@ -82,6 +85,10 @@ export default function BookAppointment() {
                 time: selectedSlot,
             });
             setSuccess(true);
+            const userName = user?.name ?? "";
+            Linking.openURL(
+                `mailto:ifithinkaboutit@gmail.com?subject=New Appointment Booking&body=Professional: ${professionalName}%0ADate: ${selectedDay}%0ATime: ${selectedSlot}%0AUser: ${userName}`
+            );
         } catch (error: any) {
             Alert.alert(
                 "Booking Failed",

@@ -30,7 +30,7 @@ const SchemeDetailsScreen = () => {
   const { currentLanguage } = useLanguageStore();
   const { isInterested, interestCount, toggleInterest, loading: interestLoading } = useInterest(
     schemeId ?? "",
-    scheme?.interest_count ?? 0
+    scheme?.interestCount ?? 0
   );
 
   // Fetch scheme on mount
@@ -268,7 +268,7 @@ const SchemeDetailsScreen = () => {
         elevation: 10,
       }}>
         <Button
-          label={isInterested ? `✓ I'm Interested` : `I'm Interested`}
+          label={isInterested ? "Applied ✓" : "Participate Now"}
           variant={isInterested ? "primary" : "outline"}
           onPress={toggleInterest}
           disabled={interestLoading}

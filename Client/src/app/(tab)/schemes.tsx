@@ -303,11 +303,8 @@ export default function Schemes() {
 
   // Featured scheme (first featured one, or first overall)
   const featuredScheme = schemes.find((s) => s.isFeatured) || schemes[0];
-  // Recommended schemes (featured ones first, then fill up to 5)
-  const recommendedSchemes = [
-    ...filteredSchemes.filter((s) => s.isFeatured),
-    ...filteredSchemes.filter((s) => !s.isFeatured),
-  ].slice(0, 5);
+  // Recommended schemes — featured only, up to 5
+  const recommendedSchemes = filteredSchemes.filter((s) => s.isFeatured).slice(0, 5);
 
   if (loading) {
     return (
@@ -382,21 +379,6 @@ export default function Schemes() {
         </View>
       </View>
 
-      {/* Banner Slideshow — live data from bannersApi */}
-      {!isSearchActive && (
-        <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
-          <BannerSlideshow
-            banners={banners.map((b) => ({
-              title: (currentLanguage === 'hi' && b.titleHi ? b.titleHi : b.title) || "",
-              subtitle: (currentLanguage === 'hi' && b.subtitleHi ? b.subtitleHi : b.subtitle) || "",
-              imageUrl: b.imageUrl,
-              url: b.redirectUrl,
-            }))}
-            autoSlideInterval={4000}
-          />
-        </View>
-      )}
-
       {/* Recommended Schemes */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: theme.background.screen }}>
         <View
@@ -450,21 +432,18 @@ export default function Schemes() {
           </Pressable>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginHorizontal: -16 }}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
-          {recommendedSchemes.map((scheme) => (
-            <SchemeCard
-              key={scheme.id}
-              scheme={scheme}
-              onPress={() => handleSchemePress(scheme.id)}
-              width={260}
-            />
-          ))}
-        </ScrollView>
+        {recommendedSchemes.map((scheme) => (
+          <SchemeCard
+            key={scheme.id}
+            scheme={scheme}
+            onPress={() => handleSchemePress(scheme.id)}
+          />
+        ))}
+        {recommendedSchemes.length > 3 && (
+          <AppText style={{ color: theme.text.muted, textAlign: "center", fontSize: 12, marginTop: 8 }}>
+            Scroll for more ↓
+          </AppText>
+        )}
       </View>
 
       {/* Categories */}
@@ -522,7 +501,7 @@ export default function Schemes() {
       {/* Government Schemes — ProgramSection cards */}
       <ProgramSection
         title={t("schemesPage.recommendedSchemes")}
-        programs={filteredSchemes.slice(0, 9).map((s) => ({
+        programs={filteredSchemes.filter((s) => s.isFeatured).slice(0, 9).map((s) => ({
           ...s,
           title: currentLanguage === 'hi' && s.titleHi ? s.titleHi : s.title,
           description: (currentLanguage === 'hi' && s.descriptionHi ? s.descriptionHi : s.description) || "",

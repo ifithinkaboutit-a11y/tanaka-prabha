@@ -22,9 +22,9 @@ const variantStyles: Record<Variant, TextStyle> = {
   h1: { fontSize: 36, fontWeight: "700", color: theme.text.dark },
   h2: { fontSize: 30, fontWeight: "600", color: theme.text.dark },
   h3: { fontSize: 24, fontWeight: "600", color: theme.text.dark },
-  bodyLg: { fontSize: 20, color: theme.text.dark },
-  bodyMd: { fontSize: 18, color: theme.text.dark },
-  bodySm: { fontSize: 16, color: theme.text.medium },
+  bodyLg: { fontSize: 21, color: theme.text.dark },
+  bodyMd: { fontSize: 19, color: theme.text.dark },
+  bodySm: { fontSize: 17, color: theme.text.medium },
   caption: { fontSize: 14, color: theme.text.light },
 };
 

@@ -180,7 +180,7 @@ export default function AdminDashboard() {
                 <QuickPill icon="list" label="View Records" color="#8B5CF6" onPress={() => goTo("/(admin)/view-attendance")} />
                 <QuickPill icon="newspaper" label="CMS" color="#F59E0B" onPress={() => goTo("/(admin)/content-management")} />
                 <QuickPill icon="notifications" label="Notify" color="#EF4444" onPress={() => goTo("/(admin)/send-notification")} />
-                <QuickPill icon="people" label="Beneficiaries" color="#0EA5E9" onPress={() => goTo("/(admin)/beneficiaries")} />
+                <QuickPill icon="people" label="Farmers" color="#0EA5E9" onPress={() => goTo("/(admin)/beneficiaries")} />
             </ScrollView>
 
             {/* ── Stats Grid ── */}
@@ -266,17 +266,17 @@ export default function AdminDashboard() {
             <View style={s.divider} />
 
             {/* ── Beneficiaries ── */}
-            <SectionHeader label="Beneficiaries" />
+            <SectionHeader label="Farmers" />
             <ActionCard
                 icon="person-add"
-                title="Add Beneficiary"
+                title="Add Farmer"
                 description="Register a new farmer on behalf of the community"
                 color="#10B981"
                 onPress={() => goTo("/(admin)/add-beneficiary")}
             />
             <ActionCard
                 icon="people"
-                title="View Beneficiaries"
+                title="View Farmers"
                 description="Browse and search all registered farmers"
                 color="#0EA5E9"
                 onPress={() => goTo("/(admin)/beneficiaries")}

@@ -22,6 +22,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { uploadApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
+import { cropTypes } from "../../data/content/onboardingOptions";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -117,32 +118,58 @@ const Profile = () => {
   );
 
   const handleAvatarUpload = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert("Permission needed", "Grant photo library access to upload a profile picture.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+    const uploadPhoto = async (uri: string) => {
+      setLocalAvatarUri(uri);
+      setAvatarUploading(true);
+      try {
+        const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+        await updateProfile({ photo_url: cloudUrl });
+        setLocalAvatarUri(null);
+      } catch (e: any) {
+        Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+        setLocalAvatarUri(null);
+      } finally {
+        setAvatarUploading(false);
+      }
+    };
 
-    const uri = result.assets[0].uri;
-    setLocalAvatarUri(uri); // instant preview
-    setAvatarUploading(true);
-    try {
-      const cloudUrl = await uploadApi.uploadUserPhoto(uri);
-      await updateProfile({ photo_url: cloudUrl });
-      setLocalAvatarUri(null); // let profile reload handle it
-    } catch (e: any) {
-      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
-      setLocalAvatarUri(null);
-    } finally {
-      setAvatarUploading(false);
-    }
+    const launchCamera = async () => {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("Permission needed", "Grant camera access to take a profile picture.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await uploadPhoto(result.assets[0].uri);
+    };
+
+    const launchGallery = async () => {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("Permission needed", "Grant photo library access to upload a profile picture.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await uploadPhoto(result.assets[0].uri);
+    };
+
+    Alert.alert("Choose Photo", "", [
+      { text: "Camera", onPress: launchCamera },
+      { text: "Gallery", onPress: launchGallery },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const handleLogout = () => {
@@ -283,7 +310,7 @@ const Profile = () => {
           <View style={s.statsDivider} />
           <StatBadge
             icon="leaf-outline"
-            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea}` : "0"}
+            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea} Bigha` : "0"}
             label={t("profile.bigha")}
           />
           <View style={s.statsDivider} />
@@ -349,13 +376,13 @@ const Profile = () => {
               accent
             />
             {profile.landDetails.rabiCrop && (
-              <InfoRow icon="sunny-outline" label={t("landDetails.rabiCrop")} value={profile.landDetails.rabiCrop} />
+              <InfoRow icon="sunny-outline" label={t("landDetails.rabiCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.rabiCrop)?.label ?? profile.landDetails.rabiCrop} />
             )}
             {profile.landDetails.kharifCrop && (
-              <InfoRow icon="rainy-outline" label={t("landDetails.kharifCrop")} value={profile.landDetails.kharifCrop} />
+              <InfoRow icon="rainy-outline" label={t("landDetails.kharifCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.kharifCrop)?.label ?? profile.landDetails.kharifCrop} />
             )}
             {profile.landDetails.zaidCrop && (
-              <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={profile.landDetails.zaidCrop} />
+              <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.zaidCrop)?.label ?? profile.landDetails.zaidCrop} />
             )}
           </>
         ) : (
@@ -386,13 +413,13 @@ const Profile = () => {
         {totalAnimals > 0 ? (
           <View>
             {[
-              { key: "cow",     label: t("livestockDetails.cow"),     count: profile.livestockDetails?.cow },
-              { key: "buffalo", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo },
-              { key: "goat",    label: t("livestockDetails.goat"),    count: profile.livestockDetails?.goat },
-              { key: "sheep",   label: t("livestockDetails.sheep"),   count: profile.livestockDetails?.sheep },
-              { key: "pig",     label: t("livestockDetails.pig"),     count: profile.livestockDetails?.pig },
-              { key: "poultry", label: t("livestockDetails.hen"),     count: profile.livestockDetails?.poultry },
-              { key: "others",  label: t("livestockDetails.others"),  count: profile.livestockDetails?.others },
+              { key: "cow",     emoji: "🐄", label: t("livestockDetails.cow"),     count: profile.livestockDetails?.cow },
+              { key: "buffalo", emoji: "🐃", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo },
+              { key: "goat",    emoji: "🐐", label: t("livestockDetails.goat"),    count: profile.livestockDetails?.goat },
+              { key: "sheep",   emoji: "🐑", label: t("livestockDetails.sheep"),   count: profile.livestockDetails?.sheep },
+              { key: "pig",     emoji: "🐖", label: t("livestockDetails.pig"),     count: profile.livestockDetails?.pig },
+              { key: "poultry", emoji: "🐔", label: t("livestockDetails.hen"),     count: profile.livestockDetails?.poultry },
+              { key: "others",  emoji: "🐾", label: t("livestockDetails.others"),  count: profile.livestockDetails?.others },
             ]
               .filter((item) => item.count && item.count > 0)
               .map((item, idx, arr) => (
@@ -403,7 +430,7 @@ const Profile = () => {
                     idx === arr.length - 1 && { borderBottomWidth: 0 },
                   ]}
                 >
-                  <Text style={s.livestockRowLabel}>{item.label}</Text>
+                  <Text style={s.livestockRowLabel}>{item.emoji} {item.label}</Text>
                   <View style={s.livestockCountBadge}>
                     <Text style={s.livestockCountText}>{item.count}</Text>
                   </View>

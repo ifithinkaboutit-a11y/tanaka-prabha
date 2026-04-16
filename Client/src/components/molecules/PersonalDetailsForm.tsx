@@ -18,6 +18,7 @@ import { getStateOptions, getDistrictOptions } from "../../data/indianLocations"
 import T from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
+import TextArea from "../atoms/TextArea";
 import AddressDropdowns, { type AddressValue } from "./AddressDropdowns";
 import { theme } from "@/styles/colors";
 
@@ -307,6 +308,7 @@ export default function PersonalDetailsForm({
   onOpenMap,
 }: PersonalDetailsFormProps) {
   const [formData, setFormData] = useState<PersonalDetails>(initialData);
+  const [genderOtherText, setGenderOtherText] = useState("");
 
   // Apply map-returned address fields without wiping personal/family data.
   // We use a ref to skip the very first render (initial mount) so we only
@@ -391,6 +393,15 @@ export default function PersonalDetailsForm({
               options={genderOptions}
               placeholder="Select..."
             />
+            {formData.gender === "other" && (
+              <TextArea
+                value={genderOtherText}
+                onChangeText={setGenderOtherText}
+                placeholder="Please specify…"
+                numberOfLines={3}
+                style={{ marginTop: 8 }}
+              />
+            )}
           </View>
         </View>
       </View>
