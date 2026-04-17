@@ -20,7 +20,7 @@ import { useTranslation } from "../i18n";
 import { theme } from "../styles/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const HERO_HEIGHT = 300;
+const HERO_HEIGHT = 360;
 
 // ─── Info Row ─────────────────────────────────────────────────────────────────
 const InfoRow = ({
@@ -188,6 +188,36 @@ const ConnectDetailScreen = () => {
     });
   };
 
+
+  const handleMail = () => {
+  setShowConnectModal(false);
+
+  const subject = encodeURIComponent("Appointment Booking Request");
+
+  const body = encodeURIComponent(
+    `Hello,
+
+I would like to book an appointment.
+
+Name:
+Preferred Professional: ${professional?.name || ""}
+Preferred Date:
+Preferred Time:
+Purpose of Appointment:
+
+Please let me know the available slots.
+
+Thank you.`
+  );
+
+  const url = `mailto:ifithinkaboutit@gmail.com?subject=${subject}&body=${body}`;
+
+  Linking.openURL(url).catch(() => {
+    Alert.alert(t("connect.error"), t("connect.cannotOpenMail"));
+  });
+};
+
+
   const avatarUrl =
     professional.imageUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&background=386641&color=fff&size=300&bold=true`;
@@ -225,37 +255,11 @@ const ConnectDetailScreen = () => {
           </Pressable>
 
           {/* Hero content */}
-          <View className="absolute bottom-0 left-0 right-0 p-5">
-            {/* Status pill */}
-            <View
-              className="flex-row items-center self-start px-2.5 py-1 rounded-full mb-2.5"
-              style={{ backgroundColor: professional.isAvailable ? "#16A34A" : "#6B7280" }}
-            >
-              <View className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
-              <AppText style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>
-                {professional.isAvailable ? t("connect.available") : t("connect.busy")}
-              </AppText>
-            </View>
-
+          <View className="absolute bottom-0 left-0 right-0 p-4">
             <AppText style={{ color: "#FFFFFF", fontSize: 26, fontWeight: "900", marginBottom: 8, lineHeight: 30 }}>
               {professional.name}
             </AppText>
 
-            <View className="flex-row items-center flex-wrap gap-1.5 mb-2">
-              <View
-                className="px-2.5 py-1 rounded-lg border border-white/20"
-                style={{ backgroundColor: "rgba(56,102,65,0.9)" }}
-              >
-                <AppText style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>
-                  {professional.role}
-                </AppText>
-              </View>
-              {professional.department && (
-                <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: "500" }}>
-                  • {professional.department}
-                </AppText>
-              )}
-            </View>
 
             {professional.district && (
               <View className="flex-row items-center gap-1">
@@ -269,11 +273,11 @@ const ConnectDetailScreen = () => {
         </View>
 
         {/* ── Quick Actions ── */}
-        <View className="flex-row mx-5 mt-4 mb-1 gap-3">
+        <View className="flex-row mx-5 my-6 mb-1 gap-3">
           {[
             { label: t("connect.options.call"), icon: "call" as const, bg: "#2563EB", onPress: handleCall },
             { label: t("connect.options.chat"), icon: "logo-whatsapp" as const, bg: "#10B981", onPress: handleChat },
-            { label: "Schedule", icon: "calendar" as const, bg: "#F59E0B", onPress: handleBookAppointment },
+            { label: "Mail", icon: "mail" as const, bg: "#F59E0B", onPress: handleMail },
           ].map((action) => (
             <Pressable key={action.label} onPress={action.onPress} className="flex-1 items-center">
               <View
@@ -319,26 +323,6 @@ const ConnectDetailScreen = () => {
             {professional.serviceArea?.state && (
               <InfoRow icon="flag-outline" label={t("connect.state")} value={professional.serviceArea.state} iconBg="#FDF2F8" iconColor="#9333EA" />
             )}
-          </SectionCard>
-        )}
-
-        {/* ── Specializations ── */}
-        {professional.specializations && professional.specializations.length > 0 && (
-          <SectionCard title={t("connect.specialization")} icon="star-outline" iconBg="#FFFBEB" iconColor="#D97706">
-            <View className="flex-row flex-wrap gap-2">
-              {professional.specializations.map((spec, index) => (
-                <View
-                  key={index}
-                  className="flex-row items-center px-3 py-1.5 rounded-full border border-green-200"
-                  style={{ backgroundColor: "#F0FDF4" }}
-                >
-                  <Ionicons name="checkmark-circle" size={13} color="#386641" style={{ marginRight: 5 }} />
-                  <AppText style={{ color: "#166534", fontSize: 13, fontWeight: "600" }}>
-                    {spec}
-                  </AppText>
-                </View>
-              ))}
-            </View>
           </SectionCard>
         )}
       </ScrollView>

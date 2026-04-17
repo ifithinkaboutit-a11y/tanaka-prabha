@@ -266,7 +266,7 @@ const Program = () => {
               {ongoingCount > 0 && <LiveBadge />}
               <StatPill
                 icon="calendar-outline"
-                label={`${upcomingEvents.length} upcoming`}
+                label={`${upcomingEvents.length} ${t("programs.upcomingEvents")}`}
                 color={theme.primary.green}
               />
             </View>
@@ -285,10 +285,10 @@ const Program = () => {
         {allFiltered.length === 0 && searchQuery.trim() !== "" && (
           <View style={s.emptyState}>
             <Ionicons name="search-outline" size={40} color={theme.text.placeholder} />
-            <AppText style={s.emptyTitle}>No results found</AppText>
-            <AppText style={s.emptySubtitle}>Try a different keyword or clear your search</AppText>
+            <AppText style={s.emptyTitle}>{t("search.noResults")}</AppText>
+            <AppText style={s.emptySubtitle}>{t("search.noResultsHint")}</AppText>
             <TouchableOpacity onPress={() => setSearchQuery("")} style={s.clearBtn}>
-              <AppText style={s.clearBtnText}>Clear search</AppText>
+              <AppText style={s.clearBtnText}>{t("filterSort.clearFilters")}</AppText>
             </TouchableOpacity>
           </View>
         )}
@@ -340,7 +340,7 @@ const Program = () => {
                     {t("events.confirmApplication") || "Confirm Participation"}
                   </AppText>
                   <AppText style={s.modalSubtitle}>
-                    Review your details before confirming
+                    {t("events.yourDetails")}
                   </AppText>
                 </View>
                 <Pressable
@@ -471,14 +471,6 @@ const s = StyleSheet.create({
   header: {
     backgroundColor: theme.background.header,
     paddingBottom: 14,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 5,
-    marginBottom: 20,
   },
   headerTop: {
     flexDirection: "row",

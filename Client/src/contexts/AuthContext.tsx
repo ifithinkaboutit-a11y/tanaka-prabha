@@ -296,6 +296,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             fathersName: pd.fathersName || user.fathersName,
             mothers_name: pd.mothersName || user.mothers_name,
             mothersName: pd.mothersName || user.mothersName,
+            // Seed the uploaded photo so profile shows it immediately
+            photoUrl: (pd as any).photoUrl || user.photoUrl,
           };
           setUser(updatedUser);
           tokenManager.setUser(updatedUser);
@@ -325,6 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setNeedsOnboarding(false);
+    // Clear the profile cache so the profile tab fetches fresh data
+    // (including the uploaded photo) on first visit after onboarding
+    await clearProfileCache();
     router.replace("/(tab)/" as any);
   }, [user, router]);
 

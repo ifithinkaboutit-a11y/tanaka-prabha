@@ -80,6 +80,8 @@ export interface LandDetails {
   rabiCrop: string;
   kharifCrop: string;
   zaidCrop: string;
+  crops?: string[];
+  otherCrop?: string;
 }
 
 export interface LivestockDetails {

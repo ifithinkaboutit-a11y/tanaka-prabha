@@ -204,35 +204,6 @@ export default function Home() {
           })) as any}
         />
       </View>
-
-      {/* Programme Happening Today Section */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-        <AppText
-          variant="h2"
-          style={{
-            fontSize: 22,
-            fontWeight: "700",
-            color: theme.text.secondary,
-            marginBottom: 12,
-          }}
-        >
-          {t("home.programmesToday")}
-        </AppText>
-
-        {eventsError ? (
-          <AppText style={{ color: theme.semantic.error, fontSize: 14 }}>{eventsError}</AppText>
-        ) : todayEvents.length === 0 ? (
-          <AppText style={{ color: theme.text.muted, fontSize: 14 }}>{t("home.noProgrammesToday")}</AppText>
-        ) : (
-          todayEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onPress={() => router.push(`/event-details?eventId=${event.id}` as any)}
-            />
-          ))
-        )}
-      </View>
     </ScrollView>
   );
 };

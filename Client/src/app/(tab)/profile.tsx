@@ -22,7 +22,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { uploadApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
-import { cropTypes } from "../../data/content/onboardingOptions";
+import { cropTypes, cropsBySeason } from "../../data/content/onboardingOptions";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -126,7 +126,7 @@ const Profile = () => {
         await updateProfile({ photo_url: cloudUrl });
         setLocalAvatarUri(null);
       } catch (e: any) {
-        Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+        Alert.alert(t("profile.uploadFailed"), e.message || t("profile.uploadFailedMessage"));
         setLocalAvatarUri(null);
       } finally {
         setAvatarUploading(false);
@@ -136,7 +136,7 @@ const Profile = () => {
     const launchCamera = async () => {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Permission needed", "Grant camera access to take a profile picture.");
+        Alert.alert(t("profile.permissionNeeded"), t("profile.cameraPermissionMessage"));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -152,7 +152,7 @@ const Profile = () => {
     const launchGallery = async () => {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Permission needed", "Grant photo library access to upload a profile picture.");
+        Alert.alert(t("profile.permissionNeeded"), t("profile.galleryPermissionMessage"));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -165,10 +165,10 @@ const Profile = () => {
       await uploadPhoto(result.assets[0].uri);
     };
 
-    Alert.alert("Choose Photo", "", [
-      { text: "Camera", onPress: launchCamera },
-      { text: "Gallery", onPress: launchGallery },
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("profile.choosePhoto"), "", [
+      { text: t("profile.camera"), onPress: launchCamera },
+      { text: t("profile.gallery"), onPress: launchGallery },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -259,23 +259,26 @@ const Profile = () => {
         <View style={s.heroCenter}>
           {/* Tappable avatar with upload overlay */}
           <Pressable onPress={handleAvatarUpload} style={s.avatarRing} disabled={avatarUploading}>
-            <Avatar
-              uri={localAvatarUri || profile.photoUrl || undefined}
-              name={profile.name}
-              size="3xl"
-              shape="circle"
-              bgColor="#FFFFFF"
-            />
-            {/* Camera badge */}
+            {/* Inner clip view — keeps image circular without clipping the badge */}
+            <View style={s.avatarClip}>
+              <Avatar
+                uri={localAvatarUri || profile.photoUrl || undefined}
+                name={profile.name}
+                size="3xl"
+                shape="circle"
+                bgColor="#FFFFFF"
+              />
+              {/* Upload spinner overlay */}
+              {avatarUploading && (
+                <View style={s.avatarLoadingOverlay}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </View>
+              )}
+            </View>
+            {/* Camera badge — outside the clip view so it's always visible */}
             {!avatarUploading && (
               <View style={s.cameraBadge}>
                 <Ionicons name="camera" size={13} color="#FFFFFF" />
-              </View>
-            )}
-            {/* Upload spinner overlay */}
-            {avatarUploading && (
-              <View style={s.avatarLoadingOverlay}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
               </View>
             )}
           </Pressable>
@@ -317,7 +320,7 @@ const Profile = () => {
           <StatBadge
             icon="paw-outline"
             value={String(totalAnimals)}
-            label="Animals"
+            label={t("livestockDetails.totalAnimals")}
           />
         </View>
 
@@ -375,20 +378,47 @@ const Profile = () => {
               value={`${profile.landDetails.totalLandArea || 0} ${t("profile.bigha")}`}
               accent
             />
-            {profile.landDetails.rabiCrop && (
-              <InfoRow icon="sunny-outline" label={t("landDetails.rabiCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.rabiCrop)?.label ?? profile.landDetails.rabiCrop} />
-            )}
-            {profile.landDetails.kharifCrop && (
-              <InfoRow icon="rainy-outline" label={t("landDetails.kharifCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.kharifCrop)?.label ?? profile.landDetails.kharifCrop} />
-            )}
-            {profile.landDetails.zaidCrop && (
-              <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={cropTypes.find(c => c.value === profile.landDetails!.zaidCrop)?.label ?? profile.landDetails.zaidCrop} />
-            )}
+            {/* Show crops per season — values are now comma-separated strings */}
+            {(() => {
+              // Build a flat lookup: value → localized label
+              const allCrops = [
+                ...cropsBySeason.rabi,
+                ...cropsBySeason.kharif,
+                ...cropsBySeason.zayed,
+                ...cropTypes.filter(c =>
+                  !cropsBySeason.rabi.find(r => r.value === c.value) &&
+                  !cropsBySeason.kharif.find(r => r.value === c.value) &&
+                  !cropsBySeason.zayed.find(r => r.value === c.value)
+                ),
+              ];
+              const resolveLabel = (raw: string) =>
+                raw
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .map((v) => {
+                    const match = allCrops.find((c) => c.value === v.toLowerCase());
+                    if (!match) return v; // custom "others" text — show as-is
+                    return currentLanguage === "hi" ? match.labelHi : match.label;
+                  })
+                  .join(", ");
+
+              const rabi   = profile.landDetails!.rabiCrop;
+              const kharif = profile.landDetails!.kharifCrop;
+              const zaid   = profile.landDetails!.zaidCrop;
+              return (
+                <>
+                  {rabi   ? <InfoRow icon="snow-outline"         label={t("landDetails.rabiCrop")}   value={resolveLabel(rabi)}   /> : null}
+                  {kharif ? <InfoRow icon="rainy-outline"        label={t("landDetails.kharifCrop")} value={resolveLabel(kharif)} /> : null}
+                  {zaid   ? <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")}   value={resolveLabel(zaid)}   /> : null}
+                </>
+              );
+            })()}
           </>
         ) : (
           <View style={s.emptySection}>
             <Ionicons name="leaf-outline" size={32} color="#D1FAE5" />
-            <Text style={s.emptySectionText}>No land details added yet</Text>
+            <Text style={s.emptySectionText}>{t("landDetails.noLandAdded")}</Text>
             <Button
               size="sm"
               variant="outline"
@@ -437,14 +467,14 @@ const Profile = () => {
                 </View>
               ))}
             <View style={s.livestockTotal}>
-              <Text style={s.livestockTotalLabel}>Total</Text>
+              <Text style={s.livestockTotalLabel}>{t("livestockDetails.totalAnimals")}</Text>
               <Text style={s.livestockTotalCount}>{totalAnimals}</Text>
             </View>
           </View>
         ) : (
           <View style={s.emptySection}>
             <Ionicons name="paw-outline" size={32} color="#FED7AA" />
-            <Text style={s.emptySectionText}>No livestock details added yet</Text>
+            <Text style={s.emptySectionText}>{t("livestockDetails.noLivestockAdded")}</Text>
             <Button
               size="sm"
               variant="outline"
@@ -546,9 +576,9 @@ const s = StyleSheet.create({
 
   heroCenter: { alignItems: "center", marginBottom: 24 },
   avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.5)",
     alignItems: "center",
@@ -559,20 +589,29 @@ const s = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
+    // NO overflow:hidden here — that was hiding the camera badge
+  },
+  avatarClip: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cameraBadge: {
     position: "absolute",
     bottom: 0,
     right: 0,
     backgroundColor: "#386641",
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "#FFFFFF",
+    zIndex: 10,
   },
   avatarLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -679,8 +718,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   infoIconBoxAccent: { backgroundColor: theme.background.successSubtle },
-  infoLabel: { color: theme.text.muted, fontSize: 13, flex: 1 },
-  infoValue: { color: theme.text.secondary, fontSize: 13, fontWeight: "600", maxWidth: "45%", textAlign: "right" },
+  infoLabel: { color: theme.text.muted, fontSize: 13, flex: 1, flexShrink: 1 },
+  infoValue: { color: theme.text.secondary, fontSize: 13, fontWeight: "600", maxWidth: "55%", textAlign: "right", flexShrink: 0 },
   infoValueAccent: { color: theme.primary.green },
 
   // Livestock table
@@ -692,7 +731,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#FEF3C7",
   },
-  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500" },
+  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500", flex: 1, marginRight: 8 },
   livestockCountBadge: {
     backgroundColor: "#FFF7ED",
     borderRadius: 8,

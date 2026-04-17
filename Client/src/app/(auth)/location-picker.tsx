@@ -646,27 +646,6 @@ export default function LocationPickerScreen() {
                 </View>
             )}
 
-            {/* Reset position button — zIndex above bottom sheet so it is always tappable */}
-            {initialPos && (
-                <View style={styles.resetPositionContainer}>
-                    <Pressable
-                        style={styles.resetPositionBtn}
-                        onPress={() => {
-                            if (!initialPos) return;
-                            flyTo(initialPos.lat, initialPos.lng, 15);
-                            setPinCoords({ lat: initialPos.lat, lng: initialPos.lng });
-                            geocodeCoords(initialPos.lat, initialPos.lng);
-                            setAccuracyCircleVisible(true);
-                        }}
-                        accessibilityLabel="Reset position"
-                        accessibilityRole="button"
-                    >
-                        <Ionicons name="refresh-outline" size={16} color={theme.primary.green} />
-                        <AppText variant="bodySm" style={styles.resetPositionText}>Reset position</AppText>
-                    </Pressable>
-                </View>
-            )}
-
             {/* ── Bottom sheet ──────────────────────────────────────────────── */}
             <View style={styles.bottomSheet}>
                 <View style={styles.sheetHandle} />
@@ -688,11 +667,6 @@ export default function LocationPickerScreen() {
                     </AppText>
                 )}
 
-                {accuracyCircleVisible && (
-                    <AppText variant="bodySm" style={styles.accuracyLabel}>
-                        {formatAccuracyLabel(gpsAccuracy)}
-                    </AppText>
-                )}
 
                 <View style={styles.nudgeRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
@@ -779,7 +753,7 @@ const styles = StyleSheet.create({
     fallbackText: { color: theme.semantic.warningText, fontSize: 12 },
 
     myLocationBtn: {
-        position: "absolute", bottom: 230, right: 16,
+        position: "absolute", bottom: 300, right: 16,
         width: 48, height: 48, borderRadius: 24,
         backgroundColor: theme.background.input, alignItems: "center", justifyContent: "center",
         shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4, zIndex: 10,
@@ -812,18 +786,17 @@ const styles = StyleSheet.create({
         paddingBottom: Platform.OS === "ios" ? 40 : 24,
         shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20, elevation: 12, zIndex: 15,
     },
-    sheetHandle: { width: 40, height: 6, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
+    sheetHandle: { width: 40, height: 8, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
     sheetLabel: { fontSize: 10, letterSpacing: 1.2, color: theme.text.placeholder, textTransform: "uppercase", marginBottom: 6 },
-    sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 12 },
-    sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 12 },
+    sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 24 },
+    sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 16 },
     geocodeErrorRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 },
     geocodeErrorText: { color: theme.semantic.error, flex: 1 },
-    accuracyLabel: { color: theme.primary.green, fontSize: 12, marginBottom: 8 },
 
     nudgeRow: {
         flexDirection: "row", alignItems: "flex-start", gap: 6,
         backgroundColor: theme.background.successSubtle, borderRadius: 10,
-        paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
+        paddingHorizontal: 10, paddingVertical: 16, marginBottom: 24,
     },
     nudgeText: { color: theme.text.secondary, flex: 1, lineHeight: 18 },
 

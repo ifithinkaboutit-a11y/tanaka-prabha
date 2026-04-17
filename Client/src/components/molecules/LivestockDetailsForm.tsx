@@ -14,29 +14,31 @@ import {
   LivestockDetails,
   LivestockDetailsFormProps,
 } from "../../data/interfaces";
-import T from "../../i18n";
+import { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import { theme } from "@/styles/colors";
 
-// ─── Animal config — label abbreviation + accent color ────────────────────────
+// ─── Animal config — standardized with emojis matching profile display ────────
 const ANIMAL_DATA: {
   key: keyof LivestockDetails;
+  emoji: string;
   abbr: string;
   accentBg: string;
   accentText: string;
 }[] = [
-  { key: "cow",     abbr: "CO", accentBg: "#EEF2FF", accentText: "#3730A3" },
-  { key: "buffalo", abbr: "BU", accentBg: "#F5F3FF", accentText: "#6D28D9" },
-  { key: "sheep",   abbr: "SH", accentBg: "#ECFDF5", accentText: "#065F46" },
-  { key: "goat",    abbr: "GO", accentBg: "#FFFBEB", accentText: "#92400E" },
-  { key: "pig",     abbr: "PI", accentBg: "#FFF1F2", accentText: "#9F1239" },
-  { key: "poultry", abbr: "PO", accentBg: "#FFF7ED", accentText: "#C2410C" },
-  { key: "others",  abbr: "OT", accentBg: "#F9FAFB", accentText: "#374151" },
+  { key: "cow",     emoji: "🐄", abbr: "CO", accentBg: "#EEF2FF", accentText: "#3730A3" },
+  { key: "buffalo", emoji: "🐃", abbr: "BU", accentBg: "#F5F3FF", accentText: "#6D28D9" },
+  { key: "sheep",   emoji: "🐑", abbr: "SH", accentBg: "#ECFDF5", accentText: "#065F46" },
+  { key: "goat",    emoji: "🐐", abbr: "GO", accentBg: "#FFFBEB", accentText: "#92400E" },
+  { key: "pig",     emoji: "🐖", abbr: "PI", accentBg: "#FFF1F2", accentText: "#9F1239" },
+  { key: "poultry", emoji: "🐔", abbr: "PO", accentBg: "#FFF7ED", accentText: "#C2410C" },
+  { key: "others",  emoji: "🐾", abbr: "OT", accentBg: "#F9FAFB", accentText: "#374151" },
 ];
 
 // ─── Counter Row ──────────────────────────────────────────────────────────────
 const AnimalCounter = ({
   label,
+  emoji,
   value,
   onChange,
   abbr,
@@ -45,6 +47,7 @@ const AnimalCounter = ({
   isLast = false,
 }: {
   label: string;
+  emoji: string;
   value: number | undefined;
   onChange: (v: number) => void;
   abbr: string;
@@ -57,7 +60,7 @@ const AnimalCounter = ({
     <View style={[ac.row, !isLast && ac.rowBorder]}>
       <View style={ac.left}>
         <View style={[ac.badge, { backgroundColor: accentBg }]}>
-          <Text style={[ac.badgeText, { color: accentText }]}>{abbr}</Text>
+          <Text style={ac.badgeEmoji}>{emoji}</Text>
         </View>
         <Text style={ac.label}>{label}</Text>
       </View>
@@ -112,10 +115,8 @@ const ac = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+  badgeEmoji: {
+    fontSize: 20,
   },
   label: { fontSize: 15, fontWeight: "500", color: theme.text.secondary },
   stepper: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -142,7 +143,6 @@ const ac = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: theme.background.input,
     fontSize: 15,
-    fontWeight: "700",
     color: theme.text.primary,
     padding: 0,
   },
@@ -154,11 +154,12 @@ export default function LivestockDetailsForm({
   onSave,
   onCancel,
 }: LivestockDetailsFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
 
   const handleSave = () => {
     if (Object.values(formData).some((v) => v < 0)) {
-      Alert.alert("Error", "Livestock counts cannot be negative");
+      Alert.alert(t("common.error"), t("livestockDetails.negativeError"));
       return;
     }
     onSave(formData);
@@ -168,6 +169,13 @@ export default function LivestockDetailsForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const totalAnimals = Object.values(formData).reduce((sum, v) => sum + v, 0);
+
+  const farmSizeLabel =
+    totalAnimals > 10
+      ? t("livestockDetails.largeFarm")
+      : totalAnimals > 0
+      ? t("livestockDetails.smallFarm")
+      : t("livestockDetails.noLivestock");
 
   return (
     <KeyboardAwareScrollView
@@ -179,30 +187,25 @@ export default function LivestockDetailsForm({
       <View style={s.summaryStrip}>
         <View style={s.summaryLeft}>
           <Text style={s.summaryNumber}>{totalAnimals}</Text>
-          <Text style={s.summaryLabel}>
-            {String(T.translate("livestockDetails.totalAnimals"))}
-          </Text>
+          <Text style={s.summaryLabel}>{t("livestockDetails.totalAnimals")}</Text>
         </View>
         <View style={s.summaryBadge}>
-          <Text style={s.summaryBadgeText}>
-            {totalAnimals > 10 ? "Large Farm" : totalAnimals > 0 ? "Small Farm" : "No Livestock"}
-          </Text>
+          <Text style={s.summaryBadgeText}>{farmSizeLabel}</Text>
         </View>
       </View>
 
       {/* ── Counter rows ── */}
       <View style={s.card}>
         <View style={s.cardHeader}>
-          <Text style={s.cardTitle}>
-            {String(T.translate("livestockDetails.livestockCount"))}
-          </Text>
-          <Text style={s.cardHint}>Tap + / − or type a number</Text>
+          <Text style={s.cardTitle}>{t("livestockDetails.livestockCount")}</Text>
+          <Text style={s.cardHint}>{t("livestockDetails.tapHint")}</Text>
         </View>
 
         {ANIMAL_DATA.map((animal, i) => (
           <AnimalCounter
             key={animal.key}
-            label={String(T.translate(`livestockDetails.${animal.key}`))}
+            label={t(`livestockDetails.${animal.key}`)}
+            emoji={animal.emoji}
             value={formData[animal.key]}
             onChange={(v) => update(animal.key, v)}
             abbr={animal.abbr}
@@ -216,22 +219,20 @@ export default function LivestockDetailsForm({
       {/* ── Info note ── */}
       <View style={s.infoRow}>
         <Ionicons name="information-circle-outline" size={15} color="#6B7280" />
-        <Text style={s.infoText}>
-          {String(T.translate("livestockDetails.infoMessage"))}
-        </Text>
+        <Text style={s.infoText}>{t("livestockDetails.infoMessage")}</Text>
       </View>
 
       {/* ── Actions ── */}
       <View style={s.btnRow}>
         <Button
           variant="outline"
-          label={String(T.translate("livestockDetails.cancel"))}
+          label={t("common.cancel")}
           onPress={onCancel}
           style={{ flex: 1 }}
         />
         <Button
           variant="primary"
-          label={String(T.translate("livestockDetails.save"))}
+          label={t("common.save")}
           onPress={handleSave}
           style={{ flex: 2, backgroundColor: "#EA580C" }}
         />

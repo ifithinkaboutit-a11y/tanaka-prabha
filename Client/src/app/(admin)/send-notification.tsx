@@ -1,5 +1,6 @@
 // src/app/(admin)/send-notification.tsx
 import AppText from "@/components/atoms/AppText";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,10 +8,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
-    Platform,
     Pressable,
-    ScrollView,
     StyleSheet,
     TextInput,
     TouchableOpacity,
@@ -19,38 +17,33 @@ import {
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-// Notification type options
 const NOTIFICATION_TYPES = [
     { key: "announcement", label: "Announcement", color: "#3B82F6" },
-    { key: "info", label: "Info", color: "#6366F1" },
-    { key: "alert", label: "Alert", color: "#F59E0B" },
-    { key: "reminder", label: "Reminder", color: "#10B981" },
+    { key: "info",         label: "Info",         color: "#6366F1" },
+    { key: "alert",        label: "Alert",        color: "#F59E0B" },
+    { key: "reminder",     label: "Reminder",     color: "#10B981" },
 ];
 
-// Common audience targets
 const AUDIENCE_OPTIONS = [
-    { key: "all", label: "All Users", icon: "people", color: "#3B82F6" },
+    { key: "all",      label: "All Users",   icon: "people",   color: "#3B82F6" },
     { key: "district", label: "By District", icon: "location", color: "#8B5CF6" },
 ];
 
 export default function SendNotificationScreen() {
     const router = useRouter();
 
-    const [title, setTitle] = useState("");
-    const [message, setMessage] = useState("");
-    const [type, setType] = useState("announcement");
+    const [title,    setTitle]    = useState("");
+    const [message,  setMessage]  = useState("");
+    const [type,     setType]     = useState("announcement");
     const [audience, setAudience] = useState<"all" | "district">("all");
     const [district, setDistrict] = useState("");
-    const [sending, setSending] = useState(false);
-    const [sent, setSent] = useState(false);
+    const [sending,  setSending]  = useState(false);
+    const [sent,     setSent]     = useState(false);
 
     useEffect(() => {
-        if (sent) {
-            router.back();
-        }
+        if (sent) router.back();
     }, [sent]);
 
-    // ── Send handler ──────────────────────────────────────────────────────────
     const handleSend = async () => {
         if (!title.trim()) {
             Alert.alert("Missing Title", "Please enter a notification title.");
@@ -60,7 +53,6 @@ export default function SendNotificationScreen() {
             Alert.alert("Missing District", "Please enter a district name.");
             return;
         }
-
         Alert.alert(
             "Confirm Send",
             `Send "${title}" to ${audience === "all" ? "all users" : `users in ${district}`}?`,
@@ -98,7 +90,6 @@ export default function SendNotificationScreen() {
                     `Notification delivered to ${db_count} users.\n${push_count} device(s) will receive a push notification.`,
                     [{ text: "Done", onPress: () => setSent(true) }]
                 );
-                // Reset form
                 setTitle("");
                 setMessage("");
                 setDistrict("");
@@ -113,11 +104,11 @@ export default function SendNotificationScreen() {
     };
 
     const selectedType = NOTIFICATION_TYPES.find(t => t.key === type)!;
+    const canSend = title.trim().length > 0 && !sending;
 
     return (
-        <KeyboardAvoidingView style={s.root} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
-        <View style={{ flex: 1 }}>
-            {/* Header */}
+        <View style={s.root}>
+            {/* ── Header ── */}
             <View style={s.header}>
                 <Pressable onPress={() => router.back()} style={s.backBtn}>
                     <Ionicons name="arrow-back" size={22} color="#111827" />
@@ -126,15 +117,20 @@ export default function SendNotificationScreen() {
                     <AppText style={s.headerTitle}>Send Notification</AppText>
                     <AppText style={s.headerSub}>Broadcast to app users</AppText>
                 </View>
-                {/* Live preview badge */}
                 <View style={[s.typeBadge, { backgroundColor: selectedType.color + "20", borderColor: selectedType.color + "50" }]}>
                     <AppText style={[s.typeBadgeText, { color: selectedType.color }]}>{selectedType.label}</AppText>
                 </View>
             </View>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-                {/* ── Preview Card ── */}
+            {/* ── Scrollable body — KeyboardAwareScrollView handles keyboard on both platforms ── */}
+            <KeyboardAwareScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={s.body}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                extraScrollHeight={80}
+            >
+                {/* Preview Card */}
                 <View style={s.previewCard}>
                     <View style={s.previewIconRow}>
                         <View style={[s.previewIcon, { backgroundColor: selectedType.color + "20" }]}>
@@ -147,7 +143,7 @@ export default function SendNotificationScreen() {
                     {message ? <AppText style={s.previewBody} numberOfLines={2}>{message}</AppText> : null}
                 </View>
 
-                {/* ── Title ── */}
+                {/* Title */}
                 <View style={s.fieldGroup}>
                     <AppText style={s.fieldLabel}>Title *</AppText>
                     <TextInput
@@ -157,11 +153,12 @@ export default function SendNotificationScreen() {
                         value={title}
                         onChangeText={setTitle}
                         maxLength={80}
+                        returnKeyType="next"
                     />
                     <AppText style={s.charCount}>{title.length}/80</AppText>
                 </View>
 
-                {/* ── Message ── */}
+                {/* Message */}
                 <View style={s.fieldGroup}>
                     <AppText style={s.fieldLabel}>Message (optional)</AppText>
                     <TextInput
@@ -178,7 +175,7 @@ export default function SendNotificationScreen() {
                     <AppText style={s.charCount}>{message.length}/250</AppText>
                 </View>
 
-                {/* ── Type ── */}
+                {/* Type chips */}
                 <View style={s.fieldGroup}>
                     <AppText style={s.fieldLabel}>Notification Type</AppText>
                     <View style={s.chipRow}>
@@ -196,7 +193,7 @@ export default function SendNotificationScreen() {
                     </View>
                 </View>
 
-                {/* ── Audience ── */}
+                {/* Audience */}
                 <View style={s.fieldGroup}>
                     <AppText style={s.fieldLabel}>Target Audience</AppText>
                     <View style={s.audienceRow}>
@@ -220,7 +217,6 @@ export default function SendNotificationScreen() {
                         ))}
                     </View>
 
-                    {/* District input appears only when "By District" is selected */}
                     {audience === "district" && (
                         <TextInput
                             style={[s.input, { marginTop: 10 }]}
@@ -229,11 +225,12 @@ export default function SendNotificationScreen() {
                             value={district}
                             onChangeText={setDistrict}
                             autoCapitalize="words"
+                            returnKeyType="done"
                         />
                     )}
                 </View>
 
-                {/* ── Info Banner ── */}
+                {/* Info banner */}
                 <View style={s.infoBanner}>
                     <Ionicons name="information-circle-outline" size={18} color="#3B82F6" />
                     <AppText style={s.infoText}>
@@ -241,14 +238,16 @@ export default function SendNotificationScreen() {
                     </AppText>
                 </View>
 
-            </ScrollView>
+                {/* Extra bottom padding so content clears the footer */}
+                <View style={{ height: 16 }} />
+            </KeyboardAwareScrollView>
 
-            {/* ── Send Button ── */}
+            {/* ── Fixed footer send button ── */}
             <View style={s.footer}>
                 <TouchableOpacity
-                    style={[s.sendBtn, (!title.trim() || sending) && s.sendBtnDisabled]}
+                    style={[s.sendBtn, !canSend && s.sendBtnDisabled]}
                     onPress={handleSend}
-                    disabled={!title.trim() || sending}
+                    disabled={!canSend}
                     activeOpacity={0.85}
                 >
                     {sending ? (
@@ -262,7 +261,6 @@ export default function SendNotificationScreen() {
                 </TouchableOpacity>
             </View>
         </View>
-        </KeyboardAvoidingView>
     );
 }
 
@@ -271,92 +269,165 @@ const s = StyleSheet.create({
 
     // header
     header: {
-        flexDirection: "row", alignItems: "center", gap: 12,
-        paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingTop: 56,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
         backgroundColor: theme.background.input,
-        borderBottomWidth: 1, borderBottomColor: theme.background.screen,
-        shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 3,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.background.screen,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 3,
     },
     backBtn: {
-        width: 38, height: 38, borderRadius: 11,
-        backgroundColor: theme.background.screen, justifyContent: "center", alignItems: "center",
+        width: 38,
+        height: 38,
+        borderRadius: 11,
+        backgroundColor: theme.background.screen,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 12,
     },
     headerTitle: { fontSize: 17, fontWeight: "800", color: theme.text.primary },
     headerSub: { fontSize: 12, color: theme.text.placeholder, marginTop: 1 },
     typeBadge: {
-        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        borderWidth: 1,
     },
     typeBadgeText: { fontSize: 11, fontWeight: "600" },
 
-    body: { padding: 20, gap: 20, paddingBottom: 40 },
+    // body
+    body: { padding: 20, paddingBottom: 24 },
 
     // preview
     previewCard: {
-        backgroundColor: theme.background.input, borderRadius: 16, padding: 16,
-        shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 10, elevation: 3,
-        borderWidth: 1, borderColor: theme.background.screen,
+        backgroundColor: theme.background.input,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: theme.background.screen,
     },
-    previewIconRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
-    previewIcon: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+    previewIconRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+    previewIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 8,
+    },
     previewApp: { fontSize: 12, fontWeight: "700", color: "#374151", flex: 1 },
     previewTime: { fontSize: 11, color: theme.text.placeholder },
     previewTitle: { fontSize: 14, fontWeight: "700", color: theme.text.primary, marginBottom: 4 },
     previewBody: { fontSize: 13, color: theme.text.muted, lineHeight: 18 },
 
     // fields
-    fieldGroup: { gap: 6 },
-    fieldLabel: { fontSize: 13, fontWeight: "700", color: "#374151" },
+    fieldGroup: { marginBottom: 20 },
+    fieldLabel: { fontSize: 13, fontWeight: "700", color: "#374151", marginBottom: 8 },
     input: {
-        backgroundColor: theme.background.input, borderRadius: 12,
-        borderWidth: 1, borderColor: theme.border.subtle,
-        paddingHorizontal: 14, paddingVertical: 13,
-        fontSize: 14, color: theme.text.primary,
-        shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
+        backgroundColor: theme.background.input,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: 14,
+        paddingVertical: 13,
+        fontSize: 14,
+        color: theme.text.primary,
+        shadowColor: "#000",
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+        elevation: 1,
     },
     inputMulti: { height: 100, paddingTop: 13 },
-    charCount: { fontSize: 11, color: theme.text.placeholder, textAlign: "right" },
+    charCount: { fontSize: 11, color: theme.text.placeholder, textAlign: "right", marginTop: 4 },
 
     // type chips
-    chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chipRow: { flexDirection: "row", flexWrap: "wrap" },
     chip: {
-        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-        borderWidth: 1.5, borderColor: theme.border.subtle, backgroundColor: theme.background.input,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1.5,
+        borderColor: theme.border.subtle,
+        backgroundColor: theme.background.input,
+        marginRight: 8,
+        marginBottom: 8,
     },
     chipText: { fontSize: 13, color: theme.text.muted },
 
     // audience
-    audienceRow: { flexDirection: "row", gap: 10 },
+    audienceRow: { flexDirection: "row" },
     audienceCard: {
-        flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: theme.border.subtle,
-        backgroundColor: theme.background.input, padding: 14, alignItems: "center", gap: 6,
-        shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
+        flex: 1,
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: theme.border.subtle,
+        backgroundColor: theme.background.input,
+        padding: 14,
+        alignItems: "center",
+        marginRight: 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+        elevation: 1,
     },
-    audienceLabel: { fontSize: 13, color: theme.text.muted, textAlign: "center" },
+    audienceLabel: { fontSize: 13, color: theme.text.muted, textAlign: "center", marginTop: 6 },
     audienceCheck: {
-        position: "absolute", top: 8, right: 8,
-        width: 18, height: 18, borderRadius: 9, justifyContent: "center", alignItems: "center",
+        position: "absolute",
+        top: 8,
+        right: 8,
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        justifyContent: "center",
+        alignItems: "center",
     },
 
     // info
     infoBanner: {
-        flexDirection: "row", gap: 10, alignItems: "flex-start",
-        backgroundColor: "#EFF6FF", borderRadius: 12, padding: 14,
-        borderWidth: 1, borderColor: "#BFDBFE",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        backgroundColor: "#EFF6FF",
+        borderRadius: 12,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: "#BFDBFE",
+        marginBottom: 4,
     },
-    infoText: { flex: 1, fontSize: 12, color: "#1D4ED8", lineHeight: 18 },
+    infoText: { flex: 1, fontSize: 12, color: "#1D4ED8", lineHeight: 18, marginLeft: 10 },
 
     // footer
     footer: {
-        padding: 16, paddingBottom: 32,
-        backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.background.screen,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 32,
+        backgroundColor: theme.background.input,
+        borderTopWidth: 1,
+        borderTopColor: theme.background.screen,
     },
     sendBtn: {
-        flexDirection: "row", alignItems: "center", justifyContent: "center",
-        gap: 10, backgroundColor: theme.primary.green, borderRadius: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.primary.green,
+        borderRadius: 14,
         paddingVertical: 16,
-        shadowColor: theme.primary.green, shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+        shadowColor: theme.primary.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    sendBtnDisabled: { backgroundColor: theme.text.placeholder, shadowOpacity: 0 },
-    sendBtnText: { fontSize: 16, fontWeight: "700", color: "#fff" },
+    sendBtnDisabled: { backgroundColor: theme.text.placeholder, shadowOpacity: 0, elevation: 0 },
+    sendBtnText: { fontSize: 16, fontWeight: "700", color: "#fff", marginLeft: 10 },
 });

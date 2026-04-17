@@ -51,11 +51,9 @@ export function useInterest(
   const toggleInterest = useCallback(async () => {
     if (loading) return;
 
-    // Snapshot pre-toggle state for potential revert (Req 5.1.10)
     const prevInterested = isInterested;
     const prevCount = interestCount;
 
-    // Optimistic update
     const nextInterested = !isInterested;
     const optimisticCount = nextInterested
       ? interestCount + 1
@@ -66,26 +64,37 @@ export function useInterest(
     setLoading(true);
 
     try {
-      const result = nextInterested
-        ? await schemesApi.addInterest(id)      // Req 5.1.3
-        : await schemesApi.removeInterest(id);  // Req 5.1.5
-
-      // Update count from API response (Req 5.1.4, 5.1.6)
-      setInterestCount(result.interestCount);
-
-      // Persist new state to AsyncStorage (Req 5.1.7)
+      // Persist locally first — works even if the backend route doesn't exist yet
       await AsyncStorage.setItem(storageKey(id), String(nextInterested));
+
+      try {
+        const result = nextInterested
+          ? await schemesApi.addInterest(id)
+          : await schemesApi.removeInterest(id);
+        // Update count from API response only if the call succeeded
+        setInterestCount(result.interestCount);
+      } catch (apiErr: any) {
+        // 404 means the interest endpoint isn't deployed yet — keep local state,
+        // don't revert and don't show an error to the user.
+        if (apiErr?.status === 404) {
+          console.warn("⚠️ Interest API not available — using local state only");
+        } else {
+          // Real error — revert everything
+          setIsInterested(prevInterested);
+          setInterestCount(prevCount);
+          await AsyncStorage.setItem(storageKey(id), String(prevInterested));
+          Alert.alert(
+            "Error",
+            nextInterested
+              ? "Could not add interest. Please try again."
+              : "Could not remove interest. Please try again."
+          );
+        }
+      }
     } catch {
-      // Revert on failure (Req 5.1.10)
+      // AsyncStorage failure — revert UI
       setIsInterested(prevInterested);
       setInterestCount(prevCount);
-
-      Alert.alert(
-        "Error",
-        nextInterested
-          ? "Could not add interest. Please try again."
-          : "Could not remove interest. Please try again."
-      );
     } finally {
       setLoading(false);
     }

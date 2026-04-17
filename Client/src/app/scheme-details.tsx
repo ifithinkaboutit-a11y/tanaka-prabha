@@ -254,7 +254,7 @@ const SchemeDetailsScreen = () => {
         <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>{renderTabContent()}</View>
       </ScrollView>
 
-      {/* Fixed Apply Now Button */}
+      {/* Fixed Bottom CTA */}
       <View style={{
         paddingHorizontal: 20,
         paddingVertical: 16,
@@ -267,13 +267,15 @@ const SchemeDetailsScreen = () => {
         shadowRadius: 12,
         elevation: 10,
       }}>
+        {/* Interested / Remove Interest toggle */}
         <Button
-          label={isInterested ? "Applied ✓" : "Participate Now"}
+          label={isInterested ? t("interested.interested") : t("interested.notInterested")}
           variant={isInterested ? "primary" : "outline"}
           onPress={toggleInterest}
           disabled={interestLoading}
           style={{ width: "100%", borderRadius: 16, marginBottom: 12 }}
         />
+        {/* Apply Now — opens external URL */}
         <Button
           label={t("programReader.applyNow")}
           variant="primary"

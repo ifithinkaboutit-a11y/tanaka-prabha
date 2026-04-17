@@ -3,108 +3,190 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Alert,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
+import MultiSelect from "@/components/atoms/MultiSelect";
 import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
-import T from "../../i18n";
+import { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 import { cropsBySeason } from "../../data/content/onboardingOptions";
+import { useLanguageStore } from "../../stores/languageStore";
 import { theme } from "@/styles/colors";
 
-// "None" option allows the user to clear a previously selected crop
-const NONE_CROP_VALUE = "__none__";
-const NONE_OPTION = { value: NONE_CROP_VALUE, label: "None (remove crop)" };
-
-// Flatten cropsBySeason into a single options array (no cotton), with a clear option first
-const cropOptions = [
-  NONE_OPTION,
-  ...cropsBySeason.rabi,
-  ...cropsBySeason.kharif,
-  ...cropsBySeason.zayed,
-];
+// ─── Constants ────────────────────────────────────────────────────────────────
+const OTHERS_VALUE = "__others__";
 
 const unitOptions = [
-  { value: "acre", label: "Acres", labelHi: "एकड़" },
+  { value: "acre",    label: "Acres",    labelHi: "एकड़" },
   { value: "hectare", label: "Hectares", labelHi: "हेक्टेयर" },
-  { value: "bigha", label: "Bigha", labelHi: "बीघा" },
+  { value: "bigha",   label: "Bigha",    labelHi: "बीघा" },
 ];
 
-// Season config
+// Season config — restores the original 3-section UI
 const SEASONS = [
   {
-    field: "rabiCrop" as const,
-    label: "Rabi",
+    field: "rabiCrop"   as const,
+    labelKey: "landDetails.rabiCrop",
     period: "Oct – Mar",
     dotColor: "#3B82F6",
     bg: "#EFF6FF",
     iconName: "snowflake",
-    iconLib: "mci" as const,
+    crops: cropsBySeason.rabi,
   },
   {
     field: "kharifCrop" as const,
-    label: "Kharif",
+    labelKey: "landDetails.kharifCrop",
     period: "Jun – Sep",
     dotColor: "#16A34A",
     bg: "#F0FDF4",
     iconName: "weather-rainy",
-    iconLib: "mci" as const,
+    crops: cropsBySeason.kharif,
   },
   {
-    field: "zaidCrop" as const,
-    label: "Zaid",
+    field: "zaidCrop"   as const,
+    labelKey: "landDetails.zaidCrop",
     period: "Mar – Jun",
     dotColor: "#EAB308",
     bg: "#FEFCE8",
     iconName: "weather-sunny",
-    iconLib: "mci" as const,
+    crops: cropsBySeason.zayed,
   },
-];
+] as const;
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Parse a stored crop string (comma-separated or single value) into
+ * { selected[], other }.
+ * Known crop values go into selected[]; anything unrecognised is treated as
+ * custom "others" text and the OTHERS_VALUE sentinel is added to selected.
+ */
+function parseCropField(
+  stored: string | undefined,
+  knownValues: string[]
+): { selected: string[]; other: string } {
+  if (!stored?.trim()) return { selected: [], other: "" };
+
+  const parts = stored.split(",").map((s) => s.trim()).filter(Boolean);
+  const selected: string[] = [];
+  const otherParts: string[] = [];
+
+  parts.forEach((p) => {
+    if (knownValues.includes(p.toLowerCase())) {
+      selected.push(p.toLowerCase());
+    } else {
+      otherParts.push(p);
+    }
+  });
+
+  // If there are custom values, add the sentinel so the "Others" input shows
+  if (otherParts.length > 0) {
+    selected.push(OTHERS_VALUE);
+  }
+
+  return { selected, other: otherParts.join(", ") };
+}
+
+/**
+ * Serialize selected values + other text back to a comma-separated string
+ * for storage in the existing rabiCrop / kharifCrop / zaidCrop fields.
+ */
+function serializeCropField(selected: string[], other: string): string {
+  const knownSelected = selected.filter((v) => v !== OTHERS_VALUE);
+  const parts = [...knownSelected];
+  if (selected.includes(OTHERS_VALUE) && other.trim()) {
+    parts.push(other.trim());
+  }
+  return parts.join(", ");
+}
+
+// ─── Main Form ────────────────────────────────────────────────────────────────
 export default function LandDetailsForm({
   initialData,
   onSave,
   onCancel,
 }: LandDetailsFormProps) {
-  // Normalize crop values to lowercase to match option values
-  const normalizedInitial: LandDetails = {
-    ...initialData,
-    rabiCrop: initialData.rabiCrop?.toLowerCase() || "",
-    kharifCrop: initialData.kharifCrop?.toLowerCase() || "",
-    zaidCrop: initialData.zaidCrop?.toLowerCase() || "",
-  };
-  const [formData, setFormData] = useState<LandDetails>(normalizedInitial);
-  const [unit, setUnit] = useState("acre");
+  const { t } = useTranslation();
+  const { currentLanguage } = useLanguageStore();
+
+  // ── Land area ────────────────────────────────────────────────────────────
+  const [totalLandArea, setTotalLandArea] = useState(
+    initialData.totalLandArea > 0 ? initialData.totalLandArea.toString() : ""
+  );
+  const [unit, setUnit] = useState("bigha");
   const [areaFocused, setAreaFocused] = useState(false);
 
+  // ── Per-season crop state ────────────────────────────────────────────────
+  // Initialise from the stored comma-separated strings in initialData
+  const initSeason = (
+    field: "rabiCrop" | "kharifCrop" | "zaidCrop",
+    knownValues: string[]
+  ) => parseCropField(initialData[field], knownValues);
+
+  const rabiInit   = initSeason("rabiCrop",   cropsBySeason.rabi.map(c => c.value));
+  const kharifInit = initSeason("kharifCrop", cropsBySeason.kharif.map(c => c.value));
+  const zaidInit   = initSeason("zaidCrop",   cropsBySeason.zayed.map(c => c.value));
+
+  const [rabiSelected,   setRabiSelected]   = useState<string[]>(rabiInit.selected);
+  const [rabiOther,      setRabiOther]      = useState(rabiInit.other);
+  const [kharifSelected, setKharifSelected] = useState<string[]>(kharifInit.selected);
+  const [kharifOther,    setKharifOther]    = useState(kharifInit.other);
+  const [zaidSelected,   setZaidSelected]   = useState<string[]>(zaidInit.selected);
+  const [zaidOther,      setZaidOther]      = useState(zaidInit.other);
+
+  // ── Save ─────────────────────────────────────────────────────────────────
   const handleSave = () => {
-    if (formData.totalLandArea < 0) {
-      Alert.alert("Error", "Land area cannot be negative");
+    const area = parseFloat(totalLandArea) || 0;
+    if (area < 0) {
+      Alert.alert(t("common.error"), t("landDetails.areaError"));
       return;
     }
-    // Convert sentinel "none" values back to empty strings before saving
     const dataToSave: LandDetails = {
-      ...formData,
-      rabiCrop: formData.rabiCrop === NONE_CROP_VALUE ? "" : formData.rabiCrop,
-      kharifCrop: formData.kharifCrop === NONE_CROP_VALUE ? "" : formData.kharifCrop,
-      zaidCrop: formData.zaidCrop === NONE_CROP_VALUE ? "" : formData.zaidCrop,
+      totalLandArea: area,
+      rabiCrop:   serializeCropField(rabiSelected,   rabiOther),
+      kharifCrop: serializeCropField(kharifSelected, kharifOther),
+      zaidCrop:   serializeCropField(zaidSelected,   zaidOther),
     };
     onSave(dataToSave);
   };
 
-  const update = (field: keyof LandDetails, value: string | number) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // ── Localized options ────────────────────────────────────────────────────
+  const buildOptions = (crops: typeof cropsBySeason.rabi) => [
+    ...crops.map((c) => ({
+      value: c.value,
+      label: currentLanguage === "hi" ? c.labelHi : c.label,
+    })),
+    {
+      value: OTHERS_VALUE,
+      label: currentLanguage === "hi" ? "अन्य (नाम लिखें)" : "Others (type name)",
+    },
+  ];
+
+  const localizedUnitOptions = unitOptions.map((u) => ({
+    value: u.value,
+    label: currentLanguage === "hi" ? u.labelHi : u.label,
+  }));
+
+  // ── Season state map ─────────────────────────────────────────────────────
+  const seasonState = {
+    rabiCrop:   { selected: rabiSelected,   setSelected: setRabiSelected,   other: rabiOther,   setOther: setRabiOther },
+    kharifCrop: { selected: kharifSelected, setSelected: setKharifSelected, other: kharifOther, setOther: setKharifOther },
+    zaidCrop:   { selected: zaidSelected,   setSelected: setZaidSelected,   other: zaidOther,   setOther: setZaidOther },
+  };
 
   return (
+    // KeyboardAwareScrollView automatically scrolls focused inputs above the
+    // keyboard on both iOS and Android — covers the "Others" text fields.
     <KeyboardAwareScrollView
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.scrollContent}
+      keyboardShouldPersistTaps="handled"
     >
       {/* ── Land area ── */}
       <View style={s.card}>
@@ -112,15 +194,15 @@ export default function LandDetailsForm({
           <View style={[s.sectionIconBg, { backgroundColor: "#DCFCE7" }]}>
             <Ionicons name="map" size={18} color="#16A34A" />
           </View>
-          <Text style={s.sectionTitle}>{String(T.translate("landDetails.landInformation"))}</Text>
+          <Text style={s.sectionTitle}>{t("landDetails.landInformation")}</Text>
         </View>
 
-        <Text style={s.fieldLabel}>{String(T.translate("landDetails.totalLandArea"))}</Text>
+        <Text style={s.fieldLabel}>{t("landDetails.totalLandArea")}</Text>
         <View style={s.landAreaRow}>
           <TextInput
             style={[s.landAreaInput, areaFocused && s.landAreaInputFocused]}
-            value={formData.totalLandArea > 0 ? formData.totalLandArea.toString() : ""}
-            onChangeText={(v) => update("totalLandArea", parseFloat(v) || 0)}
+            value={totalLandArea}
+            onChangeText={setTotalLandArea}
             keyboardType="numeric"
             placeholder="0.0"
             placeholderTextColor="#C4C9D4"
@@ -131,50 +213,80 @@ export default function LandDetailsForm({
             <Select
               value={unit}
               onChange={setUnit}
-              options={unitOptions}
-              placeholder="Unit"
+              options={localizedUnitOptions}
+              placeholder={t("landDetails.selectUnit")}
             />
           </View>
         </View>
 
-        {/* Quick tips */}
         <View style={s.tipRow}>
           <Ionicons name="information-circle-outline" size={14} color={theme.text.placeholder} />
           <Text style={s.tipText}>1 Bigha ≈ 0.4 Acres ≈ 0.16 Hectares</Text>
         </View>
       </View>
 
-      {/* ── Crop Information ── */}
+      {/* ── Crop Information — 3 season sections ── */}
       <View style={s.card}>
         <View style={s.sectionHeader}>
           <View style={[s.sectionIconBg, { backgroundColor: "#FEF3C7" }]}>
             <Ionicons name="leaf" size={18} color="#D97706" />
           </View>
-          <Text style={s.sectionTitle}>{String(T.translate("landDetails.cropInformation"))}</Text>
+          <Text style={s.sectionTitle}>{t("landDetails.cropInformation")}</Text>
         </View>
 
-        {SEASONS.map((season) => {
-          const labelKey = `landDetails.${season.field}` as any;
+        {SEASONS.map((season, idx) => {
+          const state = seasonState[season.field];
+          const options = buildOptions(season.crops);
+          const hasOthers = state.selected.includes(OTHERS_VALUE);
+
           return (
-            <View key={season.field} style={s.seasonBlock}>
+            <View
+              key={season.field}
+              style={[
+                s.seasonBlock,
+                idx < SEASONS.length - 1 && s.seasonBlockBorder,
+              ]}
+            >
+              {/* Season header pill */}
               <View style={[s.seasonHeader, { backgroundColor: season.bg }]}>
-                <MaterialCommunityIcons name={season.iconName as any} size={18} color={season.dotColor} />
+                <MaterialCommunityIcons
+                  name={season.iconName as any}
+                  size={18}
+                  color={season.dotColor}
+                />
                 <View style={s.seasonTextBlock}>
                   <Text style={[s.seasonLabel, { color: season.dotColor }]}>
-                    {String(T.translate(labelKey))}
+                    {t(season.labelKey)}
                   </Text>
                   <Text style={s.seasonPeriod}>{season.period}</Text>
                 </View>
                 <View style={[s.seasonDot, { backgroundColor: season.dotColor }]} />
               </View>
-              <View style={{ marginTop: 8 }}>
-                <Select
-                  value={formData[season.field] || undefined}
-                  onChange={(v) => update(season.field, v)}
-                  options={cropOptions}
-                  placeholder={`Select ${season.label} crop`}
+
+              {/* MultiSelect for this season's crops */}
+              <View style={{ marginTop: 10 }}>
+                <MultiSelect
+                  placeholder={t("landDetails.selectCrops")}
+                  value={state.selected}
+                  options={options}
+                  onChange={state.setSelected}
                 />
               </View>
+
+              {/* "Others" text input — visible only when the Others option is ticked */}
+              {hasOthers && (
+                <View style={s.otherWrap}>
+                  <Text style={s.otherLabel}>{t("landDetails.otherCropName")}</Text>
+                  <TextInput
+                    style={s.otherInput}
+                    value={state.other}
+                    onChangeText={state.setOther}
+                    placeholder={t("landDetails.otherCropPlaceholder")}
+                    placeholderTextColor="#C4C9D4"
+                    returnKeyType="done"
+                  />
+                </View>
+              )}
             </View>
           );
         })}
@@ -183,20 +295,20 @@ export default function LandDetailsForm({
       {/* ── Info banner ── */}
       <View style={s.infoBanner}>
         <Ionicons name="information-circle" size={18} color="#3B82F6" />
-        <Text style={s.infoBannerText}>{String(T.translate("landDetails.infoMessage"))}</Text>
+        <Text style={s.infoBannerText}>{t("landDetails.infoMessage")}</Text>
       </View>
 
-      {/* ── Buttons ── */}
+      {/* ── Action buttons ── */}
       <View style={s.btnRow}>
         <Button
           variant="outline"
-          label={String(T.translate("landDetails.cancel"))}
+          label={t("landDetails.cancel")}
           onPress={onCancel}
           style={{ flex: 1 }}
         />
         <Button
           variant="primary"
-          label={String(T.translate("landDetails.save"))}
+          label={t("landDetails.save")}
           onPress={handleSave}
           style={{ flex: 2, backgroundColor: "#16A34A" }}
         />
@@ -205,6 +317,7 @@ export default function LandDetailsForm({
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 40 },
@@ -224,7 +337,13 @@ const s = StyleSheet.create({
   },
 
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 18 },
-  sectionIconBg: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  sectionIconBg: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionTitle: { fontSize: 17, fontWeight: "700", color: theme.text.primary },
 
   fieldLabel: { fontSize: 13, fontWeight: "600", color: theme.text.subtle, marginBottom: 8 },
@@ -239,7 +358,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 18,
-    fontWeight: "700",
     color: theme.text.secondary,
   },
   landAreaInputFocused: {
@@ -251,6 +369,7 @@ const s = StyleSheet.create({
     elevation: 1,
   },
   unitSelector: { width: 130 },
+
   tipRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -262,7 +381,12 @@ const s = StyleSheet.create({
   },
   tipText: { color: theme.text.placeholder, fontSize: 12 },
 
-  seasonBlock: { marginBottom: 16 },
+  // Season blocks
+  seasonBlock: { paddingVertical: 14 },
+  seasonBlockBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
   seasonHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -275,6 +399,25 @@ const s = StyleSheet.create({
   seasonLabel: { fontSize: 13, fontWeight: "700" },
   seasonPeriod: { fontSize: 11, color: theme.text.placeholder, marginTop: 1 },
   seasonDot: { width: 8, height: 8, borderRadius: 4 },
+
+  // Others input
+  otherWrap: { marginTop: 8 },
+  otherLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: theme.text.subtle,
+    marginBottom: 6,
+  },
+  otherInput: {
+    backgroundColor: theme.background.input,
+    borderWidth: 1.5,
+    borderColor: "#D97706",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: theme.text.secondary,
+  },
 
   infoBanner: {
     flexDirection: "row",

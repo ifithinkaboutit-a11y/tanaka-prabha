@@ -105,10 +105,10 @@ const AuthPersonalDetailsScreen = () => {
   };
 
   const handlePhotoUpload = async () => {
-    Alert.alert("Choose Photo", "", [
-      { text: "Camera", onPress: launchCamera },
-      { text: "Gallery", onPress: launchGallery },
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("profile.choosePhoto"), "", [
+      { text: t("profile.camera"), onPress: launchCamera },
+      { text: t("profile.gallery"), onPress: launchGallery },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -119,7 +119,7 @@ const AuthPersonalDetailsScreen = () => {
       const cloudUrl = await uploadApi.uploadUserPhoto(uri);
       updatePersonalDetails({ photoUrl: cloudUrl });
     } catch (e: any) {
-      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+      Alert.alert(t("profile.uploadFailed"), e.message || t("profile.uploadFailedMessage"));
       setLocalPhotoUri(null);
       updatePersonalDetails({ photoUrl: "" });
     } finally {
@@ -338,30 +338,33 @@ const AuthPersonalDetailsScreen = () => {
             accessibilityLabel="Upload profile photo"
             accessibilityRole="button"
           >
-            {(localPhotoUri || personalDetails.photoUrl) ? (
-              <Image
-                source={{ uri: localPhotoUri ?? personalDetails.photoUrl }}
-                style={{ width: 86, height: 86, borderRadius: 43 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor={theme.primary.green} />
-            )}
-            {/* Camera badge */}
+            {/* Inner clip — keeps image circular without clipping the badge */}
+            <View style={photoStyles.avatarClip}>
+              {(localPhotoUri || personalDetails.photoUrl) ? (
+                <Image
+                  source={{ uri: localPhotoUri ?? personalDetails.photoUrl }}
+                  style={{ width: 88, height: 88, borderRadius: 44 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor={theme.primary.green} />
+              )}
+              {/* Upload spinner overlay */}
+              {photoUploading && (
+                <View style={photoStyles.loadingOverlay}>
+                  <ActivityIndicator size="small" color={theme.text.onPrimary} />
+                </View>
+              )}
+            </View>
+            {/* Camera badge — outside clip so it's always visible */}
             {!photoUploading && (
               <View style={photoStyles.cameraBadge}>
                 <Ionicons name="camera" size={13} color={theme.text.onPrimary} />
               </View>
             )}
-            {/* Upload spinner overlay */}
-            {photoUploading && (
-              <View style={photoStyles.loadingOverlay}>
-                <ActivityIndicator size="small" color={theme.text.onPrimary} />
-              </View>
-            )}
           </Pressable>
           <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? theme.semantic.successText : theme.text.muted, marginTop: 8, fontWeight: "600" }}>
-            {personalDetails.photoUrl ? "✓ Photo uploaded" : "Tap to add profile photo *"}
+            {personalDetails.photoUrl ? t("profile.photoUploaded") : t("profile.tapToAddPhoto")}
           </AppText>
         </View>
           <View style={{ paddingHorizontal: 20 }}>
@@ -660,9 +663,9 @@ const photoStyles = StyleSheet.create({
     marginBottom: 4,
   },
   avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     borderWidth: 3,
     borderColor: theme.primary.green,
     alignItems: "center",
@@ -672,27 +675,36 @@ const photoStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    // NO overflow:hidden — that clips the camera badge
+  },
+  avatarClip: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cameraBadge: {
     position: "absolute",
     bottom: 0,
     right: 0,
     backgroundColor: theme.primary.green,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: theme.background.input,
+    zIndex: 10,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 46,
+    borderRadius: 44,
   },
 });
 
