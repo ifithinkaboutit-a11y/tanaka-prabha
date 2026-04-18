@@ -31,6 +31,11 @@ export function useInterest(
   const [interestCount, setInterestCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
 
+  // Sync interestCount when the parent provides a fresh value from the API
+  useEffect(() => {
+    setInterestCount(initialCount);
+  }, [initialCount]);
+
   // On mount: read persisted interest state from AsyncStorage (Req 5.1.8)
   useEffect(() => {
     let cancelled = false;

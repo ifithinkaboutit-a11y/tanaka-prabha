@@ -60,14 +60,14 @@ export default function MySchedule() {
     const today = new Date().toISOString().split("T")[0];
 
     const upcoming = appointments.filter((a) => {
-        const apptDate = (a as any).appointment_date || (a as any).date || "";
-        const status = (a as any).status || "";
+        const apptDate = a.date || "";
+        const status = a.status || "";
         return apptDate >= today && !["cancelled", "completed", "missed"].includes(status);
     });
 
     const past = appointments.filter((a) => {
-        const apptDate = (a as any).appointment_date || (a as any).date || "";
-        const status = (a as any).status || "";
+        const apptDate = a.date || "";
+        const status = a.status || "";
         return apptDate < today || ["cancelled", "completed", "missed"].includes(status);
     });
 

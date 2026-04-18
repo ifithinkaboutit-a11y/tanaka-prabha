@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
+import Button from "../../components/atoms/Button";
 import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
 import { useUserProfile } from "../../contexts/UserProfileContext";
@@ -202,59 +203,18 @@ export default function Connect() {
           <QuickActionGrid actions={serviceActions} />
         </View>
 
-        {/* Emergency / SOS */}
-        <View
-          style={{
-            marginHorizontal: 10,
-            marginTop: 34,
-            backgroundColor: theme.semantic.errorBackground,
-            borderRadius: 20,
-            padding: 20,
-            minHeight: 340,
-            borderWidth: 1,
-            borderColor: theme.semantic.likeSubtle,
-          }}
-          className="flex items-center"
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-            <Ionicons name="alert-circle" size={24} color={theme.semantic.like} />
-            <AppText variant="h3" style={{ fontWeight: "700", color: theme.semantic.like, marginLeft: 8, fontSize: 18 }}>
-              {t("connect.emergencyTitle")}
-            </AppText>
-          </View>
-
-          <AppText variant="bodySm" style={{ color: theme.semantic.errorDark, marginBottom: 4, textAlign: "center", fontSize: 13 }}>
-            {t("connect.emergencySubtitle")}
-          </AppText>
-
-          {/* SOS Button — always shows call icon; logic handled in onPress */}
-          <View
-            style={{ alignItems: "center", justifyContent: "center", marginTop: 16, marginBottom: 8 }}
-            className="flex items-center justify-center py-10"
-          >
-            {/* Outer Ring */}
-            <View style={s.ringOuter} />
-            {/* Inner Ring */}
-            <View style={s.ringInner} />
-            {/* Main Button */}
-            <Pressable
+            <Button
               onPress={handleEmergencyPress}
-              style={({ pressed }) => [s.sosBtn, pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] }]}
-              accessibilityRole="button"
+              style={{flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: theme.semantic.like, borderRadius: 20, borderWidth: 1, borderColor: theme.semantic.likeSubtle, margin: 20}}
               accessibilityLabel={t("connect.emergencyTitle")}
             >
-              <Ionicons
-                name="call"
-                size={52}
-                color="white"
-              />
-            </Pressable>
-          </View>
-
-          <AppText variant="bodySm" style={{ color: theme.semantic.errorDeep, marginTop: 16, fontWeight: "600", fontSize: 13 }}>
-            {t("connect.tapToCall")}
-          </AppText>
-        </View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                <Ionicons name="alert-circle" size={28} color={theme.text.onPrimary} />
+                <AppText variant="h3" style={{ fontWeight: "700", color: theme.text.onPrimary, marginLeft: 8, fontSize: 20 }}>
+                  {t("connect.emergencyTitle")}
+                </AppText>
+              </View>
+            </Button>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -373,38 +333,6 @@ const il = StyleSheet.create({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  // SOS button rings
-  ringOuter: {
-    position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(220, 38, 38, 0.15)",
-    alignSelf: "center",
-  },
-  ringInner: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(220, 38, 38, 0.25)",
-    alignSelf: "center",
-  },
-  sosBtn: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: theme.semantic.like,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: theme.semantic.like,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-    alignSelf: "center",
-  },
-
   // Modal
   overlay: {
     flex: 1,
