@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect, useCallback } from "react";
-import { Alert, Image, Linking, Modal, Pressable, ScrollView, View, ActivityIndicator } from "react-native";
+import { Alert, Image, Linking, Modal, Pressable, ScrollView, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import AppText from "../components/atoms/AppText";
 import Button from "../components/atoms/Button";
 import Card from "../components/atoms/Card";
@@ -11,9 +11,7 @@ import { useTranslation } from "../i18n";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "@/styles/colors";
 
-export const options = {
-    headerShown: false,
-};
+import { useLanguageStore } from "../stores/languageStore";
 
 // ─── Status helper ─────────────────────────────────────────────────────────
 const computeStatus = (event: ApiEvent): string => {
@@ -44,6 +42,9 @@ const EventDetails = () => {
     const [registering, setRegistering] = useState(false);
     const [consentGiven, setConsentGiven] = useState(false);
     const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+
+    const { currentLanguage } = useLanguageStore();
+    const isHindi = currentLanguage === "hi";
 
     const { user } = useAuth();
 
@@ -197,7 +198,7 @@ const EventDetails = () => {
 
                     {/* Title */}
                     <AppText variant="h1" style={{ color: theme.text.primary, marginBottom: 16, fontSize: 22, fontWeight: "800", lineHeight: 28 }}>
-                        {event.title}
+                        {isHindi && event.title_hi ? event.title_hi : event.title}
                     </AppText>
 
                     {/* Meta Info */}
@@ -250,14 +251,47 @@ const EventDetails = () => {
                                 <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14 }} numberOfLines={2}>
                                     {event.location_name}{event.location_address ? `, ${event.location_address}` : ""}
                                 </AppText>
-                                {event.location_lat && event.location_lng && (
+                                {(event.location_lat && event.location_lng || event.location_address || event.location_name) && (
                                     <Pressable
-                                        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_lng}`)}
-                                        style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}
+                                        onPress={() => {
+                                            if (event.location_lat && event.location_lng) {
+                                                Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_lng}`);
+                                            } else {
+                                                const query = encodeURIComponent(`${event.location_name || ""}${event.location_address ? `, ${event.location_address}` : ""}`);
+                                                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+                                            }
+                                        }}
+                                        style={({ pressed }) => ({
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            marginTop: 12,
+                                            backgroundColor: pressed ? theme.primary.green + "10" : "#FFFFFF",
+                                            alignSelf: "flex-start",
+                                            paddingHorizontal: 16,
+                                            paddingVertical: 10,
+                                            borderRadius: 12,
+                                            borderWidth: 1.5,
+                                            borderColor: theme.primary.green + "30",
+                                            shadowColor: theme.primary.green,
+                                            shadowOffset: { width: 0, height: 4 },
+                                            shadowOpacity: 0.1,
+                                            shadowRadius: 8,
+                                            elevation: 3,
+                                        })}
+                                        className="
+                                            flex-row items-center mt-3
+                                            self-start
+                                            px-4 py-2.5
+                                            rounded-xl
+                                            border-[1.5px]
+                                            shadow-md
+                                            active:bg-green-100
+                                            bg-white
+                                        "
                                     >
-                                        <Ionicons name="navigate-outline" size={14} color={theme.primary.green} />
-                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
-                                            {t("events.getDirections") || "Get Directions"}
+                                        <Ionicons name="map" size={16} color={theme.primary.green} />
+                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "800", fontSize: 13, marginLeft: 8 }}>
+                                            {"Open on Maps" || t("events.openOnMaps") || t("events.getDirections")}
                                         </AppText>
                                     </Pressable>
                                 )}
@@ -279,6 +313,132 @@ const EventDetails = () => {
                             {event.description}
                         </AppText>
                     </Card>
+
+                    {(event.instructors?.length > 0) && (
+                        <View style={{ marginBottom: 24 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+                                <View style={{ width: 30, height: 30, borderRadius: 12, backgroundColor: theme.primary.green, alignItems: "center", justifyContent: "center" }}>
+                                    <Ionicons name="people" size={18} color="#FFFFFF" />
+                                </View>
+                                <AppText variant="h3" style={{ color: theme.text.primary, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
+                                    {t("events.trainerContact") || "Event Trainers"}
+                                </AppText>
+                            </View>
+
+                            <View style={{ gap: 12 }}>
+                                {event.instructors ? (
+                                    event.instructors.map((ins, index) => (
+                                        <Pressable key={ins.id || index} style={{ padding: 16, backgroundColor: theme.background.input, borderRadius: 20, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.05)" }}
+                                            className="active:bg-green-100"
+                                            onPress={() => router.push({
+                                                pathname: "/connect-detail",
+                                                params: { professionalId: ins.id },
+                                            } as any)}>
+                                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.primary.green + "20", alignItems: "center", justifyContent: "center", overflow: 'hidden' }}>
+                                                    {ins.image_url ? (
+                                                        <Image source={{ uri: ins.image_url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                                                    ) : (
+                                                        <Ionicons name="person" size={24} color={theme.primary.green} />
+                                                    )}
+                                                </View>
+                                                <View style={{ flex: 1, marginLeft: 16 }}>
+                                                    <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "800", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                                        {ins.role || t("events.trainer") || "Trainer"}
+                                                    </AppText>
+                                                    <AppText variant="bodyMd" style={{ color: theme.text.primary, fontWeight: "700", fontSize: 16, marginTop: 2 }}>
+                                                        {ins.name}
+                                                    </AppText>
+                                                </View>
+                                                {/* {ins.phone && (
+                                                    <TouchableOpacity
+                                                        onPress={() => Linking.openURL(`tel:${ins.phone}`)}
+                                                        style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.primary.green, alignItems: "center", justifyContent: "center" }}
+                                                    >
+                                                        <Ionicons name="call" size={18} color="#FFFFFF" />
+                                                    </TouchableOpacity>
+                                                )} */}
+                                            </View>
+                                        </Pressable>
+                                    ))
+                                ) : (
+                                    <>
+                                        {event.master_trainer_name && (
+                                            <Card style={{ padding: 16, backgroundColor: theme.background.input, borderRadius: 20, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.05)" }}>
+                                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.primary.green + "20", alignItems: "center", justifyContent: "center" }}>
+                                                        <Ionicons name="ribbon" size={24} color={theme.primary.green} />
+                                                    </View>
+                                                    <View style={{ flex: 1, marginLeft: 16 }}>
+                                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "800", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                                            {t("events.masterTrainer") || "Lead Mentor"}
+                                                        </AppText>
+                                                        <AppText variant="bodyMd" style={{ color: theme.text.primary, fontWeight: "700", fontSize: 16, marginTop: 2 }}>
+                                                            {event.master_trainer_name}
+                                                        </AppText>
+                                                    </View>
+                                                    {event.master_trainer_phone && (
+                                                        <TouchableOpacity
+                                                            onPress={() => Linking.openURL(`tel:${event.master_trainer_phone}`)}
+                                                            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.primary.green, alignItems: "center", justifyContent: "center" }}
+                                                        >
+                                                            <Ionicons name="call" size={18} color="#FFFFFF" />
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
+                                                {(isHindi && event.master_trainer_about_hi || event.master_trainer_about) && (
+                                                    <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(0,0,0,0.05)" }}>
+                                                        <AppText variant="bodySm" style={{ color: theme.text.muted, lineHeight: 18, fontSize: 12 }}>
+                                                            {isHindi && event.master_trainer_about_hi ? event.master_trainer_about_hi : event.master_trainer_about}
+                                                        </AppText>
+                                                    </View>
+                                                )}
+                                            </Card>
+                                        )}
+
+                                        {event.trainer_name && (
+                                            <Card style={{ padding: 16, backgroundColor: theme.background.input, borderRadius: 20, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.05)" }}>
+                                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.secondary.sky + "20", alignItems: "center", justifyContent: "center" }}>
+                                                        <Ionicons name="person" size={24} color={theme.secondary.sky} />
+                                                    </View>
+                                                    <View style={{ flex: 1, marginLeft: 16 }}>
+                                                        <AppText variant="bodySm" style={{ color: theme.secondary.sky, fontWeight: "800", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                                            {t("events.trainer") || "Speaker"}
+                                                        </AppText>
+                                                        <AppText variant="bodyMd" style={{ color: theme.text.primary, fontWeight: "700", fontSize: 16, marginTop: 2 }}>
+                                                            {event.trainer_name}
+                                                        </AppText>
+                                                    </View>
+                                                    {event.trainer_phone && (
+                                                        <TouchableOpacity
+                                                            onPress={() => Linking.openURL(`tel:${event.trainer_phone}`)}
+                                                            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.secondary.sky, alignItems: "center", justifyContent: "center" }}
+                                                        >
+                                                            <Ionicons name="call" size={18} color="#FFFFFF" />
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
+                                            </Card>
+                                        )}
+                                    </>
+                                )}
+                            </View>
+
+                            {event.contact_number && (
+                                <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                                    <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "600" }}>
+                                        Need help?
+                                    </AppText>
+                                    <Pressable onPress={() => Linking.openURL(`tel:${event.contact_number}`)}>
+                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "800", textDecorationLine: "underline" }}>
+                                            Contact Support
+                                        </AppText>
+                                    </Pressable>
+                                </View>
+                            )}
+                        </View>
+                    )}
 
                     {event.requirements && (
                         <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.input, borderRadius: 16 }}>
@@ -307,86 +467,6 @@ const EventDetails = () => {
                             </AppText>
                         </Card>
                     )}
-
-                    {(event.master_trainer_name || event.master_trainer_phone || event.trainer_name || event.trainer_phone || event.contact_number) && (
-                        <Card style={{ padding: 18, marginBottom: 12, backgroundColor: theme.background.input, borderRadius: 16 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                                <Ionicons name="people-outline" size={18} color={theme.primary.green} />
-                                <AppText variant="h3" style={{ color: theme.text.primary, marginLeft: 8, fontSize: 16, fontWeight: "700" }}>
-                                    {t("events.trainerAndContact") || "Trainer & Contact"}
-                                </AppText>
-                            </View>
-
-                            {(event.master_trainer_name || event.master_trainer_phone) && (
-                                <View style={{ marginBottom: 10 }}>
-                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
-                                        {t("events.masterTrainer") || "Master Trainer"}
-                                    </AppText>
-                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                                        {event.master_trainer_name && (
-                                            <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14, flex: 1 }}>
-                                                {event.master_trainer_name}
-                                            </AppText>
-                                        )}
-                                        {event.master_trainer_phone && (
-                                            <Pressable
-                                                onPress={() => Linking.openURL(`tel:${event.master_trainer_phone}`)}
-                                                style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}
-                                            >
-                                                <Ionicons name="call-outline" size={16} color={theme.primary.green} />
-                                                <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
-                                                    {event.master_trainer_phone}
-                                                </AppText>
-                                            </Pressable>
-                                        )}
-                                    </View>
-                                </View>
-                            )}
-
-                            {(event.trainer_name || event.trainer_phone) && (
-                                <View style={{ marginBottom: 10 }}>
-                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
-                                        {t("events.trainer") || "Trainer"}
-                                    </AppText>
-                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                                        {event.trainer_name && (
-                                            <AppText variant="bodyMd" style={{ color: theme.text.secondary, fontWeight: "600", fontSize: 14, flex: 1 }}>
-                                                {event.trainer_name}
-                                            </AppText>
-                                        )}
-                                        {event.trainer_phone && (
-                                            <Pressable
-                                                onPress={() => Linking.openURL(`tel:${event.trainer_phone}`)}
-                                                style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}
-                                            >
-                                                <Ionicons name="call-outline" size={16} color={theme.primary.green} />
-                                                <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
-                                                    {event.trainer_phone}
-                                                </AppText>
-                                            </Pressable>
-                                        )}
-                                    </View>
-                                </View>
-                            )}
-
-                            {event.contact_number && (
-                                <View>
-                                    <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
-                                        {t("events.contactNumber") || "Contact"}
-                                    </AppText>
-                                    <Pressable
-                                        onPress={() => Linking.openURL(`tel:${event.contact_number}`)}
-                                        style={{ flexDirection: "row", alignItems: "center" }}
-                                    >
-                                        <Ionicons name="call-outline" size={16} color={theme.primary.green} />
-                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "600", fontSize: 13, marginLeft: 4 }}>
-                                            {event.contact_number}
-                                        </AppText>
-                                    </Pressable>
-                                </View>
-                            )}
-                        </Card>
-                    )}
                 </View>
             </ScrollView>
 
@@ -407,7 +487,7 @@ const EventDetails = () => {
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
                             <Ionicons name="checkmark-circle" size={22} color="#16A34A" />
                             <AppText variant="bodyMd" style={{ color: "#15803D", fontWeight: "700", marginLeft: 10, fontSize: 16 }}>
-                                {t("events.alreadyRegisteredTitle") || "Registered ✓"}
+                                {t("events.appliedParticipated") || "Applied / Participated"}
                             </AppText>
                         </View>
                     </View>

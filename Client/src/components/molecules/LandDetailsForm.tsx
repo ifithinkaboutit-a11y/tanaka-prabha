@@ -11,22 +11,19 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
-import T from "../../i18n";
+import { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
-import { cropsBySeason } from "../../data/content/onboardingOptions";
+import { cropTypes, getLocalizedOptions } from "../../data/content/onboardingOptions";
 import { theme } from "@/styles/colors";
 
 // "None" option allows the user to clear a previously selected crop
 const NONE_CROP_VALUE = "__none__";
-const NONE_OPTION = { value: NONE_CROP_VALUE, label: "None (remove crop)" };
+const NONE_OPTION = { value: NONE_CROP_VALUE, label: "None (remove crop)", labelHi: "कोई नहीं (हटाएं)" };
 
-// Flatten cropsBySeason into a single options array (no cotton), with a clear option first
-const cropOptions = [
-  NONE_OPTION,
-  ...cropsBySeason.rabi,
-  ...cropsBySeason.kharif,
-  ...cropsBySeason.zayed,
+// Use all crop types from onboardingOptions
+const baseCropOptions = [
+  ...cropTypes,
 ];
 
 const unitOptions = [
@@ -71,12 +68,22 @@ export default function LandDetailsForm({
   onSave,
   onCancel,
 }: LandDetailsFormProps) {
-  // Normalize crop values to lowercase to match option values
+  const { t, currentLanguage } = useTranslation();
+  const localizedCropOptions = getLocalizedOptions(baseCropOptions, currentLanguage);
+  const localizedUnitOptions = getLocalizedOptions(unitOptions, currentLanguage);
+
+  const parseCrop = (val: any): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return val.split(",").map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+  };
+
+  // Normalize crop values to arrays for the multi-select UI
   const normalizedInitial: LandDetails = {
     ...initialData,
-    rabiCrop: initialData.rabiCrop?.toLowerCase() || "",
-    kharifCrop: initialData.kharifCrop?.toLowerCase() || "",
-    zaidCrop: initialData.zaidCrop?.toLowerCase() || "",
+    rabiCrop: parseCrop(initialData.rabiCrop),
+    kharifCrop: parseCrop(initialData.kharifCrop),
+    zaidCrop: parseCrop(initialData.zaidCrop),
   };
   const [formData, setFormData] = useState<LandDetails>(normalizedInitial);
   const [unit, setUnit] = useState("acre");
@@ -87,17 +94,17 @@ export default function LandDetailsForm({
       Alert.alert("Error", "Land area cannot be negative");
       return;
     }
-    // Convert sentinel "none" values back to empty strings before saving
+    // Convert arrays back to comma-separated strings for backend storage
     const dataToSave: LandDetails = {
       ...formData,
-      rabiCrop: formData.rabiCrop === NONE_CROP_VALUE ? "" : formData.rabiCrop,
-      kharifCrop: formData.kharifCrop === NONE_CROP_VALUE ? "" : formData.kharifCrop,
-      zaidCrop: formData.zaidCrop === NONE_CROP_VALUE ? "" : formData.zaidCrop,
+      rabiCrop: Array.isArray(formData.rabiCrop) ? formData.rabiCrop.join(",") : formData.rabiCrop,
+      kharifCrop: Array.isArray(formData.kharifCrop) ? formData.kharifCrop.join(",") : formData.kharifCrop,
+      zaidCrop: Array.isArray(formData.zaidCrop) ? formData.zaidCrop.join(",") : formData.zaidCrop,
     };
     onSave(dataToSave);
   };
 
-  const update = (field: keyof LandDetails, value: string | number) =>
+  const update = (field: keyof LandDetails, value: any) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   return (
@@ -105,6 +112,8 @@ export default function LandDetailsForm({
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.scrollContent}
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
     >
       {/* ── Land area ── */}
       <View style={s.card}>
@@ -112,10 +121,10 @@ export default function LandDetailsForm({
           <View style={[s.sectionIconBg, { backgroundColor: "#DCFCE7" }]}>
             <Ionicons name="map" size={18} color="#16A34A" />
           </View>
-          <Text style={s.sectionTitle}>{String(T.translate("landDetails.landInformation"))}</Text>
+          <Text style={s.sectionTitle}>{t("landDetails.landInformation")}</Text>
         </View>
 
-        <Text style={s.fieldLabel}>{String(T.translate("landDetails.totalLandArea"))}</Text>
+        <Text style={s.fieldLabel}>{t("landDetails.totalLandArea")}</Text>
         <View style={s.landAreaRow}>
           <TextInput
             style={[s.landAreaInput, areaFocused && s.landAreaInputFocused]}
@@ -131,7 +140,7 @@ export default function LandDetailsForm({
             <Select
               value={unit}
               onChange={setUnit}
-              options={unitOptions}
+              options={localizedUnitOptions}
               placeholder="Unit"
             />
           </View>
@@ -150,7 +159,7 @@ export default function LandDetailsForm({
           <View style={[s.sectionIconBg, { backgroundColor: "#FEF3C7" }]}>
             <Ionicons name="leaf" size={18} color="#D97706" />
           </View>
-          <Text style={s.sectionTitle}>{String(T.translate("landDetails.cropInformation"))}</Text>
+          <Text style={s.sectionTitle}>{t("landDetails.cropInformation")}</Text>
         </View>
 
         {SEASONS.map((season) => {
@@ -161,7 +170,7 @@ export default function LandDetailsForm({
                 <MaterialCommunityIcons name={season.iconName as any} size={18} color={season.dotColor} />
                 <View style={s.seasonTextBlock}>
                   <Text style={[s.seasonLabel, { color: season.dotColor }]}>
-                    {String(T.translate(labelKey))}
+                    {t(labelKey)}
                   </Text>
                   <Text style={s.seasonPeriod}>{season.period}</Text>
                 </View>
@@ -169,10 +178,11 @@ export default function LandDetailsForm({
               </View>
               <View style={{ marginTop: 8 }}>
                 <Select
-                  value={formData[season.field] || undefined}
+                  value={formData[season.field]}
+                  isMulti
                   onChange={(v) => update(season.field, v)}
-                  options={cropOptions}
-                  placeholder={`Select ${season.label} crop`}
+                  options={localizedCropOptions}
+                  placeholder={`Select ${season.label} crops`}
                 />
               </View>
             </View>
@@ -183,20 +193,20 @@ export default function LandDetailsForm({
       {/* ── Info banner ── */}
       <View style={s.infoBanner}>
         <Ionicons name="information-circle" size={18} color="#3B82F6" />
-        <Text style={s.infoBannerText}>{String(T.translate("landDetails.infoMessage"))}</Text>
+        <Text style={s.infoBannerText}>{t("landDetails.infoMessage")}</Text>
       </View>
 
       {/* ── Buttons ── */}
       <View style={s.btnRow}>
         <Button
           variant="outline"
-          label={String(T.translate("landDetails.cancel"))}
+          label={t("landDetails.cancel")}
           onPress={onCancel}
           style={{ flex: 1 }}
         />
         <Button
           variant="primary"
-          label={String(T.translate("landDetails.save"))}
+          label={t("landDetails.save")}
           onPress={handleSave}
           style={{ flex: 2, backgroundColor: "#16A34A" }}
         />

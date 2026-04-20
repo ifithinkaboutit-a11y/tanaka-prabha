@@ -315,6 +315,8 @@ export default function CreateEvent() {
     // trainer & contact
     const [masterTrainerName, setMasterTrainerName] = useState("");
     const [masterTrainerPhone, setMasterTrainerPhone] = useState("");
+    const [masterTrainerAbout, setMasterTrainerAbout] = useState("");
+    const [masterTrainerAboutHi, setMasterTrainerAboutHi] = useState("");
     const [trainerName, setTrainerName] = useState("");
     const [trainerPhone, setTrainerPhone] = useState("");
     const [contactNumber, setContactNumber] = useState("");
@@ -404,6 +406,8 @@ export default function CreateEvent() {
             status: "upcoming",
             master_trainer_name: masterTrainerName || undefined,
             master_trainer_phone: masterTrainerPhone || undefined,
+            master_trainer_about: masterTrainerAbout || undefined,
+            master_trainer_about_hi: masterTrainerAboutHi || undefined,
             trainer_name: trainerName || undefined,
             trainer_phone: trainerPhone || undefined,
             contact_number: contactNumber || undefined,
@@ -453,7 +457,8 @@ export default function CreateEvent() {
 
             <KeyboardAvoidingView
                 style={s.root}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
             >
                 <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
                     {/* Page header */}
@@ -679,6 +684,22 @@ export default function CreateEvent() {
                             value={masterTrainerPhone}
                             onChangeText={setMasterTrainerPhone}
                             keyboardType="phone-pad"
+                        />
+                        <TextInput
+                            style={[s.input, s.textArea, { height: 70 }]}
+                            placeholder="About Master Trainer (optional)"
+                            placeholderTextColor="#9CA3AF"
+                            value={masterTrainerAbout}
+                            onChangeText={setMasterTrainerAbout}
+                            multiline
+                        />
+                        <TextInput
+                            style={[s.input, s.textArea, { height: 70 }]}
+                            placeholder="About Master Trainer (Hindi - optional)"
+                            placeholderTextColor="#9CA3AF"
+                            value={masterTrainerAboutHi}
+                            onChangeText={setMasterTrainerAboutHi}
+                            multiline
                         />
                         <TextInput
                             style={s.input}

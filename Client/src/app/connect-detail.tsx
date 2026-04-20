@@ -66,7 +66,7 @@ const SectionCard = ({
   icon: keyof typeof Ionicons.glyphMap;
   iconBg: string;
   iconColor: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) => (
   <View className="mx-5 mb-4 bg-white rounded-[20px] p-5 shadow-sm" style={{ elevation: 2 }}>
     <View className="flex-row items-center mb-4">
@@ -182,9 +182,9 @@ const ConnectDetailScreen = () => {
 
   const handleBookAppointment = () => {
     setShowConnectModal(false);
-    router.push({
-      pathname: "/book-appointment" as any,
-      params: { professionalId: professional!.id, professionalName: professional!.name },
+    const email = professional.email || "bookings@tanakaprabha.com";
+    Linking.openURL(`mailto:${email}?subject=Booking Request for ${professional.name}`).catch(() => {
+      Alert.alert(t("connect.error"), "Could not open email client.");
     });
   };
 
@@ -273,7 +273,7 @@ const ConnectDetailScreen = () => {
           {[
             { label: t("connect.options.call"), icon: "call" as const, bg: "#2563EB", onPress: handleCall },
             { label: t("connect.options.chat"), icon: "logo-whatsapp" as const, bg: "#10B981", onPress: handleChat },
-            { label: "Schedule", icon: "calendar" as const, bg: "#F59E0B", onPress: handleBookAppointment },
+            { label: "Email for Booking", icon: "mail" as const, bg: "#F59E0B", onPress: handleBookAppointment },
           ].map((action) => (
             <Pressable key={action.label} onPress={action.onPress} className="flex-1 items-center">
               <View
@@ -349,12 +349,17 @@ const ConnectDetailScreen = () => {
         style={{ elevation: 12, shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 10 }}
       >
         <Pressable
-          onPress={handleBookAppointment}
+          onPress={() => {
+            router.push({
+              pathname: "/book-appointment",
+              params: { professionalId: professional.id, professionalName: professional.name }
+            } as any);
+          }}
           className="bg-[#386641] rounded-2xl py-4 flex-row items-center justify-center gap-2.5 active:opacity-90"
         >
-          <Ionicons name="calendar" size={21} color="#FFFFFF" />
+          {/* <Ionicons name="mail" size={21} color="#FFFFFF" /> */}
           <AppText style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
-            {t("connect.bookAppointment")}
+            Book Appointment
           </AppText>
         </Pressable>
       </View>
@@ -380,7 +385,15 @@ const ConnectDetailScreen = () => {
             {[
               { icon: "call" as const, label: t("connect.callThem"), sub: t("connect.callDescription"), bg: "#EFF6FF", iconBg: "#2563EB", onPress: handleCall },
               { icon: "logo-whatsapp" as const, label: t("connect.chatWithThem"), sub: t("connect.chatDescription"), bg: "#ECFDF5", iconBg: "#10B981", onPress: handleChat },
-              { icon: "calendar" as const, label: t("connect.bookAppointment"), sub: t("connect.bookDescription"), bg: "#FFFBEB", iconBg: "#F59E0B", onPress: handleBookAppointment },
+              {
+                icon: "mail" as const, label: "Email for Booking", sub: "Send an email to book inquiry", bg: "#EFF6FF", iconBg: theme.primary.green, onPress: () => {
+                  if (!professional) return;
+                  const email = professional.email || "support@tanakaprabha.com";
+                  const subject = `Booking Inquiry for ${professional.name}`;
+                  const body = `Hello ${professional.name},\n\nI would like to book a consultation for...`;
+                  Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                }
+              },
             ].map((opt) => (
               <Pressable
                 key={opt.label}

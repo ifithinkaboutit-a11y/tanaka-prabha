@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
+    Pressable,
     ScrollView,
     StyleSheet,
     TouchableOpacity,
@@ -168,7 +169,17 @@ export default function ViewAttendance() {
                                     : mobile.slice(-2); // last 2 digits as fallback initials
 
                                 return (
-                                    <View key={item.id || index} style={s.attendeeCard}>
+                                    <Pressable
+                                        key={item.id || index}
+                                        style={s.attendeeCard}
+                                        onPress={() =>
+                                            router.push({
+                                                pathname: "/(admin)/beneficiary-detail",
+                                                params: { id: item.user_id },
+                                            } as any)
+                                        }
+                                    // disabled={!item.user_id}
+                                    >
                                         <View style={[s.initials, { backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7" }]}>
                                             <AppText style={[s.initialsText, { color: isPresent ? "#059669" : "#D97706" }]}>{initials}</AppText>
                                         </View>
@@ -179,20 +190,24 @@ export default function ViewAttendance() {
                                                 <AppText style={s.attendeeMobile}>{mobile}</AppText>
                                             </View>
                                         </View>
-                                        <View style={[s.badge, {
-                                            backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7",
-                                        }]}>
-                                            <Ionicons
-                                                name={isPresent ? "checkmark-circle" : "time-outline"}
-                                                size={14}
-                                                color={isPresent ? "#059669" : "#D97706"}
-                                            />
-                                            <AppText style={[s.badgeText, { color: isPresent ? "#059669" : "#D97706" }]}>
-                                                {isPresent ? "Attended" : "Registered"}
-                                            </AppText>
+                                        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                                            <View style={[s.badge, {
+                                                backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7",
+                                            }]}>
+                                                <Ionicons
+                                                    name={isPresent ? "checkmark-circle" : "time-outline"}
+                                                    size={14}
+                                                    color={isPresent ? "#059669" : "#D97706"}
+                                                />
+                                                <AppText style={[s.badgeText, { color: isPresent ? "#059669" : "#D97706" }]}>
+                                                    {isPresent ? "Attended" : "Registered"}
+                                                </AppText>
+                                            </View>
+                                            {item.user_id && (
+                                                <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
+                                            )}
                                         </View>
-
-                                    </View>
+                                    </Pressable>
                                 );
                             })}
                         </>

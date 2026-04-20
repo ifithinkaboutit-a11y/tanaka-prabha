@@ -4,7 +4,7 @@ class EventParticipant {
     static async register(event_id, user_id, mobile_number, name) {
         const text = `
             INSERT INTO public.event_participants (
-                event_id, user_id, mobile_number, name, status
+                event_id, user_id, mobile_number, name, status, id
             ) VALUES (
                 $1, $2, $3, $4, 'registered'
             )

@@ -17,6 +17,9 @@ export default function Connect() {
   const { t } = useTranslation();
 
   const handleEmergencyPress = () => {
+    // Mock backend tracking for SOS button hits
+    console.log("[TRACKING]: SOS/Emergency button clicked by user at", new Date().toISOString());
+
     const emergencyNumber = "tel:1800180111";
     Linking.openURL(emergencyNumber);
   };
@@ -141,43 +144,24 @@ export default function Connect() {
 
         {/* Services 2×2 Grid — same QuickActionGrid used on the home screen */}
         <QuickActionGrid actions={serviceActions} />
-      </View>
-
-      {/* Emergency Help */}
-      <View
-        style={{
-          marginHorizontal: 10,
-          marginTop: 34,
-          backgroundColor: theme.semantic.errorBackground,
-          borderRadius: 20,
-          padding: 20,
-          minHeight: 340,
-          borderWidth: 1,
-          borderColor: theme.semantic.likeSubtle,
-        }}
-        className="flex items-center"
-      >
-        <View
+      </View>      {/* Emergency Help */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 32 }}>
+        <AppText
+          variant="h3"
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 8,
+            fontWeight: "700",
+            color: theme.text.secondary,
+            marginBottom: 6,
+            fontSize: 18,
           }}
         >
-          <Ionicons name="alert-circle" size={24} color={theme.semantic.like} />
-          <AppText
-            variant="h3"
-            style={{ fontWeight: "700", color: theme.semantic.like, marginLeft: 8, fontSize: 18 }}
-          >
-            {t("connect.emergencyTitle")}
-          </AppText>
-        </View>
+          {t("connect.emergencyTitle")}
+        </AppText>
         <AppText
           variant="bodySm"
           style={{
-            color: theme.semantic.errorDark,
-            marginBottom: 20,
-            textAlign: "center",
+            color: theme.text.muted,
+            marginBottom: 16,
             fontSize: 13,
           }}
         >
@@ -185,65 +169,72 @@ export default function Connect() {
         </AppText>
 
         {/* Emergency Button */}
-        <View
-          style={{ alignItems: "center", justifyContent: "center", marginTop: 16, marginBottom: 8 }}
-          className="flex items-center justify-center py-10"
+        {/* <Pressable
+          onPress={handleEmergencyPress}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 16,
+            backgroundColor: pressed ? theme.background.neutralSubtle : "#FFFFFF",
+            borderWidth: 1.5,
+            borderColor: "#FEE2E2",
+          })}
         >
-          {/* Outer Ring */}
           <View
             style={{
-              position: "absolute",
-              width: 220,
-              height: 220,
-              borderRadius: 110,
-              backgroundColor: "rgba(220, 38, 38, 0.15)",
-              alignSelf: "center",
-            }}
-          />
-          {/* Inner Ring */}
-          <View
-            style={{
-              position: "absolute",
-              width: 180,
-              height: 180,
-              borderRadius: 90,
-              backgroundColor: "rgba(220, 38, 38, 0.25)",
-              alignSelf: "center",
-            }}
-          />
-          {/* Main Button */}
-          <View
-            onTouchEnd={handleEmergencyPress}
-            style={{
-              width: 140,
-              height: 140,
-              borderRadius: 70,
-              backgroundColor: theme.semantic.like,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: theme.semantic.like,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-              elevation: 8,
-              alignSelf: "center",
+              backgroundColor: "#FEF2F2",
+              padding: 10,
+              borderRadius: 12,
+              marginRight: 16,
             }}
           >
-            <Ionicons name="call" size={56} color="white" />
+            <Ionicons name="call" size={20} color="#DC2626" />
           </View>
-        </View>
-
-        <AppText
-          variant="bodySm"
-          style={{
-            color: theme.semantic.errorDeep,
-            marginTop: 16,
-            fontWeight: "600",
-            fontSize: 13,
-          }}
+          <View style={{ flex: 1 }}>
+            <AppText
+              style={{
+                color: "#111827",
+                fontWeight: "700",
+                fontSize: 16,
+              }}
+            >
+              24/7 Helpline
+            </AppText>
+            <AppText
+              style={{
+                color: theme.text.muted,
+                fontWeight: "500",
+                fontSize: 12,
+                marginTop: 1,
+              }}
+            >
+              {t("connect.tapToCall")}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+        </Pressable> */}
+        <Pressable
+          onPress={handleEmergencyPress}
+          className="flex-row items-center py-3.5 px-4 rounded-2xl border-[1.5px] border-red-100 bg-white active:bg-neutral-100"
         >
-          {t("connect.tapToCall")}
-        </AppText>
+          <View className="bg-red-50 p-2.5 rounded-xl mr-4">
+            <Ionicons name="call" size={20} color="#DC2626" />
+          </View>
+
+          <View className="flex-1">
+            {/* <AppText className="text-gray-900 font-bold text-base">
+              Helpline
+            </AppText> */}
+
+            <AppText className="text-xs font-medium mt-0.5 text-muted">
+              {t("connect.tapToCall")}
+            </AppText>
+          </View>
+
+          <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+        </Pressable>
       </View>
 
       {/* Bottom padding for tab bar */}

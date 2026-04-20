@@ -63,7 +63,20 @@ const STAT_CONFIG = [
     bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
     format: (v) => v.toLocaleString("en-IN"),
   },
-]
+  {
+    key: "availableProfessionals",
+    label: "Total Professionals",
+    sublabel: "Active experts",
+    icon: IconUsers,
+    gradient: "from-zinc-500 to-zinc-600",
+    softBg: "bg-zinc-50 dark:bg-zinc-950/40",
+    iconBg: "bg-zinc-500/15 dark:bg-zinc-500/20",
+    iconColor: "text-zinc-600 dark:text-zinc-400",
+    glow: "hover:shadow-zinc-500/20",
+    bar: "bg-gradient-to-r from-zinc-400 to-zinc-500",
+    format: (v) => v.toLocaleString("en-IN"),
+  },
+];
 
 function StatCard({ config, value, index }) {
   const Icon = config.icon
@@ -164,6 +177,7 @@ export function SectionCards() {
           totalLandCoverage: data.totalLandCoverage || 0,
           livestockCount: data.livestockCount || 0,
           activeSchemes: data.activeSchemes || 0,
+          availableProfessionals: data.availableProfessionals || 0,
           loading: false,
         })
       } catch {

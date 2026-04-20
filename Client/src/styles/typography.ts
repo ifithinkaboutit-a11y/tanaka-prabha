@@ -8,49 +8,49 @@ export const typography = {
 
   heading: {
     h1: {
-      fontSize: 28,
-      lineHeight: 34, 
+      fontSize: 30,
+      lineHeight: 36, 
       fontWeight: "700",
     },
     h2: {
-      fontSize: 24,
-      lineHeight: 31, 
+      fontSize: 26,
+      lineHeight: 32, 
       fontWeight: "600",
     },
     h3: {
-      fontSize: 20,
-      lineHeight: 26, 
+      fontSize: 22,
+      lineHeight: 28, 
       fontWeight: "600",
     },
   },
 
   body: {
     large: {
-      fontSize: 18,
-      lineHeight: 27, 
+      fontSize: 19,
+      lineHeight: 28, 
       fontWeight: "400",
     },
     medium: {
-      fontSize: 16,
-      lineHeight: 24, 
+      fontSize: 17,
+      lineHeight: 25, 
       fontWeight: "400",
     },
     small: {
-      fontSize: 14,
-      lineHeight: 21, 
+      fontSize: 15,
+      lineHeight: 22, 
       fontWeight: "400",
     },
   },
 
   label: {
     button: {
-      fontSize: 16,
-      lineHeight: 20,
+      fontSize: 17,
+      lineHeight: 22,
       fontWeight: "600",
     },
     caption: {
-      fontSize: 12,
-      lineHeight: 17, 
+      fontSize: 13,
+      lineHeight: 18, 
       fontWeight: "400",
     },
   },

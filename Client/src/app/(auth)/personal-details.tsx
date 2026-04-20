@@ -11,6 +11,7 @@ import {
   StyleSheet,
   View,
   TextInput,
+  Modal,
 } from "react-native";
 import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollView";
 import AppText from "../../components/atoms/AppText";
@@ -20,6 +21,7 @@ import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
   genderOptions,
+  indianStates,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
 import {
@@ -67,6 +69,19 @@ interface FieldErrors {
   aadhaar?: string;
   fathersName?: string;
   mothersName?: string;
+  district?: string;
+  tehsil?: string;
+  block?: string;
+  village?: string;
+  pinCode?: string;
+  postOffice?: string;
+}
+
+interface AddressLists {
+  districts: { label: string; value: string }[];
+  tehsils: { label: string; value: string }[];
+  blocks: { label: string; value: string }[];
+  villages: { label: string; value: string }[];
 }
 
 const AuthPersonalDetailsScreen = () => {
@@ -80,9 +95,14 @@ const AuthPersonalDetailsScreen = () => {
   // ── Photo upload state (same pattern as profile.tsx) ────────────────────────
   const [photoUploading, setPhotoUploading] = useState(false);
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
-  const handlePhotoUpload = async () => {
-    // 1. Request camera permission first
+  const handlePhotoUpload = () => {
+    setShowAvatarModal(true);
+  };
+
+  const launchCamera = async () => {
+    setShowAvatarModal(false);
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
@@ -96,7 +116,6 @@ const AuthPersonalDetailsScreen = () => {
       return;
     }
 
-    // 2. Try to launch camera
     try {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
@@ -106,38 +125,77 @@ const AuthPersonalDetailsScreen = () => {
       if (result.canceled || !result.assets?.[0]) return;
       await processPhoto(result.assets[0].uri);
     } catch {
-      // 3. No-camera device fallback — show alert then open library
-      Alert.alert(
-        "No Camera Found",
-        "A live photo is preferred. Opening your photo library instead.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Open Library",
-            onPress: async () => {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ["images"],
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.75,
-              });
-              if (result.canceled || !result.assets?.[0]) return;
-              await processPhoto(result.assets[0].uri);
-            },
-          },
-        ]
-      );
+      Alert.alert("Camera Error", "Could not start camera, please use the gallery instead.");
     }
   };
 
+  const launchGallery = async () => {
+    setShowAvatarModal(false);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Gallery Required",
+        "Please allow gallery access to pick your profile photo.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
+        ]
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.75,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await processPhoto(result.assets[0].uri);
+    } catch {
+      Alert.alert("Gallery Error", "Could not open gallery.");
+    }
+  };
+
+  // const processPhoto = async (uri: string) => {
+  //   setLocalPhotoUri(uri);
+  //   setPhotoUploading(true);
+  //   try {
+  //     const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+  //     updatePersonalDetails({ photoUrl: cloudUrl });
+  //   } catch (e: any) {
+  //     Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+  //     setLocalPhotoUri(null);
+  //     updatePersonalDetails({ photoUrl: "" });
+  //   } finally {
+  //     setPhotoUploading(false);
+  //   }
+  // };
   const processPhoto = async (uri: string) => {
+    // 1. Instant preview
     setLocalPhotoUri(uri);
     setPhotoUploading(true);
+
     try {
+      // 2. Upload to cloud
       const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+
+      // 3. 🔥 Persist to backend immediately (CRITICAL FIX)
+      await userApi.updateProfile({ photo_url: cloudUrl });
+
+      // 4. Update onboarding store
       updatePersonalDetails({ photoUrl: cloudUrl });
+
+      // 5. Clear local preview → use server image
+      setLocalPhotoUri(null);
     } catch (e: any) {
-      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+      Alert.alert(
+        "Upload Failed",
+        e.message || "Could not upload photo. Please try again."
+      );
+
+      // rollback
       setLocalPhotoUri(null);
       updatePersonalDetails({ photoUrl: "" });
     } finally {
@@ -196,6 +254,66 @@ const AuthPersonalDetailsScreen = () => {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [pinCodeLoading, setPinCodeLoading] = useState(false);
+  const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string, value: string }[]>([]);
+  const [addressLists, setAddressLists] = useState<AddressLists>({
+    districts: [],
+    tehsils: [],
+    blocks: [],
+    villages: [],
+  });
+
+  const handlePinCodeChange = async (pin: string) => {
+    updatePersonalDetails({ pinCode: pin });
+    if (pin.length === 6) {
+      setPinCodeLoading(true);
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const data = await response.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffices = data[0].PostOffice;
+          const poOptions = postOffices.map((po: any) => ({ label: po.Name, value: po.Name }));
+          setPostOfficeOptions(poOptions);
+
+          // Get unique districts/blocks from PO results
+          const districts = Array.from(new Set(postOffices.map((po: any) => po.District))) as string[];
+          const blocks = Array.from(new Set(postOffices.map((po: any) => po.Block))) as string[];
+
+          setAddressLists(prev => ({
+            ...prev,
+            districts: districts.map(d => ({ label: d, value: d })),
+            blocks: blocks.map(b => ({ label: b, value: b })),
+            // Use blocks as Tehsils if not explicitly provided
+            tehsils: blocks.map(b => ({ label: b, value: b })),
+          }));
+
+          const firstPO = postOffices[0];
+
+          // Auto-select state
+          const stateOpt = getLocalizedOptions(indianStates, currentLanguage).find(s =>
+            s.label.toLowerCase() === firstPO.State.toLowerCase() ||
+            s.value.toLowerCase() === firstPO.State.toLowerCase().replace(/ /g, "_")
+          );
+
+          updatePersonalDetails({
+            state: stateOpt ? stateOpt.value : (personalDetails.state || ""),
+            district: districts.length === 1 ? districts[0] : (personalDetails.district || ""),
+            block: blocks.length === 1 ? blocks[0] : (personalDetails.block || ""),
+            postOffice: poOptions.length === 1 ? poOptions[0].value : (personalDetails.postOffice || "")
+          });
+        } else {
+          setPostOfficeOptions([]);
+        }
+      } catch (e) {
+        console.error("Error fetching PIN code:", e);
+      } finally {
+        setPinCodeLoading(false);
+      }
+    } else {
+      setPostOfficeOptions([]);
+    }
+  };
 
 
   const validateField = (field: keyof FieldErrors, value: string) => {
@@ -363,15 +481,12 @@ const AuthPersonalDetailsScreen = () => {
             accessibilityLabel="Upload profile photo"
             accessibilityRole="button"
           >
-            {(localPhotoUri || personalDetails.photoUrl) ? (
-              <Image
-                source={{ uri: localPhotoUri ?? personalDetails.photoUrl }}
-                style={{ width: 86, height: 86, borderRadius: 43 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Avatar name={personalDetails.name || "?"} size="3xl" shape="circle" bgColor={theme.primary.green} />
-            )}
+            <Avatar
+              uri={localPhotoUri || personalDetails.photoUrl || undefined}
+              name={personalDetails.name || "User"}
+              size="xl"
+              shape="circle"
+            />
             {/* Camera badge */}
             {!photoUploading && (
               <View style={photoStyles.cameraBadge}>
@@ -385,184 +500,271 @@ const AuthPersonalDetailsScreen = () => {
               </View>
             )}
           </Pressable>
-          <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? theme.semantic.successText : theme.text.muted, marginTop: 8, fontWeight: "600" }}>
-            {personalDetails.photoUrl ? "✓ Photo uploaded" : "Tap to add profile photo *"}
+          <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? theme.semantic.successText : theme.semantic.errorLight, marginTop: 10, fontWeight: "700" }}>
+            {personalDetails.photoUrl ? "✓ Profile photo added" : "Profile photo is required *"}
           </AppText>
         </View>
-          <View style={{ paddingHorizontal: 20 }}>
-            {/* Full Name */}
-            <FieldWrapper>
-              <FieldLabel text={`${t("onboarding.fullName")} *`} />
+        <View style={{ paddingHorizontal: 20 }}>
+          {/* Full Name */}
+          <FieldWrapper>
+            <FieldLabel text={`${t("onboarding.fullName")} *`} />
+            <TextInput
+              style={inputStyle("name")}
+              value={personalDetails.name}
+              onChangeText={(text) => handleFieldChange("name", text)}
+              onBlur={() => handleFieldBlur("name")}
+              placeholder={t("onboarding.enterFullName")}
+              placeholderTextColor={theme.text.placeholder}
+            />
+            <FieldError message={touched.name ? errors.name : undefined} />
+          </FieldWrapper>
+
+          {/* Age and Gender Row */}
+          <View className="flex-row gap-3 mb-5">
+            {/* Age */}
+            <View className="flex-1">
+              <FieldLabel text={`${t("onboarding.age")} *`} />
               <TextInput
-                style={inputStyle("name")}
-                value={personalDetails.name}
-                onChangeText={(text) => handleFieldChange("name", text)}
-                onBlur={() => handleFieldBlur("name")}
-                placeholder={t("onboarding.enterFullName")}
-                placeholderTextColor={theme.text.placeholder}
-              />
-              <FieldError message={touched.name ? errors.name : undefined} />
-            </FieldWrapper>
-
-            {/* Age and Gender Row */}
-            <View className="flex-row gap-3 mb-5">
-              {/* Age */}
-              <View className="flex-1">
-                <FieldLabel text={`${t("onboarding.age")} *`} />
-                <TextInput
-                  style={inputStyle("age")}
-                  value={personalDetails.age > 0 ? String(personalDetails.age) : ""}
-                  onChangeText={(text) => {
-                    const num = parseInt(text) || 0;
-                    updatePersonalDetails({ age: num });
-                    if (touched.age) validateField("age", text);
-                  }}
-                  onBlur={() => handleFieldBlur("age")}
-                  placeholder={t("onboarding.enterAge")}
-                  placeholderTextColor={theme.text.placeholder}
-                  keyboardType="numeric"
-                  maxLength={3}
-                />
-                <FieldError message={touched.age ? errors.age : undefined} />
-              </View>
-
-              {/* Gender */}
-              <View className="flex-1">
-                <FieldLabel text={`${t("onboarding.gender")} *`} />
-                <View
-                  style={{
-                    borderWidth: errors.gender && touched.gender ? 1 : 0,
-                    borderColor: errors.gender && touched.gender ? theme.semantic.errorLight : "transparent",
-                    borderRadius: 12,
-                  }}
-                >
-                  <Select
-                    value={personalDetails.gender}
-                    onChange={(value) => handleFieldChange("gender", value)}
-                    options={genderSelectOptions}
-                    placeholder={t("onboarding.selectGender")}
-                  />
-                </View>
-                <FieldError message={touched.gender ? errors.gender : undefined} />
-              </View>
-            </View>
-
-            {/* Aadhaar Number */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.aadhaar")} />
-              <TextInput
-                style={inputStyle("aadhaar")}
-                value={personalDetails.aadhaar}
+                style={inputStyle("age")}
+                value={personalDetails.age > 0 ? String(personalDetails.age) : ""}
                 onChangeText={(text) => {
-                  const cleaned = text.replace(/\D/g, "").slice(0, 12);
-                  handleFieldChange("aadhaar", cleaned);
+                  const num = parseInt(text) || 0;
+                  updatePersonalDetails({ age: num });
+                  if (touched.age) validateField("age", text);
                 }}
-                onBlur={() => handleFieldBlur("aadhaar")}
-                placeholder={t("onboarding.enterAadhaar")}
+                onBlur={() => handleFieldBlur("age")}
+                placeholder={t("onboarding.enterAge")}
                 placeholderTextColor={theme.text.placeholder}
                 keyboardType="numeric"
-                maxLength={14}
+                maxLength={3}
               />
-              <FieldError message={touched.aadhaar ? errors.aadhaar : undefined} />
-            </FieldWrapper>
+              <FieldError message={touched.age ? errors.age : undefined} />
+            </View>
 
-            {/* Father's Name */}
-            <FieldWrapper>
-              <FieldLabel text={`${t("onboarding.fathersName")} *`} />
-              <TextInput
-                style={inputStyle("fathersName")}
-                value={personalDetails.fathersName}
-                onChangeText={(text) => handleFieldChange("fathersName", text)}
-                onBlur={() => handleFieldBlur("fathersName")}
-                placeholder={t("onboarding.enterFathersName")}
-                placeholderTextColor={theme.text.placeholder}
-              />
-              <FieldError message={touched.fathersName ? errors.fathersName : undefined} />
-            </FieldWrapper>
-
-            {/* Mother's Name */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.mothersName")} />
-              <TextInput
-                style={inputStyle("mothersName")}
-                value={personalDetails.mothersName}
-                onChangeText={(text) => handleFieldChange("mothersName", text)}
-                onBlur={() => handleFieldBlur("mothersName")}
-                placeholder={t("onboarding.enterMothersName")}
-                placeholderTextColor={theme.text.placeholder}
-              />
-              <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
-            </FieldWrapper>
-
-            {/* Location — redirect to map picker instead of manual dropdowns */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.district") || "Location"} />
-              {personalDetails.village || personalDetails.district ? (
-                <View style={{
-                  backgroundColor: theme.background.successSubtle,
-                  borderWidth: 1,
-                  borderColor: theme.semantic.successBackground,
+            {/* Gender */}
+            <View className="flex-1">
+              <FieldLabel text={`${t("onboarding.gender")} *`} />
+              <View
+                style={{
+                  borderWidth: errors.gender && touched.gender ? 1 : 0,
+                  borderColor: errors.gender && touched.gender ? theme.semantic.errorLight : "transparent",
                   borderRadius: 12,
-                  padding: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                }}>
-                  <Ionicons name="location" size={18} color={theme.semantic.successText} />
-                  <AppText variant="bodySm" style={{ color: "#166534", flex: 1, fontWeight: "600" }}>
-                    {[personalDetails.village, personalDetails.district, personalDetails.state].filter(Boolean).join(", ")}
-                  </AppText>
-                  <Pressable onPress={() => router.push("/(auth)/location-picker" as any)}>
-                    <AppText variant="bodySm" style={{ color: theme.semantic.successText, fontWeight: "700" }}>Change</AppText>
-                  </Pressable>
-                </View>
+                }}
+              >
+                <Select
+                  value={personalDetails.gender}
+                  onChange={(value) => handleFieldChange("gender", value)}
+                  options={genderSelectOptions}
+                  placeholder={t("onboarding.selectGender")}
+                />
+              </View>
+              <FieldError message={touched.gender ? errors.gender : undefined} />
+            </View>
+          </View>
+
+          {/* Aadhaar Number */}
+          <FieldWrapper>
+            <FieldLabel text={t("onboarding.aadhaar")} />
+            <TextInput
+              style={inputStyle("aadhaar")}
+              value={personalDetails.aadhaar}
+              onChangeText={(text) => {
+                const cleaned = text.replace(/\D/g, "").slice(0, 12);
+                handleFieldChange("aadhaar", cleaned);
+              }}
+              onBlur={() => handleFieldBlur("aadhaar")}
+              placeholder={t("onboarding.enterAadhaar")}
+              placeholderTextColor={theme.text.placeholder}
+              keyboardType="numeric"
+              maxLength={14}
+            />
+            <FieldError message={touched.aadhaar ? errors.aadhaar : undefined} />
+          </FieldWrapper>
+
+          {/* Father's Name */}
+          <FieldWrapper>
+            <FieldLabel text={`${t("onboarding.fathersName")} *`} />
+            <TextInput
+              style={inputStyle("fathersName")}
+              value={personalDetails.fathersName}
+              onChangeText={(text) => handleFieldChange("fathersName", text)}
+              onBlur={() => handleFieldBlur("fathersName")}
+              placeholder={t("onboarding.enterFathersName")}
+              placeholderTextColor={theme.text.placeholder}
+            />
+            <FieldError message={touched.fathersName ? errors.fathersName : undefined} />
+          </FieldWrapper>
+
+          {/* Mother's Name */}
+          <FieldWrapper>
+            <FieldLabel text={t("onboarding.mothersName")} />
+            <TextInput
+              style={inputStyle("mothersName")}
+              value={personalDetails.mothersName}
+              onChangeText={(text) => handleFieldChange("mothersName", text)}
+              onBlur={() => handleFieldBlur("mothersName")}
+              placeholder={t("onboarding.enterMothersName")}
+              placeholderTextColor={theme.text.placeholder}
+            />
+            <FieldError message={touched.mothersName ? errors.mothersName : undefined} />
+          </FieldWrapper>
+
+          {/* Manual Address Dropdowns */}
+          <View style={{ marginBottom: 16 }}>
+            <AppText variant="h3" style={{ color: theme.text.primary, marginBottom: 16, fontSize: 18, fontWeight: "700" }}>
+              {t("onboarding.locationDetails") || "Location Details"}
+            </AppText>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.state") || "State"} />
+              <Select
+                options={getLocalizedOptions(indianStates, currentLanguage)}
+                value={personalDetails.state}
+                onChange={(val) => updatePersonalDetails({ state: val })}
+                placeholder={t("onboarding.selectState") || "Select State"}
+              />
+            </FieldWrapper>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.district") || "District"} />
+              {addressLists.districts.length > 0 ? (
+                <Select
+                  options={addressLists.districts}
+                  value={personalDetails.district}
+                  onChange={(val) => updatePersonalDetails({ district: val })}
+                  placeholder={t("onboarding.selectDistrict") || "Select District"}
+                />
               ) : (
-                <Pressable
-                  onPress={() => router.push("/(auth)/location-picker" as any)}
-                  style={{
-                    backgroundColor: theme.background.neutralSubtle,
-                    borderWidth: 1,
-                    borderColor: theme.border.subtle,
-                    borderRadius: 12,
-                    padding: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <Ionicons name="map-outline" size={18} color={theme.text.muted} />
-                  <AppText variant="bodySm" style={{ color: theme.text.placeholder }}>
-                    {t("onboarding.tapToPickLocation") || "Tap to pick your location on map"}
-                  </AppText>
-                  <Ionicons name="chevron-forward" size={16} color={theme.text.placeholder} style={{ marginLeft: "auto" }} />
-                </Pressable>
+                <TextInput
+                  style={inputStyle("district" as any)}
+                  value={personalDetails.district}
+                  onChangeText={(text) => handleFieldChange("district" as any, text)}
+                  placeholder={t("onboarding.enterDistrict") || "Enter District"}
+                  placeholderTextColor={theme.text.placeholder}
+                />
+              )}
+            </FieldWrapper>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.block") || "Tehsil / Block"} />
+              {addressLists.blocks.length > 0 ? (
+                <Select
+                  options={addressLists.blocks}
+                  value={personalDetails.block}
+                  onChange={(val) => updatePersonalDetails({ block: val })}
+                  placeholder={t("onboarding.selectBlock") || "Select Block"}
+                />
+              ) : (
+                <TextInput
+                  style={inputStyle("block" as any)}
+                  value={personalDetails.block}
+                  onChangeText={(text) => handleFieldChange("block" as any, text)}
+                  placeholder={t("onboarding.enterBlock") || "Enter Tehsil/Block"}
+                  placeholderTextColor={theme.text.placeholder}
+                />
+              )}
+            </FieldWrapper>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.village") || "Village / Gram Panchayat"} />
+              <TextInput
+                style={inputStyle("village" as any)}
+                value={personalDetails.village}
+                onChangeText={(text) => handleFieldChange("village" as any, text)}
+                placeholder={t("onboarding.enterVillage") || "Enter Village or Gram Panchayat"}
+                placeholderTextColor={theme.text.placeholder}
+              />
+            </FieldWrapper>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
+              <View style={{ position: "relative" }}>
+                <TextInput
+                  style={inputStyle("pinCode")}
+                  value={personalDetails.pinCode}
+                  onChangeText={handlePinCodeChange}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  placeholder={t("onboarding.enterPinCode") || "Enter 6-digit PIN"}
+                  placeholderTextColor={theme.text.placeholder}
+                />
+                {pinCodeLoading && (
+                  <ActivityIndicator style={{ position: "absolute", right: 16, top: 16 }} size="small" color={theme.primary.green} />
+                )}
+              </View>
+            </FieldWrapper>
+
+            <FieldWrapper>
+              <FieldLabel text={t("onboarding.postOffice") || "Post Office"} />
+              {postOfficeOptions.length > 0 ? (
+                <Select
+                  options={postOfficeOptions}
+                  value={personalDetails.postOffice}
+                  onChange={(val) => updatePersonalDetails({ postOffice: val })}
+                  placeholder={t("onboarding.selectPostOffice") || "Select Post Office"}
+                />
+              ) : (
+                <TextInput
+                  style={inputStyle("postOffice")}
+                  value={personalDetails.postOffice}
+                  onChangeText={(text) => handleFieldChange("postOffice" as any, text)}
+                  placeholder={t("onboarding.enterPostOffice") || "Enter Post Office"}
+                  placeholderTextColor={theme.text.placeholder}
+                />
               )}
             </FieldWrapper>
           </View>
+        </View>
       </KeyboardAwareScrollView>
 
-        {/* Bottom Buttons */}
-        <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
-          <Pressable
+      {/* Bottom Buttons */}
+      <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
+        {/* <Pressable
             onPress={handleSkip}
             className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
           >
             <AppText variant="bodyMd" className="text-gray-500 font-semibold">
               {t("onboarding.skip")}
             </AppText>
-          </Pressable>
+          </Pressable> */}
 
-          <Pressable
-            onPress={handleNext}
-            disabled={!isValid()}
-            className="flex-[2] py-4 rounded-full items-center"
-            style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
-          >
-            <AppText variant="bodyMd" className="text-white font-bold">
-              {t("onboarding.next")}
+        <Pressable
+          onPress={handleNext}
+          disabled={!isValid()}
+          className="flex-[2] py-4 rounded-full items-center"
+          style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
+        >
+          <AppText variant="bodyMd" className="text-white font-bold">
+            {t("onboarding.next")}
+          </AppText>
+        </Pressable>
+      </View>
+
+      {/* ── Avatar Choice Modal ── */}
+      <Modal visible={showAvatarModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 }}>
+          <View style={{ width: "100%", backgroundColor: theme.background.input, borderRadius: 16, padding: 24, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
+            <AppText variant="h2" style={{ color: theme.text.primary, fontSize: 18, fontWeight: "700", marginBottom: 16, textAlign: "center" }}>
+              Update Profile Photo
             </AppText>
-          </Pressable>
+
+            <Pressable onPress={launchCamera} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
+              <Ionicons name="camera-outline" size={22} color={theme.primary.green} />
+              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>Take a Photo</AppText>
+            </Pressable>
+
+            <Pressable onPress={launchGallery} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
+              <Ionicons name="images-outline" size={22} color={theme.primary.green} />
+              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>Choose from Gallery</AppText>
+            </Pressable>
+
+            <Pressable onPress={() => setShowAvatarModal(false)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: theme.background.neutralSubtle, borderRadius: 12, alignItems: "center" }}>
+              <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "700" }}>Cancel</AppText>
+            </Pressable>
+          </View>
         </View>
+      </Modal>
+
     </View>
   );
 };

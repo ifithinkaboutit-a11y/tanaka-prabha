@@ -15,18 +15,25 @@ export interface DistrictOption {
 
 // Indian States and Union Territories
 export const indianStates: StateOption[] = [
+  { value: "andaman_nicobar", label: "Andaman and Nicobar Islands", labelHi: "अंडमान और निकोबार द्वीप समूह" },
   { value: "andhra_pradesh", label: "Andhra Pradesh", labelHi: "आंध्र प्रदेश" },
   { value: "arunachal_pradesh", label: "Arunachal Pradesh", labelHi: "अरुणाचल प्रदेश" },
   { value: "assam", label: "Assam", labelHi: "असम" },
   { value: "bihar", label: "Bihar", labelHi: "बिहार" },
+  { value: "chandigarh", label: "Chandigarh", labelHi: "चंडीगढ़" },
   { value: "chhattisgarh", label: "Chhattisgarh", labelHi: "छत्तीसगढ़" },
+  { value: "dadra_nagar_haveli", label: "Dadra and Nagar Haveli and Daman and Diu", labelHi: "दादरा और नगर हवेली और दमन और दीव" },
+  { value: "delhi", label: "Delhi", labelHi: "दिल्ली" },
   { value: "goa", label: "Goa", labelHi: "गोवा" },
   { value: "gujarat", label: "Gujarat", labelHi: "गुजरात" },
   { value: "haryana", label: "Haryana", labelHi: "हरियाणा" },
   { value: "himachal_pradesh", label: "Himachal Pradesh", labelHi: "हिमाचल प्रदेश" },
+  { value: "jammu_kashmir", label: "Jammu and Kashmir", labelHi: "जम्मू और कश्मीर" },
   { value: "jharkhand", label: "Jharkhand", labelHi: "झारखंड" },
   { value: "karnataka", label: "Karnataka", labelHi: "कर्नाटक" },
   { value: "kerala", label: "Kerala", labelHi: "केरल" },
+  { value: "ladakh", label: "Ladakh", labelHi: "लद्दाख" },
+  { value: "lakshadweep", label: "Lakshadweep", labelHi: "लक्षद्वीप" },
   { value: "madhya_pradesh", label: "Madhya Pradesh", labelHi: "मध्य प्रदेश" },
   { value: "maharashtra", label: "Maharashtra", labelHi: "महाराष्ट्र" },
   { value: "manipur", label: "Manipur", labelHi: "मणिपुर" },
@@ -34,6 +41,7 @@ export const indianStates: StateOption[] = [
   { value: "mizoram", label: "Mizoram", labelHi: "मिज़ोरम" },
   { value: "nagaland", label: "Nagaland", labelHi: "नागालैंड" },
   { value: "odisha", label: "Odisha", labelHi: "ओडिशा" },
+  { value: "puducherry", label: "Puducherry", labelHi: "पुडुचेरी" },
   { value: "punjab", label: "Punjab", labelHi: "पंजाब" },
   { value: "rajasthan", label: "Rajasthan", labelHi: "राजस्थान" },
   { value: "sikkim", label: "Sikkim", labelHi: "सिक्किम" },
@@ -43,15 +51,6 @@ export const indianStates: StateOption[] = [
   { value: "uttar_pradesh", label: "Uttar Pradesh", labelHi: "उत्तर प्रदेश" },
   { value: "uttarakhand", label: "Uttarakhand", labelHi: "उत्तराखंड" },
   { value: "west_bengal", label: "West Bengal", labelHi: "पश्चिम बंगाल" },
-  // Union Territories
-  { value: "andaman_nicobar", label: "Andaman and Nicobar Islands", labelHi: "अंडमान और निकोबार द्वीप समूह" },
-  { value: "chandigarh", label: "Chandigarh", labelHi: "चंडीगढ़" },
-  { value: "dadra_nagar_haveli", label: "Dadra and Nagar Haveli and Daman and Diu", labelHi: "दादरा और नगर हवेली और दमन और दीव" },
-  { value: "delhi", label: "Delhi", labelHi: "दिल्ली" },
-  { value: "jammu_kashmir", label: "Jammu and Kashmir", labelHi: "जम्मू और कश्मीर" },
-  { value: "ladakh", label: "Ladakh", labelHi: "लद्दाख" },
-  { value: "lakshadweep", label: "Lakshadweep", labelHi: "लक्षद्वीप" },
-  { value: "puducherry", label: "Puducherry", labelHi: "पुडुचेरी" },
 ];
 
 // Districts by State - Key districts for major states

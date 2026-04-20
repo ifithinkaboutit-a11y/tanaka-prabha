@@ -77,6 +77,7 @@ export default function LocationPickerScreen() {
     const [gpsAccuracy, setGpsAccuracy] = useState(50);
     const [accuracyCircleVisible, setAccuracyCircleVisible] = useState(false);
     const [pinCoords, setPinCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [gpsAddress, setGpsAddress] = useState<string>("");
 
     // ── Address display state ──────────────────────────────────────────────────
     const [address, setAddress] = useState("");
@@ -105,13 +106,13 @@ export default function LocationPickerScreen() {
             const profile = res.data?.user;
             if (!profile) return;
             const initial: Record<string, string> = {};
-            if (profile.state)    initial.state    = profile.state;
+            if (profile.state) initial.state = profile.state;
             if (profile.district) initial.district = profile.district;
             if (Object.keys(initial).length > 0) {
                 setProfileAddressOverride(initial);
             }
         }).catch(() => { /* silently ignore — pre-population is best-effort */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [purpose]);
 
     // ── Refs ───────────────────────────────────────────────────────────────────
@@ -171,6 +172,15 @@ export default function LocationPickerScreen() {
         }
     }, []);
 
+    const geocodeGpsCoords = useCallback(async (lat: number, lng: number) => {
+        try {
+            const gpsAddr = await googleReverseGeocode(lat, lng);
+            if (isMountedRef.current) setGpsAddress(gpsAddr);
+        } catch {
+            if (isMountedRef.current) setGpsAddress("GPS Location Acquired");
+        }
+    }, []);
+
     // ── GPS acquisition on mount ───────────────────────────────────────────────
     useEffect(() => {
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -207,6 +217,7 @@ export default function LocationPickerScreen() {
                     setPinCoords({ lat: latitude, lng: longitude });
                     setAccuracyCircleVisible(true);
                     setGpsStatus("acquired");
+                    geocodeGpsCoords(latitude, longitude);
                     geocodeCoords(latitude, longitude);
                 } catch {
                     if (timeoutId) clearTimeout(timeoutId);
@@ -249,6 +260,7 @@ export default function LocationPickerScreen() {
             flyTo(latitude, longitude, 15);
             setAccuracyCircleVisible(true);
             setGpsStatus("acquired");
+            geocodeGpsCoords(latitude, longitude);
             geocodeCoords(latitude, longitude);
             return true;
         } catch {
@@ -376,12 +388,12 @@ export default function LocationPickerScreen() {
                     let parsed;
                     try { parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng); } catch { parsed = null; }
                     const override: Record<string, string> = {};
-                    if (parsed?.state)      override.state      = parsed.state;
-                    if (parsed?.district)   override.district   = parsed.district;
-                    if (parsed?.tehsil)     override.tehsil     = parsed.tehsil;
-                    if (parsed?.block)      override.block      = parsed.block;
-                    if (parsed?.village)    override.village    = parsed.village;
-                    if (parsed?.pinCode)    override.pinCode    = parsed.pinCode;
+                    if (parsed?.state) override.state = parsed.state;
+                    if (parsed?.district) override.district = parsed.district;
+                    if (parsed?.tehsil) override.tehsil = parsed.tehsil;
+                    if (parsed?.block) override.block = parsed.block;
+                    if (parsed?.village) override.village = parsed.village;
+                    if (parsed?.pinCode) override.pinCode = parsed.pinCode;
                     if (parsed?.postOffice) override.postOffice = parsed.postOffice;
                     setProfileAddressOverride(override);
                     router.back();
@@ -401,22 +413,22 @@ export default function LocationPickerScreen() {
             let parsed;
             try {
                 parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng, {
-                    state:      personalDetails.state,
-                    district:   personalDetails.district,
-                    tehsil:     personalDetails.tehsil,
-                    block:      personalDetails.block,
-                    village:    personalDetails.village,
-                    pinCode:    personalDetails.pinCode,
+                    state: personalDetails.state,
+                    district: personalDetails.district,
+                    tehsil: personalDetails.tehsil,
+                    block: personalDetails.block,
+                    village: personalDetails.village,
+                    pinCode: personalDetails.pinCode,
                     postOffice: personalDetails.postOffice,
                 });
             } catch { parsed = null; }
             const updates: Record<string, string> = {};
-            if (parsed?.state)      updates.state      = parsed.state;
-            if (parsed?.district)   updates.district   = parsed.district;
-            if (parsed?.tehsil)     updates.tehsil     = parsed.tehsil;
-            if (parsed?.block)      updates.block      = parsed.block;
-            if (parsed?.village)    updates.village    = parsed.village;
-            if (parsed?.pinCode)    updates.pinCode    = parsed.pinCode;
+            if (parsed?.state) updates.state = parsed.state;
+            if (parsed?.district) updates.district = parsed.district;
+            if (parsed?.tehsil) updates.tehsil = parsed.tehsil;
+            if (parsed?.block) updates.block = parsed.block;
+            if (parsed?.village) updates.village = parsed.village;
+            if (parsed?.pinCode) updates.pinCode = parsed.pinCode;
             if (parsed?.postOffice) updates.postOffice = parsed.postOffice;
             if (Object.keys(updates).length > 0) updatePersonalDetails(updates);
 
@@ -538,6 +550,18 @@ export default function LocationPickerScreen() {
                     <View style={[styles.progressFill, { width: "50%" }]} />
                 </View>
 
+                {/* ── Current GPS Tag ── */}
+                {gpsStatus === "acquired" && initialPos && (
+                    <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.95)", alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
+                        <Ionicons name="hardware-chip-outline" size={14} color={theme.primary.green} />
+                        <AppText variant="bodySm" style={{ marginLeft: 6, color: theme.text.secondary, fontWeight: "700", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>Current GPS Tag</AppText>
+                        <View style={{ width: 1, height: 12, backgroundColor: theme.border.subtle, marginHorizontal: 8 }} />
+                        <AppText variant="bodySm" numberOfLines={1} style={{ color: theme.text.muted, fontSize: 11, maxWidth: 180 }}>
+                            {gpsAddress || `${initialPos.lat.toFixed(4)}, ${initialPos.lng.toFixed(4)}`}
+                        </AppText>
+                    </View>
+                )}
+
                 <View style={styles.searchCard} pointerEvents="auto">
                     <Ionicons name="search-outline" size={18} color="#6B7280" style={{ marginRight: 8 }} />
                     <TextInput
@@ -652,9 +676,9 @@ export default function LocationPickerScreen() {
 
             {/* ── Bottom sheet ──────────────────────────────────────────────── */}
             <View style={styles.bottomSheet}>
-                <View style={styles.sheetHandle} />
+                {/* <View style={styles.sheetHandle} /> */}
 
-                <AppText variant="bodySm" style={styles.sheetLabel}>YOUR HOME LOCATION</AppText>
+                <AppText variant="bodySm" style={styles.sheetLabel}>PRIMARY FARMING LOCATION</AppText>
 
                 {geocodeLoading ? (
                     <AppText variant="bodySm" style={styles.sheetHint}>Resolving address…</AppText>
@@ -679,7 +703,7 @@ export default function LocationPickerScreen() {
 
                 <View style={styles.nudgeRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
-                    <AppText variant="bodySm" style={styles.nudgeText}>
+                    <AppText variant="bodyXxs" style={styles.nudgeText}>
                         Sharing your location helps us show accurate farming data for your region
                     </AppText>
                 </View>
@@ -762,7 +786,7 @@ const styles = StyleSheet.create({
     fallbackText: { color: theme.semantic.warningText, fontSize: 12 },
 
     myLocationBtn: {
-        position: "absolute", bottom: 230, right: 16,
+        position: "absolute", bottom: 300, right: 16,
         width: 48, height: 48, borderRadius: 24,
         backgroundColor: theme.background.input, alignItems: "center", justifyContent: "center",
         shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4, zIndex: 10,

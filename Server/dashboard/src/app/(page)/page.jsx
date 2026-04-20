@@ -2,6 +2,7 @@ import { SectionCards } from "@/components/section-cards"
 import { RecentActivity } from "@/components/recent-activity"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { TopRegionsPanel } from "@/components/dashboard/TopRegionsPanel"
+import { HighlightsChart } from "@/components/dashboard/HighlightsChart"
 
 export default function Page() {
   return (
@@ -13,9 +14,14 @@ export default function Page() {
         {/* Quick Actions */}
         <QuickActions />
 
-        {/* Recent Activity + Top Regions */}
+        {/* Chart + Recent Activity */}
         <div className="grid gap-6 px-4 lg:px-6 lg:grid-cols-2 md:gap-8">
+          <HighlightsChart />
           <RecentActivity />
+        </div>
+
+        {/* Top Regions */}
+        <div className="px-4 lg:px-6">
           <TopRegionsPanel />
         </div>
       </div>

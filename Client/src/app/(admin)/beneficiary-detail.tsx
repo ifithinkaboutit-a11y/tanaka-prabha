@@ -16,10 +16,13 @@ import {
 } from "react-native";
 
 // ─── Section Card ─────────────────────────────────────────────
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, children, rightElement }: { title: string; children: React.ReactNode; rightElement?: React.ReactNode }) {
     return (
         <View style={sc.card}>
-            <AppText style={sc.title}>{title}</AppText>
+            <View style={sc.headerRow}>
+                <AppText style={sc.title}>{title}</AppText>
+                {rightElement}
+            </View>
             {children}
         </View>
     );
@@ -36,13 +39,18 @@ const sc = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 12,
+    },
     title: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: "700",
         color: theme.text.muted,
         textTransform: "uppercase",
         letterSpacing: 0.5,
-        marginBottom: 12,
     },
 });
 
@@ -166,6 +174,27 @@ export default function BeneficiaryDetail() {
         );
     }
 
+    async function handleToggleVerification() {
+        if (!farmer) return;
+        const newStatus = !farmer.is_verified;
+        
+        try {
+            // Optimistic update
+            setFarmer({ ...farmer, is_verified: newStatus });
+            
+            await apiService.user.update(farmer.id, { is_verified: newStatus });
+            Alert.alert(
+                "Success", 
+                `Farmer has been successfully ${newStatus ? 'verified' : 'unverified'}.`
+            );
+        } catch (error) {
+            // Revert on error
+            setFarmer({ ...farmer, is_verified: !newStatus });
+            console.error("Failed to update verification status", error);
+            Alert.alert("Error", "Failed to update status. Please try again.");
+        }
+    }
+
     if (!farmer) return null;
 
     const land = farmer.land_details;
@@ -230,7 +259,26 @@ export default function BeneficiaryDetail() {
                 </SectionCard>
 
                 {/* Address */}
-                <SectionCard title="Address">
+                <SectionCard 
+                    title="Address"
+                    rightElement={
+                        <TouchableOpacity
+                            onPress={() => {
+                                const lat = farmer.location?.lat || farmer.location?.latitude;
+                                const lng = farmer.location?.lng || farmer.location?.longitude;
+                                if (lat && lng) {
+                                    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`);
+                                } else if (farmer.village && farmer.district) {
+                                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${farmer.village}, ${farmer.district}, ${farmer.state}`)}`);
+                                }
+                            }}
+                            style={s.mapBtn}
+                        >
+                            <Ionicons name="map-outline" size={14} color={theme.secondary.sky} />
+                            <AppText style={s.mapBtnText}>Open Maps</AppText>
+                        </TouchableOpacity>
+                    }
+                >
                     <InfoRow label="Village" value={farmer.village} />
                     <InfoRow label="Block" value={farmer.block} />
                     <InfoRow label="District" value={farmer.district} />
@@ -261,6 +309,25 @@ export default function BeneficiaryDetail() {
                         <LivestockItem label="Others" count={livestock.others} />
                     </SectionCard>
                 ) : null}
+
+                {/* Verification Action */}
+                <TouchableOpacity
+                    style={[
+                        s.verifyBtn,
+                        farmer.is_verified ? s.unverifyBtn : s.verifyBtnActive
+                    ]}
+                    onPress={handleToggleVerification}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons 
+                        name={farmer.is_verified ? "close-circle-outline" : "checkmark-circle-outline"} 
+                        size={20} 
+                        color="#fff" 
+                    />
+                    <AppText style={s.verifyBtnText}>
+                        {farmer.is_verified ? "Unverify Farmer" : "Verify Farmer"}
+                    </AppText>
+                </TouchableOpacity>
             </ScrollView>
         </View>
     );
@@ -328,4 +395,41 @@ const s = StyleSheet.create({
 
     scroll: { flex: 1 },
     scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+    verifyBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 14,
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    verifyBtnActive: {
+        backgroundColor: theme.semantic.success,
+    },
+    unverifyBtn: {
+        backgroundColor: "#9CA3AF",
+    },
+    verifyBtnText: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "700",
+    },
+    mapBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: theme.secondary.sky + "15",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.secondary.sky + "30",
+    },
+    mapBtnText: {
+        color: theme.secondary.sky,
+        fontWeight: "700",
+        fontSize: 12,
+        marginLeft: 6,
+    },
 });

@@ -62,7 +62,7 @@ export default function AdminLogin() {
     return (
         <KeyboardAvoidingView
             style={s.root}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <View style={s.card}>
                 <View style={s.header}>

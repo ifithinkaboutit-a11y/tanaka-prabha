@@ -115,7 +115,11 @@ export default function SendNotificationScreen() {
     const selectedType = NOTIFICATION_TYPES.find(t => t.key === type)!;
 
     return (
-        <KeyboardAvoidingView style={s.root} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
+        <KeyboardAvoidingView
+            style={s.root}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
         <View style={{ flex: 1 }}>
             {/* Header */}
             <View style={s.header}>

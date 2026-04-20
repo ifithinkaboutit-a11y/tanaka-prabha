@@ -1,5 +1,5 @@
 // src/app/(tab)/profile.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
 import {
@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from "react-native";
 import Button from "@/components/atoms/Button";
 import Avatar from "../../components/atoms/Avatar";
@@ -22,6 +23,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { uploadApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
+import { cropTypes } from "../../data/content/onboardingOptions";
+import { Image } from "react-native";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -96,6 +99,11 @@ const StatBadge = ({ value, label, icon }: { value: string; label: string; icon:
   </View>
 );
 
+const getCropLabel = (cropValue: string, lang: string) => {
+  const crop = cropTypes.find((c) => c.value === cropValue);
+  return lang === "hi" ? crop?.labelHi || cropValue : crop?.label || cropValue;
+};
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const Profile = () => {
   const router = useRouter();
@@ -106,6 +114,7 @@ const Profile = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   // ── Auto-refresh on tab focus ──────────────────────────────────────────────
   // Every time the user navigates to the profile tab, silently re-fetch from
@@ -116,21 +125,11 @@ const Profile = () => {
     }, [refreshProfile])
   );
 
-  const handleAvatarUpload = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert("Permission needed", "Grant photo library access to upload a profile picture.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+  const handleAvatarUpload = () => {
+    setShowAvatarModal(true);
+  };
 
-    const uri = result.assets[0].uri;
+  const processAvatarUri = async (uri: string) => {
     setLocalAvatarUri(uri); // instant preview
     setAvatarUploading(true);
     try {
@@ -142,6 +141,42 @@ const Profile = () => {
       setLocalAvatarUri(null);
     } finally {
       setAvatarUploading(false);
+    }
+  };
+
+  const launchCamera = async () => {
+    setShowAvatarModal(false);
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Camera Required", "Please allow camera access.", [{ text: "Cancel", style: "cancel" }]);
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true, aspect: [1, 1], quality: 0.7,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await processAvatarUri(result.assets[0].uri);
+    } catch {
+      Alert.alert("Camera Error", "Could not use camera.");
+    }
+  };
+
+  const launchGallery = async () => {
+    setShowAvatarModal(false);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Gallery Required", "Please allow gallery access.", [{ text: "Cancel", style: "cancel" }]);
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.7,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      await processAvatarUri(result.assets[0].uri);
+    } catch {
+      Alert.alert("Gallery Error", "Could not open gallery.");
     }
   };
 
@@ -349,13 +384,13 @@ const Profile = () => {
               accent
             />
             {profile.landDetails.rabiCrop && (
-              <InfoRow icon="sunny-outline" label={t("landDetails.rabiCrop")} value={profile.landDetails.rabiCrop} />
+              <InfoRow icon="sunny-outline" label={t("landDetails.rabiCrop")} value={getCropLabel(profile.landDetails.rabiCrop, currentLanguage)} />
             )}
             {profile.landDetails.kharifCrop && (
-              <InfoRow icon="rainy-outline" label={t("landDetails.kharifCrop")} value={profile.landDetails.kharifCrop} />
+              <InfoRow icon="rainy-outline" label={t("landDetails.kharifCrop")} value={getCropLabel(profile.landDetails.kharifCrop, currentLanguage)} />
             )}
             {profile.landDetails.zaidCrop && (
-              <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={profile.landDetails.zaidCrop} />
+              <InfoRow icon="partly-sunny-outline" label={t("landDetails.zaidCrop")} value={getCropLabel(profile.landDetails.zaidCrop, currentLanguage)} />
             )}
           </>
         ) : (
@@ -384,15 +419,19 @@ const Profile = () => {
         editLabel={t("profile.editLivestockDetails")}
       >
         {totalAnimals > 0 ? (
-          <View>
+          <View className="relative">
+            {/* Background Doodle */}
+            <View style={{ position: "absolute", right: -10, top: -10, opacity: 0.05 }}>
+              <Ionicons name="paw" size={100} color="#EA580C" />
+            </View>
             {[
-              { key: "cow",     label: t("livestockDetails.cow"),     count: profile.livestockDetails?.cow },
-              { key: "buffalo", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo },
-              { key: "goat",    label: t("livestockDetails.goat"),    count: profile.livestockDetails?.goat },
-              { key: "sheep",   label: t("livestockDetails.sheep"),   count: profile.livestockDetails?.sheep },
-              { key: "pig",     label: t("livestockDetails.pig"),     count: profile.livestockDetails?.pig },
-              { key: "poultry", label: t("livestockDetails.hen"),     count: profile.livestockDetails?.poultry },
-              { key: "others",  label: t("livestockDetails.others"),  count: profile.livestockDetails?.others },
+              { key: "cow", label: t("livestockDetails.cow"), count: profile.livestockDetails?.cow, icon: "cow", lib: "mci" },
+              { key: "buffalo", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo, icon: "water-outline", lib: "ion" },
+              { key: "goat", label: t("livestockDetails.goat"), count: profile.livestockDetails?.goat, icon: "goat", lib: "mci" },
+              { key: "sheep", label: t("livestockDetails.sheep"), count: profile.livestockDetails?.sheep, icon: "sheep", lib: "mci" },
+              { key: "pig", label: t("livestockDetails.pig"), count: profile.livestockDetails?.pig, icon: "pig-variant", lib: "mci" },
+              { key: "poultry", label: t("livestockDetails.hen"), count: profile.livestockDetails?.poultry, icon: "bird", lib: "mci" },
+              { key: "others", label: t("livestockDetails.others"), count: profile.livestockDetails?.others, icon: "dots-horizontal-circle-outline", lib: "ion" },
             ]
               .filter((item) => item.count && item.count > 0)
               .map((item, idx, arr) => (
@@ -403,14 +442,23 @@ const Profile = () => {
                     idx === arr.length - 1 && { borderBottomWidth: 0 },
                   ]}
                 >
-                  <Text style={s.livestockRowLabel}>{item.label}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "#FFF7ED", alignItems: "center", justifyContent: "center" }}>
+                      {item.lib === "mci" ? (
+                        <MaterialCommunityIcons name={item.icon as any} size={18} color="#EA580C" />
+                      ) : (
+                        <Ionicons name={item.icon as any} size={18} color="#EA580C" />
+                      )}
+                    </View>
+                    <Text style={s.livestockRowLabel}>{item.label}</Text>
+                  </View>
                   <View style={s.livestockCountBadge}>
                     <Text style={s.livestockCountText}>{item.count}</Text>
                   </View>
                 </View>
               ))}
             <View style={s.livestockTotal}>
-              <Text style={s.livestockTotalLabel}>Total</Text>
+              <Text style={s.livestockTotalLabel}>{t("Total") || "Total"}</Text>
               <Text style={s.livestockTotalCount}>{totalAnimals}</Text>
             </View>
           </View>
@@ -472,6 +520,30 @@ const Profile = () => {
       </SectionCard>
 
       <View style={{ height: 32 }} />
+
+      <Modal visible={showAvatarModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 }}>
+          <View style={{ width: "100%", backgroundColor: theme.background.input, borderRadius: 16, padding: 24, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
+            <Text style={{ color: theme.text.primary, fontSize: 18, fontWeight: "700", marginBottom: 16, textAlign: "center" }}>
+              Update Profile Photo
+            </Text>
+
+            <Pressable onPress={launchCamera} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
+              <Ionicons name="camera-outline" size={22} color={theme.primary.green} />
+              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>Take a Photo</Text>
+            </Pressable>
+
+            <Pressable onPress={launchGallery} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
+              <Ionicons name="images-outline" size={22} color={theme.primary.green} />
+              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>Choose from Gallery</Text>
+            </Pressable>
+
+            <Pressable onPress={() => setShowAvatarModal(false)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: theme.background.neutralSubtle, borderRadius: 12, alignItems: "center" }}>
+              <Text style={{ color: theme.text.muted, fontWeight: "700", fontSize: 13 }}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };

@@ -13,23 +13,25 @@ import AppText from "../components/atoms/AppText";
 import { AppointmentCardSkeleton } from "../components/atoms/Skeleton";
 import { Appointment, appointmentsApi } from "../services/apiService";
 import { theme } from "../styles/colors";
+import { useTranslation } from "../i18n";
 
-const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string; dot: string; icon: keyof typeof Ionicons.glyphMap }> = {
-    pending:   { color: "#D97706", bg: "#FEF3C7", label: "Pending",   dot: "#F59E0B", icon: "time-outline" },
-    scheduled: { color: "#2563EB", bg: "#DBEAFE", label: "Scheduled", dot: "#3B82F6", icon: "calendar-outline" },
-    completed: { color: "#16A34A", bg: "#DCFCE7", label: "Completed", dot: "#22C55E", icon: "checkmark-circle-outline" },
-    cancelled: { color: "#DC2626", bg: "#FEE2E2", label: "Cancelled", dot: "#EF4444", icon: "close-circle-outline" },
-    missed:    { color: "#6B7280", bg: "#F3F4F6", label: "Missed",    dot: "#9CA3AF", icon: "alert-circle-outline" },
+const STATUS_CONFIG: Record<string, { color: string; bg: string; dot: string; icon: keyof typeof Ionicons.glyphMap }> = {
+    pending:   { color: "#D97706", bg: "#FEF3C7", dot: "#F59E0B", icon: "time-outline" },
+    scheduled: { color: "#2563EB", bg: "#DBEAFE", dot: "#3B82F6", icon: "calendar-outline" },
+    completed: { color: "#16A34A", bg: "#DCFCE7", dot: "#22C55E", icon: "checkmark-circle-outline" },
+    cancelled: { color: "#DC2626", bg: "#FEE2E2", dot: "#EF4444", icon: "close-circle-outline" },
+    missed:    { color: "#6B7280", bg: "#F3F4F6", dot: "#9CA3AF", icon: "alert-circle-outline" },
 };
 
-function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
+function formatDate(dateStr: string, currentLanguage: string): string {
+    return new Date(dateStr).toLocaleDateString(currentLanguage === "hi" ? "hi-IN" : "en-IN", {
         weekday: "short", day: "numeric", month: "short", year: "numeric",
     });
 }
 
 export default function MySchedule() {
     const router = useRouter();
+    const { t, currentLanguage } = useTranslation();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -86,26 +88,26 @@ export default function MySchedule() {
                 <Pressable onPress={() => router.back()} className="mb-3 w-9 h-9 rounded-full bg-white/20 items-center justify-center">
                     <Ionicons name="arrow-back" size={22} color="#fff" />
                 </Pressable>
-                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>My Schedule</AppText>
+                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("schedule.title")}</AppText>
                 <AppText style={{ color: "rgba(255,255,255,0.75)", marginTop: 4, fontSize: 13 }}>
-                    Your appointments & sessions
+                    {t("schedule.subtitle")}
                 </AppText>
 
                 {/* Tab Row */}
                 <View className="flex-row bg-white/15 rounded-xl p-1 mt-4">
-                    {(["upcoming", "past"] as const).map((t) => (
+                    {(["upcoming", "past"] as const).map((tValue) => (
                         <Pressable
-                            key={t}
-                            onPress={() => setTab(t)}
-                            className={`flex-1 py-2.5 rounded-[10px] items-center ${tab === t ? "bg-white" : "bg-transparent"}`}
+                            key={tValue}
+                            onPress={() => setTab(tValue)}
+                            className={`flex-1 py-2.5 rounded-[10px] items-center ${tab === tValue ? "bg-white" : "bg-transparent"}`}
                         >
                             <AppText style={{
-                                color: tab === t ? "#386641" : "rgba(255,255,255,0.85)",
+                                color: tab === tValue ? "#386641" : "rgba(255,255,255,0.85)",
                                 fontWeight: "700",
                                 fontSize: 13,
                                 textTransform: "capitalize",
                             }}>
-                                {t} ({t === "upcoming" ? upcoming.length : past.length})
+                                {t(`schedule.tabs.${tValue}`)} ({tValue === "upcoming" ? upcoming.length : past.length})
                             </AppText>
                         </Pressable>
                     ))}
@@ -137,10 +139,10 @@ export default function MySchedule() {
                                 <Ionicons name="calendar-outline" size={44} color={theme.border.card} />
                             </View>
                             <AppText style={{ color: theme.text.muted, fontSize: 16, fontWeight: "700" }}>
-                                No {tab} appointments
+                                {tab === "upcoming" ? t("schedule.emptyUpcomingTitle") : t("schedule.emptyPastTitle")}
                             </AppText>
                             <AppText style={{ color: theme.text.placeholder, fontSize: 13, marginTop: 4 }}>
-                                {tab === "upcoming" ? "Book a session with an expert" : "Your past sessions will appear here"}
+                                {tab === "upcoming" ? t("schedule.emptyUpcomingDesc") : t("schedule.emptyPastDesc")}
                             </AppText>
                             {tab === "upcoming" && (
                                 <Pressable
@@ -148,7 +150,7 @@ export default function MySchedule() {
                                     className="mt-5 bg-[#386641] rounded-xl px-6 py-3 active:opacity-90"
                                 >
                                     <AppText style={{ color: theme.text.onPrimary, fontWeight: "700", fontSize: 14 }}>
-                                        Book an Appointment
+                                        {t("schedule.bookAppointment")}
                                     </AppText>
                                 </Pressable>
                             )}
@@ -197,7 +199,7 @@ export default function MySchedule() {
                                             </AppText>
                                             {professionalRole ? (
                                                 <AppText style={{ color: "#6B7280", fontSize: 12, marginTop: 1 }}>
-                                                    {professionalRole}
+                                                    {t(`connect.roles.${professionalRole.toLowerCase().replace(/\s+/g, "")}`) || professionalRole}
                                                 </AppText>
                                             ) : null}
                                         </View>
@@ -209,7 +211,7 @@ export default function MySchedule() {
                                         >
                                             <Ionicons name={cfg.icon} size={11} color={cfg.color} style={{ marginRight: 4 }} />
                                             <AppText style={{ color: cfg.color, fontWeight: "700", fontSize: 11 }}>
-                                                {cfg.label}
+                                                {t(`schedule.status.${status}`)}
                                             </AppText>
                                         </View>
                                     </View>
@@ -219,7 +221,7 @@ export default function MySchedule() {
                                         <View className="flex-row items-center bg-slate-50 px-3 py-2 rounded-xl gap-1.5">
                                             <Ionicons name="calendar-outline" size={14} color="#386641" />
                                             <AppText style={{ color: "#374151", fontSize: 12, fontWeight: "600" }}>
-                                                {formatDate(apptDate)}
+                                                {formatDate(apptDate, currentLanguage)}
                                             </AppText>
                                         </View>
                                         <View className="flex-row items-center bg-slate-50 px-3 py-2 rounded-xl gap-1.5">
@@ -245,7 +247,7 @@ export default function MySchedule() {
                                                 >
                                                     <Ionicons name="call" size={16} color="#2563EB" />
                                                     <AppText style={{ color: "#2563EB", fontWeight: "700", fontSize: 13 }}>
-                                                        Call
+                                                        {t("schedule.call")}
                                                     </AppText>
                                                 </Pressable>
                                             )}
@@ -256,7 +258,7 @@ export default function MySchedule() {
                                                 >
                                                     <Ionicons name="logo-whatsapp" size={16} color="#16A34A" />
                                                     <AppText style={{ color: "#16A34A", fontWeight: "700", fontSize: 13 }}>
-                                                        WhatsApp
+                                                        {t("schedule.whatsapp")}
                                                     </AppText>
                                                 </Pressable>
                                             )}
@@ -266,7 +268,7 @@ export default function MySchedule() {
                                             >
                                                 <Ionicons name="close-circle-outline" size={20} color="#DC2626" />
                                                 <AppText style={{ color: "#DC2626", fontWeight: "700", fontSize: 13 }}>
-                                                    Cancel
+                                                    {t("schedule.cancel")}
                                                 </AppText>
                                             </Pressable>
                                         </View>

@@ -57,6 +57,9 @@ export const cropsBySeason: CropsBySeason = {
     { value: "mustard", label: "Mustard", labelHi: "सरसों" },
     { value: "gram", label: "Gram", labelHi: "चना" },
     { value: "potato", label: "Potato", labelHi: "आलू" },
+    { value: "barley", label: "Barley", labelHi: "जौ" },
+    { value: "linseed", label: "Linseed", labelHi: "अलसी" },
+    { value: "peas", label: "Peas", labelHi: "मटर" },
   ],
   kharif: [
     { value: "rice", label: "Rice", labelHi: "चावल" },
@@ -64,10 +67,18 @@ export const cropsBySeason: CropsBySeason = {
     { value: "soybean", label: "Soybean", labelHi: "सोयाबीन" },
     { value: "sugarcane", label: "Sugarcane", labelHi: "गन्ना" },
     { value: "groundnut", label: "Groundnut", labelHi: "मूंगफली" },
+    { value: "cotton", label: "Cotton", labelHi: "कपास" },
+    { value: "bajra", label: "Bajra (Pearl Millet)", labelHi: "बाजरा" },
+    { value: "jowar", label: "Jowar (Sorghum)", labelHi: "ज्वार" },
+    { value: "tur_arhar", label: "Tur/Arhar (Pigeon Pea)", labelHi: "अरहर" },
   ],
   zayed: [
     { value: "vegetables", label: "Vegetables", labelHi: "सब्जियां" },
     { value: "fruits", label: "Fruits", labelHi: "फल" },
+    { value: "watermelon", label: "Watermelon", labelHi: "तरबूज" },
+    { value: "muskmelon", label: "Muskmelon", labelHi: "खरबूजा" },
+    { value: "cucumber", label: "Cucumber", labelHi: "खीरा" },
+    { value: "moong_dal", label: "Moong Dal", labelHi: "मूंग की दाल" },
   ],
 };
 

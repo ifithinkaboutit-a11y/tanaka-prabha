@@ -324,12 +324,12 @@ export default function PersonalDetailsForm({
 
     setFormData((prev) => ({
       ...prev,
-      ...(addressOverride.state    ? { state:    toSlug(addressOverride.state) }    : {}),
+      ...(addressOverride.state ? { state: toSlug(addressOverride.state) } : {}),
       ...(addressOverride.district ? { district: toSlug(addressOverride.district) } : {}),
-      ...(addressOverride.tehsil   ? { tehsil:   addressOverride.tehsil }   : {}),
-      ...(addressOverride.block    ? { block:    addressOverride.block }    : {}),
-      ...(addressOverride.village  ? { village:  addressOverride.village }  : {}),
-      ...(addressOverride.pinCode  ? { pinCode:  addressOverride.pinCode }  : {}),
+      ...(addressOverride.tehsil ? { tehsil: addressOverride.tehsil } : {}),
+      ...(addressOverride.block ? { block: addressOverride.block } : {}),
+      ...(addressOverride.village ? { village: addressOverride.village } : {}),
+      ...(addressOverride.pinCode ? { pinCode: addressOverride.pinCode } : {}),
     }));
   }, [addressOverride]);
 
@@ -625,7 +625,7 @@ export default function PersonalDetailsForm({
               returnKeyType="next"
             />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }} className="mb-[5rem]">
             <FormInput
               label={String(T.translate("personalDetails.postOffice"))}
               value={formData.postOffice}

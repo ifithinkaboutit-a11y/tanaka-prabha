@@ -22,7 +22,6 @@ import {
   landUnits,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
-import { colors } from "../../styles/colors";
 import { theme } from "../../styles/colors";
 import { validateLandEntry, validateLandArea } from "../../utils/validation";
 
@@ -44,9 +43,7 @@ const AuthLandDetailsScreen = () => {
     hasLand,
     setHasLand,
     landEntries,
-    landLocationData,
     addLandEntry,
-    removeLandEntry,
     updateLandEntry,
   } = useOnboardingStore();
 
@@ -55,57 +52,32 @@ const AuthLandDetailsScreen = () => {
 
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
 
-  const validateEntry = (entry: LandEntry): boolean => {
+  const validateAllEntries = (): boolean => {
+    if (!hasLand) return true;
+    if (landEntries.length === 0) return false;
+
+    const entry = landEntries[0];
     const validation = validateLandEntry({
       area: entry.area,
       unit: entry.unit,
       crops: entry.crops || [],
     });
 
-    const entryErrors: { area?: string; crops?: string } = {};
-    validation.errors.forEach((error) => {
-      if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
-        entryErrors.area = error;
-      } else if (error.toLowerCase().includes("crop")) {
-        entryErrors.crops = error;
-      }
-    });
-
-    setErrors((prev) => ({ ...prev, [entry.id]: entryErrors }));
-    return validation.isValid;
-  };
-
-  const validateAllEntries = (): boolean => {
-    if (!hasLand) return true;
-
-    let allValid = true;
-    const newErrors: EntryErrors = {};
-
-    landEntries.forEach((entry) => {
-      const validation = validateLandEntry({
-        area: entry.area,
-        unit: entry.unit,
-        crops: entry.crops || [],
+    if (!validation.isValid) {
+      const entryErrors: { area?: string; crops?: string } = {};
+      validation.errors.forEach((error) => {
+        if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
+          entryErrors.area = error;
+        } else if (error.toLowerCase().includes("crop")) {
+          entryErrors.crops = error;
+        }
       });
+      setErrors({ [entry.id]: entryErrors });
+      return false;
+    }
 
-      if (!validation.isValid) {
-        allValid = false;
-        const entryErrors: { area?: string; crops?: string } = {};
-
-        validation.errors.forEach((error) => {
-          if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
-            entryErrors.area = error;
-          } else if (error.toLowerCase().includes("crop")) {
-            entryErrors.crops = error;
-          }
-        });
-
-        newErrors[entry.id] = entryErrors;
-      }
-    });
-
-    setErrors(newErrors);
-    return allValid;
+    setErrors({});
+    return true;
   };
 
   const handleAreaChange = (entryId: string, text: string) => {
@@ -148,7 +120,6 @@ const AuthLandDetailsScreen = () => {
 
   const handleCropsChange = (entryId: string, crops: string[]) => {
     updateLandEntry(entryId, { crops });
-
     if (crops.length > 0) {
       setErrors((prev) => ({
         ...prev,
@@ -159,20 +130,16 @@ const AuthLandDetailsScreen = () => {
 
   const handleNext = () => {
     if (hasLand && !validateAllEntries()) {
-      const firstErrorEntry = Object.values(errors).find((e) => e.area || e.crops);
+      const entryId = landEntries[0]?.id || "default";
       const errorMessage =
-        firstErrorEntry?.area ||
-        firstErrorEntry?.crops ||
+        errors[entryId]?.area ||
+        errors[entryId]?.crops ||
         t("validation.landDetailsError") ||
         "Please fill in all land details correctly";
 
       Alert.alert(t("validation.validationError") || "Validation Error", errorMessage);
 
-      const newTouched: Record<string, Record<string, boolean>> = {};
-      landEntries.forEach((entry) => {
-        newTouched[entry.id] = { area: true, crops: true };
-      });
-      setTouched(newTouched);
+      setTouched({ [entryId]: { area: true, crops: true } });
       return;
     }
 
@@ -183,17 +150,10 @@ const AuthLandDetailsScreen = () => {
     router.push("/(auth)/livestock-details");
   };
 
-  const handleBack = () => {
-    router.back();
-  };
-
   const isValid = () => {
     if (!hasLand) return true;
-    return landEntries.some(
-      (entry) => entry.area > 0 && entry.crops && entry.crops.length > 0
-    );
+    return landEntries[0] && landEntries[0].area > 0 && landEntries[0].crops && landEntries[0].crops.length > 0;
   };
-
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background.input }}>
@@ -212,148 +172,119 @@ const AuthLandDetailsScreen = () => {
       </View>
 
       <View style={{ flex: 1 }}>
-          <KeyboardAwareScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Has Land Toggle */}
-            <View className="bg-gray-50 rounded-2xl p-5 mb-4">
-              <View className="flex-row justify-between items-center">
-                <AppText variant="bodyMd" className="font-semibold text-gray-700">
-                  {t("onboarding.hasLand")}
+        <KeyboardAwareScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Has Land Toggle */}
+          <View className="bg-gray-50 rounded-2xl p-5 mb-4 mt-6">
+            <View className="flex-row justify-between items-center">
+              <AppText variant="bodyMd" className="font-semibold text-gray-700">
+                {t("onboarding.hasLand")}
+              </AppText>
+              <Toggle
+                checked={hasLand}
+                onChange={(value) => {
+                  setHasLand(value);
+                  if (value && landEntries.length === 0) {
+                    addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
+                  }
+                }}
+              />
+            </View>
+          </View>
+
+          {/* Unified Land Entry Form */}
+          {hasLand && landEntries[0] && (
+            <View className="bg-white rounded-2xl p-6 mb-4 shadow-sm elevation-2">
+              <AppText variant="h3" style={{ color: theme.text.primary, marginBottom: 20, fontSize: 18, fontWeight: "700" }}>
+                {t("onboarding.landEntry") || "Total Landholding"}
+              </AppText>
+
+              {/* Area Input */}
+              <View className="mb-6">
+                <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", marginBottom: 8 }}>
+                  {t("onboarding.landArea") || "Total Land Area"}
                 </AppText>
-                <Toggle
-                  checked={hasLand}
-                  onChange={(value) => {
-                    setHasLand(value);
-                    if (value && landEntries.length === 0) {
-                      addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] });
-                    }
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    <TextInput
+                      style={{
+                        backgroundColor: theme.background.neutralSubtle,
+                        borderWidth: 1,
+                        borderColor: errors[landEntries[0].id]?.area && touched[landEntries[0].id]?.area ? theme.semantic.errorLight : theme.border.subtle,
+                        borderRadius: 12,
+                        padding: 14,
+                        fontSize: 16,
+                        color: theme.text.secondary,
+                      }}
+                      value={landEntries[0].area > 0 ? String(landEntries[0].area) : ""}
+                      onChangeText={(text) => handleAreaChange(landEntries[0].id, text)}
+                      onBlur={() => handleAreaBlur(landEntries[0].id, landEntries[0].area)}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor={theme.text.placeholder}
+                    />
+                  </View>
+                  <View style={{ width: 120 }}>
+                    <Select
+                      value={landEntries[0].unit}
+                      onChange={(value) =>
+                        updateLandEntry(landEntries[0].id, { unit: value as "bigha" | "acre" | "hectare" })
+                      }
+                      options={unitOptions}
+                      placeholder={t("onboarding.selectUnit")}
+                    />
+                  </View>
+                </View>
+                {errors[landEntries[0].id]?.area && touched[landEntries[0].id]?.area && (
+                  <AppText variant="bodySm" className="text-red-500 mt-2">
+                    {errors[landEntries[0].id].area}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Crops Selection */}
+              <View>
+                <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", marginBottom: 8 }}>
+                  {t("onboarding.cropsGrown") || "Crops Grown"}
+                </AppText>
+                <View
+                  style={{
+                    borderWidth: errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops ? 1 : 0,
+                    borderColor: errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops ? theme.semantic.errorLight : "transparent",
+                    borderRadius: 12,
                   }}
-                />
+                >
+                  <CropSelector
+                    value={landEntries[0].crops || []}
+                    onValueChange={(crops) => handleCropsChange(landEntries[0].id, crops)}
+                    otherValue={landEntries[0].otherCropsText || ""}
+                    onOtherValueChange={(text) => updateLandEntry(landEntries[0].id, { otherCropsText: text })}
+                    language={currentLanguage as "en" | "hi"}
+                  />
+                </View>
+                {errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops && (
+                  <AppText variant="bodySm" className="text-red-500 mt-2">
+                    {errors[landEntries[0].id].crops}
+                  </AppText>
+                )}
               </View>
             </View>
-
-            {/* Land Entries */}
-            {hasLand && (
-              <>
-                {landEntries.map((entry, index) => (
-                  <View
-                    key={entry.id}
-                    className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
-                  >
-                    {/* Entry Header */}
-                    <View className="flex-row justify-between items-center mb-4">
-                      <AppText variant="bodyMd" className="font-bold text-gray-800">
-                        {t("onboarding.landEntry")} {index + 1}
-                      </AppText>
-                      {landEntries.length > 1 && (
-                        <Pressable
-                          onPress={() => removeLandEntry(entry.id)}
-                          className="p-2 active:opacity-70"
-                        >
-                          <Ionicons name="trash-outline" size={20} color={theme.semantic.like} />
-                        </Pressable>
-                      )}
-                    </View>
-
-                    {/* Area Input */}
-                    <View className="mb-4">
-                      <AppText variant="bodySm" className="text-gray-500 mb-2">
-                        {t("onboarding.landArea")}
-                      </AppText>
-                      <View className="flex-row gap-3">
-                        <View className="flex-1">
-                          <TextInput
-                            style={{
-                              backgroundColor: theme.background.neutralSubtle,
-                              borderWidth: 1,
-                      borderColor: errors[entry.id]?.area && touched[entry.id]?.area ? theme.semantic.errorLight : theme.border.subtle,
-                              borderRadius: 12,
-                              padding: 14,
-                              fontSize: 16,
-                              color: theme.text.secondary,
-                            }}
-                            value={entry.area > 0 ? String(entry.area) : ""}
-                            onChangeText={(text) => handleAreaChange(entry.id, text)}
-                            onBlur={() => handleAreaBlur(entry.id, entry.area)}
-                            keyboardType="numeric"
-                            placeholder="0"
-                            placeholderTextColor={theme.text.placeholder}
-                          />
-                        </View>
-                        <View style={{ width: 120 }}>
-                          <Select
-                            value={entry.unit}
-                            onChange={(value) =>
-                              updateLandEntry(entry.id, { unit: value as "bigha" | "acre" | "hectare" })
-                            }
-                            options={unitOptions}
-                            placeholder={t("onboarding.selectUnit")}
-                          />
-                        </View>
-                      </View>
-                      {errors[entry.id]?.area && touched[entry.id]?.area && (
-                        <AppText variant="bodySm" className="text-red-500 mt-1">
-                          {errors[entry.id].area}
-                        </AppText>
-                      )}
-                    </View>
-
-                    {/* Crops Selection */}
-                    <View>
-                      <AppText variant="bodySm" className="text-gray-500 mb-2">
-                        {t("onboarding.cropsGrown")}
-                      </AppText>
-                      <View
-                        style={{
-                          borderWidth: errors[entry.id]?.crops && touched[entry.id]?.crops ? 1 : 0,
-                          borderColor: errors[entry.id]?.crops && touched[entry.id]?.crops ? theme.semantic.errorLight : "transparent",
-                          borderRadius: 12,
-                        }}
-                      >
-                        <CropSelector
-                          value={entry.crops || []}
-                          onValueChange={(crops) => handleCropsChange(entry.id, crops)}
-                          language={currentLanguage as "en" | "hi"}
-                        />
-                      </View>
-                      {errors[entry.id]?.crops && touched[entry.id]?.crops && (
-                        <AppText variant="bodySm" className="text-red-500 mt-1">
-                          {errors[entry.id].crops}
-                        </AppText>
-                      )}
-                    </View>
-                  </View>
-                ))}
-
-                {/* Add Another Land Entry */}
-                <Pressable
-                  onPress={() => addLandEntry({ area: 0, unit: "bigha", mainCrop: "", crops: [] })}
-                  className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-green-300 border-dashed active:bg-green-100 bg-green-50"
-                >
-                  <Ionicons name="add-circle-outline" size={20} color={theme.semantic.successText} />
-                  <AppText variant="bodySm" className="text-green-600 font-semibold ml-2">
-                    {t("onboarding.addAnotherLand")}
-                  </AppText>
-                </Pressable>
-
-
-              </>
-            )}
-          </KeyboardAwareScrollView>
+          )}
+        </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
         <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
-          <Pressable
+          {/* <Pressable
             onPress={handleSkip}
             style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: theme.background.input, borderWidth: 1, borderColor: theme.border.card, alignItems: "center" }}
           >
             <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
               {t("common.skip")}
             </AppText>
-          </Pressable>
+          </Pressable> */}
 
           <Pressable
             onPress={handleNext}

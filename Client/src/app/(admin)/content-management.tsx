@@ -25,10 +25,9 @@ import {
 } from "react-native";
 
 // ─── types ───────────────────────────────────────────────────
-type TabKey = "banners" | "schemes" | "professionals";
+type TabKey = "schemes" | "professionals";
 
 const TABS: { key: TabKey; label: string; icon: string; color: string }[] = [
-    { key: "banners", label: "Banners", icon: "images-outline", color: "#F59E0B" },
     { key: "schemes", label: "Schemes", icon: "document-text-outline", color: "#EC4899" },
     { key: "professionals", label: "Experts", icon: "people-circle-outline", color: "#6366F1" },
 ];
@@ -138,191 +137,14 @@ const fi = StyleSheet.create({
 });
 
 // ─── Banners Tab ──────────────────────────────────────────────
-function BannersTab() {
-    const [banners, setBanners] = useState<Banner[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [editingItem, setEditingItem] = useState<Banner | null>(null);
-
-    // form
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
-    const [titleHi, setTitleHi] = useState("");
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    useEffect(() => { load(); }, []);
-
-    async function load() {
-        try {
-            const data = await apiService.banners.getAll();
-            setBanners(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function pickImage() {
-        setUploadingImage(true);
-        try {
-            const url = await pickAndUploadImage(uri => apiService.upload.uploadEventImage(uri));
-            if (url) setImageUrl(url);
-        } catch {
-            Alert.alert("Error", "Image upload failed.");
-        } finally {
-            setUploadingImage(false);
-        }
-    }
-
-    function reset() {
-        setTitle(""); setSubtitle(""); setTitleHi(""); setImageUrl(null);
-        setEditingItem(null);
-    }
-
-    function openCreate() {
-        reset();
-        setShowModal(true);
-    }
-
-    function openEdit(item: Banner) {
-        setEditingItem(item);
-        setTitle(item.title ?? "");
-        setSubtitle(item.subtitle ?? "");
-        setTitleHi((item as any).titleHi ?? "");
-        setImageUrl(item.imageUrl ?? null);
-        setShowModal(true);
-    }
-
-    function confirmDelete(item: Banner) {
-        Alert.alert("Delete Banner", `Delete "${item.title}"?`, [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Delete", style: "destructive", onPress: async () => {
-                    try {
-                        const token = await apiService.tokenManager.getToken();
-                        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-                        const res = await fetch(`${API_BASE}/banners/${item.id}`, {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
-                        if (!res.ok) throw new Error("Failed");
-                        load();
-                    } catch {
-                        Alert.alert("Error", "Could not delete banner.");
-                    }
-                },
-            },
-        ]);
-    }
-
-    async function handleSave() {
-        if (!title || !imageUrl) {
-            Alert.alert("Required", "Title and image are required.");
-            return;
-        }
-        setSaving(true);
-        try {
-            const token = await apiService.tokenManager.getToken();
-            const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-            const method = editingItem ? "PUT" : "POST";
-            const url = editingItem ? `${API_BASE}/banners/${editingItem.id}` : `${API_BASE}/banners`;
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ title, subtitle, title_hi: titleHi, image_url: imageUrl }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed");
-            Alert.alert("✅ Success", editingItem ? "Banner updated!" : "Banner created!");
-            reset();
-            setShowModal(false);
-            load();
-        } catch (e: any) {
-            Alert.alert("Error", e.message || "Could not save banner.");
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    return (
-        <View style={{ flex: 1 }}>
-            <TouchableOpacity style={cms.addBtn} onPress={openCreate}>
-                <Ionicons name="add-circle" size={18} color="#fff" />
-                <AppText style={cms.addBtnText}>Add New Banner</AppText>
-            </TouchableOpacity>
-
-            {loading ? (
-                <ActivityIndicator color="#F59E0B" style={{ marginTop: 32 }} />
-            ) : banners.length === 0 ? (
-                <View style={cms.empty}>
-                    <Ionicons name="images-outline" size={48} color="#D1D5DB" />
-                    <AppText style={cms.emptyText}>No banners yet</AppText>
-                </View>
-            ) : (
-                <FlatList
-                    data={banners}
-                    keyExtractor={b => b.id}
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    renderItem={({ item }) => (
-                        <View style={cms.itemCard}>
-                            {item.imageUrl ? (
-                                <Image source={{ uri: cdn(item.imageUrl) }} style={cms.itemThumb} resizeMode="cover" />
-                            ) : (
-                                <View style={[cms.itemThumb, cms.thumbPlaceholder]}>
-                                    <Ionicons name="image-outline" size={24} color="#9CA3AF" />
-                                </View>
-                            )}
-                            <View style={{ flex: 1, marginLeft: 12 }}>
-                                <AppText style={cms.itemTitle}>{item.title}</AppText>
-                                {item.subtitle ? <AppText style={cms.itemSub}>{item.subtitle}</AppText> : null}
-                            </View>
-                            <View style={[cms.statusDot, { backgroundColor: item.isActive ? "#10B981" : "#EF4444" }]} />
-                            <TouchableOpacity style={cms.actionBtn} onPress={() => openEdit(item)}>
-                                <Ionicons name="pencil" size={16} color="#3B82F6" />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
-                                <Ionicons name="trash" size={16} color="#EF4444" />
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                />
-            )}
-
-            {/* Create / Edit Modal */}
-            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
-                <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
-                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
-                        <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
-                            <View style={cms.sheetHandle} />
-                            <AppText style={cms.sheetTitle}>{editingItem ? "Edit Banner" : "Add Banner"}</AppText>
-                            <ScrollView showsVerticalScrollIndicator={false}>
-                                <ImageUploadRow label="Banner Image *" url={imageUrl} uploading={uploadingImage} onPick={pickImage} />
-                                <Field label="Title (English) *" value={title} onChangeText={setTitle} />
-                                <Field label="Title (Hindi)" value={titleHi} onChangeText={setTitleHi} />
-                                <Field label="Subtitle" value={subtitle} onChangeText={setSubtitle} />
-                                <Button variant="primary" disabled={saving} onPress={handleSave}
-                                    style={{ backgroundColor: "#F59E0B", borderColor: "#F59E0B", marginTop: 8 } as any}>
-                                    {saving ? <ActivityIndicator color="#fff" /> : <AppText style={cms.saveBtnText}>{editingItem ? "Update Banner" : "Save Banner"}</AppText>}
-                                </Button>
-                                <Button variant="outline" label="Cancel" onPress={() => { setShowModal(false); reset(); }} style={{ marginTop: 8 }} />
-                            </ScrollView>
-                        </Pressable>
-                    </KeyboardAvoidingView>
-                </Pressable>
-            </Modal>
-        </View>
-    );
-}
 
 // ─── Schemes Tab ──────────────────────────────────────────────
 function SchemesTab() {
     const [schemes, setSchemes] = useState<Scheme[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showDetail, setShowDetail] = useState(false);
+    const [viewItem, setViewItem] = useState<Scheme | null>(null);
     const [editingItem, setEditingItem] = useState<Scheme | null>(null);
 
     // form
@@ -459,7 +281,10 @@ function SchemesTab() {
                     style={{ flex: 1 }}
                     contentContainerStyle={{ paddingBottom: 20 }}
                     renderItem={({ item }) => (
-                        <View style={cms.itemCard}>
+                        <TouchableOpacity 
+                            style={cms.itemCard}
+                            onPress={() => { setViewItem(item); setShowDetail(true); }}
+                        >
                             {item.imageUrl ? (
                                 <Image source={{ uri: cdn(item.imageUrl) }} style={cms.itemThumb} resizeMode="cover" />
                             ) : (
@@ -480,14 +305,14 @@ function SchemesTab() {
                             <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
                                 <Ionicons name="trash" size={16} color="#EF4444" />
                             </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
                     )}
                 />
             )}
 
             <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
                 <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
-                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
+                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
                             <AppText style={cms.sheetTitle}>{editingItem ? "Edit Scheme" : "Add Scheme"}</AppText>
@@ -509,6 +334,50 @@ function SchemesTab() {
                     </KeyboardAvoidingView>
                 </Pressable>
             </Modal>
+
+            {/* Detail Modal */}
+            <Modal visible={showDetail} transparent animationType="fade" onRequestClose={() => setShowDetail(false)}>
+                <Pressable style={cms.overlay} onPress={() => setShowDetail(false)}>
+                    <Pressable style={[cms.sheet, { maxHeight: '85%' }]} onPress={e => e.stopPropagation()}>
+                        <View style={cms.sheetHandle} />
+                        <AppText style={cms.sheetTitle}>{viewItem?.title}</AppText>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {viewItem?.imageUrl && (
+                                <Image source={{ uri: cdn(viewItem.imageUrl) }} style={cms.detailHero} resizeMode="cover" />
+                            )}
+                            <View style={{ gap: 16, marginTop: 16 }}>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Category</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.category}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Title (Hindi)</AppText>
+                                    <AppText style={cms.detailValue}>{(viewItem as any)?.titleHi || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Description</AppText>
+                                    <AppText style={cms.detailValue}>{(viewItem as any)?.description || "No description provided."}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Description (Hindi)</AppText>
+                                    <AppText style={cms.detailValue}>{(viewItem as any)?.descriptionHi || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Eligibility</AppText>
+                                    <AppText style={cms.detailValue}>{(viewItem as any)?.eligibility || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Status</AppText>
+                                    <AppText style={[cms.detailValue, { color: viewItem?.isActive ? "#10B981" : "#EF4444" }]}>
+                                        {viewItem?.isActive ? "Active" : "Inactive"}
+                                    </AppText>
+                                </View>
+                            </View>
+                            <Button variant="outline" label="Close" onPress={() => setShowDetail(false)} style={{ marginTop: 24 }} />
+                        </ScrollView>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -518,6 +387,8 @@ function ProfessionalsTab() {
     const [profs, setProfs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showDetail, setShowDetail] = useState(false);
+    const [viewItem, setViewItem] = useState<any | null>(null);
     const [editingItem, setEditingItem] = useState<any | null>(null);
 
     const [pName, setPName] = useState("");
@@ -639,7 +510,10 @@ function ProfessionalsTab() {
                     style={{ flex: 1 }}
                     contentContainerStyle={{ paddingBottom: 20 }}
                     renderItem={({ item }) => (
-                        <View style={cms.itemCard}>
+                        <TouchableOpacity 
+                            style={cms.itemCard}
+                            onPress={() => { setViewItem(item); setShowDetail(true); }}
+                        >
                             {item.imageUrl ? (
                                 <Image source={{ uri: cdn(item.imageUrl) }} style={[cms.itemThumb, { borderRadius: 30 }]} resizeMode="cover" />
                             ) : (
@@ -658,14 +532,14 @@ function ProfessionalsTab() {
                             <TouchableOpacity style={cms.actionBtn} onPress={() => confirmDelete(item)}>
                                 <Ionicons name="trash" size={16} color="#EF4444" />
                             </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
                     )}
                 />
             )}
 
             <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
                 <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
-                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ width: "100%" }}>
+                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
                             <AppText style={cms.sheetTitle}>{editingItem ? "Edit Professional" : "Add Professional"}</AppText>
@@ -687,6 +561,57 @@ function ProfessionalsTab() {
                     </KeyboardAvoidingView>
                 </Pressable>
             </Modal>
+
+            {/* Detail Modal */}
+            <Modal visible={showDetail} transparent animationType="fade" onRequestClose={() => setShowDetail(false)}>
+                <Pressable style={cms.overlay} onPress={() => setShowDetail(false)}>
+                    <Pressable style={[cms.sheet, { maxHeight: '85%' }]} onPress={e => e.stopPropagation()}>
+                        <View style={cms.sheetHandle} />
+                        <AppText style={cms.sheetTitle}>{viewItem?.name}</AppText>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                {viewItem?.imageUrl ? (
+                                    <Image source={{ uri: cdn(viewItem.imageUrl) }} style={cms.detailAvatar} resizeMode="cover" />
+                                ) : (
+                                    <View style={[cms.detailAvatar, { backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Ionicons name="person" size={40} color="#9CA3AF" />
+                                    </View>
+                                )}
+                            </View>
+
+                            <View style={{ gap: 16 }}>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Role</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.role}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Category</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.category}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Department</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.department || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Phone Number</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.phoneNumber || viewItem?.phone_number || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>District</AppText>
+                                    <AppText style={cms.detailValue}>{viewItem?.district || "N/A"}</AppText>
+                                </View>
+                                <View>
+                                    <AppText style={cms.detailLabel}>Availability Status</AppText>
+                                    <AppText style={[cms.detailValue, { color: viewItem?.isAvailable ? "#10B981" : "#9CA3AF" }]}>
+                                        {viewItem?.isAvailable ? "Available" : "Unavailable"}
+                                    </AppText>
+                                </View>
+                            </View>
+                            <Button variant="outline" label="Close" onPress={() => setShowDetail(false)} style={{ marginTop: 24 }} />
+                        </ScrollView>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -694,7 +619,7 @@ function ProfessionalsTab() {
 // ─── Main CMS Screen ──────────────────────────────────────────
 export default function ContentManagement() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<TabKey>("banners");
+    const [activeTab, setActiveTab] = useState<TabKey>("schemes");
 
     return (
         <View style={s.root}>
@@ -705,7 +630,7 @@ export default function ContentManagement() {
                 </TouchableOpacity>
                 <View>
                     <AppText style={s.title}>Content Management</AppText>
-                    <AppText style={s.subtitle}>Banners · Schemes · Professionals</AppText>
+                    <AppText style={s.subtitle}>Schemes · Professionals</AppText>
                 </View>
             </View>
 
@@ -771,6 +696,11 @@ const cms = StyleSheet.create({
     sheetHandle: { width: 44, height: 4, backgroundColor: "#E5E7EB", borderRadius: 4, alignSelf: "center", marginBottom: 16 },
     sheetTitle: { fontSize: 20, fontWeight: "800", color: "#111827", textAlign: "center", marginBottom: 16 },
     saveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16, textAlign: "center" },
+
+    detailHero: { width: '100%', height: 180, borderRadius: 16, backgroundColor: '#E5E7EB' },
+    detailAvatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E5E7EB' },
+    detailLabel: { fontSize: 13, fontWeight: '700', color: theme.text.placeholder, textTransform: 'uppercase', letterSpacing: 0.5 },
+    detailValue: { fontSize: 16, color: theme.text.primary, marginTop: 4, fontWeight: '500' },
 });
 
 // ─── page styles ──────────────────────────────────────────────

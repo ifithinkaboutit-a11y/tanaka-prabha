@@ -7,16 +7,25 @@ import {
   TextInput,
   Platform,
   KeyboardEvent,
+  Dimensions,
 } from "react-native";
 
 interface KeyboardAwareScrollViewProps extends ScrollViewProps {
   children: React.ReactNode;
+  /** Extra pixels to scroll beyond the focused input (breathing room). */
   extraScrollHeight?: number;
+  /**
+   * Vertical offset for KeyboardAvoidingView on iOS.
+   * Use this to account for custom headers / status-bar height.
+   * Default: 0.
+   */
+  keyboardVerticalOffset?: number;
 }
 
 export function KeyboardAwareScrollView({
   children,
-  extraScrollHeight = 20,
+  extraScrollHeight = 24,
+  keyboardVerticalOffset = 0,
   ...scrollViewProps
 }: KeyboardAwareScrollViewProps) {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -30,22 +39,22 @@ export function KeyboardAwareScrollView({
     [scrollViewProps.onScroll]
   );
 
+  // ── Android: manually scroll the focused input into view ──
   useEffect(() => {
     if (Platform.OS === "ios") return;
+
+    const screenHeight = Dimensions.get("window").height;
 
     const showSub = Keyboard.addListener(
       "keyboardDidShow",
       (e: KeyboardEvent) => {
-        const keyboardHeight = e.endCoordinates.height;
         const focusedInput = TextInput.State.currentlyFocusedInput();
-
         if (!focusedInput || !scrollViewRef.current) return;
 
         focusedInput.measure((_x, _y, _width, height, _pageX, pageY) => {
+          const keyboardTop = screenHeight - e.endCoordinates.height;
           const inputBottom = pageY + height + extraScrollHeight;
-          const screenBottom =
-            e.endCoordinates.screenY ?? e.endCoordinates.height;
-          const overlap = inputBottom - (screenBottom - keyboardHeight);
+          const overlap = inputBottom - keyboardTop;
 
           if (overlap > 0) {
             scrollViewRef.current?.scrollTo({
@@ -57,12 +66,8 @@ export function KeyboardAwareScrollView({
       }
     );
 
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      scrollViewRef.current?.scrollTo({
-        y: scrollOffsetRef.current,
-        animated: true,
-      });
-    });
+    // Don't snap back on hide — let the user stay where they scrolled
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {});
 
     return () => {
       showSub.remove();
@@ -70,24 +75,10 @@ export function KeyboardAwareScrollView({
     };
   }, [extraScrollHeight]);
 
-  if (Platform.OS === "ios") {
-    return (
-      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <ScrollView
-          ref={scrollViewRef}
-          {...scrollViewProps}
-          onScroll={handleScroll}
-          scrollEventThrottle={scrollViewProps.scrollEventThrottle ?? 16}
-        >
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    );
-  }
-
-  return (
+  const scrollView = (
     <ScrollView
       ref={scrollViewRef}
+      keyboardShouldPersistTaps="handled"
       {...scrollViewProps}
       onScroll={handleScroll}
       scrollEventThrottle={scrollViewProps.scrollEventThrottle ?? 16}
@@ -95,6 +86,23 @@ export function KeyboardAwareScrollView({
       {children}
     </ScrollView>
   );
+
+  if (Platform.OS === "ios") {
+    return (
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+      >
+        {scrollView}
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // Android: no KeyboardAvoidingView wrapper — the manual listener
+  // combined with android:windowSoftInputMode handles it.
+  return scrollView;
 }
 
 export default KeyboardAwareScrollView;
+

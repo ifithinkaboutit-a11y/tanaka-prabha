@@ -365,141 +365,141 @@ const AuthLivestockDetailsScreen = () => {
       </View>
 
       <View style={{ flex: 1 }}>
-          <KeyboardAwareScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Has Livestock Toggle */}
-            <View className="bg-gray-50 rounded-2xl p-5 mb-4">
-              <View className="flex-row justify-between items-center">
-                <AppText variant="bodyMd" className="font-semibold text-gray-700">
-                  {t("onboarding.hasLivestock")}
-                </AppText>
-                <Toggle
-                  checked={hasLivestock}
-                  onChange={(value) => {
-                    setHasLivestock(value);
-                    if (value && livestockEntries.length === 0) {
-                      addLivestockEntry({ type: "", count: 0 });
-                    }
-                  }}
-                />
-              </View>
+        <KeyboardAwareScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Has Livestock Toggle */}
+          <View className="bg-gray-50 rounded-2xl p-5 mb-4">
+            <View className="flex-row justify-between items-center">
+              <AppText variant="bodyMd" className="font-semibold text-gray-700">
+                {t("onboarding.hasLivestock")}
+              </AppText>
+              <Toggle
+                checked={hasLivestock}
+                onChange={(value) => {
+                  setHasLivestock(value);
+                  if (value && livestockEntries.length === 0) {
+                    addLivestockEntry({ type: "", count: 0 });
+                  }
+                }}
+              />
             </View>
+          </View>
 
-            {/* Livestock Entries */}
-            {hasLivestock && (
-              <>
-                {livestockEntries.map((entry, index) => (
-                  <View
-                    key={entry.id}
-                    className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
-                  >
-                    {/* Entry Header */}
-                    <View className="flex-row justify-between items-center mb-4">
-                      <AppText variant="bodyMd" className="font-bold text-gray-800">
-                        {t("onboarding.livestockEntry")} {index + 1}
-                      </AppText>
-                      {livestockEntries.length > 1 && (
-                        <Pressable
-                          onPress={() => removeLivestockEntry(entry.id)}
-                          className="p-2 active:opacity-70"
-                        >
-                          <Ionicons name="trash-outline" size={20} color={theme.semantic.like} />
-                        </Pressable>
-                      )}
-                    </View>
-
-                    {/* Animal Type */}
-                    <View className="mb-4">
-                      <AppText variant="bodySm" className="text-gray-500 mb-2">
-                        {t("onboarding.animalType")}
-                      </AppText>
-                      <View
-                        style={{
-                          borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
-                          borderColor: errors[entry.id]?.type && touched[entry.id]?.type ? theme.semantic.errorLight : "transparent",
-                          borderRadius: 12,
-                        }}
-                      >
-                        <Select
-                          value={entry.type}
-                          onChange={(value) => handleTypeChange(entry.id, value)}
-                          options={animalOptions}
-                          placeholder={t("onboarding.selectAnimal")}
-                        />
-                      </View>
-                      {errors[entry.id]?.type && touched[entry.id]?.type && (
-                        <AppText variant="bodySm" className="text-red-500 mt-1">
-                          {errors[entry.id].type}
-                        </AppText>
-                      )}
-                    </View>
-
-                    {/* Count Input */}
-                    <View>
-                      <AppText variant="bodySm" className="text-gray-500 mb-2">
-                        {t("onboarding.animalCount")}
-                      </AppText>
-                      <TextInput
-                        style={{
-                          backgroundColor: theme.background.neutralSubtle,
-                          borderWidth: 1,
-                          borderColor: errors[entry.id]?.count && touched[entry.id]?.count ? theme.semantic.errorLight : theme.border.subtle,
-                          borderRadius: 12,
-                          padding: 14,
-                          fontSize: 16,
-                          color: theme.text.secondary,
-                        }}
-                        value={entry.count > 0 ? String(entry.count) : ""}
-                        onChangeText={(text) => handleCountChange(entry.id, text)}
-                        onBlur={() => handleCountBlur(entry.id, entry.count)}
-                        keyboardType="numeric"
-                        placeholder="0"
-                        placeholderTextColor={theme.text.placeholder}
-                      />
-                      {errors[entry.id]?.count && touched[entry.id]?.count && (
-                        <AppText variant="bodySm" className="text-red-500 mt-1">
-                          {errors[entry.id].count}
-                        </AppText>
-                      )}
-                    </View>
-                  </View>
-                ))}
-
-                {/* Add Another Entry */}
-                <Pressable
-                  onPress={() => addLivestockEntry({ type: "", count: 0 })}
-                  className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-yellow-300 border-dashed active:bg-yellow-100 bg-yellow-50"
+          {/* Livestock Entries */}
+          {hasLivestock && (
+            <>
+              {livestockEntries.map((entry, index) => (
+                <View
+                  key={entry.id}
+                  className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
                 >
-                  <Ionicons name="add-circle-outline" size={20} color={theme.semantic.ongoingAction} />
-                  <AppText variant="bodySm" className="text-amber-600 font-semibold ml-2">
-                    {t("onboarding.addAnotherLivestock")}
-                  </AppText>
-                </Pressable>
-              </>
-            )}
+                  {/* Entry Header */}
+                  <View className="flex-row justify-between items-center mb-4">
+                    <AppText variant="bodyMd" className="font-bold text-gray-800">
+                      {t("onboarding.livestockEntry")} {index + 1}
+                    </AppText>
+                    {livestockEntries.length > 1 && (
+                      <Pressable
+                        onPress={() => removeLivestockEntry(entry.id)}
+                        className="p-2 active:opacity-70"
+                      >
+                        <Ionicons name="trash-outline" size={20} color={theme.semantic.like} />
+                      </Pressable>
+                    )}
+                  </View>
 
-            {/* Completion Message */}
-            <View style={{ backgroundColor: theme.background.successSubtle, borderRadius: 14, padding: 16, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: theme.semantic.successBackground }}>
-              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: theme.semantic.successBackground, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="checkmark" size={20} color={theme.semantic.successText} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText variant="bodyMd" style={{ color: theme.semantic.successText, fontWeight: "700" }}>
-                  {t("onboarding.almostDone")}
+                  {/* Animal Type */}
+                  <View className="mb-4">
+                    <AppText variant="bodySm" className="text-gray-500 mb-2">
+                      {t("onboarding.animalType")}
+                    </AppText>
+                    <View
+                      style={{
+                        borderWidth: errors[entry.id]?.type && touched[entry.id]?.type ? 1 : 0,
+                        borderColor: errors[entry.id]?.type && touched[entry.id]?.type ? theme.semantic.errorLight : "transparent",
+                        borderRadius: 12,
+                      }}
+                    >
+                      <Select
+                        value={entry.type}
+                        onChange={(value) => handleTypeChange(entry.id, value)}
+                        options={animalOptions}
+                        placeholder={t("onboarding.selectAnimal")}
+                      />
+                    </View>
+                    {errors[entry.id]?.type && touched[entry.id]?.type && (
+                      <AppText variant="bodySm" className="text-red-500 mt-1">
+                        {errors[entry.id].type}
+                      </AppText>
+                    )}
+                  </View>
+
+                  {/* Count Input */}
+                  <View>
+                    <AppText variant="bodySm" className="text-gray-500 mb-2">
+                      {t("onboarding.animalCount")}
+                    </AppText>
+                    <TextInput
+                      style={{
+                        backgroundColor: theme.background.neutralSubtle,
+                        borderWidth: 1,
+                        borderColor: errors[entry.id]?.count && touched[entry.id]?.count ? theme.semantic.errorLight : theme.border.subtle,
+                        borderRadius: 12,
+                        padding: 14,
+                        fontSize: 16,
+                        color: theme.text.secondary,
+                      }}
+                      value={entry.count > 0 ? String(entry.count) : ""}
+                      onChangeText={(text) => handleCountChange(entry.id, text)}
+                      onBlur={() => handleCountBlur(entry.id, entry.count)}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor={theme.text.placeholder}
+                    />
+                    {errors[entry.id]?.count && touched[entry.id]?.count && (
+                      <AppText variant="bodySm" className="text-red-500 mt-1">
+                        {errors[entry.id].count}
+                      </AppText>
+                    )}
+                  </View>
+                </View>
+              ))}
+
+              {/* Add Another Entry */}
+              <Pressable
+                onPress={() => addLivestockEntry({ type: "", count: 0 })}
+                className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-yellow-300 border-dashed active:bg-yellow-100 bg-yellow-50"
+              >
+                <Ionicons name="add-circle-outline" size={20} color={theme.semantic.ongoingAction} />
+                <AppText variant="bodySm" className="text-amber-600 font-semibold ml-2">
+                  {t("onboarding.addAnotherLivestock")}
                 </AppText>
-                <AppText variant="bodySm" style={{ color: theme.semantic.successText, marginTop: 2 }}>
-                  {t("onboarding.finishMessage")}
-                </AppText>
-              </View>
+              </Pressable>
+            </>
+          )}
+
+          {/* Completion Message */}
+          <View style={{ backgroundColor: theme.background.successSubtle, borderRadius: 14, padding: 16, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: theme.semantic.successBackground }}>
+            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: theme.semantic.successBackground, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="checkmark" size={20} color={theme.semantic.successText} />
             </View>
-          </KeyboardAwareScrollView>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodyMd" style={{ color: theme.semantic.successText, fontWeight: "700" }}>
+                {t("onboarding.almostDone")}
+              </AppText>
+              <AppText variant="bodySm" style={{ color: theme.semantic.successText, marginTop: 2 }}>
+                {t("onboarding.finishMessage")}
+              </AppText>
+            </View>
+          </View>
+        </KeyboardAwareScrollView>
 
         {/* Bottom Buttons */}
         <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
-          <Pressable
+          {/* <Pressable
             onPress={handleSkip}
             disabled={isSubmitting}
             style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: theme.background.input, borderWidth: 1, borderColor: theme.border.card, alignItems: "center", opacity: isSubmitting ? 0.5 : 1 }}
@@ -507,7 +507,7 @@ const AuthLivestockDetailsScreen = () => {
             <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
               {t("common.skip")}
             </AppText>
-          </Pressable>
+          </Pressable> */}
 
           <Pressable
             onPress={handleFinish}
