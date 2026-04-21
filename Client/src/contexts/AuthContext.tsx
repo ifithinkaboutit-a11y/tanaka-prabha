@@ -180,6 +180,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // DO NOT redirect. This was the crash trigger: the guard was firing during
       // the async location-permission dialog, unmounting the map screen mid-operation.
       return;
+    } else if (isAuthenticated && needsOnboarding && !onCurrentOnboardingScreen && segments[0] !== "(auth)") {
+      // Authenticated but onboarding incomplete and not on an onboarding screen — redirect to start onboarding.
+      router.replace("/(auth)/personal-details" as any);
     } else if (isAuthenticated && !needsOnboarding && (inAuthGroup || onCurrentOnboardingScreen)) {
       // Authenticated user who completed onboarding — skip to tabs.
       // Also blocks login users (needsOnboarding=false) from landing on onboarding screens.
@@ -222,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setupPushNotifications().catch(() => { });
       return { user: userData, isNewUser };
     },
-    []
+    [setupPushNotifications]
   );
 
   // Complete onboarding - syncs collected data to backend, then navigates
@@ -296,6 +299,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             fathersName: pd.fathersName || user.fathersName,
             mothers_name: pd.mothersName || user.mothers_name,
             mothersName: pd.mothersName || user.mothersName,
+            // Seed the uploaded photo so profile shows it immediately
+            photoUrl: (pd as any).photoUrl || user.photoUrl,
           };
           setUser(updatedUser);
           tokenManager.setUser(updatedUser);
@@ -325,6 +330,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setNeedsOnboarding(false);
+    // Clear the profile cache so the profile tab fetches fresh data
+    // (including the uploaded photo) on first visit after onboarding
+    await clearProfileCache();
     router.replace("/(tab)/" as any);
   }, [user, router]);
 

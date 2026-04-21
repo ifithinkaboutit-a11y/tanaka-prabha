@@ -84,7 +84,7 @@ const SetPasswordScreen = () => {
                         text: "OK",
                         onPress: () => {
                             if (mode === "reset") {
-                                router.replace({ pathname: "/(auth)/phone-input", params: { mode: "login" } });
+                                router.replace("/(auth)/" as any);
                             } else {
                                 // First-time signup: continue to onboarding
                                 router.replace("/(auth)/personal-details" as any);

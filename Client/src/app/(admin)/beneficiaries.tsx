@@ -172,7 +172,7 @@ export default function Beneficiaries() {
                     <Ionicons name="arrow-back" size={22} color="#1F2937" />
                 </TouchableOpacity>
                 <View style={s.headerTitle}>
-                    <AppText style={s.title}>Beneficiaries</AppText>
+                    <AppText style={s.title}>Farmers</AppText>
                     <AppText style={s.subtitle}>{farmers.length} registered farmers</AppText>
                 </View>
                 <TouchableOpacity

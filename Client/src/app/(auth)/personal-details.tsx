@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -17,6 +16,7 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
+import TextArea from "../../components/atoms/TextArea";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -32,6 +32,7 @@ import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { theme } from "../../styles/colors";
+import { indianStates, indianDistricts } from "../../data/indianLocations";
 
 export const unstable_settings = {
   headerShown: false,
@@ -91,6 +92,7 @@ const AuthPersonalDetailsScreen = () => {
   const { personalDetails, updatePersonalDetails, setOnboardingStep, onboardingStep } = useOnboardingStore();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [genderOtherText, setGenderOtherText] = useState("");
 
   // ── Photo upload state (same pattern as profile.tsx) ────────────────────────
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -385,12 +387,6 @@ const AuthPersonalDetailsScreen = () => {
       fathersName: true, mothersName: true,
     });
 
-    // Photo is mandatory
-    if (!personalDetails.photoUrl) {
-      Alert.alert("Photo Required", "Please upload a profile photo to continue.");
-      return;
-    }
-
     let hasErrors = false;
     const newErrors: FieldErrors = {};
 
@@ -430,7 +426,6 @@ const AuthPersonalDetailsScreen = () => {
 
   const isValid = () => {
     return (
-      !!personalDetails.photoUrl &&        // photo is mandatory
       personalDetails.name?.trim() !== "" &&
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&
@@ -491,12 +486,6 @@ const AuthPersonalDetailsScreen = () => {
             {!photoUploading && (
               <View style={photoStyles.cameraBadge}>
                 <Ionicons name="camera" size={13} color={theme.text.onPrimary} />
-              </View>
-            )}
-            {/* Upload spinner overlay */}
-            {photoUploading && (
-              <View style={photoStyles.loadingOverlay}>
-                <ActivityIndicator size="small" color={theme.text.onPrimary} />
               </View>
             )}
           </Pressable>
@@ -779,9 +768,9 @@ const photoStyles = StyleSheet.create({
     marginBottom: 4,
   },
   avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     borderWidth: 3,
     borderColor: theme.primary.green,
     alignItems: "center",
@@ -791,27 +780,36 @@ const photoStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    // NO overflow:hidden — that clips the camera badge
+  },
+  avatarClip: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cameraBadge: {
     position: "absolute",
     bottom: 0,
     right: 0,
     backgroundColor: theme.primary.green,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: theme.background.input,
+    zIndex: 10,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 46,
+    borderRadius: 44,
   },
 });
 

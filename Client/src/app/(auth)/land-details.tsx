@@ -1,5 +1,4 @@
 // src/app/(auth)/land-details.tsx
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -15,25 +14,21 @@ import AppText from "../../components/atoms/AppText";
 import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
-import CropSelector from "../../components/molecules/CropSelector";
-import { useOnboardingStore, LandEntry } from "../../stores/onboardingStore";
+import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
   landUnits,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
 import { theme } from "../../styles/colors";
-import { validateLandEntry, validateLandArea } from "../../utils/validation";
+import { validateLandArea } from "../../utils/validation";
 
 export const unstable_settings = {
   headerShown: false,
 };
 
-interface EntryErrors {
-  [entryId: string]: {
-    area?: string;
-    crops?: string;
-  };
+interface FormErrors {
+  area?: string;
 }
 
 const AuthLandDetailsScreen = () => {
@@ -47,8 +42,8 @@ const AuthLandDetailsScreen = () => {
     updateLandEntry,
   } = useOnboardingStore();
 
-  const [errors, setErrors] = useState<EntryErrors>({});
-  const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
 
@@ -80,36 +75,26 @@ const AuthLandDetailsScreen = () => {
     return true;
   };
 
-  const handleAreaChange = (entryId: string, text: string) => {
+  const handleAreaChange = (text: string) => {
+    if (!entry) return;
     const num = parseFloat(text) || 0;
-    updateLandEntry(entryId, { area: num });
+    updateLandEntry(entry.id, { area: num });
 
-    if (touched[entryId]?.area) {
+    if (touched.area) {
       const validation = validateLandArea(num);
-      setErrors((prev) => ({
-        ...prev,
-        [entryId]: { ...prev[entryId], area: validation.errors[0] },
-      }));
+      setErrors((prev) => ({ ...prev, area: validation.errors[0] }));
     }
   };
 
-  const handleAreaBlur = (entryId: string, area: number) => {
-    setTouched((prev) => ({
-      ...prev,
-      [entryId]: { ...prev[entryId], area: true },
-    }));
+  const handleAreaBlur = () => {
+    if (!entry) return;
+    setTouched((prev) => ({ ...prev, area: true }));
 
-    const validation = validateLandArea(area);
-    if (area <= 0) {
-      setErrors((prev) => ({
-        ...prev,
-        [entryId]: { ...prev[entryId], area: "Land area must be greater than 0" },
-      }));
+    const validation = validateLandArea(entry.area);
+    if (entry.area <= 0) {
+      setErrors((prev) => ({ ...prev, area: "Land area must be greater than 0" }));
     } else if (!validation.isValid) {
-      setErrors((prev) => ({
-        ...prev,
-        [entryId]: { ...prev[entryId], area: validation.errors[0] },
-      }));
+      setErrors((prev) => ({ ...prev, area: validation.errors[0] }));
     } else {
       setErrors((prev) => ({
         ...prev,
@@ -279,9 +264,20 @@ const AuthLandDetailsScreen = () => {
         <View style={{ padding: 20, backgroundColor: theme.background.input, borderTopWidth: 1, borderTopColor: theme.border.subtle, flexDirection: "row", gap: 12 }}>
           {/* <Pressable
             onPress={handleSkip}
-            style={{ flex: 1, paddingVertical: 16, borderRadius: 999, backgroundColor: theme.background.input, borderWidth: 1, borderColor: theme.border.card, alignItems: "center" }}
+            style={{
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: 999,
+              backgroundColor: theme.background.input,
+              borderWidth: 1,
+              borderColor: theme.border.card,
+              alignItems: "center",
+            }}
           >
-            <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
+            <AppText
+              variant="bodyMd"
+              style={{ color: theme.text.muted, fontWeight: "600" }}
+            >
               {t("common.skip")}
             </AppText>
           </Pressable> */}
@@ -289,9 +285,20 @@ const AuthLandDetailsScreen = () => {
           <Pressable
             onPress={handleNext}
             disabled={!isValid()}
-            style={{ flex: 2, paddingVertical: 16, borderRadius: 999, alignItems: "center", backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
+            style={{
+              flex: 2,
+              paddingVertical: 16,
+              borderRadius: 999,
+              alignItems: "center",
+              backgroundColor: isValid()
+                ? theme.primary.green
+                : theme.border.card,
+            }}
           >
-            <AppText variant="bodyMd" style={{ color: theme.text.onPrimary, fontWeight: "700" }}>
+            <AppText
+              variant="bodyMd"
+              style={{ color: theme.text.onPrimary, fontWeight: "700" }}
+            >
               {t("common.next")}
             </AppText>
           </Pressable>

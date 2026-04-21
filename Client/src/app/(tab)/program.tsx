@@ -1,9 +1,10 @@
 // src/app/(tab)/Program.tsx
 import { useRouter } from "expo-router";
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import {
   ScrollView, View, ActivityIndicator, RefreshControl,
-  Modal, Pressable, Alert,
+  Modal, Pressable, Alert, Animated, TouchableOpacity,
+  StyleSheet, StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AppText from "../../components/atoms/AppText";
@@ -16,7 +17,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLanguageStore } from "../../stores/languageStore";
 import { theme } from "@/styles/colors";
 
-// Compute live status based on current date/time (same logic as EventCard)
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function computeEventStatus(event: ApiEvent): "upcoming" | "ongoing" | "completed" | "cancelled" {
   if (event.status === "cancelled") return "cancelled";
   if (!event.date) return (event.status as any) || "upcoming";
@@ -29,6 +31,53 @@ function computeEventStatus(event: ApiEvent): "upcoming" | "ongoing" | "complete
   return "completed";
 }
 
+function buildDateKey(ev: ApiEvent) {
+  return new Date(`${ev.date?.split("T")[0]}T${ev.start_time || "00:00:00"}`).getTime();
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/** Pulsing "LIVE" badge for ongoing events */
+function LiveBadge() {
+  const pulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+  return (
+    <View style={s.liveBadge}>
+      <Animated.View style={[s.liveDot, { opacity: pulse }]} />
+      <AppText style={s.liveText}>LIVE</AppText>
+    </View>
+  );
+}
+
+/** Summary stat strip shown in the header */
+function StatPill({ icon, label, color }: { icon: string; label: string; color: string }) {
+  return (
+    <View style={[s.statPill, { backgroundColor: color + "18" }]}>
+      <Ionicons name={icon as any} size={12} color={color} />
+      <AppText style={[s.statLabel, { color }]}>{label}</AppText>
+    </View>
+  );
+}
+
+/** Row in the modal user-details card */
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={s.detailRow}>
+      <AppText style={s.detailLabel}>{label}</AppText>
+      <AppText style={s.detailValue}>{value}</AppText>
+    </View>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 const Program = () => {
   const router = useRouter();
   const { t } = useTranslation();
@@ -40,10 +89,16 @@ const Program = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ── Participate Modal state ─────────────────────────────────────────────
+  // Participate modal
   const [participateEvent, setParticipateEvent] = useState<ApiEvent | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const modalAnim = useRef(new Animated.Value(0)).current;
+
+  // Header entrance
+  const headerAnim = useRef(new Animated.Value(0)).current;
+
+  // ── Data ────────────────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async () => {
     try {
@@ -55,12 +110,14 @@ const Program = () => {
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
+    (async () => {
       setLoading(true);
       await fetchData();
       setLoading(false);
-    };
-    loadData();
+      Animated.spring(headerAnim, {
+        toValue: 1, damping: 18, stiffness: 160, useNativeDriver: true,
+      }).start();
+    })();
   }, [fetchData]);
 
   const onRefresh = async () => {
@@ -69,53 +126,66 @@ const Program = () => {
     setRefreshing(false);
   };
 
-  // All filtered events (search applied)
-  const allFilteredEvents = useMemo(() => {
+  // ── Derived data ────────────────────────────────────────────────────────────
+
+  const allFiltered = useMemo(() => {
     if (!searchQuery.trim()) return events;
+    const q = searchQuery.toLowerCase();
     return events.filter(
       (ev) =>
-        ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (ev.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ev.location_name.toLowerCase().includes(searchQuery.toLowerCase()),
+        ev.title.toLowerCase().includes(q) ||
+        (ev.description || "").toLowerCase().includes(q) ||
+        ev.location_name.toLowerCase().includes(q),
     );
   }, [searchQuery, events]);
 
-  // Upcoming events: upcoming + ongoing, sorted by date ascending (soonest first)
-  const upcomingEvents = useMemo(() => {
-    return allFilteredEvents
-      .filter((ev) => {
-        const s = computeEventStatus(ev);
-        return s === "upcoming" || s === "ongoing";
-      })
-      .sort((a, b) => {
-        const dateA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime();
-        const dateB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime();
-        return dateA - dateB;
-      });
-  }, [allFilteredEvents]);
+  const upcomingEvents = useMemo(() =>
+    allFiltered
+      .filter((ev) => { const s = computeEventStatus(ev); return s === "upcoming" || s === "ongoing"; })
+      .sort((a, b) => buildDateKey(a) - buildDateKey(b)),
+    [allFiltered]);
 
-  // Past events: completed or cancelled, sorted by date descending (most recent first)
-  const pastEvents = useMemo(() => {
-    return allFilteredEvents
-      .filter((ev) => {
-        const s = computeEventStatus(ev);
-        return s === "completed" || s === "cancelled";
-      })
-      .sort((a, b) => {
-        const dateA = new Date(`${a.date?.split("T")[0]}T${a.start_time || "00:00:00"}`).getTime();
-        const dateB = new Date(`${b.date?.split("T")[0]}T${b.start_time || "00:00:00"}`).getTime();
-        return dateB - dateA;
-      });
-  }, [allFilteredEvents]);
+  const pastEvents = useMemo(() =>
+    allFiltered
+      .filter((ev) => { const s = computeEventStatus(ev); return s === "completed" || s === "cancelled"; })
+      .sort((a, b) => buildDateKey(b) - buildDateKey(a)),
+    [allFiltered]);
 
-  const handleEventPress = (ev: ApiEvent) => {
-    router.push({ pathname: "/event-details" as any, params: { eventId: ev.id } });
-  };
+  const ongoingCount = useMemo(
+    () => events.filter((e) => computeEventStatus(e) === "ongoing").length,
+    [events],
+  );
 
-  // ── Open participate modal from listing card ────────────────────────────
-  const handleParticipate = (ev: ApiEvent) => {
+  const localise = useCallback((ev: ApiEvent) => ({
+    ...ev,
+    title: currentLanguage === "hi" && ev.title_hi ? ev.title_hi : ev.title,
+    description: currentLanguage === "hi" && ev.description_hi ? ev.description_hi : ev.description,
+  }), [currentLanguage]);
+
+  const displayUpcoming = useMemo(() => [
+    ...upcomingEvents.filter((e) => computeEventStatus(e) === "ongoing"),
+    ...upcomingEvents.filter((e) => computeEventStatus(e) === "upcoming"),
+  ].slice(0, 4).map(localise), [upcomingEvents, localise]);
+
+  const displayPast = useMemo(() =>
+    pastEvents.slice(0, 3).map(localise),
+    [pastEvents, localise]);
+
+  // ── Modal helpers ────────────────────────────────────────────────────────────
+
+  const openModal = (ev: ApiEvent) => {
     setParticipateEvent(ev);
     setConsentGiven(false);
+    modalAnim.setValue(0);
+    Animated.spring(modalAnim, {
+      toValue: 1, damping: 20, stiffness: 200, useNativeDriver: true,
+    }).start();
+  };
+
+  const closeModal = () => {
+    Animated.timing(modalAnim, {
+      toValue: 0, duration: 180, useNativeDriver: true,
+    }).start(() => setParticipateEvent(null));
   };
 
   const handleConfirmParticipation = async () => {
@@ -123,19 +193,18 @@ const Program = () => {
       Alert.alert(t("events.consentRequired"), t("events.consentRequiredMessage"));
       return;
     }
-    if (!participateEvent) return;
-    if (!user?.mobileNumber) {
+    if (!participateEvent || !user?.mobileNumber) {
       Alert.alert(t("common.error"), t("events.mobileRequired"));
       return;
     }
     try {
       setRegistering(true);
       await eventsApi.register(participateEvent.id, user.mobileNumber, user.name || "Unknown");
-      setParticipateEvent(null);
+      closeModal();
       Alert.alert(t("events.successTitle"), t("events.successMessage"));
     } catch (error: any) {
       if (error.status === 400 && error.message?.includes("already registered")) {
-        setParticipateEvent(null);
+        closeModal();
         Alert.alert(t("events.alreadyRegisteredTitle"), t("events.alreadyRegisteredMessage"));
       } else {
         Alert.alert(t("common.error"), t("events.registrationFailed"));
@@ -145,36 +214,33 @@ const Program = () => {
     }
   };
 
+  // ── Loading skeleton ─────────────────────────────────────────────────────────
+
   if (loading) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: theme.background.screen }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingTop: 24 }}>
-          {[0, 1, 2, 3].map((i) => <EventCardSkeleton key={i} />)}
-        </View>
-      </ScrollView>
+      <View style={s.screen}>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={s.skeletonHeader} />
+          <View style={{ paddingTop: 8 }}>
+            {[0, 1, 2, 3].map((i) => <EventCardSkeleton key={i} />)}
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 
-  // Localise event title/description based on language
-  const localise = (ev: ApiEvent) => ({
-    ...ev,
-    title: currentLanguage === "hi" && ev.title_hi ? ev.title_hi : ev.title,
-    description: currentLanguage === "hi" && ev.description_hi ? ev.description_hi : ev.description,
-  });
+  // ── Render ───────────────────────────────────────────────────────────────────
 
-  // Priority: ongoing first, then upcoming — cap at 4
-  const displayUpcoming = [
-    ...upcomingEvents.filter((e) => computeEventStatus(e) === "ongoing"),
-    ...upcomingEvents.filter((e) => computeEventStatus(e) === "upcoming"),
-  ].slice(0, 4).map(localise);
-
-  // Past: show 3, rest go to all-events screen
-  const displayPast = pastEvents.slice(0, 3).map(localise);
+  const headerTranslateY = headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
+  const modalTranslateY = modalAnim.interpolate({ inputRange: [0, 1], outputRange: [300, 0] });
 
   return (
     <>
+      <StatusBar barStyle="dark-content" />
+
       <ScrollView
-        style={{ flex: 1, backgroundColor: theme.background.screen }}
+        style={s.screen}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
         refreshControl={
@@ -186,168 +252,546 @@ const Program = () => {
           />
         }
       >
-        {/* Elevated Header */}
-        <View style={{
-          backgroundColor: theme.background.header,
-          paddingBottom: 16,
-          borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
-          shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.04, shadowRadius: 12, elevation: 4,
-          marginBottom: 20,
-        }}>
-          <View style={{ paddingTop: 48, paddingBottom: 8, paddingHorizontal: 20 }}>
-            <AppText variant="h2" style={{ fontWeight: "700", color: theme.text.primary, fontSize: 26, letterSpacing: -0.3 }}>
-              {t("programs.title")}
-            </AppText>
-            <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 4, fontSize: 13, fontWeight: "500" }}>
-              {t("programs.subtitle")}
-            </AppText>
+        {/* ── Sticky Header ── */}
+        <Animated.View
+          style={[s.header, { opacity: headerAnim, transform: [{ translateY: headerTranslateY }] }]}
+        >
+          {/* Title + stats row */}
+          <View style={s.headerTop}>
+            <View style={{ flex: 1 }}>
+              <AppText style={s.screenTitle}>{t("programs.title")}</AppText>
+              <AppText style={s.screenSubtitle}>{t("programs.subtitle")}</AppText>
+            </View>
+            <View style={s.statRow}>
+              {ongoingCount > 0 && <LiveBadge />}
+              <StatPill
+                icon="calendar-outline"
+                label={`${upcomingEvents.length} ${t("programs.upcomingEvents")}`}
+                color={theme.primary.green}
+              />
+            </View>
           </View>
-          <View style={{ marginTop: 4 }}>
-            <SearchBar placeholder={t("programs.searchPlaceholder")} onSearch={setSearchQuery} />
+
+          {/* Search */}
+          <View style={s.searchWrap}>
+            <SearchBar
+              placeholder={t("programs.searchPlaceholder")}
+              onSearch={setSearchQuery}
+            />
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Upcoming Events Section */}
-        <EventSection
-          title={t("programs.upcomingEvents") || "Upcoming Events"}
-          events={displayUpcoming}
-          onEventPress={handleEventPress}
-          onParticipate={handleParticipate}
-        />
+        {/* ── Empty state ── */}
+        {allFiltered.length === 0 && searchQuery.trim() !== "" && (
+          <View style={s.emptyState}>
+            <Ionicons name="search-outline" size={40} color={theme.text.placeholder} />
+            <AppText style={s.emptyTitle}>{t("search.noResults")}</AppText>
+            <AppText style={s.emptySubtitle}>{t("search.noResultsHint")}</AppText>
+            <TouchableOpacity onPress={() => setSearchQuery("")} style={s.clearBtn}>
+              <AppText style={s.clearBtnText}>{t("filterSort.clearFilters")}</AppText>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Past Events Section — capped at 3 with View All */}
-        <EventSection
-          title={t("programs.pastEvents") || "Past Events"}
-          events={displayPast}
-          onEventPress={handleEventPress}
-          onViewAll={pastEvents.length > 3 ? () => router.push("/all-events" as any) : undefined}
-        />
+        {/* ── Upcoming Events ── */}
+        {displayUpcoming.length > 0 && (
+          <EventSection
+            title={t("programs.upcomingEvents") || "Upcoming Events"}
+            events={displayUpcoming}
+            onEventPress={(ev) => router.push({ pathname: "/event-details" as any, params: { eventId: ev.id } })}
+            onParticipate={openModal}
+          />
+        )}
 
-        <View style={{ height: 24 }} />
+        {/* ── Past Events ── */}
+        {displayPast.length > 0 && (
+          <EventSection
+            title={t("programs.pastEvents") || "Past Events"}
+            events={displayPast}
+            onEventPress={(ev) => router.push({ pathname: "/event-details" as any, params: { eventId: ev.id } })}
+            onViewAll={pastEvents.length > 3 ? () => router.push("/all-events" as any) : undefined}
+          />
+        )}
+
+        <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* ── Quick Participate Modal ── */}
+      {/* ── Participate Modal ── */}
       <Modal
         visible={!!participateEvent}
         transparent
-        animationType="slide"
-        onRequestClose={() => setParticipateEvent(null)}
+        animationType="none"           // we drive the animation ourselves
+        onRequestClose={closeModal}
+        statusBarTranslucent
       >
-        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <View style={{
-            backgroundColor: theme.background.input,
-            borderTopLeftRadius: 28, borderTopRightRadius: 28,
-            maxHeight: "75%",
-          }}>
-            {/* Modal Header */}
-            <View style={{
-              flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-              paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16,
-              borderBottomWidth: 1, borderBottomColor: theme.background.neutralSubtle,
-            }}>
-              <AppText variant="h2" style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>
-                {t("events.confirmApplication") || "Confirm Participation"}
-              </AppText>
-              <Pressable
-                onPress={() => setParticipateEvent(null)}
-                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.background.neutralSubtle, alignItems: "center", justifyContent: "center" }}
-              >
-                <Ionicons name="close" size={18} color={theme.text.muted} />
-              </Pressable>
-            </View>
+        <Pressable style={s.backdrop} onPress={closeModal}>
+          {/* Stop propagation so taps inside don't close */}
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <Animated.View
+              style={[s.sheet, { transform: [{ translateY: modalTranslateY }] }]}
+            >
+              {/* Drag handle */}
+              <View style={s.dragHandle} />
 
-            {/* Modal Body */}
-            <ScrollView style={{ paddingHorizontal: 24, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
-              {/* Event name */}
-              <View style={{
-                backgroundColor: "#F0FDF4", borderRadius: 14, padding: 14,
-                marginBottom: 16, borderWidth: 1, borderColor: "#BBF7D0",
-              }}>
-                <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "600", fontSize: 11, marginBottom: 4 }}>
-                  {t("events.applyingFor") || "Applying for"}
-                </AppText>
-                <AppText variant="bodyMd" style={{ color: "#166534", fontWeight: "700", fontSize: 15 }}>
-                  {participateEvent?.title}
-                </AppText>
+              {/* Header */}
+              <View style={s.modalHeader}>
+                <View>
+                  <AppText style={s.modalTitle}>
+                    {t("events.confirmApplication") || "Confirm Participation"}
+                  </AppText>
+                  <AppText style={s.modalSubtitle}>
+                    {t("events.yourDetails")}
+                  </AppText>
+                </View>
+                <Pressable
+                  onPress={closeModal}
+                  style={s.closeBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close"
+                >
+                  <Ionicons name="close" size={16} color={theme.text.muted} />
+                </Pressable>
               </View>
 
-              {/* User info */}
-              <View style={{
-                backgroundColor: theme.background.neutralSubtle, borderRadius: 14, padding: 14,
-                marginBottom: 16, borderWidth: 1, borderColor: theme.border.subtle,
-              }}>
-                <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "600", fontSize: 11, marginBottom: 8 }}>
-                  {t("events.yourDetails") || "Your Details"}
-                </AppText>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                  <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.name") || "Name"}</AppText>
-                  <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 13 }}>{user?.name || "—"}</AppText>
+              <ScrollView
+                style={s.modalBody}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                {/* Event name card */}
+                <View style={s.eventCard}>
+                  <View style={s.eventCardIcon}>
+                    <Ionicons name="calendar" size={16} color={theme.primary.green} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <AppText style={s.eventCardLabel}>
+                      {t("events.applyingFor") || "Applying for"}
+                    </AppText>
+                    <AppText style={s.eventCardTitle} numberOfLines={2}>
+                      {participateEvent?.title}
+                    </AppText>
+                  </View>
                 </View>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <AppText variant="bodySm" style={{ color: theme.text.placeholder, fontSize: 13 }}>{t("profile.mobile") || "Mobile"}</AppText>
-                  <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", fontSize: 13 }}>{user?.mobileNumber || "—"}</AppText>
+
+                {/* User details */}
+                <View style={s.userCard}>
+                  <AppText style={s.userCardHeading}>
+                    {t("events.yourDetails") || "Your Details"}
+                  </AppText>
+                  <View style={s.divider} />
+                  <DetailRow
+                    label={t("profile.name") || "Name"}
+                    value={user?.name || "—"}
+                  />
+                  <DetailRow
+                    label={t("profile.mobile") || "Mobile"}
+                    value={user?.mobileNumber || "—"}
+                  />
                 </View>
+
+                {/* Consent toggle */}
+                <Pressable
+                  onPress={() => setConsentGiven((v) => !v)}
+                  style={[s.consentRow, consentGiven && s.consentRowActive]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: consentGiven }}
+                >
+                  <View style={[s.checkbox, consentGiven && s.checkboxActive]}>
+                    {consentGiven && (
+                      <Ionicons name="checkmark" size={13} color="#FFFFFF" />
+                    )}
+                  </View>
+                  <AppText style={[s.consentText, consentGiven && s.consentTextActive]}>
+                    {t("events.consentText") ||
+                      "I agree to participate in this event and confirm the details above are correct."}
+                  </AppText>
+                </Pressable>
+
+                <View style={{ height: 8 }} />
+              </ScrollView>
+
+              {/* Actions */}
+              <View style={s.modalActions}>
+                <Pressable
+                  onPress={closeModal}
+                  style={s.cancelBtn}
+                  accessibilityRole="button"
+                >
+                  <AppText style={s.cancelBtnText}>
+                    {t("common.cancel") || "Cancel"}
+                  </AppText>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleConfirmParticipation}
+                  disabled={registering || !consentGiven}
+                  style={[s.confirmBtn, (!consentGiven || registering) && s.confirmBtnDisabled]}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: registering || !consentGiven }}
+                >
+                  {registering
+                    ? <ActivityIndicator size="small" color="#FFFFFF" />
+                    : <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  }
+                  <AppText style={s.confirmBtnText}>
+                    {registering
+                      ? (t("events.submitting") || "Submitting…")
+                      : (t("events.confirmApply") || "Confirm")}
+                  </AppText>
+                </Pressable>
               </View>
-
-              {/* Consent */}
-              <Pressable
-                onPress={() => setConsentGiven(!consentGiven)}
-                style={{
-                  flexDirection: "row", alignItems: "center",
-                  backgroundColor: consentGiven ? "#F0FDF4" : "#F9FAFB",
-                  borderRadius: 14, padding: 14, marginBottom: 24,
-                  borderWidth: 1, borderColor: consentGiven ? "#86EFAC" : "#E5E7EB",
-                }}
-              >
-                <View style={{
-                  width: 24, height: 24, borderRadius: 6,
-                  backgroundColor: consentGiven ? "#16A34A" : "#FFFFFF",
-                  borderWidth: consentGiven ? 0 : 2, borderColor: "#D1D5DB",
-                  alignItems: "center", justifyContent: "center", marginRight: 12,
-                }}>
-                  {consentGiven && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <AppText variant="bodySm" style={{ color: "#374151", flex: 1, fontSize: 13, lineHeight: 18 }}>
-                  {t("events.consentText") || "I agree to participate in this event and confirm the details above are correct."}
-                </AppText>
-              </Pressable>
-            </ScrollView>
-
-            {/* Modal Actions */}
-            <View style={{
-              flexDirection: "row", paddingHorizontal: 24,
-              paddingTop: 12, paddingBottom: 28,
-              borderTopWidth: 1, borderTopColor: theme.background.neutralSubtle, gap: 12,
-            }}>
-              <Pressable
-                onPress={() => setParticipateEvent(null)}
-                style={{ flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: theme.border.card, paddingVertical: 14, alignItems: "center" }}
-              >
-                <AppText variant="bodyMd" style={{ color: theme.text.subtle, fontWeight: "600" }}>
-                  {t("common.cancel") || "Cancel"}
-                </AppText>
-              </Pressable>
-              <Pressable
-                onPress={handleConfirmParticipation}
-                disabled={registering || !consentGiven}
-                style={{
-                  flex: 1, borderRadius: 12, paddingVertical: 14,
-                  backgroundColor: consentGiven ? theme.primary.green : theme.text.placeholder,
-                  alignItems: "center", flexDirection: "row", justifyContent: "center",
-                }}
-              >
-                {registering && <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 6 }} />}
-                <AppText variant="bodyMd" style={{ color: "#FFFFFF", fontWeight: "700" }}>
-                  {registering ? (t("events.submitting") || "Submitting…") : (t("events.confirmApply") || "Confirm")}
-                </AppText>
-              </Pressable>
-            </View>
-          </View>
-        </View>
+            </Animated.View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </>
   );
 };
 
 export default Program;
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: theme.background.screen,
+  },
+
+  // ── Skeleton ──
+  skeletonHeader: {
+    height: 160,
+    backgroundColor: theme.background.header,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginBottom: 20,
+  },
+
+  // ── Header ──
+  header: {
+    backgroundColor: theme.background.header,
+    paddingBottom: 14,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingTop: 52,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: theme.text.primary,
+    letterSpacing: -0.5,
+    lineHeight: 33,
+  },
+  screenSubtitle: {
+    fontSize: 13,
+    color: theme.text.muted,
+    marginTop: 3,
+    fontWeight: "500",
+  },
+  statRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingTop: 4,
+  },
+  statPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  liveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FEF2F2",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#EF4444",
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#EF4444",
+    letterSpacing: 0.5,
+  },
+  searchWrap: {
+    marginTop: 2,
+    paddingHorizontal: 4,
+  },
+
+  // ── Empty state ──
+  emptyState: {
+    alignItems: "center",
+    paddingTop: 64,
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: theme.text.subtle,
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: theme.text.muted,
+    textAlign: "center",
+    lineHeight: 19,
+  },
+  clearBtn: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: theme.primary.green + "18",
+  },
+  clearBtnText: {
+    color: theme.primary.green,
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  // ── Modal ──
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: theme.background.input,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    maxHeight: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 20,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.border.subtle,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.border.subtle,
+  },
+  modalTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    color: theme.text.primary,
+    letterSpacing: -0.3,
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: theme.text.muted,
+    marginTop: 2,
+    fontWeight: "500",
+  },
+  closeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: theme.background.neutralSubtle,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBody: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+
+  // Event card in modal
+  eventCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    backgroundColor: theme.primary.green + "0E",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.primary.green + "30",
+  },
+  eventCardIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: theme.primary.green + "20",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  eventCardLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: theme.primary.green,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: 3,
+  },
+  eventCardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: theme.text.primary,
+    lineHeight: 20,
+  },
+
+  // User details card
+  userCard: {
+    backgroundColor: theme.background.neutralSubtle,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.border.subtle,
+  },
+  userCardHeading: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: theme.text.muted,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: theme.border.subtle,
+    marginBottom: 10,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  detailLabel: {
+    fontSize: 13,
+    color: theme.text.muted,
+    fontWeight: "500",
+  },
+  detailValue: {
+    fontSize: 13,
+    color: theme.text.primary,
+    fontWeight: "700",
+  },
+
+  // Consent
+  consentRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: theme.background.neutralSubtle,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: theme.border.subtle,
+    gap: 12,
+  },
+  consentRowActive: {
+    backgroundColor: theme.primary.green + "0E",
+    borderColor: theme.primary.green + "50",
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: theme.border.subtle,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  checkboxActive: {
+    backgroundColor: theme.primary.green,
+    borderColor: theme.primary.green,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 13,
+    color: theme.text.subtle,
+    lineHeight: 19,
+  },
+  consentTextActive: {
+    color: theme.text.primary,
+  },
+
+  // Modal actions
+  modalActions: {
+    flexDirection: "row",
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 32,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.border.subtle,
+    gap: 10,
+  },
+  cancelBtn: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: theme.border.card,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelBtnText: {
+    color: theme.text.subtle,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  confirmBtn: {
+    flex: 1.6,
+    borderRadius: 14,
+    paddingVertical: 15,
+    backgroundColor: theme.primary.green,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 4,
+    shadowColor: theme.primary.green,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  confirmBtnDisabled: {
+    backgroundColor: theme.text.placeholder,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  confirmBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+});

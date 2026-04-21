@@ -5,6 +5,7 @@ import FormInput from "@/components/atoms/FormInput";
 import Select from "@/components/atoms/Select";
 import Toggle from "@/components/atoms/Toggle";
 import MultiSelect from "@/components/atoms/MultiSelect";
+import TextArea from "@/components/atoms/TextArea";
 import OnboardingHeader from "@/components/molecules/OnboardingHeader";
 import {
   animalTypes,
@@ -19,7 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { OnboardingData } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -142,6 +143,8 @@ const Onboarding = () => {
   const cropOptions = getLocalizedOptions(cropTypes, currentLanguage);
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
+
+  const [otherTypeText, setOtherTypeText] = useState<Record<string, string>>({});
 
   const renderPersonalStep = () => (
     <View style={{ flex: 1 }}>
@@ -379,6 +382,17 @@ const Onboarding = () => {
                       }
                       otherPlaceholder="Enter livestock type..."
                     />
+                    {entry.type === "other" && (
+                      <TextArea
+                        value={otherTypeText[entry.id] || ""}
+                        onChangeText={(text) =>
+                          setOtherTypeText((prev) => ({ ...prev, [entry.id]: text }))
+                        }
+                        placeholder={t("onboarding.specifyOther") || "Please specify…"}
+                        numberOfLines={3}
+                        style={{ marginTop: 8 }}
+                      />
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <FormInput

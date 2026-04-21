@@ -89,7 +89,7 @@ export default function MultiSelect({
             s.triggerText,
             { color: selectedOptions.length > 0 ? theme.text.dark : theme.text.light },
           ]}
-          numberOfLines={1}
+          numberOfLines={2}
         >
           {displayText}
         </Text>
@@ -196,12 +196,15 @@ const s = StyleSheet.create({
     borderColor: theme.border.default,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    minHeight: 52,
     backgroundColor: theme.background.input,
   },
   triggerText: {
-    fontSize: 16,
+    fontSize: 15,
     flex: 1,
+    marginRight: 8,
+    lineHeight: 22,
   },
   overlay: {
     flex: 1,
@@ -230,14 +233,17 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: theme.border.default,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 15,
     color: theme.text.dark,
+    flex: 1,
+    marginRight: 12,
+    lineHeight: 22,
   },
   checkbox: {
     width: 24,

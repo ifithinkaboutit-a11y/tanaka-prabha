@@ -357,7 +357,7 @@ export default function CreateEvent() {
             return;
         }
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [16, 9],
             quality: 0.8,
@@ -388,14 +388,26 @@ export default function CreateEvent() {
             return;
         }
 
+        // Convert "HH:MM AM/PM" → "HH:MM:00" (24-hour) for the backend
+        function to24h(t: string): string {
+            const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (!match) return t; // already 24h or unexpected format
+            let h = parseInt(match[1], 10);
+            const m = match[2];
+            const mer = match[3].toUpperCase();
+            if (mer === "AM" && h === 12) h = 0;
+            if (mer === "PM" && h !== 12) h += 12;
+            return `${String(h).padStart(2, "0")}:${m}:00`;
+        }
+
         const payload = {
             title,
             title_hi: titleHi,
             description,
             description_hi: descriptionHi,
             date,
-            start_time: startTime,
-            end_time: endTime,
+            start_time: to24h(startTime),
+            end_time: endTime ? to24h(endTime) : undefined,
             location_name: locationName,
             location_address: locationAddress,
             guidelines_and_rules: guidelines,

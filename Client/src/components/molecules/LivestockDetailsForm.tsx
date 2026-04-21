@@ -18,7 +18,7 @@ import T, { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import { theme } from "@/styles/colors";
 
-// ─── Animal config — label abbreviation + accent color ────────────────────────
+// ─── Animal config — standardized with emojis matching profile display ────────
 const ANIMAL_DATA: {
   key: keyof LivestockDetails;
   icon: string;
@@ -39,6 +39,7 @@ const ANIMAL_DATA: {
 // ─── Counter Row ──────────────────────────────────────────────────────────────
 const AnimalCounter = ({
   label,
+  emoji,
   value,
   onChange,
   icon,
@@ -48,6 +49,7 @@ const AnimalCounter = ({
   isLast = false,
 }: {
   label: string;
+  emoji: string;
   value: number | undefined;
   onChange: (v: number) => void;
   icon: string;
@@ -120,10 +122,8 @@ const ac = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+  badgeEmoji: {
+    fontSize: 20,
   },
   label: { fontSize: 15, fontWeight: "500", color: theme.text.secondary },
   stepper: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -150,7 +150,6 @@ const ac = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: theme.background.input,
     fontSize: 15,
-    fontWeight: "700",
     color: theme.text.primary,
     padding: 0,
   },
@@ -162,12 +161,13 @@ export default function LivestockDetailsForm({
   onSave,
   onCancel,
 }: LivestockDetailsFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
   const { t } = useTranslation();
 
   const handleSave = () => {
     if (Object.values(formData).some((v) => v < 0)) {
-      Alert.alert("Error", "Livestock counts cannot be negative");
+      Alert.alert(t("common.error"), t("livestockDetails.negativeError"));
       return;
     }
     onSave(formData);
@@ -177,6 +177,13 @@ export default function LivestockDetailsForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const totalAnimals = Object.values(formData).reduce((sum, v) => sum + v, 0);
+
+  const farmSizeLabel =
+    totalAnimals > 10
+      ? t("livestockDetails.largeFarm")
+      : totalAnimals > 0
+      ? t("livestockDetails.smallFarm")
+      : t("livestockDetails.noLivestock");
 
   return (
     <KeyboardAwareScrollView
@@ -193,9 +200,7 @@ export default function LivestockDetailsForm({
           </Text>
         </View>
         <View style={s.summaryBadge}>
-          <Text style={s.summaryBadgeText}>
-            {totalAnimals > 10 ? "Large Farm" : totalAnimals > 0 ? "Small Farm" : "No Livestock"}
-          </Text>
+          <Text style={s.summaryBadgeText}>{farmSizeLabel}</Text>
         </View>
       </View>
 

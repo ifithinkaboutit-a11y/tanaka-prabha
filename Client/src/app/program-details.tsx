@@ -28,7 +28,7 @@ const ProgramDetails = () => {
   const [loading, setLoading] = useState(true);
   const { isInterested, interestCount, toggleInterest, loading: interestLoading } = useInterest(
     programId ?? "",
-    program?.interest_count ?? 0
+    program?.interestCount ?? 0
   );
 
   // Fetch program on mount

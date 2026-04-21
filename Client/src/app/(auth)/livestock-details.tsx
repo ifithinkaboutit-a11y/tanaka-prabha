@@ -15,6 +15,7 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
+import TextArea from "../../components/atoms/TextArea";
 import { useOnboardingStore, LivestockEntry } from "../../stores/onboardingStore";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "../../i18n";
@@ -46,9 +47,25 @@ function resolveCropLabel(value: string): string {
   return found ? found.label : value;
 }
 
+function resolveAnimalLabel(type: string, lang: string): string {
+  const item = animalTypes.find((a) => a.value === type);
+  if (!item) return type;
+  return lang === "hi" ? (item.labelHi ?? item.label) : item.label;
+}
+
 export const unstable_settings = {
   headerShown: false,
 };
+
+// Unique accent colors for each livestock entry (cycles if more than 6 entries)
+const ENTRY_ACCENT_COLORS = [
+  "#16A34A", // green
+  "#2563EB", // blue
+  "#D97706", // amber
+  "#9333EA", // purple
+  "#DC2626", // red
+  "#0891B2", // cyan
+];
 
 interface EntryErrors {
   [entryId: string]: {
@@ -79,6 +96,7 @@ const AuthLivestockDetailsScreen = () => {
   const [errors, setErrors] = useState<EntryErrors>({});
   const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otherTypeText, setOtherTypeText] = useState<Record<string, string>>({});
 
   const animalOptions = getLocalizedOptions(animalTypes, currentLanguage);
 

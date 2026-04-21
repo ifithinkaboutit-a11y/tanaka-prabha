@@ -8,14 +8,11 @@ import {
   RefreshControl,
   ScrollView,
   View,
-  ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
-import BannerSlideshow from "@/components/molecules/Banner";
-import ProgramSection from "../../components/molecules/ProgramSection";
 import SearchBar from "../../components/molecules/SearchBar";
 import { schemeCategories } from "../../data/content/schemeCategories";
-import { bannersApi, schemesApi, Scheme, Banner } from "@/services/apiService";
+import { schemesApi, Scheme } from "@/services/apiService";
 import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
@@ -49,6 +46,7 @@ const SchemeCard = ({
         style={{
           borderRadius: 24,
           overflow: "hidden",
+          marginBottom:"16",
           backgroundColor: theme.background.input,
           borderWidth: 1.5,
           borderColor: "rgba(0,0,0,0.06)",
@@ -174,7 +172,6 @@ export default function Schemes() {
   const { t } = useTranslation();
   const { currentLanguage } = useLanguageStore();
   const [schemes, setSchemes] = useState<Scheme[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -183,12 +180,8 @@ export default function Schemes() {
 
   const fetchSchemes = async () => {
     try {
-      const [data, bannersData] = await Promise.all([
-        fetchWithCache(CACHE_KEYS.SCHEMES, () => schemesApi.getAll({ limit: 50 })),
-        fetchWithCache(CACHE_KEYS.BANNERS, () => bannersApi.getAll()),
-      ]);
+      const data = await fetchWithCache(CACHE_KEYS.SCHEMES, () => schemesApi.getAll({ limit: 50 }));
       setSchemes(data);
-      setBanners(bannersData);
       // Compute real counts per category from returned data
       const counts: Record<string, number> = {};
       data.forEach((s) => {
@@ -282,13 +275,8 @@ export default function Schemes() {
 
   const isSearchActive = searchQuery.trim().length > 0;
 
-  // Featured scheme (first featured one, or first overall)
-  const featuredScheme = schemes.find((s) => s.isFeatured) || schemes[0];
-  // Recommended schemes (featured ones first, then fill up to 5)
-  const recommendedSchemes = [
-    ...filteredSchemes.filter((s) => s.isFeatured),
-    ...filteredSchemes.filter((s) => !s.isFeatured),
-  ].slice(0, 5);
+  // Recommended schemes — featured only, up to 5
+  const recommendedSchemes = filteredSchemes.filter((s) => s.isFeatured).slice(0, 5);
 
   if (loading) {
     return (
@@ -417,6 +405,7 @@ export default function Schemes() {
           </Pressable>
         </View>
 
+<<<<<<< bug1
         <View style={{ position: "relative" }}>
           <ScrollView
             horizontal
@@ -465,6 +454,20 @@ export default function Schemes() {
             </View>
           )}
         </View>
+=======
+        {recommendedSchemes.map((scheme) => (
+          <SchemeCard
+            key={scheme.id}
+            scheme={scheme}
+            onPress={() => handleSchemePress(scheme.id)}
+          />
+        ))}
+        {recommendedSchemes.length > 3 && (
+          <AppText style={{ color: theme.text.muted, textAlign: "center", fontSize: 12, marginTop: 8 }}>
+            {t("schemesPage.scrollForMore")}
+          </AppText>
+        )}
+>>>>>>> main
       </View>
 
       {/* Categories */}
@@ -519,6 +522,42 @@ export default function Schemes() {
         </View>
       )}
 
+<<<<<<< bug1
+=======
+      {/* All Schemes section — latest 5 with View All */}
+      {!isSearchActive && filteredSchemes.length > 0 && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <AppText variant="h3" style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20, letterSpacing: -0.2 }}>
+              {t("schemesPage.allSchemes")}
+            </AppText>
+           <Pressable
+              onPress={handleViewAllSchemes}
+              style={({ pressed }) => ({
+                marginTop: 12,
+                paddingVertical: 14,
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "#16A34A",
+                alignItems: "center",
+                backgroundColor: pressed ? "#F0FDF4" : "transparent",
+              })}
+            >
+              <AppText style={{ color: "#16A34A", fontWeight: "700", fontSize: 14 }}>
+                {t("schemesPage.viewAll")} ({filteredSchemes.length - 5} {t("schemesPage.more")})
+              </AppText>
+            </Pressable>
+          </View>
+          {filteredSchemes.slice(0, 5).map((scheme) => (
+            <SchemeCard
+              key={scheme.id}
+              scheme={scheme}
+              onPress={() => handleSchemePress(scheme.id)}
+            />
+          ))}
+        </View>
+      )}
+>>>>>>> main
 
       {/* No results message */}
       {isSearchActive && filteredSchemes.length === 0 && (

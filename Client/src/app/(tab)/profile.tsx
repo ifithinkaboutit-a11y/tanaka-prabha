@@ -267,23 +267,26 @@ const Profile = () => {
         <View style={s.heroCenter}>
           {/* Tappable avatar with upload overlay */}
           <Pressable onPress={handleAvatarUpload} style={s.avatarRing} disabled={avatarUploading}>
-            <Avatar
-              uri={localAvatarUri || profile.photoUrl || undefined}
-              name={profile.name}
-              size="3xl"
-              shape="circle"
-              bgColor="#FFFFFF"
-            />
-            {/* Camera badge */}
+            {/* Inner clip view — keeps image circular without clipping the badge */}
+            <View style={s.avatarClip}>
+              <Avatar
+                uri={localAvatarUri || profile.photoUrl || undefined}
+                name={profile.name}
+                size="3xl"
+                shape="circle"
+                bgColor="#FFFFFF"
+              />
+              {/* Upload spinner overlay */}
+              {avatarUploading && (
+                <View style={s.avatarLoadingOverlay}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </View>
+              )}
+            </View>
+            {/* Camera badge — outside the clip view so it's always visible */}
             {!avatarUploading && (
               <View style={s.cameraBadge}>
                 <Ionicons name="camera" size={13} color="#FFFFFF" />
-              </View>
-            )}
-            {/* Upload spinner overlay */}
-            {avatarUploading && (
-              <View style={s.avatarLoadingOverlay}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
               </View>
             )}
           </Pressable>
@@ -318,14 +321,14 @@ const Profile = () => {
           <View style={s.statsDivider} />
           <StatBadge
             icon="leaf-outline"
-            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea}` : "0"}
+            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea} Bigha` : "0"}
             label={t("profile.bigha")}
           />
           <View style={s.statsDivider} />
           <StatBadge
             icon="paw-outline"
             value={String(totalAnimals)}
-            label="Animals"
+            label={t("livestockDetails.totalAnimals")}
           />
         </View>
 
@@ -396,7 +399,7 @@ const Profile = () => {
         ) : (
           <View style={s.emptySection}>
             <Ionicons name="leaf-outline" size={32} color="#D1FAE5" />
-            <Text style={s.emptySectionText}>No land details added yet</Text>
+            <Text style={s.emptySectionText}>{t("landDetails.noLandAdded")}</Text>
             <Button
               size="sm"
               variant="outline"
@@ -465,7 +468,7 @@ const Profile = () => {
         ) : (
           <View style={s.emptySection}>
             <Ionicons name="paw-outline" size={32} color="#FED7AA" />
-            <Text style={s.emptySectionText}>No livestock details added yet</Text>
+            <Text style={s.emptySectionText}>{t("livestockDetails.noLivestockAdded")}</Text>
             <Button
               size="sm"
               variant="outline"
@@ -591,9 +594,9 @@ const s = StyleSheet.create({
 
   heroCenter: { alignItems: "center", marginBottom: 24 },
   avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.5)",
     alignItems: "center",
@@ -604,20 +607,29 @@ const s = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
+    // NO overflow:hidden here — that was hiding the camera badge
+  },
+  avatarClip: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cameraBadge: {
     position: "absolute",
     bottom: 0,
     right: 0,
     backgroundColor: "#386641",
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "#FFFFFF",
+    zIndex: 10,
   },
   avatarLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -724,8 +736,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   infoIconBoxAccent: { backgroundColor: theme.background.successSubtle },
-  infoLabel: { color: theme.text.muted, fontSize: 13, flex: 1 },
-  infoValue: { color: theme.text.secondary, fontSize: 13, fontWeight: "600", maxWidth: "45%", textAlign: "right" },
+  infoLabel: { color: theme.text.muted, fontSize: 13, flex: 1, flexShrink: 1 },
+  infoValue: { color: theme.text.secondary, fontSize: 13, fontWeight: "600", maxWidth: "55%", textAlign: "right", flexShrink: 0 },
   infoValueAccent: { color: theme.primary.green },
 
   // Livestock table
@@ -737,7 +749,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#FEF3C7",
   },
-  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500" },
+  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500", flex: 1, marginRight: 8 },
   livestockCountBadge: {
     backgroundColor: "#FFF7ED",
     borderRadius: 8,

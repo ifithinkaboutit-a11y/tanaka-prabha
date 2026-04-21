@@ -695,11 +695,6 @@ export default function LocationPickerScreen() {
                     </AppText>
                 )}
 
-                {accuracyCircleVisible && (
-                    <AppText variant="bodySm" style={styles.accuracyLabel}>
-                        {formatAccuracyLabel(gpsAccuracy)}
-                    </AppText>
-                )}
 
                 <View style={styles.nudgeRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
@@ -800,6 +795,18 @@ const styles = StyleSheet.create({
     },
     myLocationErrorText: { color: theme.semantic.warningText, fontSize: 12, flexShrink: 1 },
 
+    resetPositionContainer: {
+        position: "absolute", bottom: 190, left: 16,
+        zIndex: 20, elevation: 20,
+    },
+    resetPositionBtn: {
+        flexDirection: "row", alignItems: "center", gap: 6,
+        backgroundColor: theme.background.input,
+        paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20,
+        shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
+    },
+    resetPositionText: { color: theme.primary.green, fontWeight: "600", fontSize: 13 },
+
     bottomSheet: {
         position: "absolute", bottom: 0, left: 0, right: 0,
         backgroundColor: theme.background.input, borderTopLeftRadius: 24, borderTopRightRadius: 24,
@@ -807,18 +814,17 @@ const styles = StyleSheet.create({
         paddingBottom: Platform.OS === "ios" ? 40 : 24,
         shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20, elevation: 12, zIndex: 15,
     },
-    sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
+    sheetHandle: { width: 40, height: 8, borderRadius: 2, backgroundColor: theme.border.subtle, alignSelf: "center", marginBottom: 14 },
     sheetLabel: { fontSize: 10, letterSpacing: 1.2, color: theme.text.placeholder, textTransform: "uppercase", marginBottom: 6 },
-    sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 12 },
-    sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 12 },
+    sheetHint: { color: theme.text.placeholder, fontStyle: "italic", marginBottom: 24 },
+    sheetAddress: { color: theme.text.primary, fontWeight: "600", lineHeight: 22, marginBottom: 16 },
     geocodeErrorRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 },
     geocodeErrorText: { color: theme.semantic.error, flex: 1 },
-    accuracyLabel: { color: theme.primary.green, fontSize: 12, marginBottom: 8 },
 
     nudgeRow: {
         flexDirection: "row", alignItems: "flex-start", gap: 6,
         backgroundColor: theme.background.successSubtle, borderRadius: 10,
-        paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
+        paddingHorizontal: 10, paddingVertical: 16, marginBottom: 24,
     },
     nudgeText: { color: theme.text.secondary, flex: 1, lineHeight: 18 },
 

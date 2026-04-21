@@ -60,14 +60,14 @@ export default function MySchedule() {
     const today = new Date().toISOString().split("T")[0];
 
     const upcoming = appointments.filter((a) => {
-        const apptDate = (a as any).appointment_date || (a as any).date || "";
-        const status = (a as any).status || "";
+        const apptDate = a.date || "";
+        const status = a.status || "";
         return apptDate >= today && !["cancelled", "completed", "missed"].includes(status);
     });
 
     const past = appointments.filter((a) => {
-        const apptDate = (a as any).appointment_date || (a as any).date || "";
-        const status = (a as any).status || "";
+        const apptDate = a.date || "";
+        const status = a.status || "";
         return apptDate < today || ["cancelled", "completed", "missed"].includes(status);
     });
 
@@ -88,7 +88,11 @@ export default function MySchedule() {
                 <Pressable onPress={() => router.back()} className="mb-3 w-9 h-9 rounded-full bg-white/20 items-center justify-center">
                     <Ionicons name="arrow-back" size={22} color="#fff" />
                 </Pressable>
+<<<<<<< bug1
                 <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("schedule.title")}</AppText>
+=======
+                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("connect.mySchedule")}</AppText>
+>>>>>>> main
                 <AppText style={{ color: "rgba(255,255,255,0.75)", marginTop: 4, fontSize: 13 }}>
                     {t("schedule.subtitle")}
                 </AppText>

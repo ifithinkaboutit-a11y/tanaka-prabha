@@ -13,8 +13,16 @@ async function syncQueue(): Promise<void> {
 
   const entries = await offlineQueue.getAll();
   const now = Date.now();
+
+  // Drop stale entries (older than 6 hours) — they are no longer actionable
+  for (const entry of entries) {
+    if (now - new Date(entry.savedAt).getTime() >= SIX_HOURS_MS) {
+      await offlineQueue.dequeue(entry.id);
+    }
+  }
+
   const eligible = entries.filter(
-    (e) => now - new Date(e.savedAt).getTime() >= SIX_HOURS_MS
+    (e) => now - new Date(e.savedAt).getTime() < SIX_HOURS_MS
   );
 
   for (const entry of eligible) {

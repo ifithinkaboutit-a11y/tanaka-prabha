@@ -144,10 +144,12 @@ const uc = StyleSheet.create({
 // ──────────────────────────────────────────────────────────────
 // NotFoundCard  – shown when no user exists for the mobile number
 // ──────────────────────────────────────────────────────────────
-function NotFoundCard({ mobile, onMarkAnyway, marking }: {
+function NotFoundCard({ mobile, onMarkAnyway, marking, walkInName, setWalkInName }: {
     mobile: string;
     onMarkAnyway: () => void;
     marking: boolean;
+    walkInName: string;
+    setWalkInName: (name: string) => void;
 }) {
     return (
         <View style={nf.card}>
@@ -156,7 +158,14 @@ function NotFoundCard({ mobile, onMarkAnyway, marking }: {
             <AppText style={nf.subtitle}>
                 No account found for <AppText style={nf.mobile}>{mobile}</AppText>. You can still mark them as present.
             </AppText>
-            <TouchableOpacity style={nf.markBtn} onPress={onMarkAnyway} disabled={marking}>
+            <TextInput
+                style={nf.nameInput}
+                placeholder="Enter name"
+                placeholderTextColor="#9CA3AF"
+                value={walkInName}
+                onChangeText={setWalkInName}
+            />
+            <TouchableOpacity style={[nf.markBtn, walkInName.trim() === "" && nf.markBtnDisabled]} onPress={onMarkAnyway} disabled={marking || walkInName.trim() === ""}>
                 {marking ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
@@ -180,10 +189,19 @@ const nf = StyleSheet.create({
     title: { fontSize: 16, fontWeight: "700", color: "#374151", textAlign: "center" },
     subtitle: { fontSize: 13, color: "#6B7280", textAlign: "center", marginTop: 6, marginBottom: 16, lineHeight: 20 },
     mobile: { fontWeight: "700", color: theme.text.secondary },
+    nameInput: {
+        width: "100%",
+        borderWidth: 1.5, borderColor: "#E5E7EB", borderRadius: 10,
+        paddingHorizontal: 14, paddingVertical: 10,
+        fontSize: 15, color: "#374151",
+        backgroundColor: "#F9FAFB",
+        marginBottom: 12,
+    },
     markBtn: {
         flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
         backgroundColor: "#F59E0B", borderRadius: 12, paddingVertical: 12, paddingHorizontal: 20,
     },
+    markBtnDisabled: { backgroundColor: "#D1D5DB" },
     markBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
 });
 
@@ -199,6 +217,7 @@ export default function MarkAttendance() {
     const [lookupLoading, setLookupLoading] = useState(false);
     const [foundUser, setFoundUser] = useState<UserProfile | null | "not_found">(null);
     const [marking, setMarking] = useState(false);
+    const [walkInName, setWalkInName] = useState("");
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const router = useRouter();
@@ -245,7 +264,7 @@ export default function MarkAttendance() {
             const resolvedName =
                 foundUser && foundUser !== "not_found"
                     ? foundUser.name
-                    : `Walk-in: ${mobileNumber}`;
+                    : walkInName;
 
             const payload = {
                 eventId: selectedEvent.id,
@@ -265,8 +284,7 @@ export default function MarkAttendance() {
 
             await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present", resolvedName);
             Alert.alert("✅ Done!", "Attendance marked as Present.", [
-                { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); } },
-                { text: "Done", onPress: () => setSelectedEvent(null) },
+                { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); setWalkInName(""); } },
             ]);
         } catch {
             Alert.alert("Error", "Failed to mark attendance. Please try again.");
@@ -343,7 +361,7 @@ export default function MarkAttendance() {
         <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 48 }}>
             {/* header */}
             <View style={s.header}>
-                <TouchableOpacity onPress={() => { setSelectedEvent(null); setMobileNumber(""); setFoundUser(null); }} style={s.backBtn}>
+                <TouchableOpacity onPress={() => { setSelectedEvent(null); setMobileNumber(""); setFoundUser(null); setWalkInName(""); }} style={s.backBtn}>
                     <Ionicons name="arrow-back" size={22} color={theme.text.secondary} />
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
@@ -415,6 +433,8 @@ export default function MarkAttendance() {
                             mobile={mobileNumber}
                             onMarkAnyway={handleMarkPresent}
                             marking={marking}
+                            walkInName={walkInName}
+                            setWalkInName={setWalkInName}
                         />
                     ) : (
                         <UserCard

@@ -604,6 +604,7 @@ export default function AdminDashboard() {
                 </View>
             )}
 
+<<<<<<< bug1
             {/* Livestock Breakdown Modal */}
             <Modal
                 visible={livestockVisible}
@@ -679,6 +680,89 @@ export default function AdminDashboard() {
             </View>
 
             <View style={{ height: 40 }} />
+=======
+            <View style={s.divider} />
+
+            {/* ── Event Management ── */}
+            <SectionHeader label="Event Management" />
+            <ActionCard
+                icon="add-circle"
+                title="Create New Event"
+                description="Schedule a new event with date, time & cover image"
+                color="#3B82F6"
+                onPress={() => goTo("/(admin)/create-event")}
+            />
+            <ActionCard
+                icon="checkmark-done-circle"
+                title="Mark Attendance"
+                description="Look up farmers by mobile & mark them present"
+                color="#10B981"
+                onPress={() => goTo("/(admin)/mark-attendance")}
+            />
+            <ActionCard
+                icon="list-circle"
+                title="View Attendance Records"
+                description="Browse attendance logs per event"
+                color="#8B5CF6"
+                onPress={() => goTo("/(admin)/view-attendance")}
+            />
+
+            <View style={s.divider} />
+
+            {/* ── Content Management ── */}
+            <SectionHeader label="Content Management (CMS)" />
+            <ActionCard
+                icon="images-outline"
+                title="Manage Banners"
+                description="Add, edit or remove home screen banners"
+                color="#F59E0B"
+                onPress={() => goTo("/(admin)/content-management")}
+            />
+            <ActionCard
+                icon="document-text-outline"
+                title="Manage Schemes"
+                description="Create and update government scheme listings"
+                color="#EC4899"
+                onPress={() => goTo("/(admin)/content-management")}
+            />
+            <ActionCard
+                icon="people-circle-outline"
+                title="Manage Professionals"
+                description="Add or update expert profiles"
+                color="#6366F1"
+                onPress={() => goTo("/(admin)/content-management")}
+            />
+            <View style={s.divider} />
+
+            {/* ── Notifications ── */}
+            <SectionHeader label="Notifications" />
+            <ActionCard
+                icon="notifications"
+                title="Send Push Notification"
+                description="Broadcast announcements to all users or by district"
+                color="#EF4444"
+                onPress={() => goTo("/(admin)/send-notification")}
+            />
+
+            <View style={s.divider} />
+
+            {/* ── Beneficiaries ── */}
+            <SectionHeader label="Farmers" />
+            <ActionCard
+                icon="person-add"
+                title="Add Farmer"
+                description="Register a new farmer on behalf of the community"
+                color="#10B981"
+                onPress={() => goTo("/(admin)/add-beneficiary")}
+            />
+            <ActionCard
+                icon="people"
+                title="View Farmers"
+                description="Browse and search all registered farmers"
+                color="#0EA5E9"
+                onPress={() => goTo("/(admin)/beneficiaries")}
+            />
+>>>>>>> main
         </ScrollView>
     );
 }

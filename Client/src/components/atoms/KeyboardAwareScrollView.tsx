@@ -10,6 +10,9 @@ import {
   Dimensions,
 } from "react-native";
 
+// Minimum breathing room above the keyboard on Android (px)
+const ANDROID_MIN_EXTRA_HEIGHT = 20;
+
 interface KeyboardAwareScrollViewProps extends ScrollViewProps {
   children: React.ReactNode;
   /** Extra pixels to scroll beyond the focused input (breathing room). */

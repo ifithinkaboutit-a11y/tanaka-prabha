@@ -28,7 +28,7 @@ const LandDetailsScreen = () => {
     return (
       <View style={s.loader}>
         <ActivityIndicator size="large" color={HEADER_COLOR} />
-        <Text style={s.loaderText}>Loading your land details...</Text>
+        <Text style={s.loaderText}>{t("common.loading")}</Text>
       </View>
     );
   }
@@ -43,10 +43,10 @@ const LandDetailsScreen = () => {
   const handleSave = async (data: typeof initialData) => {
     try {
       await updateLandDetails(data);
-      Alert.alert("✅ Saved", "Your land details have been updated.");
+      Alert.alert("✅ Saved", t("landDetails.savedMessage") || "Your land details have been updated.");
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to save. Please check your connection.");
+      Alert.alert(t("common.error"), t("landDetails.saveError") || "Failed to save. Please check your connection.");
       console.error("Error saving land details:", error);
     }
   };
@@ -79,7 +79,7 @@ const LandDetailsScreen = () => {
           {saving && (
             <View style={s.savingIndicator}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={s.savingText}>Saving...</Text>
+              <Text style={s.savingText}>{t("common.loading")}</Text>
             </View>
           )}
         </View>

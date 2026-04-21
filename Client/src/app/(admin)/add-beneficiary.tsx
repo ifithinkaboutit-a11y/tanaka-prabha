@@ -2,6 +2,7 @@
 import AppText from "@/components/atoms/AppText";
 import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView";
 import Select from "@/components/atoms/Select";
+import TextArea from "@/components/atoms/TextArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { genderOptions, cropTypes, indianStates, getLocalizedOptions } from "@/data/content/onboardingOptions";
 import { ApiUserProfile, uploadApi } from "@/services/apiService";
@@ -97,6 +98,7 @@ function Step1({
     onCapturePhoto: () => void;
 }) {
     const genderOpts = genderOptions.map((g) => ({ value: g.value, label: g.label }));
+    const [genderOtherText, setGenderOtherText] = useState("");
     return (
         <>
             {/* Photo capture */}
@@ -151,6 +153,15 @@ function Step1({
                     <Select value={form.gender} onChange={(v) => setForm({ ...form, gender: v })}
                         options={genderOpts} placeholder="Select" />
                     <FieldError message={errors.gender} />
+                    {form.gender === "other" && (
+                        <TextArea
+                            value={genderOtherText}
+                            onChangeText={setGenderOtherText}
+                            placeholder="Please specify…"
+                            numberOfLines={3}
+                            style={{ marginTop: 8 }}
+                        />
+                    )}
                 </View>
             </View>
 
@@ -674,6 +685,7 @@ export default function AddBeneficiary() {
     const [submitting, setSubmitting] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [conflictFarmer, setConflictFarmer] = useState<ApiUserProfile | null>(null);
+    const [showStep2Error, setShowStep2Error] = useState(false);
 
     const [personal, setPersonal] = useState<PersonalForm>({
         name: "", mobile: "", age: "", gender: "", fathersName: "", aadhaar: "", photoUrl: "",
@@ -790,7 +802,8 @@ export default function AddBeneficiary() {
     // ── Navigation ────────────────────────────────────────────
     function handleNext() {
         if (step === 0 && !validateStep1()) return;
-        if (step === 1 && !validateStep2()) return;
+        if (step === 1 && !validateStep2()) { setShowStep2Error(true); return; }
+        setShowStep2Error(false);
         setStep((s) => s + 1);
     }
     function handleBack() {
@@ -963,10 +976,19 @@ export default function AddBeneficiary() {
                             </Pressable>
                         )}
                         {step < TOTAL_STEPS - 1 ? (
-                            <Pressable style={[s.nextBtn, step === 0 ? { flex: 1 } : {}]} onPress={handleNext}>
-                                <AppText style={s.nextBtnText}>Next</AppText>
-                                <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
-                            </Pressable>
+                            <View style={{ flex: 1 }}>
+                                <Pressable
+                                    style={[s.nextBtn, step === 0 ? { flex: 1 } : {}, step === 1 && !(location.lat !== null || (location.state && location.district)) && { opacity: 0.6 }]}
+                                    onPress={handleNext}
+                                    disabled={step === 1 && !(location.lat !== null || (location.state && location.district))}
+                                >
+                                    <AppText style={s.nextBtnText}>Next</AppText>
+                                    <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+                                </Pressable>
+                                {step === 1 && showStep2Error && (
+                                    <AppText style={{ color: "#EF4444", fontSize: 12, marginTop: 8 }}>Please pin a location on the map or select State and District</AppText>
+                                )}
+                            </View>
                         ) : (
                             <Pressable style={[s.submitBtn, submitting && { opacity: 0.7 }]}
                                 onPress={handleSubmit} disabled={submitting}>
