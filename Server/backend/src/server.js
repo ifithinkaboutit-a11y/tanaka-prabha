@@ -2,6 +2,7 @@ import './utils/liveLogger.js';
 import dotenv from 'dotenv';
 import app from './app.js';
 import { pool } from './config/db.js';
+import { initEventStatusCron } from './utils/cronJobs.js';
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ const startServer = async () => {
             console.log(`📚 API Docs: http://localhost:${PORT}/api`);
             console.log('='.repeat(50));
         });
+
+        // Initialize background cron jobs
+        initEventStatusCron();
 
         // Graceful shutdown
         const gracefulShutdown = async (signal) => {

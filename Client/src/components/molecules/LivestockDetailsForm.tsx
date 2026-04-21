@@ -1,5 +1,5 @@
 // src/components/molecules/LivestockDetailsForm.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Alert,
@@ -14,26 +14,27 @@ import {
   LivestockDetails,
   LivestockDetailsFormProps,
 } from "../../data/interfaces";
-import { useTranslation } from "../../i18n";
+import T, { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import { theme } from "@/styles/colors";
 
 // ─── Animal config — standardized with emojis matching profile display ────────
 const ANIMAL_DATA: {
   key: keyof LivestockDetails;
-  emoji: string;
-  abbr: string;
+  icon: string;
+  iconLib: "mci" | "ion";
   accentBg: string;
   accentText: string;
 }[] = [
-  { key: "cow",     emoji: "🐄", abbr: "CO", accentBg: "#EEF2FF", accentText: "#3730A3" },
-  { key: "buffalo", emoji: "🐃", abbr: "BU", accentBg: "#F5F3FF", accentText: "#6D28D9" },
-  { key: "sheep",   emoji: "🐑", abbr: "SH", accentBg: "#ECFDF5", accentText: "#065F46" },
-  { key: "goat",    emoji: "🐐", abbr: "GO", accentBg: "#FFFBEB", accentText: "#92400E" },
-  { key: "pig",     emoji: "🐖", abbr: "PI", accentBg: "#FFF1F2", accentText: "#9F1239" },
-  { key: "poultry", emoji: "🐔", abbr: "PO", accentBg: "#FFF7ED", accentText: "#C2410C" },
-  { key: "others",  emoji: "🐾", abbr: "OT", accentBg: "#F9FAFB", accentText: "#374151" },
-];
+    { key: "cow", icon: "cow", iconLib: "mci", accentBg: "#EEF2FF", accentText: "#3730A3" },
+    { key: "buffalo", icon: "water-outline", iconLib: "ion", accentBg: "#F5F3FF", accentText: "#6D28D9" },
+    { key: "sheep", icon: "sheep", iconLib: "mci", accentBg: "#ECFDF5", accentText: "#065F46" },
+    { key: "goat", icon: "goat", iconLib: "mci", accentBg: "#FFFBEB", accentText: "#92400E" },
+    { key: "pig", icon: "pig-variant", iconLib: "mci", accentBg: "#FFF1F2", accentText: "#9F1239" },
+    { key: "poultry", icon: "bird", iconLib: "mci", accentBg: "#FFF7ED", accentText: "#C2410C" },
+    { key: "horse", icon: "horse-variant", iconLib: "mci", accentBg: "#F0FDFA", accentText: "#0D9488" },
+    { key: "others", icon: "dots-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
+  ];
 
 // ─── Counter Row ──────────────────────────────────────────────────────────────
 const AnimalCounter = ({
@@ -41,7 +42,8 @@ const AnimalCounter = ({
   emoji,
   value,
   onChange,
-  abbr,
+  icon,
+  iconLib,
   accentBg,
   accentText,
   isLast = false,
@@ -50,7 +52,8 @@ const AnimalCounter = ({
   emoji: string;
   value: number | undefined;
   onChange: (v: number) => void;
-  abbr: string;
+  icon: string;
+  iconLib: "mci" | "ion";
   accentBg: string;
   accentText: string;
   isLast?: boolean;
@@ -60,7 +63,11 @@ const AnimalCounter = ({
     <View style={[ac.row, !isLast && ac.rowBorder]}>
       <View style={ac.left}>
         <View style={[ac.badge, { backgroundColor: accentBg }]}>
-          <Text style={ac.badgeEmoji}>{emoji}</Text>
+          {iconLib === "mci" ? (
+            <MaterialCommunityIcons name={icon as any} size={20} color={accentText} />
+          ) : (
+            <Ionicons name={icon as any} size={20} color={accentText} />
+          )}
         </View>
         <Text style={ac.label}>{label}</Text>
       </View>
@@ -156,6 +163,7 @@ export default function LivestockDetailsForm({
 }: LivestockDetailsFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
+  const { t } = useTranslation();
 
   const handleSave = () => {
     if (Object.values(formData).some((v) => v < 0)) {
@@ -187,7 +195,9 @@ export default function LivestockDetailsForm({
       <View style={s.summaryStrip}>
         <View style={s.summaryLeft}>
           <Text style={s.summaryNumber}>{totalAnimals}</Text>
-          <Text style={s.summaryLabel}>{t("livestockDetails.totalAnimals")}</Text>
+          <Text style={s.summaryLabel}>
+            {t("livestockDetails.totalAnimals")}
+          </Text>
         </View>
         <View style={s.summaryBadge}>
           <Text style={s.summaryBadgeText}>{farmSizeLabel}</Text>
@@ -197,18 +207,20 @@ export default function LivestockDetailsForm({
       {/* ── Counter rows ── */}
       <View style={s.card}>
         <View style={s.cardHeader}>
-          <Text style={s.cardTitle}>{t("livestockDetails.livestockCount")}</Text>
-          <Text style={s.cardHint}>{t("livestockDetails.tapHint")}</Text>
+          <Text style={s.cardTitle}>
+            {t("livestockDetails.livestockCount")}
+          </Text>
+          <Text style={s.cardHint}>Tap + / − or type a number</Text>
         </View>
 
         {ANIMAL_DATA.map((animal, i) => (
           <AnimalCounter
             key={animal.key}
             label={t(`livestockDetails.${animal.key}`)}
-            emoji={animal.emoji}
             value={formData[animal.key]}
             onChange={(v) => update(animal.key, v)}
-            abbr={animal.abbr}
+            icon={animal.icon}
+            iconLib={animal.iconLib}
             accentBg={animal.accentBg}
             accentText={animal.accentText}
             isLast={i === ANIMAL_DATA.length - 1}
@@ -219,20 +231,22 @@ export default function LivestockDetailsForm({
       {/* ── Info note ── */}
       <View style={s.infoRow}>
         <Ionicons name="information-circle-outline" size={15} color="#6B7280" />
-        <Text style={s.infoText}>{t("livestockDetails.infoMessage")}</Text>
+        <Text style={s.infoText}>
+          {t("livestockDetails.infoMessage")}
+        </Text>
       </View>
 
       {/* ── Actions ── */}
       <View style={s.btnRow}>
         <Button
           variant="outline"
-          label={t("common.cancel")}
+          label={t("livestockDetails.cancel")}
           onPress={onCancel}
           style={{ flex: 1 }}
         />
         <Button
           variant="primary"
-          label={t("common.save")}
+          label={t("livestockDetails.save")}
           onPress={handleSave}
           style={{ flex: 2, backgroundColor: "#EA580C" }}
         />

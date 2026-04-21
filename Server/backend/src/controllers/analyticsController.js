@@ -19,22 +19,70 @@ export const getDashboardStats = async (req, res) => {
         const landResult = await query('SELECT SUM(total_land_area) as total FROM public.land_details');
         const totalLandCoverage = parseFloat(landResult.rows[0].total) || 0;
 
-        // Get livestock count
-        const livestockResult = await query(`
+        // Get livestock breakdown (Real Data)
+        const livestockBreakdownResult = await query(`
             SELECT 
-                COALESCE(SUM(cow), 0) + COALESCE(SUM(buffalo), 0) + COALESCE(SUM(goat), 0) + 
-                COALESCE(SUM(sheep), 0) + COALESCE(SUM(pig), 0) + COALESCE(SUM(poultry), 0) as total
+                COALESCE(SUM(cow), 0) as cow, 
+                COALESCE(SUM(buffalo), 0) as buffalo, 
+                COALESCE(SUM(goat), 0) as goat, 
+                COALESCE(SUM(sheep), 0) as sheep, 
+                COALESCE(SUM(pig), 0) as pig, 
+                COALESCE(SUM(poultry), 0) as poultry,
+                COALESCE(SUM(horse), 0) as horse,
+                COALESCE(SUM(others), 0) as other
             FROM public.livestock_details
         `);
-        const livestockCount = parseInt(livestockResult.rows[0].total) || 0;
+        
+        const lb = livestockBreakdownResult.rows[0];
+        const livestockBreakdown = {
+            cow: parseInt(lb.cow) || 0,
+            buffalo: parseInt(lb.buffalo) || 0,
+            goat: parseInt(lb.goat) || 0,
+            sheep: parseInt(lb.sheep) || 0,
+            pig: parseInt(lb.pig) || 0,
+            poultry: parseInt(lb.poultry) || 0,
+            horse: parseInt(lb.horse) || 0,
+            other: parseInt(lb.other) || 0
+        };
+        const livestockCount = Object.values(livestockBreakdown).reduce((a, b) => a + b, 0);
 
-        // Get active schemes count
-        const schemesResult = await query('SELECT COUNT(*) as count FROM public.schemes WHERE is_active = true');
-        const activeSchemes = parseInt(schemesResult.rows[0].count) || 0;
+        // Get land breakdown (District-wise)
+        const landByDistrictResult = await query(`
+            SELECT u.district, SUM(ld.total_land_area) as total
+            FROM public.land_details ld
+            JOIN public.users u ON ld.user_id = u.id
+            WHERE u.district IS NOT NULL AND u.district != ''
+            GROUP BY u.district
+            ORDER BY total DESC
+        `);
+        
+        const districts = {};
+        landByDistrictResult.rows.forEach(row => {
+            districts[row.district] = parseFloat(row.total) || 0;
+        });
 
-        // Get professionals count
-        const professionalsResult = await query('SELECT COUNT(*) as count FROM public.professionals WHERE is_available = true');
-        const availableProfessionals = parseInt(professionalsResult.rows[0].count) || 0;
+        // Get seasonal counts
+        const seasonalResult = await query(`
+            SELECT 
+                COUNT(CASE WHEN rabi_crop IS NOT NULL AND rabi_crop != '' THEN 1 END) as rabi,
+                COUNT(CASE WHEN kharif_crop IS NOT NULL AND kharif_crop != '' THEN 1 END) as kharif,
+                COUNT(CASE WHEN zaid_crop IS NOT NULL AND zaid_crop != '' THEN 1 END) as zayed
+            FROM public.land_details
+        `);
+
+        const landBreakdown = {
+            rabi: parseInt(seasonalResult.rows[0].rabi) || 0,
+            kharif: parseInt(seasonalResult.rows[0].kharif) || 0,
+            zayed: parseInt(seasonalResult.rows[0].zayed) || 0,
+            units: { acre: totalLandCoverage, bigha: 0, hectare: 0 },
+            districts
+        };
+
+        // Get active schemes/professionals counts
+        const [schemesResult, professionalsResult] = await Promise.all([
+            query('SELECT COUNT(*) as count FROM public.schemes WHERE is_active = true'),
+            query('SELECT COUNT(*) as count FROM public.professionals WHERE is_available = true')
+        ]);
 
         res.status(200).json({
             status: 'success',
@@ -43,8 +91,11 @@ export const getDashboardStats = async (req, res) => {
                 totalFarmers,
                 totalLandCoverage,
                 livestockCount,
-                activeSchemes,
-                availableProfessionals
+                livestockBreakdown,
+                landBreakdown,
+                activeSchemes: parseInt(schemesResult.rows[0].count) || 0,
+                availableProfessionals: parseInt(professionalsResult.rows[0].count) || 0,
+                totalAppointments: 0 // Fetch optionally if needed
             }
         });
     } catch (error) {

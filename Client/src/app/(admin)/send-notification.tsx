@@ -107,8 +107,13 @@ export default function SendNotificationScreen() {
     const canSend = title.trim().length > 0 && !sending;
 
     return (
-        <View style={s.root}>
-            {/* ── Header ── */}
+        <KeyboardAvoidingView
+            style={s.root}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+        <View style={{ flex: 1 }}>
+            {/* Header */}
             <View style={s.header}>
                 <Pressable onPress={() => router.back()} style={s.backBtn}>
                     <Ionicons name="arrow-back" size={22} color="#111827" />

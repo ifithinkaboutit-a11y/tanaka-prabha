@@ -29,24 +29,16 @@ export default function Home() {
   const avatarUri = profile?.photoUrl || user?.photoUrl || undefined;
 
   // State for API data
-  const [schemes, setSchemes] = useState<Scheme[]>([]);
-  const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-  const [todayEvents, setTodayEvents] = useState<ApiEvent[]>([]);
-  const [eventsError, setEventsError] = useState<string | null>(null);
 
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const schemesData = await fetchWithCache(
-          CACHE_KEYS.HOME_SCHEMES,
-          () => schemesApi.getAll({ limit: 5 })
-        );
-        setSchemes(schemesData);
         // Fetch latest unread notifications (up to 3)
         const unread = await notificationsApi.getMy({ unread_only: true, limit: 3 });
         setNotifications(unread);
@@ -55,20 +47,6 @@ export default function Home() {
         console.error("Error fetching home data:", error);
       } finally {
         setLoading(false);
-      }
-
-      // Fetch today's events independently so failures don't affect other sections
-      try {
-        const todayString = new Date().toISOString().split("T")[0];
-        const allEvents = await eventsApi.getAll();
-        const filtered = allEvents.filter(
-          (event) => event.date && event.date.split("T")[0] === todayString
-        );
-        setTodayEvents(filtered);
-        setEventsError(null);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setEventsError("Unable to load today's programmes.");
       }
     };
 
@@ -181,29 +159,7 @@ export default function Home() {
         <QuickActionGrid actions={quickActions} />
       </View>
 
-      {/* Popular Schemes Section */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-        <AppText
-          variant="h2"
-          style={{
-            fontSize: 22,
-            fontWeight: "700",
-            color: theme.text.secondary,
-            marginBottom: 12,
-          }}
-        >
-          {t("home.popularSchemes")}
-        </AppText>
-        <SchemePreviewList
-          schemes={schemes.map((scheme) => ({
-            ...scheme,
-            title: currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title,
-            description: (currentLanguage === 'hi' && scheme.descriptionHi ? scheme.descriptionHi : scheme.description) || "",
-            onPress: () =>
-              router.push(`/scheme-details?schemeId=${scheme.id}` as any),
-          })) as any}
-        />
-      </View>
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 };

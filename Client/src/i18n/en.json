@@ -45,7 +45,13 @@
       "district": "District",
       "selectDistrict": "Select District",
       "village": "Village",
-      "selectVillage": "Select Village"
+      "selectVillage": "Select Village",
+      "locationDetails": "Location Details",
+      "block": "Block",
+      "enterBlock": "Enter Block",
+      "selectBlock": "Select Block",
+      "gramPanchayat": "Gram Panchayat",
+      "selectGramPanchayat": "Select Gram Panchayat"
     },
     "land": {
       "title": "Land & Crop Details",
@@ -388,6 +394,7 @@
     "hen": "Hen / Poultry",
     "pig": "Pig",
     "poultry": "Poultry",
+    "horse": "Horse",
     "others": "Others",
     "infoMessage": "Keep your livestock count updated to receive relevant animal husbandry schemes and veterinary support.",
     "save": "Save",
@@ -642,5 +649,28 @@
     "guidelinesHi": "Guidelines (Hindi)",
     "requirementsEn": "Requirements (English)",
     "requirementsHi": "Requirements (Hindi)"
+  },
+  "schedule": {
+    "title": "My Schedule",
+    "subtitle": "Your appointments & sessions",
+    "tabs": {
+      "upcoming": "Upcoming",
+      "past": "Past"
+    },
+    "emptyUpcomingTitle": "No upcoming appointments",
+    "emptyUpcomingDesc": "Book a session with an expert",
+    "emptyPastTitle": "No past appointments",
+    "emptyPastDesc": "Your past sessions will appear here",
+    "bookAppointment": "Book an Appointment",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "cancel": "Cancel",
+    "status": {
+      "pending": "Pending",
+      "scheduled": "Scheduled",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "missed": "Missed"
+    }
   }
 }

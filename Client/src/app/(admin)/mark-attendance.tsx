@@ -357,7 +357,7 @@ export default function MarkAttendance() {
 
     // ── Step 2: Enter mobile number & mark attendance ──
     return (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 48 }}>
             {/* header */}
             <View style={s.header}>

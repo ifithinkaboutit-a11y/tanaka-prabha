@@ -79,6 +79,7 @@ export function BeneficiariesTable() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [districtFilter, setDistrictFilter] = React.useState("all")
   const [cropFilter, setCropFilter] = React.useState("all")
+  const [statusFilter, setStatusFilter] = React.useState("all")
   const [districts, setDistricts] = React.useState([])
   const [crops, setCrops] = React.useState([])
   // Server-side pagination state
@@ -367,8 +368,16 @@ export function BeneficiariesTable() {
       })
     }
 
+    if (statusFilter !== "all") {
+      result = result.filter(item => {
+        if (statusFilter === "verified") return item.is_verified
+        if (statusFilter === "pending") return !item.is_verified
+        return true
+      })
+    }
+
     return result
-  }, [data, districtFilter, cropFilter])
+  }, [data, districtFilter, cropFilter, statusFilter])
 
   const table = useReactTable({
     data: filteredData,
@@ -512,6 +521,18 @@ export function BeneficiariesTable() {
             {crops.map(crop => (
               <SelectItem key={crop} value={crop}>{crop}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[152px] h-9 bg-muted/50 border-transparent">
+            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="verified">Verified</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
           </SelectContent>
         </Select>
 

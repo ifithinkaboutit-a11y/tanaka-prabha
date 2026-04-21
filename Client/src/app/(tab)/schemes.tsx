@@ -44,80 +44,61 @@ const SchemeCard = ({
     >
       <View
         style={{
-          borderRadius: 20,
+          borderRadius: 24,
           overflow: "hidden",
           marginBottom:"16",
           backgroundColor: theme.background.input,
-          borderWidth: 1,
-          borderColor: "rgba(0,0,0,0.05)",
+          borderWidth: 1.5,
+          borderColor: "rgba(0,0,0,0.06)",
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.05,
-          shadowRadius: 10,
-          elevation: 2,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.1,
+          shadowRadius: 16,
+          elevation: 4,
           transform: [{ scale: isPressed ? 0.98 : 1 }],
         }}
       >
-        <View style={{ position: "relative" }}>
-          <Image
-            source={{ uri: cdn(scheme.imageUrl) || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Scheme" }}
-            style={{ width: "100%", height: 140 }}
-            resizeMode="cover"
-          />
-          {/* Category Badge */}
-          <View
-            style={{
-              position: "absolute",
-              top: 12,
-              left: 12,
-              backgroundColor: "rgba(56, 102, 65, 0.9)",
-              borderRadius: 20,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-            }}
+        <Image
+          source={{ uri: cdn(scheme.imageUrl) || "https://via.placeholder.com/400x200/386641/FFFFFF?text=Scheme" }}
+          style={{ width: "100%", height: width ? 160 : 180 }}
+          resizeMode="cover"
+        />
+        <View
+          style={{
+            position: "absolute",
+            top: 14,
+            left: 14,
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+          }}
+        >
+          <AppText
+            variant="bodySm"
+            style={{ color: theme.primary.green, fontWeight: "800", fontSize: 11, textTransform: "uppercase" }}
           >
-            <AppText
-              variant="bodySm"
-              style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 11 }}
-            >
-              {scheme.category}
-            </AppText>
-          </View>
-          {/* Bookmark */}
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              setIsBookmarked(!isBookmarked);
-            }}
-            style={{
-              position: "absolute",
-              top: 12,
-              right: 12,
-              backgroundColor: "#FFFFFF",
-              borderRadius: 20,
-              padding: 8,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.1,
-              shadowRadius: 2,
-              elevation: 2,
-            }}
-          >
-            <Ionicons
-              name={isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={18}
-              color={isBookmarked ? theme.primary.green : theme.text.secondary}
-            />
-          </Pressable>
+            {scheme.category}
+          </AppText>
         </View>
-        <View style={{ padding: 14 }}>
+
+        <View style={{ padding: 18 }}>
           <AppText
             variant="bodyMd"
-            style={{ fontWeight: "800", color: theme.text.primary, fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
+            style={{ fontWeight: "800", color: theme.text.primary, fontSize: 16, lineHeight: 22, letterSpacing: -0.3 }}
             numberOfLines={2}
           >
             {displayTitle}
           </AppText>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
+            <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>
+              Explore Details
+            </AppText>
+            <Ionicons name="arrow-forward" size={14} color={theme.primary.green} style={{ marginLeft: 6 }} />
+          </View>
         </View>
       </View>
     </Pressable>
@@ -370,6 +351,7 @@ export default function Schemes() {
         </View>
       </View>
 
+
       {/* Recommended Schemes */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 24, backgroundColor: theme.background.screen }}>
         <View
@@ -423,6 +405,56 @@ export default function Schemes() {
           </Pressable>
         </View>
 
+<<<<<<< bug1
+        <View style={{ position: "relative" }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -16 }}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
+          >
+            {recommendedSchemes.map((scheme) => (
+                <SchemeCard
+                  key={scheme.id}
+                  scheme={scheme}
+                  onPress={() => handleSchemePress(scheme.id)}
+                  width={290}
+                />
+            ))}
+            {/* End spacing for scroll cue */}
+            <View style={{ width: 16 }} />
+          </ScrollView>
+          {/* Scroll Cue Arrow */}
+          {recommendedSchemes.length > 1 && (
+            <View 
+              pointerEvents="none"
+              style={{ 
+                position: "absolute", 
+                right: 0, 
+                top: 0, 
+                bottom: 0, 
+                width: 60, 
+                justifyContent: "center", 
+                alignItems: "flex-end",
+                paddingRight: 8
+              }}
+            >
+              <View style={{ 
+                backgroundColor: "rgba(255,255,255,0.7)", 
+                borderRadius: 20, 
+                width: 32, 
+                height: 32, 
+                alignItems: "center", 
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.05)"
+              }}>
+                <Ionicons name="chevron-forward" size={18} color={theme.primary.green} />
+              </View>
+            </View>
+          )}
+        </View>
+=======
         {recommendedSchemes.map((scheme) => (
           <SchemeCard
             key={scheme.id}
@@ -435,6 +467,7 @@ export default function Schemes() {
             {t("schemesPage.scrollForMore")}
           </AppText>
         )}
+>>>>>>> main
       </View>
 
       {/* Categories */}
@@ -489,6 +522,8 @@ export default function Schemes() {
         </View>
       )}
 
+<<<<<<< bug1
+=======
       {/* All Schemes section — latest 5 with View All */}
       {!isSearchActive && filteredSchemes.length > 0 && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
@@ -522,6 +557,7 @@ export default function Schemes() {
           ))}
         </View>
       )}
+>>>>>>> main
 
       {/* No results message */}
       {isSearchActive && filteredSchemes.length === 0 && (

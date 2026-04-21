@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -26,6 +27,14 @@ interface MultiSelectProps {
   onChange?: (values: string[]) => void;
   onValueChange?: (values: string[]) => void;
   disabled?: boolean;
+  /** If true, shows a text input when "other" is selected */
+  enableOtherInput?: boolean;
+  /** The value of the "Other" text input */
+  otherValue?: string;
+  /** Callback for when the "Other" text input changes */
+  onOtherChange?: (value: string) => void;
+  /** Placeholder for the "Other" text input */
+  otherPlaceholder?: string;
 }
 
 export default function MultiSelect({
@@ -37,6 +46,10 @@ export default function MultiSelect({
   onChange,
   onValueChange,
   disabled = false,
+  enableOtherInput = false,
+  otherValue = "",
+  onOtherChange,
+  otherPlaceholder = "Please specify...",
 }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -86,6 +99,29 @@ export default function MultiSelect({
           color={colors.neutral.textLight}
         />
       </Pressable>
+
+      {/* Dynamic "Other" Input */}
+      {enableOtherInput && selected.includes("other") && (
+        <View style={{ marginTop: 8 }}>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: colors.neutral.border,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              backgroundColor: theme.background.input,
+              fontSize: 16,
+              color: theme.text.dark,
+            }}
+            placeholder={otherPlaceholder}
+            placeholderTextColor={theme.text.light}
+            value={otherValue}
+            onChangeText={onOtherChange}
+            editable={!disabled}
+          />
+        </View>
+      )}
 
       <Modal
         visible={isOpen}

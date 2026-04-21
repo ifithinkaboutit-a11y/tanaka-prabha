@@ -77,11 +77,9 @@ export interface PersonalDetails {
 
 export interface LandDetails {
   totalLandArea: number;
-  rabiCrop: string;
-  kharifCrop: string;
-  zaidCrop: string;
-  crops?: string[];
-  otherCrop?: string;
+  rabiCrop: string | string[];
+  kharifCrop: string | string[];
+  zaidCrop: string | string[];
 }
 
 export interface LivestockDetails {
@@ -91,5 +89,6 @@ export interface LivestockDetails {
   goat: number;
   pig: number;
   poultry: number;
+  horse: number;
   others: number;
 }

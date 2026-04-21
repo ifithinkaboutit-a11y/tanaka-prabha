@@ -34,11 +34,13 @@ export interface LandEntry {
   unit: "bigha" | "acre" | "hectare";
   mainCrop: string;
   crops: string[]; // Support multiple crop selection
+  otherCropsText?: string;
 }
 
 export interface LivestockEntry {
   id: string;
   type: string;
+  otherTypeText?: string;
   count: number;
 }
 

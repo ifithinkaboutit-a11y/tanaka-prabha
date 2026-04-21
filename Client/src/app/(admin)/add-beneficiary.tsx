@@ -4,15 +4,16 @@ import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView"
 import Select from "@/components/atoms/Select";
 import TextArea from "@/components/atoms/TextArea";
 import { useAuth } from "@/contexts/AuthContext";
-import { genderOptions, cropTypes } from "@/data/content/onboardingOptions";
-import { indianStates, indianDistricts } from "../../data/indianLocations";
+import { genderOptions, cropTypes, indianStates, getLocalizedOptions } from "@/data/content/onboardingOptions";
 import { ApiUserProfile, uploadApi } from "@/services/apiService";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
+import AddressDropdowns, { type AddressValue } from "@/components/molecules/AddressDropdowns";
+import { getStateOptions, getDistrictOptions } from "@/data/indianLocations";
 import {
     ActivityIndicator,
     Alert,
@@ -59,7 +60,9 @@ interface PersonalForm {
     photoUrl: string;
 }
 interface LocationForm {
-    state: string; district: string; tehsil: string; village: string;
+    state: string; district: string; tehsil: string; block: string;
+    village: string; gramPanchayat: string; nyayPanchayat: string;
+    pinCode: string; postOffice: string;
     lat: number | null; lng: number | null; address: string;
 }
 interface LandForm { totalLandArea: string; rabiCrop: string; kharifCrop: string; }
@@ -211,7 +214,7 @@ const ph = StyleSheet.create({
     },
 });
 
-// ─── Step 2: Location (map picker + manual fallback) ─────────
+// ─── Step 2: Location (Map + Compulsory Address) ─────────────
 function Step2({
     form, setForm, errors, onPickOnMap,
 }: {
@@ -220,91 +223,199 @@ function Step2({
     errors: Partial<Record<keyof LocationForm, string>>;
     onPickOnMap: () => void;
 }) {
+    const [pinLoading, setPinLoading] = useState(false);
+    const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
+    const [addressLists, setAddressLists] = useState<{
+        districts: { label: string; value: string }[];
+        blocks: { label: string; value: string }[];
+    }>({ districts: [], blocks: [] });
+
     const hasMapPin = form.lat !== null;
+
+    const handlePinCodeChange = async (pin: string) => {
+        setForm({ ...form, pinCode: pin });
+        if (pin.length === 6) {
+            setPinLoading(true);
+            try {
+                const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                const data = await response.json();
+                if (data && data[0] && data[0].Status === "Success") {
+                    const postOffices = data[0].PostOffice;
+                    const poOptions = postOffices.map((po: any) => ({ label: po.Name, value: po.Name }));
+                    setPostOfficeOptions(poOptions);
+
+                    // Normalize for comparison
+                    const firstPO = postOffices[0];
+                    const stateSlug = firstPO.State.trim().toLowerCase().replace(/[\s-]+/g, "_");
+                    const districtName = firstPO.District;
+
+                    setForm(prev => ({
+                        ...prev,
+                        pinCode: pin,
+                        state: stateSlug,
+                        district: districtName,
+                        // Block/Tehsil/Village will be manually confirmed or selected via dropdown
+                        postOffice: poOptions.length === 1 ? poOptions[0].value : (prev.postOffice || "")
+                    }));
+                }
+            } catch (e) {
+                console.error("Error fetching PIN:", e);
+            } finally {
+                setPinLoading(false);
+            }
+        }
+    };
+
+    const stateOptions = getStateOptions();
+    const districtOptions = form.state ? getDistrictOptions(form.state) : [];
 
     return (
         <>
-            {/* Map picker button — changes appearance once a pin is set */}
+            <AppText style={lc.stepNotice}>BOTH GPS location and full address are compulsory.</AppText>
+
+            {/* Part A: GPS Map Picker */}
+            <AppText style={f.label}>Step 2A: GPS Coordinates *</AppText>
             <Pressable onPress={onPickOnMap} style={[lc.mapBtn, hasMapPin && lc.mapBtnPinned]}>
                 <View style={[lc.mapBtnIcon, hasMapPin && lc.mapBtnIconPinned]}>
                     <Ionicons name={hasMapPin ? "location" : "map"} size={22} color={hasMapPin ? "#FFFFFF" : "#386641"} />
                 </View>
                 <View style={{ flex: 1 }}>
                     <AppText style={[lc.mapBtnTitle, hasMapPin && { color: "#FFFFFF" }]}>
-                        {hasMapPin ? "Location Pinned ✓" : "Pick Location on Map"}
+                        {hasMapPin ? "GPS Location Secured ✓" : "Pin Location on Map"}
                     </AppText>
                     {form.address ? (
                         <AppText style={[lc.mapBtnAddress, hasMapPin && { color: "rgba(255,255,255,0.85)" }]} numberOfLines={2}>
                             {form.address}
                         </AppText>
                     ) : (
-                        <AppText style={lc.mapBtnHint}>Tap to open map and drop a pin</AppText>
+                        <AppText style={lc.mapBtnHint}>Required to pick a point on the map</AppText>
                     )}
                 </View>
-                <AppText style={[lc.changeText, hasMapPin && { color: "rgba(255,255,255,0.8)" }]}>
-                    {hasMapPin ? "Change" : "Open"}
-                </AppText>
+                {hasMapPin && (
+                    <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                )}
             </Pressable>
+            <FieldError message={errors.lat ? "Map location is mandatory" : ""} />
 
-            {/* When map pin is set — show coords and a clear button, hide manual fields */}
-            {hasMapPin ? (
-                <View style={lc.pinnedInfo}>
-                    <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-                    <AppText style={lc.coordsText}>
-                        {form.lat!.toFixed(5)}, {form.lng!.toFixed(5)}
-                    </AppText>
-                    <Pressable
-                        onPress={() => setForm({ ...form, lat: null, lng: null, address: "", state: "", district: "" })}
-                        hitSlop={8}
-                    >
-                        <AppText style={lc.clearText}>Clear</AppText>
-                    </Pressable>
+            <View style={lc.divider}>
+                <View style={lc.dividerLine} />
+                <AppText style={lc.dividerLabel}>Step 2B: Full Address Details</AppText>
+                <View style={lc.dividerLine} />
+            </View>
+
+            {/* Part B: Manual Address Fields */}
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="PIN Code *" />
+                <View style={{ position: "relative" }}>
+                    <TextInput style={inputStyle(!!errors.pinCode)} value={form.pinCode}
+                        onChangeText={handlePinCodeChange}
+                        placeholder="6-digit PIN" placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric" maxLength={6} />
+                    {pinLoading && <ActivityIndicator style={{ position: "absolute", right: 12, top: 14 }} size="small" color="#386641" />}
                 </View>
+                <FieldError message={errors.pinCode} />
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="State *" />
+                <Select value={form.state} onChange={(v) => setForm({ ...form, state: v, district: "" })}
+                    options={stateOptions} placeholder="Select State" />
+                <FieldError message={errors.state} />
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="District *" />
+                <Select value={form.district} onChange={(v) => setForm({ ...form, district: v, tehsil: "", block: "", gramPanchayat: "", nyayPanchayat: "", village: "" })}
+                    options={districtOptions} placeholder={form.state ? "Select District" : "Select State first"} disabled={!form.state} />
+                <FieldError message={errors.district} />
+            </View>
+
+            {/* Specialized Dropdowns for Bhadohi / Mirzapur */}
+            {(form.district?.toLowerCase() === "bhadohi" || form.district?.toLowerCase() === "mirzapur") ? (
+                <AddressDropdowns
+                    district={form.district}
+                    language="en"
+                    value={{
+                        tehsil: form.tehsil || "",
+                        nyayPanchayat: form.nyayPanchayat || "",
+                        gramPanchayat: form.gramPanchayat || "",
+                        village: form.village || "",
+                    }}
+                    onChange={(v: AddressValue) => setForm({
+                        ...form,
+                        tehsil: v.tehsil,
+                        nyayPanchayat: v.nyayPanchayat,
+                        gramPanchayat: v.gramPanchayat,
+                        village: v.village
+                    })}
+                />
             ) : (
-                /* Manual fallback — only shown when no map pin */
                 <>
-                    <View style={lc.divider}>
-                        <View style={lc.dividerLine} />
-                        <AppText style={lc.dividerLabel}>or enter manually</AppText>
-                        <View style={lc.dividerLine} />
+                    <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
+                        <View style={{ flex: 1 }}>
+                            <FieldLabel text="Tehsil *" />
+                            <TextInput style={inputStyle(!!errors.tehsil)} value={form.tehsil}
+                                onChangeText={(v) => setForm({ ...form, tehsil: v })}
+                                placeholder="Tehsil" placeholderTextColor="#9CA3AF" />
+                            <FieldError message={errors.tehsil} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <FieldLabel text="Block *" />
+                            <TextInput style={inputStyle(!!errors.block)} value={form.block}
+                                onChangeText={(v) => setForm({ ...form, block: v })}
+                                placeholder="Block" placeholderTextColor="#9CA3AF" />
+                            <FieldError message={errors.block} />
+                        </View>
                     </View>
 
                     <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="State *" />
-                        <Select options={indianStates.map(s => ({ label: s.label, value: s.value }))} value={form.state} onChange={(v) => setForm({ ...form, state: v, district: "" })} placeholder="Select state" />
-                        <FieldError message={errors.state} />
+                        <FieldLabel text="Nyay Panchayat *" />
+                        <TextInput style={inputStyle(!!errors.nyayPanchayat)} value={form.nyayPanchayat}
+                            onChangeText={(v) => setForm({ ...form, nyayPanchayat: v })}
+                            placeholder="Enter Nyay Panchayat" placeholderTextColor="#9CA3AF" />
+                        <FieldError message={errors.nyayPanchayat} />
                     </View>
 
                     <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="District *" />
-                        <Select options={indianDistricts.filter(d => !form.state || d.stateValue === form.state).map(d => ({ label: d.label, value: d.value }))} value={form.district} onChange={(v) => setForm({ ...form, district: v })} disabled={!form.state} placeholder="Select district" />
-                        <FieldError message={errors.district} />
+                        <FieldLabel text="Gram Panchayat *" />
+                        <TextInput style={inputStyle(!!errors.gramPanchayat)} value={form.gramPanchayat}
+                            onChangeText={(v) => setForm({ ...form, gramPanchayat: v })}
+                            placeholder="Enter Gram Panchayat" placeholderTextColor="#9CA3AF" />
+                        <FieldError message={errors.gramPanchayat} />
                     </View>
 
                     <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="Tehsil" />
-                        <TextInput style={inputStyle()} value={form.tehsil}
-                            onChangeText={(v) => setForm({ ...form, tehsil: v })}
-                            placeholder="Enter tehsil (optional)" placeholderTextColor="#9CA3AF" />
-                    </View>
-
-                    <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="Village" />
-                        <TextInput style={inputStyle()} value={form.village}
+                        <FieldLabel text="Village *" />
+                        <TextInput style={inputStyle(!!errors.village)} value={form.village}
                             onChangeText={(v) => setForm({ ...form, village: v })}
-                            placeholder="Enter village (optional)" placeholderTextColor="#9CA3AF" />
+                            placeholder="Enter Village" placeholderTextColor="#9CA3AF" />
+                        <FieldError message={errors.village} />
                     </View>
                 </>
             )}
+
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="Post Office *" />
+                {postOfficeOptions.length > 0 ? (
+                    <Select value={form.postOffice} onChange={(v) => setForm({ ...form, postOffice: v })}
+                        options={postOfficeOptions} placeholder="Select PO" />
+                ) : (
+                    <TextInput style={inputStyle(!!errors.postOffice)} value={form.postOffice}
+                        onChangeText={(v) => setForm({ ...form, postOffice: v })}
+                        placeholder="Enter Post Office" placeholderTextColor="#9CA3AF" />
+                )}
+                <FieldError message={errors.postOffice} />
+            </View>
         </>
     );
 }
 
 const lc = StyleSheet.create({
+    stepNotice: { fontSize: 13, fontWeight: "600", color: "#B45309", marginBottom: 20, backgroundColor: "#FFFBEB", padding: 10, borderRadius: 8, borderWidth: 1, borderColor: "#FCD34D" },
     mapBtn: {
         flexDirection: "row", alignItems: "center", gap: 12,
         backgroundColor: "#F0FDF4", borderWidth: 1.5, borderColor: "#86EFAC",
-        borderRadius: 14, padding: 14, marginBottom: 12,
+        borderRadius: 14, padding: 14, marginBottom: 12, marginTop: 8,
     },
     mapBtnPinned: {
         backgroundColor: "#386641", borderColor: "#386641",
@@ -317,19 +428,19 @@ const lc = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.2)",
     },
     mapBtnTitle: { fontSize: 14, fontWeight: "700", color: "#166534" },
-    mapBtnAddress: { fontSize: 12, color: "#15803D", marginTop: 2 },
-    mapBtnHint: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+    mapBtnAddress: { fontSize: 11, color: "#15803D", marginTop: 2, lineHeight: 16 },
+    mapBtnHint: { fontSize: 12, color: "#EA580C", marginTop: 2, fontWeight: "500" },
     changeText: { fontSize: 12, fontWeight: "700", color: "#16A34A" },
     pinnedInfo: {
         flexDirection: "row", alignItems: "center", gap: 6,
         backgroundColor: "#F0FDF4", borderRadius: 10,
-        paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8,
+        paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16,
     },
     coordsText: { flex: 1, fontSize: 11, color: "#16A34A", fontWeight: "500" },
     clearText: { fontSize: 12, color: "#EF4444", fontWeight: "600" },
-    divider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 16 },
+    divider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 20 },
     dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-    dividerLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
+    dividerLabel: { fontSize: 11, color: "#6B7280", fontWeight: "700", textTransform: "uppercase" },
 });
 
 // ─── Step 3: Land Details ─────────────────────────────────────
@@ -582,7 +693,10 @@ export default function AddBeneficiary() {
     const [personalErrors, setPersonalErrors] = useState<Partial<PersonalForm>>({});
 
     const [location, setLocation] = useState<LocationForm>({
-        state: "", district: "", tehsil: "", village: "", lat: null, lng: null, address: "",
+        state: "", district: "", tehsil: "", block: "",
+        village: "", gramPanchayat: "", nyayPanchayat: "",
+        pinCode: "", postOffice: "",
+        lat: null, lng: null, address: "",
     });
     const [locationErrors, setLocationErrors] = useState<Partial<Record<keyof LocationForm, string>>>({});
 
@@ -617,7 +731,10 @@ export default function AddBeneficiary() {
                         state: parsed.state || prev.state,
                         district: parsed.district || prev.district,
                         tehsil: parsed.tehsil || prev.tehsil,
+                        block: parsed.block || prev.block,
                         village: parsed.village || prev.village,
+                        pinCode: parsed.pinCode || prev.pinCode,
+                        postOffice: parsed.postOffice || prev.postOffice,
                     }));
                 }
             } catch { /* silent — lat/lng is enough */ }
@@ -666,11 +783,18 @@ export default function AddBeneficiary() {
     }
 
     function validateStep2(): boolean {
-        // If a map pin was set, lat/lng is sufficient — no manual fields required
-        if (location.lat !== null) return true;
         const errs: Partial<Record<keyof LocationForm, string>> = {};
+        if (location.lat === null) errs.address = "GPS location is mandatory";
         if (!location.state.trim()) errs.state = "State is required";
         if (!location.district.trim()) errs.district = "District is required";
+        if (!location.tehsil.trim()) errs.tehsil = "Tehsil is required";
+        if (!location.block.trim()) errs.block = "Block is required";
+        if (!location.pinCode.trim() || location.pinCode.length !== 6) errs.pinCode = "Valid 6-digit PIN required";
+        if (!location.postOffice.trim()) errs.postOffice = "Post Office is required";
+        if (!location.nyayPanchayat.trim()) errs.nyayPanchayat = "Nyay Panchayat is required";
+        if (!location.gramPanchayat.trim()) errs.gramPanchayat = "Gram Panchayat is required";
+        if (!location.village.trim()) errs.village = "Village is required";
+        
         setLocationErrors(errs);
         return Object.keys(errs).length === 0;
     }
@@ -706,12 +830,17 @@ export default function AddBeneficiary() {
                 fathers_name: personal.fathersName.trim(),
                 state: location.state.trim(),
                 district: location.district.trim(),
+                tehsil: location.tehsil.trim(),
+                block: location.block.trim(),
+                pin_code: location.pinCode.trim(),
+                post_office: location.postOffice.trim(),
+                nyay_panchayat: location.nyayPanchayat.trim(),
+                gram_panchayat: location.gramPanchayat.trim(),
+                village: location.village.trim(),
                 registered_by: user?.id,
             };
             if (personal.photoUrl) payload.photo_url = personal.photoUrl;
             if (personal.aadhaar) payload.aadhaar_number = personal.aadhaar;
-            if (location.tehsil) payload.tehsil = location.tehsil.trim();
-            if (location.village) payload.village = location.village.trim();
             if (location.lat !== null) { payload.latitude = location.lat; payload.longitude = location.lng; }
 
             const landArea = parseFloat(land.totalLandArea);

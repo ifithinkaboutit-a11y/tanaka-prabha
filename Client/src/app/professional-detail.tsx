@@ -89,6 +89,34 @@ export default function ProfessionalDetail() {
                             {(professional as any).department}
                         </AppText>
                     </View>
+
+                    {/* Top Side Email Action */}
+                    <Pressable
+                        onPress={() => {
+                            const email = professional.email || "support@tanakaprabha.com";
+                            const subject = `Inquiry for ${professional.name}`;
+                            Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}`);
+                        }}
+                        style={({ pressed }) => ({
+                            marginTop: 16,
+                            backgroundColor: "#EAB308", // Yellow
+                            paddingHorizontal: 20,
+                            paddingVertical: 10,
+                            borderRadius: 20,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            opacity: pressed ? 0.9 : 1,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                        })}
+                    >
+                        <Ionicons name="mail" size={18} color="#000" />
+                        <AppText style={{ color: "#000", fontWeight: "700", marginLeft: 8, fontSize: 13 }}>
+                            Email Expert
+                        </AppText>
+                    </Pressable>
                 </View>
 
                 {/* Progressive disclosure toggle */}
@@ -187,22 +215,26 @@ export default function ProfessionalDetail() {
             {/* Fixed Book CTA */}
             <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: theme.background.input, padding: 20, borderTopWidth: 1, borderTopColor: theme.border.subtle }}>
                 <Pressable
-                    onPress={() => router.push({ pathname: "/book-appointment", params: { professionalId: id, professionalName: professional.name } } as any)}
-                    disabled={!isAvailable}
+                    onPress={() => {
+                        router.push({
+                            pathname: "/book-appointment",
+                            params: { id: professional.id }
+                        } as any);
+                    }}
                     style={({ pressed }) => ({
-                        backgroundColor: isAvailable ? theme.primary.green : theme.border.card,
+                        backgroundColor: theme.primary.green,
                         borderRadius: 16, paddingVertical: 18,
                         flexDirection: "row", alignItems: "center", justifyContent: "center",
                         opacity: pressed ? 0.9 : 1,
                         shadowColor: theme.primary.green,
                         shadowOffset: { width: 0, height: 6 },
-                        shadowOpacity: isAvailable ? 0.3 : 0,
-                        shadowRadius: 12, elevation: isAvailable ? 4 : 0,
+                        shadowOpacity: 0.3,
+                        shadowRadius: 12, elevation: 4,
                     })}
                 >
-                    <Ionicons name="calendar" size={22} color="#fff" />
+                    <Ionicons name="calendar" size={20} color="#fff" />
                     <AppText variant="bodyMd" style={{ color: "#fff", fontWeight: "800", marginLeft: 10, fontSize: 17 }}>
-                        {isAvailable ? "Book Appointment" : "Not Available"}
+                        Book Appointment
                     </AppText>
                 </Pressable>
             </View>

@@ -1,18 +1,28 @@
 // src/components/atoms/Select.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   AccessibilityInfo,
+  Animated,
   findNodeHandle,
+  LayoutAnimation,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
+  UIManager,
   View,
 } from "react-native";
 import { colors, theme } from "../../styles/colors";
 import AppText from "./AppText";
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface SelectOption {
   label: string;
@@ -22,12 +32,21 @@ interface SelectOption {
 interface SelectProps {
   label?: string;
   placeholder?: string;
-  value?: string;
+  value?: string | string[];
   options: SelectOption[];
-  onChange: (value: string) => void;
+  onChange: (value: any) => void;
+  isMulti?: boolean;
   disabled?: boolean;
   /** Show search bar when list has more than this many items. Default 10 */
   searchThreshold?: number;
+  /** If true, shows a text input when value is "other" */
+  enableOtherInput?: boolean;
+  /** The value of the "Other" text input */
+  otherValue?: string;
+  /** Callback for when the "Other" text input changes */
+  onOtherChange?: (value: string) => void;
+  /** Placeholder for the "Other" text input */
+  otherPlaceholder?: string;
 }
 
 export default function Select({
@@ -36,14 +55,30 @@ export default function Select({
   value,
   options,
   onChange,
+  isMulti = false,
   disabled = false,
   searchThreshold = 10,
+  enableOtherInput = false,
+  otherValue = "",
+  onOtherChange,
+  otherPlaceholder = "Please specify...",
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const triggerRef = useRef<View>(null);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedOptions = useMemo(() => {
+    if (isMulti && Array.isArray(value)) {
+      return options.filter((opt) => value.includes(opt.value));
+    }
+    return options.find((opt) => opt.value === value) ? [options.find((opt) => opt.value === value)!] : [];
+  }, [options, value, isMulti]);
+
+  const displayLabel = useMemo(() => {
+    if (selectedOptions.length === 0) return placeholder;
+    return selectedOptions.map((opt) => opt.label).join(", ");
+  }, [selectedOptions, placeholder]);
+
   const showSearch = options.length > searchThreshold;
 
   const filteredOptions = useMemo(() => {
@@ -69,8 +104,19 @@ export default function Select({
   };
 
   const handleSelect = (val: string) => {
-    onChange(val);
-    closeModal();
+    if (isMulti) {
+      const currentValues = Array.isArray(value) ? [...value] : [];
+      const index = currentValues.indexOf(val);
+      if (index > -1) {
+        currentValues.splice(index, 1);
+      } else {
+        currentValues.push(val);
+      }
+      onChange(currentValues);
+    } else {
+      onChange(val);
+      closeModal();
+    }
   };
 
   return (
@@ -89,18 +135,19 @@ export default function Select({
         ref={triggerRef}
         onPress={openModal}
         accessibilityRole="button"
-        accessibilityLabel={selectedOption?.label ?? placeholder}
+        accessibilityLabel={displayLabel}
         className="flex-row items-center justify-between border border-gray-200 rounded-xl px-4 bg-white"
         style={[{ paddingVertical: 14 }, disabled && { opacity: 0.5 }]}
       >
         <AppText
           variant="bodyMd"
           style={{
-            color: selectedOption ? colors.neutral.textDark : colors.neutral.textLight,
+            color: selectedOptions.length > 0 ? colors.neutral.textDark : colors.neutral.textLight,
             flex: 1,
           }}
+          numberOfLines={1}
         >
-          {selectedOption?.label || placeholder}
+          {displayLabel}
         </AppText>
         <Ionicons
           name={isOpen ? "chevron-up" : "chevron-down"}
@@ -108,6 +155,29 @@ export default function Select({
           color={colors.neutral.textLight}
         />
       </Pressable>
+
+      {/* Dynamic "Other" Input */}
+      {enableOtherInput && value === "other" && (
+        <View style={{ marginTop: 8 }}>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: colors.neutral.border,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              backgroundColor: theme.background.input,
+              fontSize: 16,
+              color: colors.neutral.textDark,
+            }}
+            placeholder={otherPlaceholder}
+            placeholderTextColor={colors.neutral.textLight}
+            value={otherValue}
+            onChangeText={onOtherChange}
+            editable={!disabled}
+          />
+        </View>
+      )}
 
       {/* Bottom sheet modal — animationType="slide" for native feel */}
       <Modal
@@ -199,7 +269,9 @@ export default function Select({
                 </View>
               ) : (
                 filteredOptions.map((option) => {
-                  const isSelected = value === option.value;
+                  const isSelected = isMulti && Array.isArray(value)
+                    ? value.includes(option.value)
+                    : value === option.value;
                   return (
                     <TouchableOpacity
                       key={option.value}

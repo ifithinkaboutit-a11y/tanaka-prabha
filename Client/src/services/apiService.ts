@@ -408,6 +408,7 @@ function convertApiUserToUserProfile(apiUser: ApiUserProfile): UserProfile {
         sheep: apiUser.livestock_details.sheep,
         pig: apiUser.livestock_details.pig,
         poultry: apiUser.livestock_details.poultry,
+        horse: apiUser.livestock_details.horse,
         others: apiUser.livestock_details.others,
       }
       : undefined,
@@ -489,6 +490,16 @@ export const userApi = {
     } catch {
       return null;
     }
+  },
+
+  /**
+   * Update a specific user's data (Admin access)
+   */
+  async update(id: string, data: Partial<ApiUserProfile>): Promise<ApiResponse<{ user: ApiUserProfile }>> {
+    return fetchWithAuth<{ user: ApiUserProfile }>(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 };
 
@@ -614,6 +625,7 @@ export interface ApiLivestockDetails {
   sheep?: number;
   pig?: number;
   poultry?: number;
+  horse?: number;
   others?: number;
 }
 
@@ -691,6 +703,7 @@ export interface UserProfile {
     sheep?: number;
     pig?: number;
     poultry?: number;
+    horse?: number;
     others?: number;
   };
   isNewUser?: boolean;
@@ -885,13 +898,24 @@ export interface ApiEvent {
   location_name: string;
   location_address?: string;
   guidelines_and_rules?: string;
+  guidelines_and_rules_hi?: string;
   requirements?: string;
+  requirements_hi?: string;
   hero_image_url?: string;
   status: string;
   master_trainer_name?: string;
   master_trainer_phone?: string;
+  master_trainer_about?: string;
+  master_trainer_about_hi?: string;
   trainer_name?: string;
   trainer_phone?: string;
+  instructors?: {
+    id: string;
+    name: string;
+    role: string;
+    phone?: string;
+    image_url?: string | null;
+  }[];
   contact_number?: string;
   location_lat?: number;
   location_lng?: number;
@@ -1074,6 +1098,7 @@ export interface ApiProfessional {
   };
   specializations?: string[];
   is_available?: boolean;
+  email?: string;
   created_at?: string;
 }
 
@@ -1087,6 +1112,7 @@ export interface Professional {
   category: string;
   imageUrl?: string;
   phone?: string;
+  email?: string;
   district?: string;
   serviceArea?: {
     district?: string;
@@ -1150,6 +1176,7 @@ export const professionalsApi = {
         (s) => `connect.specializations.${s.toLowerCase().replace(/\s+/g, "")}`
       ),
       isAvailable: p.is_available,
+      email: p.email,
       createdAt: p.created_at,
     }));
   },
@@ -1183,6 +1210,7 @@ export const professionalsApi = {
         (s) => `connect.specializations.${s.toLowerCase().replace(/\s+/g, "")}`
       ),
       isAvailable: p.is_available,
+      email: p.email,
       createdAt: p.created_at,
     };
   },
@@ -1615,6 +1643,28 @@ export interface DashboardStats {
   livestockCount: number;
   activeSchemes: number;
   availableProfessionals: number;
+  totalAppointments: number;
+  livestockBreakdown?: {
+    cow: number;
+    buffalo: number;
+    goat: number;
+    sheep: number;
+    poultry: number;
+    pig: number;
+    horse: number;
+    other: number;
+  };
+  landBreakdown?: {
+    rabi: number;
+    kharif: number;
+    zayed: number;
+    units: {
+      acre: number;
+      bigha: number;
+      hectare: number;
+    };
+    districts?: Record<string, number>;
+  };
 }
 
 export const analyticsApi = {
@@ -1623,13 +1673,7 @@ export const analyticsApi = {
    */
   async getDashboardStats(): Promise<DashboardStats | null> {
     try {
-      const response = await fetchWithAuth<{
-        totalFarmers: number;
-        totalLandCoverage: number;
-        livestockCount: number;
-        activeSchemes: number;
-        availableProfessionals: number;
-      }>("/analytics/dashboard");
+      const response = await fetchWithAuth<DashboardStats>("/analytics/dashboard");
 
       return response.data || null;
     } catch (error) {

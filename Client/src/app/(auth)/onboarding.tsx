@@ -93,7 +93,15 @@ const Onboarding = () => {
     if (hasLand && landEntries.length > 0) {
       // Sum up land areas and collect all crops
       const totalArea = landEntries.reduce((sum, e) => sum + (e.area || 0), 0);
-      const allCrops = landEntries.flatMap((e) => e.crops || []);
+      const allCrops = landEntries.flatMap((e) => {
+        let entryCrops = [...(e.crops || [])];
+        if (entryCrops.includes("other") && e.otherCropsText) {
+          // Replace or augment "other" with the specific text
+          entryCrops = entryCrops.filter((c) => c !== "other");
+          entryCrops.push(e.otherCropsText);
+        }
+        return entryCrops;
+      });
       data.landDetails = {
         totalLandArea: totalArea,
         crops: allCrops,
@@ -105,7 +113,8 @@ const Onboarding = () => {
       const livestock: Record<string, number> = {};
       for (const entry of livestockEntries) {
         if (entry.type) {
-          livestock[entry.type] = (livestock[entry.type] || 0) + entry.count;
+          const typeKey = entry.type === "other" && entry.otherTypeText ? entry.otherTypeText.trim().toLowerCase() : entry.type;
+          livestock[typeKey] = (livestock[typeKey] || 0) + entry.count;
         }
       }
       data.livestockDetails = livestock;
@@ -154,12 +163,7 @@ const Onboarding = () => {
           onChangeText={(text) => updatePersonalDetails({ name: text })}
         />
 
-        <FormInput
-          label={t("personalDetails.fathersName") || "Father's Name"}
-          placeholder="Enter father's name"
-          value={personalDetails.fathersName}
-          onChangeText={(text) => updatePersonalDetails({ fathersName: text })}
-        />
+// Let me look first, I don't see gender on this file segment.
 
         <Select
           label={t("onboarding.personal.state")}
@@ -279,6 +283,12 @@ const Onboarding = () => {
                   onChange={(values) =>
                     updateLandEntry(entry.id, { crops: values })
                   }
+                  enableOtherInput={true}
+                  otherValue={entry.otherCropsText || ""}
+                  onOtherChange={(text) =>
+                    updateLandEntry(entry.id, { otherCropsText: text })
+                  }
+                  otherPlaceholder="Please enter other crops..."
                 />
               </View>
             ))}
@@ -365,6 +375,12 @@ const Onboarding = () => {
                       onChange={(value) =>
                         updateLivestockEntry(entry.id, { type: value })
                       }
+                      enableOtherInput={true}
+                      otherValue={entry.otherTypeText || ""}
+                      onOtherChange={(text) =>
+                        updateLivestockEntry(entry.id, { otherTypeText: text })
+                      }
+                      otherPlaceholder="Enter livestock type..."
                     />
                     {entry.type === "other" && (
                       <TextArea
@@ -435,7 +451,7 @@ const Onboarding = () => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: theme.background.screen }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {renderStep()}
 

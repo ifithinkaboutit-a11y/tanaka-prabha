@@ -20,7 +20,7 @@ import { theme } from "../styles/colors";
 function generateDays() {
     const days: { label: string; value: string; dayName: string }[] = [];
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
+    for (let i = 1; i < 14; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         days.push({
@@ -63,7 +63,7 @@ export default function BookAppointment() {
                 setSlots(available);
                 setIsFullyBooked(fullyBooked);
             } catch {
-                setSlots(["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"]);
+                setSlots(["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]);
             } finally {
                 setLoadingSlots(false);
             }
@@ -298,9 +298,8 @@ export default function BookAppointment() {
                 <Pressable
                     onPress={handleBook}
                     disabled={!selectedSlot || submitting}
-                    className={`w-full rounded-2xl py-[18px] flex-row items-center justify-center gap-2.5 ${
-                        selectedSlot ? "bg-[#386641] active:opacity-90" : "bg-slate-200"
-                    }`}
+                    className={`w-full rounded-2xl py-[18px] flex-row items-center justify-center gap-2.5 ${selectedSlot ? "bg-[#386641] active:opacity-90" : "bg-slate-200"
+                        }`}
                 >
                     {submitting ? (
                         <ActivityIndicator color="#FFFFFF" size="small" />
