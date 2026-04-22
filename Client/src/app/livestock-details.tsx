@@ -28,7 +28,7 @@ const LivestockDetailsScreen = () => {
     return (
       <View style={s.loader}>
         <ActivityIndicator size="large" color={HEADER_COLOR} />
-        <Text style={s.loaderText}>Loading your livestock details...</Text>
+        <Text style={s.loaderText}>{t("common.loading")}</Text>
       </View>
     );
   }
@@ -82,7 +82,7 @@ const LivestockDetailsScreen = () => {
           {saving && (
             <View style={s.savingIndicator}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={s.savingText}>Saving...</Text>
+              <Text style={s.savingText}>{t("common.loading")}</Text>
             </View>
           )}
         </View>

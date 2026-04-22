@@ -88,11 +88,7 @@ export default function MySchedule() {
                 <Pressable onPress={() => router.back()} className="mb-3 w-9 h-9 rounded-full bg-white/20 items-center justify-center">
                     <Ionicons name="arrow-back" size={22} color="#fff" />
                 </Pressable>
-<<<<<<< bug1
-                <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("schedule.title")}</AppText>
-=======
                 <AppText style={{ color: "#fff", fontWeight: "800", fontSize: 28 }}>{t("connect.mySchedule")}</AppText>
->>>>>>> main
                 <AppText style={{ color: "rgba(255,255,255,0.75)", marginTop: 4, fontSize: 13 }}>
                     {t("schedule.subtitle")}
                 </AppText>

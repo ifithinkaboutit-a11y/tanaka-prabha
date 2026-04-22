@@ -1,5 +1,6 @@
 // src/components/molecules/CropSelector.tsx
 import React from "react";
+import { useTranslation } from "../../i18n";
 import { Pressable, ScrollView, StyleSheet, Text, View, TextInput } from "react-native";
 import { cropsBySeason, SelectOption } from "../../data/content/onboardingOptions";
 import { theme } from "@/styles/colors";
@@ -34,6 +35,8 @@ export default function CropSelector({
   otherValue,
   onOtherValueChange
 }: CropSelectorProps) {
+  const { t } = useTranslation();
+
   const toggle = (cropValue: string) => {
     if (value.includes(cropValue)) {
       onValueChange(value.filter((v) => v !== cropValue));
@@ -88,7 +91,7 @@ export default function CropSelector({
                         isSelected && s.chipTextSelected,
                       ]}
                     >
-                      {cropLabel}
+                      {t(`crops.${crop.value}`, { defaultValue: cropLabel })}
                     </Text>
                   </Pressable>
                 );

@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Linking,
   Modal,
   Pressable,
@@ -12,24 +11,17 @@ import {
   View,
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
-import Button from "../../components/atoms/Button";
 import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
 import { useUserProfile } from "../../contexts/UserProfileContext";
 import { theme } from "@/styles/colors";
 
-const HELPLINE_NUMBER = "tel:1800180111";
+const HELPLINE_EMAIL = "support@example.com"; // replace with real address
 const AFTER_HOURS = 18; // 6:00 PM
 
 /** Returns true if current local hour >= 18 (6 PM) */
 function isAfterHours(): boolean {
   return new Date().getHours() >= AFTER_HOURS;
-}
-
-/** Format a Date as "DD/MM/YYYY HH:MM" */
-function formatDateTime(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function Connect() {
@@ -43,11 +35,28 @@ export default function Connect() {
 
   // ── SOS button handler ────────────────────────────────────────────────────
   const handleEmergencyPress = () => {
-    // Mock backend tracking for SOS button hits
     console.log("[TRACKING]: SOS/Emergency button clicked by user at", new Date().toISOString());
-
     const emergencyNumber = "tel:1800180111";
     Linking.openURL(emergencyNumber);
+  };
+
+  // ── After-hours modal handlers ────────────────────────────────────────────
+  const handleCallAnyway = () => {
+    setModalVisible(false);
+    Linking.openURL("tel:1800180111");
+  };
+
+  const handleSendEmail = () => {
+    const name = profile?.name ?? "Unknown";
+    const mobile = profile?.mobileNumber ?? "Unknown";
+    const id = profile?.id ?? "Unknown";
+    const location = [profile?.village, profile?.district].filter(Boolean).join(", ") || "Unknown";
+    const body = encodeURIComponent(
+      `Name: ${name}\nMobile: ${mobile}\nBeneficiary ID: ${id}\nLocation: ${location}\n\nReason:\n${reason}`
+    );
+    const subject = encodeURIComponent("SOS After-Hours Support Request");
+    Linking.openURL(`mailto:${HELPLINE_EMAIL}?subject=${subject}&body=${body}`);
+    setModalVisible(false);
   };
 
   // ── Service grid ──────────────────────────────────────────────────────────
@@ -88,114 +97,132 @@ export default function Connect() {
 
   const afterHours = isAfterHours();
 
-      {/* What do you need help with? */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-        <AppText
-          variant="h3"
+  return (
+    <>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: theme.background.screen }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Page header */}
+        <View
           style={{
-            fontWeight: "700",
-            color: theme.text.secondary,
+            backgroundColor: theme.background.header,
+            paddingTop: 52,
+            paddingBottom: 20,
+            paddingHorizontal: 20,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.04,
+            shadowRadius: 12,
+            elevation: 4,
             marginBottom: 16,
-            fontSize: 18,
           }}
         >
-          {t("connect.whatHelpWith")}
-        </AppText>
-
-        {/* Services 2×2 Grid — same QuickActionGrid used on the home screen */}
-        <QuickActionGrid actions={serviceActions} />
-      </View>      {/* Emergency Help */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 32 }}>
-        <AppText
-          variant="h3"
-          style={{
-            fontWeight: "700",
-            color: theme.text.secondary,
-            marginBottom: 6,
-            fontSize: 18,
-          }}
-        >
-          {t("connect.emergencyTitle")}
-        </AppText>
-        <AppText
-          variant="bodySm"
-          style={{
-            color: theme.text.muted,
-            marginBottom: 16,
-            fontSize: 13,
-          }}
-        >
-          {t("connect.emergencySubtitle")}
-        </AppText>
-
-        {/* Emergency Button */}
-        {/* <Pressable
-          onPress={handleEmergencyPress}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 14,
-            paddingHorizontal: 16,
-            borderRadius: 16,
-            backgroundColor: pressed ? theme.background.neutralSubtle : "#FFFFFF",
-            borderWidth: 1.5,
-            borderColor: "#FEE2E2",
-          })}
-        >
-          <View
+          <AppText
+            variant="h2"
             style={{
-              backgroundColor: "#FEF2F2",
-              padding: 10,
-              borderRadius: 12,
-              marginRight: 16,
+              fontSize: 24,
+              fontWeight: "800",
+              color: theme.text.primary,
+              letterSpacing: -0.5,
             }}
           >
-            <Ionicons name="call" size={20} color="#DC2626" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <AppText
+            {t("connect.title")}
+          </AppText>
+          <AppText
+            variant="bodySm"
+            style={{ color: theme.text.muted, marginTop: 4, fontSize: 13 }}
+          >
+            {t("connect.subtitle")}
+          </AppText>
+        </View>
+
+        {/* ── Services 2×2 Grid ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+          <AppText
+            variant="h3"
+            style={{
+              fontWeight: "700",
+              color: theme.text.secondary,
+              marginBottom: 16,
+              fontSize: 18,
+            }}
+          >
+            {t("connect.whatHelpWith")}
+          </AppText>
+          <QuickActionGrid actions={serviceActions} />
+        </View>
+
+        {/* ── Emergency / Helpline section ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 32 }}>
+          <AppText
+            variant="h3"
+            style={{
+              fontWeight: "700",
+              color: theme.text.secondary,
+              marginBottom: 6,
+              fontSize: 18,
+            }}
+          >
+            {t("connect.emergencyTitle")}
+          </AppText>
+          <AppText
+            variant="bodySm"
+            style={{
+              color: theme.text.muted,
+              marginBottom: 16,
+              fontSize: 13,
+            }}
+          >
+            {t("connect.emergencySubtitle")}
+          </AppText>
+
+          {/* Emergency Button */}
+          <Pressable
+            onPress={afterHours ? () => setModalVisible(true) : handleEmergencyPress}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              paddingVertical: 14,
+              paddingHorizontal: 16,
+              borderRadius: 16,
+              backgroundColor: pressed ? theme.background.neutralSubtle ?? "#F5F5F5" : "#FFFFFF",
+              borderWidth: 1.5,
+              borderColor: "#FEE2E2",
+            })}
+          >
+            <View
               style={{
-                color: "#111827",
-                fontWeight: "700",
-                fontSize: 16,
+                backgroundColor: "#FEF2F2",
+                padding: 10,
+                borderRadius: 12,
+                marginRight: 16,
               }}
             >
-              24/7 Helpline
-            </AppText>
-            <AppText
-              style={{
-                color: theme.text.muted,
-                fontWeight: "500",
-                fontSize: 12,
-                marginTop: 1,
-              }}
-            >
-              {t("connect.tapToCall")}
-            </AppText>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-        </Pressable> */}
-        <Pressable
-          onPress={handleEmergencyPress}
-          className="flex-row items-center py-3.5 px-4 rounded-2xl border-[1.5px] border-red-100 bg-white active:bg-neutral-100"
-        >
-          <View className="bg-red-50 p-2.5 rounded-xl mr-4">
-            <Ionicons name="call" size={20} color="#DC2626" />
-          </View>
+              <Ionicons name="call" size={20} color="#DC2626" />
+            </View>
 
-          <View className="flex-1">
-            {/* <AppText className="text-gray-900 font-bold text-base">
-              Helpline
-            </AppText> */}
+            <View style={{ flex: 1 }}>
+              <AppText style={{ color: "#111827", fontWeight: "700", fontSize: 16 }}>
+                24/7 Helpline
+              </AppText>
+              <AppText
+                style={{
+                  color: theme.text.muted,
+                  fontWeight: "500",
+                  fontSize: 12,
+                  marginTop: 1,
+                }}
+              >
+                {t("connect.tapToCall")}
+              </AppText>
+            </View>
 
-            <AppText className="text-xs font-medium mt-0.5 text-muted">
-              {t("connect.tapToCall")}
-            </AppText>
-          </View>
-
-          <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-        </Pressable>
-      </View>
+            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+          </Pressable>
+        </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>

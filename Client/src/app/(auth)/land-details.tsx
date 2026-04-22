@@ -14,6 +14,7 @@ import AppText from "../../components/atoms/AppText";
 import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
+import CropSelector from "../../components/molecules/CropSelector";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -27,9 +28,11 @@ export const unstable_settings = {
   headerShown: false,
 };
 
-interface FormErrors {
+interface EntryErrors {
   area?: string;
+  crops?: string;
 }
+type FormErrors = Record<string, EntryErrors>;
 
 const AuthLandDetailsScreen = () => {
   const router = useRouter();
@@ -43,7 +46,7 @@ const AuthLandDetailsScreen = () => {
   } = useOnboardingStore();
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [touched, setTouched] = useState<Record<string, Record<string, boolean>>>({});
 
   const unitOptions = getLocalizedOptions(landUnits, currentLanguage);
 
@@ -52,21 +55,16 @@ const AuthLandDetailsScreen = () => {
     if (landEntries.length === 0) return false;
 
     const entry = landEntries[0];
-    const validation = validateLandEntry({
-      area: entry.area,
-      unit: entry.unit,
-      crops: entry.crops || [],
-    });
+    const entryErrors: EntryErrors = {};
 
-    if (!validation.isValid) {
-      const entryErrors: { area?: string; crops?: string } = {};
-      validation.errors.forEach((error) => {
-        if (error.toLowerCase().includes("area") || error.toLowerCase().includes("land")) {
-          entryErrors.area = error;
-        } else if (error.toLowerCase().includes("crop")) {
-          entryErrors.crops = error;
-        }
-      });
+    if (!entry.area || entry.area <= 0) {
+      entryErrors.area = "Land area must be greater than 0";
+    }
+    if (!entry.crops || entry.crops.length === 0) {
+      entryErrors.crops = "Please select at least one crop";
+    }
+
+    if (Object.keys(entryErrors).length > 0) {
       setErrors({ [entry.id]: entryErrors });
       return false;
     }
@@ -75,26 +73,36 @@ const AuthLandDetailsScreen = () => {
     return true;
   };
 
-  const handleAreaChange = (text: string) => {
-    if (!entry) return;
+  const handleAreaChange = (entryId: string, text: string) => {
     const num = parseFloat(text) || 0;
-    updateLandEntry(entry.id, { area: num });
+    updateLandEntry(entryId, { area: num });
 
-    if (touched.area) {
+    if (touched?.[entryId]?.area) {
       const validation = validateLandArea(num);
-      setErrors((prev) => ({ ...prev, area: validation.errors[0] }));
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+      }));
     }
   };
 
-  const handleAreaBlur = () => {
-    if (!entry) return;
-    setTouched((prev) => ({ ...prev, area: true }));
+  const handleAreaBlur = (entryId: string, area: number) => {
+    setTouched((prev) => ({
+      ...prev,
+      [entryId]: { ...prev?.[entryId], area: true },
+    }));
 
-    const validation = validateLandArea(entry.area);
-    if (entry.area <= 0) {
-      setErrors((prev) => ({ ...prev, area: "Land area must be greater than 0" }));
+    const validation = validateLandArea(area);
+    if (area <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: "Land area must be greater than 0" },
+      }));
     } else if (!validation.isValid) {
-      setErrors((prev) => ({ ...prev, area: validation.errors[0] }));
+      setErrors((prev) => ({
+        ...prev,
+        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+      }));
     } else {
       setErrors((prev) => ({
         ...prev,
@@ -119,10 +127,9 @@ const AuthLandDetailsScreen = () => {
       const errorMessage =
         errors[entryId]?.area ||
         errors[entryId]?.crops ||
-        t("validation.landDetailsError") ||
         "Please fill in all land details correctly";
 
-      Alert.alert(t("validation.validationError") || "Validation Error", errorMessage);
+      Alert.alert("Validation Error", errorMessage);
 
       setTouched({ [entryId]: { area: true, crops: true } });
       return;

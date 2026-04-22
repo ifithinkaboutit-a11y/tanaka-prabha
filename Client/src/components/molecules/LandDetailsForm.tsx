@@ -12,19 +12,14 @@ import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollV
 import MultiSelect from "@/components/atoms/MultiSelect";
 import { LandDetails, LandDetailsFormProps } from "../../data/interfaces";
 import { useTranslation } from "../../i18n";
+import { useLanguageStore } from "../../stores/languageStore";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
-import { cropTypes, getLocalizedOptions } from "../../data/content/onboardingOptions";
+import { cropsBySeason } from "../../data/content/onboardingOptions";
 import { theme } from "@/styles/colors";
 
-// "None" option allows the user to clear a previously selected crop
-const NONE_CROP_VALUE = "__none__";
-const NONE_OPTION = { value: NONE_CROP_VALUE, label: "None (remove crop)", labelHi: "कोई नहीं (हटाएं)" };
-
-// Use all crop types from onboardingOptions
-const baseCropOptions = [
-  ...cropTypes,
-];
+// Sentinel value used to track "Others" chips + free-text input
+const OTHERS_VALUE = "other";
 
 const unitOptions = [
   { value: "acre",    label: "Acres",    labelHi: "एकड़" },
@@ -32,7 +27,7 @@ const unitOptions = [
   { value: "bigha",   label: "Bigha",    labelHi: "बीघा" },
 ];
 
-// Season config — restores the original 3-section UI
+// Season config — 3-section UI (Rabi / Kharif / Zaid)
 const SEASONS = [
   {
     field: "rabiCrop"   as const,
@@ -116,27 +111,6 @@ export default function LandDetailsForm({
   onSave,
   onCancel,
 }: LandDetailsFormProps) {
-<<<<<<< bug1
-  const { t, currentLanguage } = useTranslation();
-  const localizedCropOptions = getLocalizedOptions(baseCropOptions, currentLanguage);
-  const localizedUnitOptions = getLocalizedOptions(unitOptions, currentLanguage);
-
-  const parseCrop = (val: any): string[] => {
-    if (!val) return [];
-    if (Array.isArray(val)) return val;
-    return val.split(",").map((s: string) => s.trim().toLowerCase()).filter(Boolean);
-  };
-
-  // Normalize crop values to arrays for the multi-select UI
-  const normalizedInitial: LandDetails = {
-    ...initialData,
-    rabiCrop: parseCrop(initialData.rabiCrop),
-    kharifCrop: parseCrop(initialData.kharifCrop),
-    zaidCrop: parseCrop(initialData.zaidCrop),
-  };
-  const [formData, setFormData] = useState<LandDetails>(normalizedInitial);
-  const [unit, setUnit] = useState("acre");
-=======
   const { t } = useTranslation();
   const { currentLanguage } = useLanguageStore();
 
@@ -145,7 +119,6 @@ export default function LandDetailsForm({
     initialData.totalLandArea > 0 ? initialData.totalLandArea.toString() : ""
   );
   const [unit, setUnit] = useState("bigha");
->>>>>>> main
   const [areaFocused, setAreaFocused] = useState(false);
 
   // ── Per-season crop state ────────────────────────────────────────────────
@@ -173,28 +146,16 @@ export default function LandDetailsForm({
       Alert.alert(t("common.error"), t("landDetails.areaError"));
       return;
     }
-<<<<<<< bug1
-    // Convert arrays back to comma-separated strings for backend storage
-    const dataToSave: LandDetails = {
-      ...formData,
-      rabiCrop: Array.isArray(formData.rabiCrop) ? formData.rabiCrop.join(",") : formData.rabiCrop,
-      kharifCrop: Array.isArray(formData.kharifCrop) ? formData.kharifCrop.join(",") : formData.kharifCrop,
-      zaidCrop: Array.isArray(formData.zaidCrop) ? formData.zaidCrop.join(",") : formData.zaidCrop,
-=======
+
     const dataToSave: LandDetails = {
       totalLandArea: area,
       rabiCrop:   serializeCropField(rabiSelected,   rabiOther),
       kharifCrop: serializeCropField(kharifSelected, kharifOther),
       zaidCrop:   serializeCropField(zaidSelected,   zaidOther),
->>>>>>> main
     };
     onSave(dataToSave);
   };
 
-<<<<<<< bug1
-  const update = (field: keyof LandDetails, value: any) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
-=======
   // ── Localized options ────────────────────────────────────────────────────
   const buildOptions = (crops: typeof cropsBySeason.rabi) => [
     ...crops.map((c) => ({
@@ -218,7 +179,6 @@ export default function LandDetailsForm({
     kharifCrop: { selected: kharifSelected, setSelected: setKharifSelected, other: kharifOther, setOther: setKharifOther },
     zaidCrop:   { selected: zaidSelected,   setSelected: setZaidSelected,   other: zaidOther,   setOther: setZaidOther },
   };
->>>>>>> main
 
   return (
     // KeyboardAwareScrollView automatically scrolls focused inputs above the
@@ -227,10 +187,6 @@ export default function LandDetailsForm({
       style={s.scroll}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={s.scrollContent}
-<<<<<<< bug1
-      extraScrollHeight={20}
-=======
->>>>>>> main
       keyboardShouldPersistTaps="handled"
     >
       {/* ── Land area ── */}
@@ -259,11 +215,7 @@ export default function LandDetailsForm({
               value={unit}
               onChange={setUnit}
               options={localizedUnitOptions}
-<<<<<<< bug1
-              placeholder="Unit"
-=======
               placeholder={t("landDetails.selectUnit")}
->>>>>>> main
             />
           </View>
         </View>
@@ -305,25 +257,12 @@ export default function LandDetailsForm({
                 />
                 <View style={s.seasonTextBlock}>
                   <Text style={[s.seasonLabel, { color: season.dotColor }]}>
-<<<<<<< bug1
-                    {t(labelKey)}
-=======
                     {t(season.labelKey)}
->>>>>>> main
                   </Text>
                   <Text style={s.seasonPeriod}>{season.period}</Text>
                 </View>
                 <View style={[s.seasonDot, { backgroundColor: season.dotColor }]} />
               </View>
-<<<<<<< bug1
-              <View style={{ marginTop: 8 }}>
-                <Select
-                  value={formData[season.field]}
-                  isMulti
-                  onChange={(v) => update(season.field, v)}
-                  options={localizedCropOptions}
-                  placeholder={`Select ${season.label} crops`}
-=======
 
               {/* MultiSelect for this season's crops */}
               <View style={{ marginTop: 10 }}>
@@ -332,7 +271,6 @@ export default function LandDetailsForm({
                   value={state.selected}
                   options={options}
                   onChange={state.setSelected}
->>>>>>> main
                 />
               </View>
 

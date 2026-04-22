@@ -191,6 +191,8 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                 guidelines_and_rules_hi: editData.guidelines_and_rules_hi,
                 requirements: editData.requirements,
                 requirements_hi: editData.requirements_hi,
+                perks: editData.perks,
+                perks_hi: editData.perks_hi,
                 hero_image_url: editData.hero_image_url,
                 status: editData.status,
                 instructors: editData.instructors,
@@ -436,6 +438,15 @@ export default function EventDetailsPage({ params: paramsPromise }) {
                                     <div>
                                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Guidelines & Rules</p>
                                         <p className="leading-relaxed whitespace-pre-line">{event.guidelines_and_rules}</p>
+                                    </div>
+                                </>
+                            )}
+                            {event.perks && (
+                                <>
+                                    <Separator />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">🎁 Perks & Benefits</p>
+                                        <p className="leading-relaxed">{event.perks}</p>
                                     </div>
                                 </>
                             )}

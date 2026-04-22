@@ -14,6 +14,7 @@ import {
   Bell,
   Calendar,
   CalendarCheck,
+  FileBarChart,
   FileText,
   LayoutDashboard,
   Settings,
@@ -53,7 +54,7 @@ const dashboardRoutes = [
   },
   {
     id: "beneficiaries",
-    title: "Beneficiaries",
+    title: "Farmers",
     icon: <Users className="size-4" />,
     link: "/beneficiaries",
   },
@@ -81,9 +82,15 @@ const dashboardRoutes = [
   },
   {
     id: "professionals",
-    title: "Professionals",
+    title: "Manage Professionals",
     icon: <Stethoscope className="size-4" />,
-    link: "/professionals",
+    link: "/professionals?tab=experts",
+  },
+  {
+    id: "reports",
+    title: "Reports",
+    icon: <FileBarChart className="size-4" />,
+    link: "/reports",
   },
   {
     id: "users",

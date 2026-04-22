@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Pencil, Loader2, UserPlus, ChevronRight, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,9 +13,10 @@ import {
     Select, SelectContent, SelectItem,
     SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { professionalsApi } from "@/lib/api"
-import { ASSAM_DISTRICTS } from "@/lib/constants"
+import { INDIA_STATES_UTS, DISTRICTS_BY_STATE, ASSAM_DISTRICTS } from "@/lib/constants"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +33,9 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
         department: professional?.department || "",
         category: professional?.category || professional?.type || "",
         phone_number: professional?.phone_number || professional?.phone || "",
+        email: professional?.email || "",
+        description: professional?.description || "",
+        state: professional?.state || "",
         district: professional?.district || "",
         service_area: professional?.service_area || "",
         specializations: Array.isArray(professional?.specializations)
@@ -40,7 +44,26 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
         is_available: professional?.is_available !== false,
     })
 
-    function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
+    // Derive districts from selected state
+    const availableDistricts = useMemo(() => {
+        if (form.state && DISTRICTS_BY_STATE[form.state]) {
+            return DISTRICTS_BY_STATE[form.state]
+        }
+        // Fallback: if professional has a district but no state, show Assam districts
+        if (form.district && !form.state) {
+            return ASSAM_DISTRICTS
+        }
+        return []
+    }, [form.state, form.district])
+
+    function set(key, val) {
+        // When state changes, reset district
+        if (key === "state") {
+            setForm(p => ({ ...p, [key]: val, district: "" }))
+        } else {
+            setForm(p => ({ ...p, [key]: val }))
+        }
+    }
 
     function validateStep1() {
         if (!form.name.trim()) return "Name is required"
@@ -137,10 +160,11 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                                 { key: "name", label: "Full Name *", placeholder: "e.g., Dr. Rajesh Kumar" },
                                 { key: "role", label: "Role", placeholder: "e.g., Senior Veterinarian" },
                                 { key: "phone_number", label: "Phone Number", placeholder: "10-digit number" },
+                                { key: "email", label: "Email", placeholder: "e.g., rajesh@example.com" },
                             ].map(({ key, label, placeholder }) => (
                                 <div key={key} className="space-y-1.5">
                                     <Label htmlFor={key}>{label}</Label>
-                                    <Input id={key} placeholder={placeholder} value={form[key]} onChange={e => set(key, e.target.value)} />
+                                    <Input id={key} type={key === "email" ? "email" : "text"} placeholder={placeholder} value={form[key]} onChange={e => set(key, e.target.value)} />
                                 </div>
                             ))}
                             <div className="space-y-1.5">
@@ -155,6 +179,16 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                                         <SelectItem value="financial">Financial Advisor</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Brief description of the professional's expertise..."
+                                    value={form.description}
+                                    onChange={e => set("description", e.target.value)}
+                                    rows={2}
+                                />
                             </div>
                         </div>
                     )}
@@ -171,15 +205,34 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                                     <Input id={key} placeholder={placeholder} value={form[key]} onChange={e => set(key, e.target.value)} />
                                 </div>
                             ))}
+
+                            {/* State selector */}
                             <div className="space-y-1.5">
-                                <Label>District</Label>
-                                <Select value={form.district} onValueChange={v => set("district", v)}>
-                                    <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
-                                    <SelectContent>
-                                        {ASSAM_DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                <Label>State</Label>
+                                <Select value={form.state} onValueChange={v => set("state", v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                        {INDIA_STATES_UTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {/* District selector — populated based on state */}
+                            <div className="space-y-1.5">
+                                <Label>District</Label>
+                                <Select value={form.district} onValueChange={v => set("district", v)} disabled={!form.state && availableDistricts.length === 0}>
+                                    <SelectTrigger><SelectValue placeholder={form.state ? "Select district" : "Select a state first"} /></SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                        {availableDistricts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                {!form.state && form.district && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Current district: {form.district}. Select a state to update.
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="flex items-center gap-3 rounded-lg border p-3">
                                 <Switch
                                     id="is_available"
@@ -204,15 +257,14 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                             Cancel
                         </Button>
                     )}
-
                     {step < totalSteps ? (
                         <Button onClick={handleNext} className="flex-1">
-                            Continue <ChevronRight className="size-4 ml-1" />
+                            Next <ChevronRight className="size-4 ml-1" />
                         </Button>
                     ) : (
-                        <Button onClick={handleSubmit} className="flex-1" disabled={saving}>
-                            {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-                            {isEdit ? "Save Changes" : "Add Professional"}
+                        <Button onClick={handleSubmit} disabled={saving} className="flex-1">
+                            {saving && <Loader2 className="size-4 mr-2 animate-spin" />}
+                            {isEdit ? "Update" : "Create"}
                         </Button>
                     )}
                 </div>

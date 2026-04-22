@@ -27,6 +27,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -70,7 +74,7 @@ function getInitials(name) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function ProfessionalsTable() {
+export function ProfessionalsTable({ filterType = "all" }) {
   const router = useRouter()
   const [data, setData] = React.useState([])
   const [loading, setLoading] = React.useState(true)
@@ -105,14 +109,15 @@ export function ProfessionalsTable() {
     }
   }
 
-  const columns = React.useMemo(() => [
+  // Full columns for "all" view
+  const fullColumns = React.useMemo(() => [
     {
       accessorKey: "name",
       header: "Professional",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={row.original.avatar} />
+            <AvatarImage src={row.original.avatar || row.original.image_url} />
             <AvatarFallback className="bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
               {getInitials(row.original.name)}
             </AvatarFallback>
@@ -137,7 +142,7 @@ export function ProfessionalsTable() {
       accessorKey: "type",
       header: "Type",
       cell: ({ row }) => {
-        const type = row.original.type || "doctor"
+        const type = row.original.type || row.original.category || "doctor"
         const colors = {
           doctor: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
           veterinary: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
@@ -155,13 +160,13 @@ export function ProfessionalsTable() {
       header: "Contact",
       cell: ({ row }) => (
         <div className="space-y-1">
-          {row.original.phone && (
+          {(row.original.phone || row.original.phone_number) && (
             <a
-              href={`tel:${row.original.phone}`}
+              href={`tel:${row.original.phone || row.original.phone_number}`}
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
               <IconPhone className="size-3.5" />
-              {row.original.phone}
+              {row.original.phone || row.original.phone_number}
             </a>
           )}
           {row.original.email && (
@@ -181,6 +186,7 @@ export function ProfessionalsTable() {
       header: "Location",
       cell: ({ row }) => (
         <div className="text-sm">
+          {row.original.state && <span className="text-muted-foreground">{row.original.state} → </span>}
           {row.original.district || "—"}
         </div>
       ),
@@ -233,6 +239,65 @@ export function ProfessionalsTable() {
       ),
     },
   ], [])
+
+  // Simplified columns for "expert" card view — only Name and Description
+  const expertColumns = React.useMemo(() => [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={row.original.avatar || row.original.image_url} />
+            <AvatarFallback className="bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{row.original.name || "Unknown"}</div>
+            <div className="text-xs text-muted-foreground line-clamp-1">
+              {row.original.description || row.original.role || row.original.category || ""}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: ({ row }) => (
+        <div className="text-sm text-muted-foreground line-clamp-2 max-w-[300px]">
+          {row.original.description || row.original.role || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-8">
+              <IconDotsVertical className="size-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={() => router.push(`/professionals/${row.original.id}`)}>View Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setEditProfessional(row.original); setIsEditOpen(true) }}>Edit</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => setDeleteId(row.original.id)}
+            >
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ], [])
+
+  const columns = filterType === "expert" ? expertColumns : fullColumns
 
   React.useEffect(() => {
     fetchProfessionals()
@@ -311,8 +376,9 @@ export function ProfessionalsTable() {
   }
 
   const filteredData = React.useMemo(() => {
-    if (typeFilter === "all") return data
-    return data.filter(item => item.type === typeFilter)
+    let result = data
+    if (typeFilter === "all") return result
+    return result.filter(item => (item.type || item.category) === typeFilter)
   }, [data, typeFilter])
 
   const table = useReactTable({
@@ -361,59 +427,103 @@ export function ProfessionalsTable() {
           />
         </div>
 
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="doctor">Doctors</SelectItem>
-            <SelectItem value="veterinary">Veterinary</SelectItem>
-            <SelectItem value="agricultural">Agricultural</SelectItem>
-          </SelectContent>
-        </Select>
+        {filterType !== "expert" && (
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="doctor">Doctors</SelectItem>
+              <SelectItem value="veterinary">Veterinary</SelectItem>
+              <SelectItem value="agricultural">Agricultural</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
 
         <div className="ml-auto">
           <ProfessionalDialog onSuccess={fetchProfessionals} mode="add" />
         </div>
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+      {/* Expert view: Card layout showing only Name and Description */}
+      {filterType === "expert" && filteredData.length > 0 ? (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {filteredData.map((pro) => (
+            <Card
+              key={pro.id}
+              className="cursor-pointer hover:border-primary/30 transition-colors"
+              onClick={() => router.push(`/professionals/${pro.id}`)}
+            >
+              <CardContent className="flex items-center gap-3 p-4">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={pro.avatar || pro.image_url} />
+                  <AvatarFallback className="bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 text-xs">
+                    {getInitials(pro.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{pro.name || "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {pro.description || pro.role || pro.category || "No description"}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`shrink-0 text-[10px] ${pro.is_available !== false
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400"
+                    : "bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400"
+                  }`}
+                >
+                  {pro.is_available !== false ? "Available" : "Unavailable"}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Table view for "all" */
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No professionals found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/professionals/${row.original.id}`)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No professionals found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">

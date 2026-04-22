@@ -76,6 +76,7 @@ export function SchemesGrid() {
     category: "",
     image_url: "",
     is_active: true,
+    eligibility_criteria: [],
   })
 
   React.useEffect(() => {
@@ -131,6 +132,7 @@ export function SchemesGrid() {
       category: scheme.category || "",
       image_url: scheme.image_url || "",
       is_active: scheme.is_active ?? true,
+      eligibility_criteria: scheme.eligibility_criteria || [],
     })
     setIsEditOpen(true)
   }
@@ -201,6 +203,7 @@ export function SchemesGrid() {
       category: "",
       image_url: "",
       is_active: true,
+      eligibility_criteria: [],
     })
   }
 

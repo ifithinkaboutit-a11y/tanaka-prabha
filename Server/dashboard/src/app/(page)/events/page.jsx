@@ -35,6 +35,7 @@ const EVENT_FIELDS = [
     { key: "description", label: "Description", type: "textarea" },
     { key: "guidelines_and_rules", label: "Guidelines & Rules", type: "textarea" },
     { key: "requirements", label: "Requirements", type: "textarea" },
+    { key: "perks", label: "Perks & Benefits", type: "textarea" },
 ]
 
 // Compute live status based on current time (same logic as mobile app)
@@ -71,6 +72,8 @@ const emptyForm = {
     guidelines_and_rules_hi: "",
     requirements: "",
     requirements_hi: "",
+    perks: "",
+    perks_hi: "",
     hero_image_url: "",
     status: "upcoming",
     outcome: "",
