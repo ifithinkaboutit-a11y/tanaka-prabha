@@ -405,7 +405,6 @@ export default function Schemes() {
           </Pressable>
         </View>
 
-<<<<<<< bug1
         <View style={{ position: "relative" }}>
           <ScrollView
             horizontal
@@ -426,25 +425,25 @@ export default function Schemes() {
           </ScrollView>
           {/* Scroll Cue Arrow */}
           {recommendedSchemes.length > 1 && (
-            <View 
+            <View
               pointerEvents="none"
-              style={{ 
-                position: "absolute", 
-                right: 0, 
-                top: 0, 
-                bottom: 0, 
-                width: 60, 
-                justifyContent: "center", 
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 60,
+                justifyContent: "center",
                 alignItems: "flex-end",
                 paddingRight: 8
               }}
             >
-              <View style={{ 
-                backgroundColor: "rgba(255,255,255,0.7)", 
-                borderRadius: 20, 
-                width: 32, 
-                height: 32, 
-                alignItems: "center", 
+              <View style={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                borderRadius: 20,
+                width: 32,
+                height: 32,
+                alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
                 borderColor: "rgba(0,0,0,0.05)"
@@ -454,20 +453,6 @@ export default function Schemes() {
             </View>
           )}
         </View>
-=======
-        {recommendedSchemes.map((scheme) => (
-          <SchemeCard
-            key={scheme.id}
-            scheme={scheme}
-            onPress={() => handleSchemePress(scheme.id)}
-          />
-        ))}
-        {recommendedSchemes.length > 3 && (
-          <AppText style={{ color: theme.text.muted, textAlign: "center", fontSize: 12, marginTop: 8 }}>
-            {t("schemesPage.scrollForMore")}
-          </AppText>
-        )}
->>>>>>> main
       </View>
 
       {/* Categories */}
@@ -522,8 +507,6 @@ export default function Schemes() {
         </View>
       )}
 
-<<<<<<< bug1
-=======
       {/* All Schemes section — latest 5 with View All */}
       {!isSearchActive && filteredSchemes.length > 0 && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
@@ -557,7 +540,6 @@ export default function Schemes() {
           ))}
         </View>
       )}
->>>>>>> main
 
       {/* No results message */}
       {isSearchActive && filteredSchemes.length === 0 && (

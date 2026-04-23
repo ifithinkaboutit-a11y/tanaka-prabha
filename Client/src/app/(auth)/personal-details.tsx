@@ -32,7 +32,6 @@ import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { theme } from "../../styles/colors";
-import { indianStates, indianDistricts } from "../../data/indianLocations";
 
 export const unstable_settings = {
   headerShown: false,

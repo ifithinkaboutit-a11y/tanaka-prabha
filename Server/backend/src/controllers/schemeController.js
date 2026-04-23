@@ -1,4 +1,5 @@
 import Scheme from '../models/Scheme.js';
+import AuditLog from '../models/AuditLog.js';
 import { query } from '../config/db.js';
 
 /**
@@ -55,6 +56,24 @@ export const getSchemeById = async (req, res) => {
                 status: 'error',
                 message: 'Scheme not found'
             });
+        }
+
+        // Audit log: track scheme view
+        try {
+            const user_id = req.user?.userId || null;
+            const ip_address = req.ip || req.connection?.remoteAddress || null;
+            const user_agent = req.get('user-agent') || null;
+            await AuditLog.create({
+                user_id,
+                action: 'scheme_view',
+                entity_id: id,
+                metadata: { title: scheme.title },
+                ip_address,
+                user_agent,
+            });
+        } catch (auditErr) {
+            // Don't fail the request if audit logging fails
+            console.error('Audit log error (scheme_view):', auditErr.message);
         }
 
         res.status(200).json({

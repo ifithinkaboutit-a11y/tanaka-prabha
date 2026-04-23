@@ -1,6 +1,7 @@
 // src/app/(admin)/mark-attendance.tsx
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import apiService, { ApiEvent, UserProfile } from "@/services/apiService";
 import { offlineQueue } from "@/utils/offlineQueue";
 import { avatar } from "@/utils/cloudinaryUtils";
@@ -13,14 +14,12 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
-    KeyboardAvoidingView,
-    Platform,
+    Linking,
     StyleSheet,
     TextInput,
     TouchableOpacity,
     View,
     Image,
-    ScrollView,
 } from "react-native";
 
 // ──────────────────────────────────────────────────────────────
@@ -260,7 +259,8 @@ export default function MarkAttendance() {
         try {
             // Resolve the best available name:
             // - Registered user → their real name from the DB lookup
-            // - Walk-in (not found) → "Walk-in: {number}" so the report always shows something
+            // - Walk-in (not found) → the name they provided
+            const isWalkIn = foundUser === "not_found";
             const resolvedName =
                 foundUser && foundUser !== "not_found"
                     ? foundUser.name
@@ -282,15 +282,58 @@ export default function MarkAttendance() {
                 return;
             }
 
-            await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present", resolvedName);
-            Alert.alert("✅ Done!", "Attendance marked as Present.", [
-                { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); setWalkInName(""); } },
-            ]);
+            const result = await apiService.events.markAttendance(selectedEvent.id, mobileNumber, "present", resolvedName);
+
+            // If this was a walk-in, offer to send a WhatsApp invite
+            if (isWalkIn && mobileNumber) {
+                Alert.alert(
+                    "✅ Attendance Marked!",
+                    "This person is not registered. Send them a WhatsApp invite to join Tanak Prabha?",
+                    [
+                        {
+                            text: "Skip",
+                            style: "cancel",
+                            onPress: () => { setMobileNumber(""); setFoundUser(null); setWalkInName(""); },
+                        },
+                        {
+                            text: "Send Invite",
+                            onPress: () => {
+                                openWhatsAppInvite(mobileNumber, resolvedName);
+                                setMobileNumber("");
+                                setFoundUser(null);
+                                setWalkInName("");
+                            },
+                        },
+                    ]
+                );
+            } else {
+                Alert.alert("✅ Done!", "Attendance marked as Present.", [
+                    { text: "Mark Another", onPress: () => { setMobileNumber(""); setFoundUser(null); setWalkInName(""); } },
+                ]);
+            }
         } catch {
             Alert.alert("Error", "Failed to mark attendance. Please try again.");
         } finally {
             setMarking(false);
         }
+    }
+
+    function openWhatsAppInvite(mobile: string, name: string) {
+        const appName = "Tanak Prabha";
+        const inviteMessage = `Hello${name ? ` ${name}` : ""}! 👋\n\nYou attended an event on the ${appName} platform. Join now to access schemes, events, and more!\n\nDownload: https://tanakprabha.in/download`;
+        // Format number for WhatsApp: add India country code if not present
+        const formattedNumber = mobile.startsWith("91") ? mobile : `91${mobile}`;
+        const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(inviteMessage)}`;
+        Linking.canOpenURL(whatsappUrl).then((supported) => {
+            if (supported) {
+                Linking.openURL(whatsappUrl);
+            } else {
+                // Fallback to SMS
+                Linking.openURL(`sms:${mobile}?body=${encodeURIComponent(inviteMessage)}`);
+            }
+        }).catch(() => {
+            // Silent fallback
+        });
     }
 
     // ── Loading ──
@@ -357,8 +400,12 @@ export default function MarkAttendance() {
 
     // ── Step 2: Enter mobile number & mark attendance ──
     return (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 48 }}>
+        <KeyboardAwareScrollView
+            style={s.root}
+            contentContainerStyle={{ paddingBottom: 48 }}
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={40}
+        >
             {/* header */}
             <View style={s.header}>
                 <TouchableOpacity onPress={() => { setSelectedEvent(null); setMobileNumber(""); setFoundUser(null); setWalkInName(""); }} style={s.backBtn}>
@@ -445,8 +492,7 @@ export default function MarkAttendance() {
                     )
                 )}
             </View>
-        </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     );
 }
 

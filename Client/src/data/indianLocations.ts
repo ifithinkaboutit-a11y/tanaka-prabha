@@ -410,8 +410,9 @@ const allDistricts: DistrictOption[] = [
 export const getDistrictsByState = (stateValue: string): DistrictOption[] =>
   allDistricts.filter(d => d.stateValue === stateValue);
 
-// Options for Select components
-export const getStateOptions = () => indianStates.map(s => ({ value: s.value, label: s.label }));
-export const getDistrictOptions = (stateValue: string) =>
-  getDistrictsByState(stateValue).map(d => ({ value: d.value, label: d.label }));
+// Options for Select components — language-aware
+export const getStateOptions = (language: string = "en") =>
+  indianStates.map(s => ({ value: s.value, label: language === "hi" ? s.labelHi : s.label }));
+export const getDistrictOptions = (stateValue: string, language: string = "en") =>
+  getDistrictsByState(stateValue).map(d => ({ value: d.value, label: language === "hi" ? d.labelHi : d.label }));
 

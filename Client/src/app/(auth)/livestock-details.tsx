@@ -32,19 +32,22 @@ import { validateLivestockEntry, validateLivestockCount } from "../../utils/vali
 import { userApi } from "../../services/apiService";
 
 // ── helpers: resolve slug value → human-readable label ──────────────────────
-function resolveStateLabel(value: string): string {
+function resolveStateLabel(value: string, lang: string = "en"): string {
   const found = stateOptions.find((s) => s.value === value);
-  return found ? found.label : value;
+  if (!found) return value;
+  return lang === "hi" ? (found.labelHi ?? found.label) : found.label;
 }
 
-function resolveDistrictLabel(value: string): string {
+function resolveDistrictLabel(value: string, lang: string): string {
   const found = indianDistricts.find((d) => d.value === value);
-  return found ? found.label : value;
+  if (!found) return value;
+  return lang === "hi" ? (found.labelHi ?? found.label) : found.label;
 }
 
-function resolveCropLabel(value: string): string {
+function resolveCropLabel(value: string, lang: string): string {
   const found = cropTypes.find((c) => c.value === value);
-  return found ? found.label : value;
+  if (!found) return value;
+  return lang === "hi" ? (found.labelHi ?? found.label) : found.label;
 }
 
 function resolveAnimalLabel(type: string, lang: string): string {
@@ -206,8 +209,8 @@ const AuthLivestockDetailsScreen = () => {
         block: personalDetails.block || undefined,
         pin_code: personalDetails.pinCode || undefined,
         // Resolve slug values → human-readable labels to match seed format
-        state: personalDetails.state ? resolveStateLabel(personalDetails.state) : undefined,
-        district: personalDetails.district ? resolveDistrictLabel(personalDetails.district) : undefined,
+        state: personalDetails.state ? resolveStateLabel(personalDetails.state, currentLanguage) : undefined,
+        district: personalDetails.district ? resolveDistrictLabel(personalDetails.district, currentLanguage) : undefined,
       };
 
       // Attach confirmed GPS location from the location picker
@@ -233,7 +236,7 @@ const AuthLivestockDetailsScreen = () => {
           // Resolve crop slugs to labels
           if (entry.crops) {
             entry.crops.forEach((crop) => {
-              const label = resolveCropLabel(crop);
+              const label = resolveCropLabel(crop, currentLanguage);
               if (!allCropLabels.includes(label)) {
                 allCropLabels.push(label);
               }

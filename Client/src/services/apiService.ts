@@ -990,6 +990,14 @@ export const eventsApi = {
       body: JSON.stringify({ token }),
     });
   },
+
+  resendInvite: async (eventId: string, mobile_number: string): Promise<any> => {
+    const cleanMobile = mobile_number.replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
+    return await fetchWithAuth(`/events/${eventId}/resend-invite`, {
+      method: "POST",
+      body: JSON.stringify({ mobile_number: cleanMobile }),
+    });
+  },
 };
 
 
@@ -1683,6 +1691,27 @@ export const analyticsApi = {
   },
 };
 
+// ============================================================
+// Audit Log API
+// ============================================================
+
+export const auditLogApi = {
+  /**
+   * Log an audit event (scheme view, SOS trigger, etc.)
+   */
+  async logEvent(action: string, entityId?: string, metadata?: Record<string, any>): Promise<void> {
+    try {
+      await fetchWithAuth("/audit-logs", {
+        method: "POST",
+        body: JSON.stringify({ action, entity_id: entityId, metadata }),
+      });
+    } catch (error) {
+      // Audit logging should never block the user flow
+      console.error("Audit log error:", error);
+    }
+  },
+};
+
 export default {
   auth: authApi,
   user: userApi,
@@ -1694,6 +1723,7 @@ export default {
   appointments: appointmentsApi,
   analytics: analyticsApi,
   upload: uploadApi,
+  auditLog: auditLogApi,
   tokenManager,
 };
 

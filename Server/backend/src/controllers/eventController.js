@@ -142,6 +142,16 @@ export const registerParticipant = async (req, res) => {
 
         const participant = await EventParticipant.register(id, finalUserId, mobile_number, finalName);
 
+        // If this participant was previously a walk-in (had no user_id but now does), mark as converted
+        if (finalUserId && mobile_number) {
+            try {
+                await EventParticipant.markConverted(id, mobile_number);
+            } catch (convErr) {
+                // Non-critical — don't fail the registration
+                console.warn('Could not mark walk-in as converted:', convErr.message);
+            }
+        }
+
         res.status(201).json({
             status: 'success',
             data: { participant }
@@ -245,9 +255,21 @@ export const markAttendance = async (req, res) => {
             participant = await EventParticipant.markAttendance(id, mobile_number);
         }
 
+        // If this is a walk-in (no user_id), mark invite_sent so the client knows to send WhatsApp
+        const isWalkIn = !participant.user_id;
+        if (isWalkIn) {
+            try {
+                await EventParticipant.markInviteSent(id, mobile_number);
+                participant.invite_sent = true;
+            } catch (inviteErr) {
+                // Non-critical — don't fail the attendance marking
+                console.warn('Could not mark invite_sent:', inviteErr.message);
+            }
+        }
+
         res.status(200).json({
             status: 'success',
-            data: { participant }
+            data: { participant, isWalkIn }
         });
     } catch (error) {
         console.error('Error marking attendance:', error);
@@ -301,5 +323,42 @@ export const generateQrToken = async (req, res) => {
     } catch (error) {
         console.error('Error generating QR token:', error);
         res.status(500).json({ status: 'error', message: 'Failed to generate QR token' });
+    }
+};
+
+export const resendInvite = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { mobile_number } = req.body;
+
+        if (!mobile_number) {
+            return res.status(400).json({ status: 'error', message: 'mobile_number is required' });
+        }
+
+        // Verify the participant exists and is a walk-in
+        const participant = await EventParticipant.findAttendance(id, mobile_number);
+        if (!participant) {
+            return res.status(404).json({ status: 'error', message: 'Participant not found' });
+        }
+
+        if (participant.user_id) {
+            return res.status(400).json({ status: 'error', message: 'Participant is already a registered user' });
+        }
+
+        // Mark invite_sent (re-record that we sent another invite)
+        await EventParticipant.markInviteSent(id, mobile_number);
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                mobile_number,
+                invite_sent: true,
+                converted: participant.converted || false,
+                message: 'Invite link ready to be sent via WhatsApp'
+            }
+        });
+    } catch (error) {
+        console.error('Error resending invite:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to resend invite' });
     }
 };

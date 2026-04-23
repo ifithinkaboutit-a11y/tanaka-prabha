@@ -100,8 +100,15 @@ const StatBadge = ({ value, label, icon }: { value: string; label: string; icon:
 );
 
 const getCropLabel = (cropValue: string, lang: string) => {
-  const crop = cropTypes.find((c) => c.value === cropValue);
-  return lang === "hi" ? crop?.labelHi || cropValue : crop?.label || cropValue;
+  // Stored values may be comma-separated (e.g. "wheat, mustard")
+  return cropValue
+    .split(",")
+    .map((part) => {
+      const v = part.trim();
+      const crop = cropTypes.find((c) => c.value === v);
+      return lang === "hi" ? crop?.labelHi || v : crop?.label || v;
+    })
+    .join(", ");
 };
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -424,7 +431,7 @@ const Profile = () => {
         {totalAnimals > 0 ? (
           <View className="relative">
             {/* Background Doodle */}
-            <View style={{ position: "absolute", right: -10, top: -10, opacity: 0.05 }}>
+            <View style={{ position: "absolute", right: -5, top: -10, opacity: 0.05 }}>
               <Ionicons name="paw" size={100} color="#EA580C" />
             </View>
             {[
@@ -746,10 +753,11 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 10,
+    paddingRight: 30,
     borderBottomWidth: 1,
     borderBottomColor: "#FEF3C7",
   },
-  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500", flex: 1, marginRight: 8 },
+  livestockRowLabel: { color: "#374151", fontSize: 14, fontWeight: "500", flex: 1},
   livestockCountBadge: {
     backgroundColor: "#FFF7ED",
     borderRadius: 8,

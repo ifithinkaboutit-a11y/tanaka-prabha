@@ -14,6 +14,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { cropTypes } from "@/data/content/onboardingOptions";
+import { useLanguageStore } from "@/stores/languageStore";
 
 // ─── Section Card ─────────────────────────────────────────────
 function SectionCard({ title, children, rightElement }: { title: string; children: React.ReactNode; rightElement?: React.ReactNode }) {
@@ -80,14 +82,25 @@ const ir = StyleSheet.create({
 
 // ─── Season Row ───────────────────────────────────────────────
 function SeasonRow({ season, crop, area }: { season: string; crop?: string; area?: number }) {
+    const lang = useLanguageStore((s) => s.currentLanguage);
     if (!crop && !area) return null;
+    const localizedCrop = crop
+        ? crop
+            .split(",")
+            .map((part) => {
+                const v = part.trim();
+                const found = cropTypes.find((c) => c.value === v);
+                return lang === "hi" ? found?.labelHi || v : found?.label || v;
+            })
+            .join(", ")
+        : undefined;
     return (
         <View style={sr.row}>
             <View style={sr.badge}>
                 <AppText style={sr.badgeText}>{season}</AppText>
             </View>
             <View style={sr.info}>
-                {crop ? <AppText style={sr.crop}>{crop}</AppText> : null}
+                {localizedCrop ? <AppText style={sr.crop}>{localizedCrop}</AppText> : null}
                 {area ? <AppText style={sr.area}>{area} acres</AppText> : null}
             </View>
         </View>

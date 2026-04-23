@@ -8,6 +8,8 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     StyleSheet,
     TextInput,
@@ -266,6 +268,7 @@ export default function SendNotificationScreen() {
                 </TouchableOpacity>
             </View>
         </View>
+        </KeyboardAvoidingView>
     );
 }
 

@@ -4,16 +4,17 @@ import KeyboardAwareScrollView from "@/components/atoms/KeyboardAwareScrollView"
 import Select from "@/components/atoms/Select";
 import TextArea from "@/components/atoms/TextArea";
 import { useAuth } from "@/contexts/AuthContext";
-import { genderOptions, cropTypes, indianStates, getLocalizedOptions } from "@/data/content/onboardingOptions";
+import { genderOptions, cropTypes, animalTypes, indianStates, getLocalizedOptions } from "@/data/content/onboardingOptions";
 import { ApiUserProfile, uploadApi } from "@/services/apiService";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { theme } from "@/styles/colors";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import AddressDropdowns, { type AddressValue } from "@/components/molecules/AddressDropdowns";
 import { getStateOptions, getDistrictOptions } from "@/data/indianLocations";
+import { useLanguageStore } from "@/stores/languageStore";
 import {
     ActivityIndicator,
     Alert,
@@ -65,7 +66,7 @@ interface LocationForm {
     pinCode: string; postOffice: string;
     lat: number | null; lng: number | null; address: string;
 }
-interface LandForm { totalLandArea: string; rabiCrop: string; kharifCrop: string; }
+interface LandForm { totalLandArea: string; rabiCrop: string; kharifCrop: string; rabiCropOther: string; kharifCropOther: string; }
 interface LivestockForm {
     cow: string; buffalo: string; goat: string;
     sheep: string; pig: string; poultry: string; others: string;
@@ -97,7 +98,8 @@ function Step1({
     uploadingPhoto: boolean;
     onCapturePhoto: () => void;
 }) {
-    const genderOpts = genderOptions.map((g) => ({ value: g.value, label: g.label }));
+    const lang = useLanguageStore((s) => s.currentLanguage);
+    const genderOpts = getLocalizedOptions(genderOptions, lang);
     const [genderOtherText, setGenderOtherText] = useState("");
     return (
         <>
@@ -223,6 +225,7 @@ function Step2({
     errors: Partial<Record<keyof LocationForm, string>>;
     onPickOnMap: () => void;
 }) {
+    const lang = useLanguageStore((s) => s.currentLanguage);
     const [pinLoading, setPinLoading] = useState(false);
     const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
     const [addressLists, setAddressLists] = useState<{
@@ -266,8 +269,8 @@ function Step2({
         }
     };
 
-    const stateOptions = getStateOptions();
-    const districtOptions = form.state ? getDistrictOptions(form.state) : [];
+    const stateOptions = getStateOptions(lang);
+    const districtOptions = form.state ? getDistrictOptions(form.state, lang) : [];
 
     return (
         <>
@@ -334,7 +337,7 @@ function Step2({
             {(form.district?.toLowerCase() === "bhadohi" || form.district?.toLowerCase() === "mirzapur") ? (
                 <AddressDropdowns
                     district={form.district}
-                    language="en"
+                    language={lang as "en" | "hi"}
                     value={{
                         tehsil: form.tehsil || "",
                         nyayPanchayat: form.nyayPanchayat || "",
@@ -445,7 +448,8 @@ const lc = StyleSheet.create({
 
 // ─── Step 3: Land Details ─────────────────────────────────────
 function Step3({ form, setForm }: { form: LandForm; setForm: (f: LandForm) => void }) {
-    const cropOpts = cropTypes.map((c) => ({ value: c.value, label: c.label }));
+    const lang = useLanguageStore((s) => s.currentLanguage);
+    const cropOpts = getLocalizedOptions(cropTypes, lang);
     return (
         <>
             <View style={{ marginBottom: 16 }}>
@@ -456,42 +460,127 @@ function Step3({ form, setForm }: { form: LandForm; setForm: (f: LandForm) => vo
             </View>
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="Rabi Crop" />
-                <Select value={form.rabiCrop} onChange={(v) => setForm({ ...form, rabiCrop: v })}
-                    options={cropOpts} placeholder="Select rabi crop (optional)" />
+                <Select
+                    value={form.rabiCrop}
+                    onChange={(v) => setForm({ ...form, rabiCrop: v, rabiCropOther: v === "other" ? form.rabiCropOther : "" })}
+                    options={cropOpts}
+                    placeholder="Select rabi crop (optional)"
+                    enableOtherInput
+                    otherValue={form.rabiCropOther}
+                    onOtherChange={(v) => setForm({ ...form, rabiCropOther: v })}
+                    otherPlaceholder="Please specify the rabi crop…"
+                />
             </View>
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="Kharif Crop" />
-                <Select value={form.kharifCrop} onChange={(v) => setForm({ ...form, kharifCrop: v })}
-                    options={cropOpts} placeholder="Select kharif crop (optional)" />
+                <Select
+                    value={form.kharifCrop}
+                    onChange={(v) => setForm({ ...form, kharifCrop: v, kharifCropOther: v === "other" ? form.kharifCropOther : "" })}
+                    options={cropOpts}
+                    placeholder="Select kharif crop (optional)"
+                    enableOtherInput
+                    otherValue={form.kharifCropOther}
+                    onOtherChange={(v) => setForm({ ...form, kharifCropOther: v })}
+                    otherPlaceholder="Please specify the kharif crop…"
+                />
             </View>
         </>
     );
 }
 
 // ─── Step 4: Livestock Details ────────────────────────────────
+const LIVESTOCK_CONFIG: {
+    key: keyof LivestockForm;
+    label: string;
+    labelHi: string;
+    icon: string;
+    accentBg: string;
+    accentText: string;
+}[] = [
+    { key: "cow", label: "Cow", labelHi: "गाय", icon: "cow", accentBg: "#EEF2FF", accentText: "#3730A3" },
+    { key: "buffalo", label: "Buffalo", labelHi: "भैंस", icon: "water-outline", accentBg: "#F5F3FF", accentText: "#6D28D9" },
+    { key: "goat", label: "Goat", labelHi: "बकरी", icon: "goat", accentBg: "#FFFBEB", accentText: "#92400E" },
+    { key: "sheep", label: "Sheep", labelHi: "भेड़", icon: "sheep", accentBg: "#ECFDF5", accentText: "#065F46" },
+    { key: "pig", label: "Pig", labelHi: "सुअर", icon: "pig-variant", accentBg: "#FFF1F2", accentText: "#9F1239" },
+    { key: "poultry", label: "Poultry / Hen", labelHi: "मुर्गी", icon: "bird", accentBg: "#FFF7ED", accentText: "#C2410C" },
+    { key: "others", label: "Others", labelHi: "अन्य", icon: "dots-horizontal-circle-outline", accentBg: "#F9FAFB", accentText: "#374151" },
+];
+
 function Step4({ form, setForm }: { form: LivestockForm; setForm: (f: LivestockForm) => void }) {
-    const animals: { key: keyof LivestockForm; label: string }[] = [
-        { key: "cow", label: "Cow" }, { key: "buffalo", label: "Buffalo" },
-        { key: "goat", label: "Goat" }, { key: "sheep", label: "Sheep" },
-        { key: "pig", label: "Pig" }, { key: "poultry", label: "Poultry / Hen" },
-        { key: "others", label: "Others" },
-    ];
+    const lang = useLanguageStore((s) => s.currentLanguage);
     return (
         <>
             <AppText style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>
                 Enter the count for each animal type (leave blank or 0 if none).
             </AppText>
-            {animals.map(({ key, label }) => (
-                <View key={key} style={{ marginBottom: 16 }}>
-                    <FieldLabel text={label} />
-                    <TextInput style={inputStyle()} value={form[key]}
-                        onChangeText={(v) => setForm({ ...form, [key]: v.replace(/\D/g, "") })}
-                        placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="numeric" />
+            {LIVESTOCK_CONFIG.map(({ key, label, labelHi, icon, accentBg, accentText }, i) => (
+                <View key={key} style={[ls.row, i < LIVESTOCK_CONFIG.length - 1 && ls.rowBorder]}>
+                    <View style={ls.left}>
+                        <View style={[ls.badge, { backgroundColor: accentBg }]}>
+                            <MaterialCommunityIcons name={icon as any} size={20} color={accentText} />
+                        </View>
+                        <AppText style={[ls.label, { color: accentText }]}>{lang === "hi" ? labelHi : label}</AppText>
+                    </View>
+                    <View style={ls.inputWrap}>
+                        <TextInput
+                            style={ls.countInput}
+                            value={form[key]}
+                            onChangeText={(v) => setForm({ ...form, [key]: v.replace(/\D/g, "") })}
+                            placeholder="0"
+                            placeholderTextColor="#9CA3AF"
+                            keyboardType="numeric"
+                        />
+                    </View>
                 </View>
             ))}
         </>
     );
 }
+
+const ls = StyleSheet.create({
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 10,
+    },
+    rowBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: "#E5E7EB",
+    },
+    left: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        flex: 1,
+    },
+    badge: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
+    inputWrap: {
+        width: 80,
+    },
+    countInput: {
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        borderRadius: 10,
+        backgroundColor: "#F9FAFB",
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        fontSize: 15,
+        color: "#1F2937",
+        textAlign: "center",
+        fontWeight: "600",
+    },
+});
 
 // ─── Conflict Card ────────────────────────────────────────────
 function ConflictCard({
@@ -700,7 +789,7 @@ export default function AddBeneficiary() {
     });
     const [locationErrors, setLocationErrors] = useState<Partial<Record<keyof LocationForm, string>>>({});
 
-    const [land, setLand] = useState<LandForm>({ totalLandArea: "", rabiCrop: "", kharifCrop: "" });
+    const [land, setLand] = useState<LandForm>({ totalLandArea: "", rabiCrop: "", kharifCrop: "", rabiCropOther: "", kharifCropOther: "" });
     const [livestock, setLivestock] = useState<LivestockForm>({
         cow: "", buffalo: "", goat: "", sheep: "", pig: "", poultry: "", others: "",
     });
@@ -847,8 +936,8 @@ export default function AddBeneficiary() {
             if (!isNaN(landArea) && landArea > 0) {
                 payload.land_details = {
                     total_land_area: landArea,
-                    rabi_crop: land.rabiCrop || undefined,
-                    kharif_crop: land.kharifCrop || undefined,
+                    rabi_crop: land.rabiCrop === "other" ? (land.rabiCropOther || land.rabiCrop) : (land.rabiCrop || undefined),
+                    kharif_crop: land.kharifCrop === "other" ? (land.kharifCropOther || land.kharifCrop) : (land.kharifCrop || undefined),
                 };
             }
             const hasLivestock = Object.values(livestock).some((v) => parseInt(v) > 0);

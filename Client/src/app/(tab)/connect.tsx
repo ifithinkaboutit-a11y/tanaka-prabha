@@ -14,6 +14,7 @@ import AppText from "../../components/atoms/AppText";
 import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
 import { useUserProfile } from "../../contexts/UserProfileContext";
+import { auditLogApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
 
 const HELPLINE_EMAIL = "support@example.com"; // replace with real address
@@ -36,6 +37,12 @@ export default function Connect() {
   // ── SOS button handler ────────────────────────────────────────────────────
   const handleEmergencyPress = () => {
     console.log("[TRACKING]: SOS/Emergency button clicked by user at", new Date().toISOString());
+    // Audit log: track SOS trigger
+    auditLogApi.logEvent("sos_trigger", undefined, {
+      type: "call",
+      timestamp: new Date().toISOString(),
+      userId: profile?.id,
+    });
     const emergencyNumber = "tel:1800180111";
     Linking.openURL(emergencyNumber);
   };
@@ -55,6 +62,13 @@ export default function Connect() {
       `Name: ${name}\nMobile: ${mobile}\nBeneficiary ID: ${id}\nLocation: ${location}\n\nReason:\n${reason}`
     );
     const subject = encodeURIComponent("SOS After-Hours Support Request");
+    // Audit log: track SOS email trigger
+    auditLogApi.logEvent("sos_email", undefined, {
+      type: "email",
+      reason: reason || "(no reason provided)",
+      timestamp: new Date().toISOString(),
+      userId: profile?.id,
+    });
     Linking.openURL(`mailto:${HELPLINE_EMAIL}?subject=${subject}&body=${body}`);
     setModalVisible(false);
   };
@@ -183,36 +197,41 @@ export default function Connect() {
           <Pressable
             onPress={afterHours ? () => setModalVisible(true) : handleEmergencyPress}
             style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
               paddingVertical: 14,
-              paddingHorizontal: 16,
+              paddingHorizontal: 10,
               borderRadius: 16,
-              backgroundColor: pressed ? theme.background.neutralSubtle ?? "#F5F5F5" : "#FFFFFF",
+              backgroundColor: pressed ? "#981c1c" : "#DC2626",
               borderWidth: 1.5,
               borderColor: "#FEE2E2",
             })}
+            className="flex flex-row items-center"
           >
             <View
               style={{
-                backgroundColor: "#FEF2F2",
+                width: 50,
+                backgroundColor: "#d7d6d6",
                 padding: 10,
                 borderRadius: 12,
                 marginRight: 16,
+                borderWidth:1,
+                display:"flex",
+                alignItems:"center",
+                justifyContent:"center",
+                aspectRatio:1,
               }}
             >
-              <Ionicons name="call" size={20} color="#DC2626" />
+              <Ionicons name="call" size={28} color="#e90f0f" style={{borderRadius: 12, }} />
             </View>
-
-            <View style={{ flex: 1 }}>
-              <AppText style={{ color: "#111827", fontWeight: "700", fontSize: 16 }}>
+            <View style={{ flex: 1, }}>
+              <AppText style={{ color: "#111827", fontWeight: "700", fontSize: 18 }}>
                 24/7 Helpline
               </AppText>
+
               <AppText
                 style={{
                   color: theme.text.muted,
                   fontWeight: "500",
-                  fontSize: 12,
+                  fontSize: 14,
                   marginTop: 1,
                 }}
               >
@@ -221,7 +240,7 @@ export default function Connect() {
             </View>
 
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-          </Pressable>
+2          </Pressable>
         </View>
 
         <View style={{ height: 100 }} />
@@ -289,6 +308,7 @@ export default function Connect() {
               <Pressable
                 onPress={handleCallAnyway}
                 style={({ pressed }) => [s.btnSecondary, pressed && { opacity: 0.7 }]}
+                className="flex flex-row border rounded-xl itms-center justify-center p-4"
               >
                 <Ionicons name="call-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
                 <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>

@@ -7,7 +7,9 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
+    Linking,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -112,8 +114,112 @@ export default function ViewAttendance() {
     }
 
     // DB status values: 'attended' = marked present, 'registered' = not yet attended
+    // Walk-in = no user_id (unregistered), Pre-registered = has user_id
     const present = attendees.filter(a => a.status === "attended");
     const absent = attendees.filter(a => a.status !== "attended");
+    const walkIns = attendees.filter(a => !a.user_id);
+    const preRegistered = attendees.filter(a => !!a.user_id);
+
+    const handleResendInvite = (item: any) => {
+        if (!selectedEvent || !item.mobile_number) return;
+        const mobile = item.mobile_number;
+        const name = item.name || "";
+        const appName = "Tanak Prabha";
+        const inviteMessage = `Hello${name ? ` ${name}` : ""}! 👋\n\nYou attended an event on the ${appName} platform. Join now to access schemes, events, and more!\n\nDownload: https://tanakprabha.in/download`;
+        const formattedNumber = mobile.startsWith("91") ? mobile : `91${mobile}`;
+        const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(inviteMessage)}`;
+
+        // Fire-and-forget: tell the backend we're resending
+        apiService.events.resendInvite(selectedEvent.id, mobile).catch(() => {});
+
+        Linking.canOpenURL(whatsappUrl).then((supported) => {
+            if (supported) {
+                Linking.openURL(whatsappUrl);
+            } else {
+                Linking.openURL(`sms:${mobile}?body=${encodeURIComponent(inviteMessage)}`);
+            }
+        }).catch(() => {
+            Alert.alert("Error", "Could not open WhatsApp or SMS.");
+        });
+    };
+
+    const renderAttendeeCard = (item: any, index: number, isWalkIn: boolean) => {
+        const isPresent = item.status === "attended";
+        const name = item.name || "";
+        const mobile = item.mobile_number || "N/A";
+        const displayName = name || mobile;
+        const initials = name
+            ? name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()
+            : mobile.slice(-2);
+        const hasConverted = item.converted;
+
+        return (
+            <Pressable
+                key={item.id || index}
+                style={[s.attendeeCard, isWalkIn && s.walkInCard]}
+                onPress={() =>
+                    item.user_id
+                        ? router.push({
+                            pathname: "/(admin)/beneficiary-detail",
+                            params: { id: item.user_id },
+                        } as any)
+                        : null
+                }
+            >
+                <View style={[s.initials, { backgroundColor: isWalkIn ? "#FEF3C7" : isPresent ? "#D1FAE5" : "#FEF3C7" }]}>
+                    <AppText style={[s.initialsText, { color: isWalkIn ? "#D97706" : isPresent ? "#059669" : "#D97706" }]}>{initials}</AppText>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <AppText style={s.attendeeName}>{displayName}</AppText>
+                        {isWalkIn && (
+                            <View style={s.walkInBadge}>
+                                <Ionicons name="walk-outline" size={10} color="#FFFFFF" />
+                                <AppText style={s.walkInBadgeText}>Walk-in</AppText>
+                            </View>
+                        )}
+                        {isWalkIn && hasConverted && (
+                            <View style={s.convertedBadge}>
+                                <Ionicons name="checkmark-done" size={10} color="#FFFFFF" />
+                                <AppText style={s.convertedBadgeText}>Registered</AppText>
+                            </View>
+                        )}
+                    </View>
+                    <View style={s.mobileMeta}>
+                        <Ionicons name="call-outline" size={12} color="#9CA3AF" />
+                        <AppText style={s.attendeeMobile}>{mobile}</AppText>
+                    </View>
+                    {/* Resend Link button for unconverted walk-ins */}
+                    {isWalkIn && !hasConverted && mobile !== "N/A" && (
+                        <TouchableOpacity
+                            style={s.resendBtn}
+                            onPress={(e) => { e.stopPropagation(); handleResendInvite(item); }}
+                        >
+                            <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
+                            <AppText style={s.resendBtnText}>Resend Invite</AppText>
+                        </TouchableOpacity>
+                    )}
+                </View>
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                    <View style={[s.badge, {
+                        backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7",
+                    }]}>
+                        <Ionicons
+                            name={isPresent ? "checkmark-circle" : "time-outline"}
+                            size={14}
+                            color={isPresent ? "#059669" : "#D97706"}
+                        />
+                        <AppText style={[s.badgeText, { color: isPresent ? "#059669" : "#D97706" }]}>
+                            {isPresent ? "Attended" : "Registered"}
+                        </AppText>
+                    </View>
+                    {item.user_id && (
+                        <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
+                    )}
+                </View>
+            </Pressable>
+        );
+    };
 
     return (
         <View style={s.root}>
@@ -149,7 +255,6 @@ export default function ViewAttendance() {
                         </View>
                     </View>
 
-
                     {attendees.length === 0 ? (
                         <View style={s.empty}>
                             <Ionicons name="people-outline" size={48} color="#D1D5DB" />
@@ -157,59 +262,27 @@ export default function ViewAttendance() {
                         </View>
                     ) : (
                         <>
-                            {attendees.map((item, index) => {
-                                // Participant rows are flat: ep.name, ep.mobile_number (no nested user object)
-                                // status: 'attended' = present, 'registered' = not yet attended
-                                const isPresent = item.status === "attended";
-                                const name = item.name || ""; // stored when registered
-                                const mobile = item.mobile_number || "N/A";
-                                const displayName = name || mobile; // fallback to mobile if no name
-                                const initials = name
-                                    ? name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()
-                                    : mobile.slice(-2); // last 2 digits as fallback initials
+                            {/* Pre-registered Section */}
+                            {preRegistered.length > 0 && (
+                                <>
+                                    <View style={s.sectionHeader}>
+                                        <Ionicons name="person-outline" size={14} color="#6B7280" />
+                                        <AppText style={s.sectionTitle}>Pre-registered ({preRegistered.length})</AppText>
+                                    </View>
+                                    {preRegistered.map((item, index) => renderAttendeeCard(item, index, false))}
+                                </>
+                            )}
 
-                                return (
-                                    <Pressable
-                                        key={item.id || index}
-                                        style={s.attendeeCard}
-                                        onPress={() =>
-                                            router.push({
-                                                pathname: "/(admin)/beneficiary-detail",
-                                                params: { id: item.user_id },
-                                            } as any)
-                                        }
-                                    // disabled={!item.user_id}
-                                    >
-                                        <View style={[s.initials, { backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7" }]}>
-                                            <AppText style={[s.initialsText, { color: isPresent ? "#059669" : "#D97706" }]}>{initials}</AppText>
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <AppText style={s.attendeeName}>{displayName}</AppText>
-                                            <View style={s.mobileMeta}>
-                                                <Ionicons name="call-outline" size={12} color="#9CA3AF" />
-                                                <AppText style={s.attendeeMobile}>{mobile}</AppText>
-                                            </View>
-                                        </View>
-                                        <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                                            <View style={[s.badge, {
-                                                backgroundColor: isPresent ? "#D1FAE5" : "#FEF3C7",
-                                            }]}>
-                                                <Ionicons
-                                                    name={isPresent ? "checkmark-circle" : "time-outline"}
-                                                    size={14}
-                                                    color={isPresent ? "#059669" : "#D97706"}
-                                                />
-                                                <AppText style={[s.badgeText, { color: isPresent ? "#059669" : "#D97706" }]}>
-                                                    {isPresent ? "Attended" : "Registered"}
-                                                </AppText>
-                                            </View>
-                                            {item.user_id && (
-                                                <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
-                                            )}
-                                        </View>
-                                    </Pressable>
-                                );
-                            })}
+                            {/* Walk-in Section */}
+                            {walkIns.length > 0 && (
+                                <>
+                                    <View style={[s.sectionHeader, { marginTop: preRegistered.length > 0 ? 16 : 0 }]}>
+                                        <Ionicons name="walk-outline" size={14} color="#D97706" />
+                                        <AppText style={[s.sectionTitle, { color: "#D97706" }]}>Walk-in Attendees ({walkIns.length})</AppText>
+                                    </View>
+                                    {walkIns.map((item, index) => renderAttendeeCard(item, index, true))}
+                                </>
+                            )}
                         </>
                     )}
                 </ScrollView>
@@ -270,4 +343,53 @@ const s = StyleSheet.create({
     attendeeMobile: { fontSize: 12, color: theme.text.placeholder },
     badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
     badgeText: { fontSize: 12, fontWeight: "600" },
+
+    // walk-in segregation
+    walkInCard: {
+        borderLeftWidth: 3,
+        borderLeftColor: "#F59E0B",
+        backgroundColor: "#FFFBEB",
+    },
+    walkInBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 2,
+        backgroundColor: "#F59E0B",
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    walkInBadgeText: { fontSize: 9, fontWeight: "700", color: "#FFFFFF", letterSpacing: 0.5 },
+    convertedBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 2,
+        backgroundColor: "#059669",
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    convertedBadgeText: { fontSize: 9, fontWeight: "700", color: "#FFFFFF", letterSpacing: 0.5 },
+    resendBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        marginTop: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        backgroundColor: "#ECFDF5",
+        borderWidth: 1,
+        borderColor: "#A7F3D0",
+        alignSelf: "flex-start",
+    },
+    resendBtnText: { fontSize: 11, fontWeight: "600", color: "#059669" },
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 8,
+        marginTop: 4,
+    },
+    sectionTitle: { fontSize: 13, fontWeight: "700", color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.5 },
 });

@@ -16,6 +16,7 @@ import {
 } from "../../data/interfaces";
 import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import T from "../../i18n";
+import { useLanguageStore } from "../../stores/languageStore";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 import TextArea from "../atoms/TextArea";
@@ -335,8 +336,11 @@ export default function PersonalDetailsForm({
     }));
   }, [addressOverride]);
 
-  const stateOptions = getStateOptions();
-  const districtOptions = formData.state ? getDistrictOptions(formData.state) : [];
+  const lang = useLanguageStore((s) => s.currentLanguage);
+  const stateOptions = getStateOptions(lang);
+  const districtOptions = formData.state ? getDistrictOptions(formData.state, lang) : [];
+  const localizedGenderOptions = genderOptions.map((g) => ({ value: g.value, label: lang === "hi" ? g.labelHi : g.label }));
+  const localizedEducationOptions = educationOptions.map((e) => ({ value: e.value, label: lang === "hi" ? e.labelHi : e.label }));
 
   const handleSave = () => {
     if (!formData.name.trim()) {
@@ -390,7 +394,7 @@ export default function PersonalDetailsForm({
             <Select
               value={formData.gender}
               onChange={(v) => update("gender", v)}
-              options={genderOptions}
+              options={localizedGenderOptions}
               placeholder="Select..."
             />
             {formData.gender === "other" && (
@@ -432,7 +436,7 @@ export default function PersonalDetailsForm({
           <Select
             value={formData.educationalQualification}
             onChange={(v) => update("educationalQualification", v)}
-            options={educationOptions}
+            options={localizedEducationOptions}
             placeholder="Select education level"
           />
         </View>
@@ -571,7 +575,7 @@ export default function PersonalDetailsForm({
                 village: v.village,
               }))
             }
-            language="en"
+            language={lang as "en" | "hi"}
           />
         ) : (
           <>

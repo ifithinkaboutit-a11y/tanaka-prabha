@@ -161,7 +161,6 @@ export default function LivestockDetailsForm({
   onSave,
   onCancel,
 }: LivestockDetailsFormProps) {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
   const { t } = useTranslation();
 

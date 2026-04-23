@@ -9,7 +9,8 @@ import {
     getEventParticipants,
     markAttendance,
     getMyEvents,
-    generateQrToken
+    generateQrToken,
+    resendInvite
 } from '../controllers/eventController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -23,6 +24,9 @@ router.post('/:id/register', authMiddleware, registerParticipant);
 
 // QR token generation (admin/dashboard)
 router.post('/:id/qr-token', authMiddleware, generateQrToken);
+
+// Walk-in invite tracking
+router.post('/:id/resend-invite', authMiddleware, resendInvite);
 
 // Admin-only routes (Use authMiddleware, role check inside controller if needed)
 router.post('/', authMiddleware, createEvent);
