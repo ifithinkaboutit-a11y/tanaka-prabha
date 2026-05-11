@@ -1,22 +1,36 @@
 // src/app/notifications.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  ScrollView,
-  View,
+  Animated,
+  Pressable,
   RefreshControl,
-  TouchableOpacity
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import AppText from "../components/atoms/AppText";
-import Card from "../components/atoms/Card";
 import { useTranslation } from "../i18n";
 import { notificationsApi, Notification } from "../services/apiService";
 import { NotificationItemSkeleton } from "../components/atoms/Skeleton";
 import { colors, theme } from "../styles/colors";
 
-// Helper to group notifications by date
+// ── Notification type config ────────────────────────────────────────────────
+const TYPE_CONFIG: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }> = {
+  approval: { icon: "checkmark-circle", color: "#2196F3", bg: "#E3F2FD" },
+  reminder: { icon: "calendar", color: "#E91E63", bg: "#FCE4EC" },
+  alert:    { icon: "alert-circle", color: "#FF5722", bg: "#FBE9E7" },
+  info:     { icon: "information-circle", color: "#607D8B", bg: "#ECEFF1" },
+  default:  { icon: "notifications", color: "#9C27B0", bg: "#F3E5F5" },
+};
+
+function getTypeConfig(type: string) {
+  return TYPE_CONFIG[type] || TYPE_CONFIG.default;
+}
+
+// ── Helper: group by date ───────────────────────────────────────────────────
 const groupNotificationsByDate = (notifs: Notification[]) => {
   const today = new Date();
   const yesterday = new Date(today);
@@ -25,7 +39,7 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
   const groups: { title: string; titleKey: string; data: Notification[] }[] = [
     { title: "Today", titleKey: "notifications.today", data: [] },
     { title: "Yesterday", titleKey: "notifications.yesterday", data: [] },
-    { title: "Others", titleKey: "notifications.others", data: [] },
+    { title: "Earlier", titleKey: "notifications.others", data: [] },
   ];
 
   notifs.forEach((notif) => {
@@ -42,40 +56,21 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
   return groups.filter((g) => g.data.length > 0);
 };
 
-const NotificationItem = ({ notification }: { notification: Notification }) => {
+// ── Single notification item ────────────────────────────────────────────────
+const NotificationItem = ({ notification, onPress }: { notification: Notification; onPress?: () => void }) => {
   const { t } = useTranslation();
+  const config = getTypeConfig(notification.type);
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
-  // Safe translation: if the key is not found, t() returns the key itself.
-  // We detect this by checking if the result looks like a dotted key path.
   const safeT = (key?: string, fallback?: string): string => {
     if (!key) return fallback || "";
     const result = t(key);
-    // If result equals the key (not found), use the fallback or humanise the last segment
     if (result === key) {
       if (fallback) return fallback;
       const lastSegment = key.split(".").pop() || key;
       return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/([A-Z])/g, " $1");
     }
     return result;
-  };
-
-  const getIconColor = (type: string) => {
-    switch (type) {
-      case "approval": return "#2196F3";
-      case "reminder": return "#E91E63";
-      case "alert": return "#FF5722";
-      default: return "#757575";
-    }
-  };
-
-  const getIconName = (type: string): keyof typeof Ionicons.glyphMap => {
-    if (notification.icon) return notification.icon as any;
-    switch (type) {
-      case "approval": return "checkmark-circle";
-      case "reminder": return "calendar";
-      case "alert": return "alert-circle";
-      default: return "notifications";
-    }
   };
 
   const title = notification.titleKey
@@ -86,65 +81,115 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
     ? safeT(notification.descriptionKey, notification.description)
     : notification.description;
 
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+  };
+
   return (
-    <View style={{
-      marginBottom: 12,
-      flexDirection: "row",
-      backgroundColor: theme.background.input,
-      borderRadius: 12,
-      padding: 16,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 1,
-      position: "relative",
-    }}>
-      {/* Icon badge */}
-      <View
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <Pressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={onPress}
         style={{
-          width: 48, height: 48, borderRadius: 24,
-          alignItems: "center", justifyContent: "center",
-          marginRight: 16,
-          backgroundColor: notification.iconBgColor || getIconColor(notification.type),
+          marginBottom: 10,
+          flexDirection: "row",
+          backgroundColor: notification.isRead ? theme.background.input : "#F0FDF4",
+          borderRadius: 16,
+          padding: 16,
+          borderLeftWidth: 4,
+          borderLeftColor: notification.isRead ? "transparent" : config.color,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: notification.isRead ? 0 : 0.06,
+          shadowRadius: 4,
+          elevation: notification.isRead ? 0 : 2,
         }}
       >
-        <Ionicons name={getIconName(notification.type)} size={24} color="#FFFFFF" />
-      </View>
-
-      {/* Content wrapper */}
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <AppText
-            variant="bodyMd"
-            style={{ fontWeight: "700", color: theme.text.primary, flex: 1, marginRight: 16, fontSize: 15 }}
-          >
-            {title}
-          </AppText>
-          {!notification.isRead && (
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#0EA5E9", marginTop: 6 }} />
-          )}
+        {/* Icon badge */}
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 14,
+            backgroundColor: notification.iconBgColor || config.bg,
+          }}
+        >
+          <Ionicons
+            name={notification.icon ? (notification.icon as any) : config.icon}
+            size={22}
+            color={notification.iconBgColor ? "#FFFFFF" : config.color}
+          />
         </View>
 
-        {description ? (
-          <AppText
-            variant="bodySm"
-            style={{ color: theme.text.muted, fontSize: 13, lineHeight: 18, marginTop: 4 }}
-            numberOfLines={2}
-          >
-            {description}
-          </AppText>
-        ) : null}
+        {/* Content */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <AppText
+              variant="bodyMd"
+              style={{
+                fontWeight: notification.isRead ? "600" : "700",
+                color: theme.text.primary,
+                flex: 1,
+                marginRight: 12,
+                fontSize: 14.5,
+              }}
+              numberOfLines={2}
+            >
+              {title}
+            </AppText>
+            {!notification.isRead && (
+              <View style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: config.color,
+                marginTop: 4,
+              }} />
+            )}
+          </View>
 
-        <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500", marginTop: 6 }}>
-          {notification.time}
-        </AppText>
-      </View>
-    </View>
+          {description ? (
+            <AppText
+              variant="bodySm"
+              style={{ color: theme.text.muted, fontSize: 13, lineHeight: 18, marginTop: 4 }}
+              numberOfLines={2}
+            >
+              {description}
+            </AppText>
+          ) : null}
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 6 }}>
+            <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+            <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500" }}>
+              {notification.time}
+            </AppText>
+            {/* Type badge */}
+            <View style={{
+              marginLeft: 6,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: config.bg,
+            }}>
+              <AppText style={{ fontSize: 10, fontWeight: "600", color: config.color, textTransform: "uppercase" }}>
+                {notification.type || "info"}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 };
 
-
+// ── Main Screen ─────────────────────────────────────────────────────────────
 export default function NotificationsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -156,14 +201,9 @@ export default function NotificationsScreen() {
     try {
       const data = await notificationsApi.getMy();
       setNotifications(data);
-      // Mark all as read when user opens notification screen
       const hasUnread = data.some((n) => !n.isRead);
       if (hasUnread) {
-        try {
-          await notificationsApi.markAllAsRead();
-        } catch {
-          // Silent — best effort
-        }
+        try { await notificationsApi.markAllAsRead(); } catch { /* best effort */ }
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -173,22 +213,27 @@ export default function NotificationsScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  useEffect(() => { fetchNotifications(); }, []);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchNotifications();
   }, []);
 
   const groupedNotifications = groupNotificationsByDate(notifications);
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: theme.border.subtle, backgroundColor: theme.background.header }}>
+        <View style={{
+          flexDirection: "row", alignItems: "center",
+          paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16,
+          borderBottomWidth: 1, borderBottomColor: theme.border.subtle,
+          backgroundColor: theme.background.header,
+        }}>
           <View style={{ width: 40, height: 24, borderRadius: 6, backgroundColor: theme.border.subtle, marginRight: 16 }} />
           <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: theme.border.subtle }} />
         </View>
@@ -199,11 +244,12 @@ export default function NotificationsScreen() {
     );
   }
 
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Custom Header */}
+      {/* Header */}
       <View style={{
         flexDirection: "row",
         alignItems: "center",
@@ -217,13 +263,34 @@ export default function NotificationsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16, padding: 8 }}>
           <Ionicons name="arrow-back" size={24} color={theme.text.secondary} />
         </TouchableOpacity>
-        <AppText
-          variant="h3"
-          style={{ color: theme.text.secondary, flex: 1, fontWeight: "700", fontSize: 18 }}
-          numberOfLines={1}
-        >
-          {t("notifications.title") || "Notifications"}
-        </AppText>
+        <View style={{ flex: 1 }}>
+          <AppText variant="h3" style={{ color: theme.text.secondary, fontWeight: "700", fontSize: 18 }}>
+            {t("notifications.title") || "Notifications"}
+          </AppText>
+          {unreadCount > 0 && (
+            <AppText variant="caption" style={{ color: theme.text.muted, fontSize: 12, marginTop: 2 }}>
+              {unreadCount} unread
+            </AppText>
+          )}
+        </View>
+        {unreadCount > 0 && (
+          <TouchableOpacity
+            onPress={async () => {
+              try { await notificationsApi.markAllAsRead(); } catch { /* */ }
+              setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+            }}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+              backgroundColor: "#EFF6FF",
+            }}
+          >
+            <AppText style={{ fontSize: 12, fontWeight: "600", color: "#2563EB" }}>
+              {t("notifications.markAllRead")}
+            </AppText>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
@@ -234,24 +301,62 @@ export default function NotificationsScreen() {
         }
       >
         {groupedNotifications.length === 0 ? (
-          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80, opacity: 0.6 }}>
-            <Ionicons name="notifications-off-outline" size={64} color={theme.text.light} />
-            <AppText style={{ marginTop: 16, color: theme.text.medium, textAlign: "center" }}>
+          /* ── Empty state ── */
+          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
+            <View style={{
+              width: 100, height: 100, borderRadius: 50,
+              backgroundColor: "#F3E5F5", alignItems: "center", justifyContent: "center",
+              marginBottom: 20,
+            }}>
+              <Ionicons name="notifications-off-outline" size={48} color="#9C27B0" />
+            </View>
+            <AppText variant="h3" style={{ color: theme.text.primary, fontWeight: "700", fontSize: 18, marginBottom: 6 }}>
               {t("notifications.empty") || "No notifications yet"}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: theme.text.muted, textAlign: "center", maxWidth: 260, lineHeight: 20 }}>
+              {t("notifications.emptySubtitle") || "You'll be notified about schemes, events and updates here"}
             </AppText>
           </View>
         ) : (
-          <View style={{ paddingBottom: 40, paddingTop: 10 }}>
+          <View style={{ paddingBottom: 40, paddingTop: 16 }}>
             {groupedNotifications.map((group, index) => (
-              <View key={index} style={{ marginBottom: 28 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-                  <AppText variant="h3" style={{ fontSize: 13, fontWeight: "700", color: theme.text.placeholder, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <View key={index} style={{ marginBottom: 24 }}>
+                {/* Section header */}
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                  <AppText variant="h3" style={{
+                    fontSize: 12, fontWeight: "700",
+                    color: theme.text.placeholder,
+                    textTransform: "uppercase", letterSpacing: 0.8,
+                  }}>
                     {t(group.titleKey) || group.title}
                   </AppText>
                   <View style={{ flex: 1, height: 1, backgroundColor: theme.border.subtle, marginLeft: 12 }} />
+                  <AppText variant="caption" style={{ color: theme.text.placeholder, fontSize: 11, marginLeft: 8 }}>
+                    {group.data.length}
+                  </AppText>
                 </View>
                 {group.data.map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} />
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    onPress={() => {
+                      // Navigate based on notification data
+                      const data = (notification as any).data || {};
+                      if (data.screen) {
+                        const routeMap: Record<string, string> = {
+                          "scheme-details": "/scheme-details",
+                          "event-details": "/event-details",
+                          "program-details": "/program-details",
+                        };
+                        const route = routeMap[data.screen] || `/${data.screen}`;
+                        if (data.id) {
+                          router.push({ pathname: route as any, params: { id: String(data.id) } });
+                        } else {
+                          router.push(route as any);
+                        }
+                      }
+                    }}
+                  />
                 ))}
               </View>
             ))}

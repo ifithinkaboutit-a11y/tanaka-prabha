@@ -29,7 +29,7 @@ export const getAllUsers = async (req, res) => {
     if (req.query.format === 'csv') {
         try {
             res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', 'attachment; filename="beneficiaries.csv"');
+            res.setHeader('Content-Disposition', 'attachment; filename="farmers.csv"');
 
             // Write header row
             res.write('name,mobile_number,district,state,village,land_area,livestock_count,created_at,is_verified\n');

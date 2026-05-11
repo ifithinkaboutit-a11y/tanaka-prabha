@@ -14,7 +14,6 @@ import AppText from "../../components/atoms/AppText";
 import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
-import CropSelector from "../../components/molecules/CropSelector";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
@@ -59,9 +58,6 @@ const AuthLandDetailsScreen = () => {
 
     if (!entry.area || entry.area <= 0) {
       entryErrors.area = "Land area must be greater than 0";
-    }
-    if (!entry.crops || entry.crops.length === 0) {
-      entryErrors.crops = "Please select at least one crop";
     }
 
     if (Object.keys(entryErrors).length > 0) {
@@ -111,16 +107,6 @@ const AuthLandDetailsScreen = () => {
     }
   };
 
-  const handleCropsChange = (entryId: string, crops: string[]) => {
-    updateLandEntry(entryId, { crops });
-    if (crops.length > 0) {
-      setErrors((prev) => ({
-        ...prev,
-        [entryId]: { ...prev[entryId], crops: undefined },
-      }));
-    }
-  };
-
   const handleNext = () => {
     if (hasLand && !validateAllEntries()) {
       const entryId = landEntries[0]?.id || "default";
@@ -144,7 +130,7 @@ const AuthLandDetailsScreen = () => {
 
   const isValid = () => {
     if (!hasLand) return true;
-    return landEntries[0] && landEntries[0].area > 0 && landEntries[0].crops && landEntries[0].crops.length > 0;
+    return landEntries[0] && landEntries[0].area > 0;
   };
 
   return (
@@ -197,7 +183,7 @@ const AuthLandDetailsScreen = () => {
               {/* Area Input */}
               <View className="mb-6">
                 <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", marginBottom: 8 }}>
-                  {t("onboarding.landArea") || "Total Land Area"}
+                  {t("onboarding.landArea") || "Total Land (in Ha)"}
                 </AppText>
                 <View className="flex-row gap-3">
                   <View className="flex-1">
@@ -237,32 +223,6 @@ const AuthLandDetailsScreen = () => {
                 )}
               </View>
 
-              {/* Crops Selection */}
-              <View>
-                <AppText variant="bodySm" style={{ color: theme.text.subtle, fontWeight: "600", marginBottom: 8 }}>
-                  {t("onboarding.cropsGrown") || "Crops Grown"}
-                </AppText>
-                <View
-                  style={{
-                    borderWidth: errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops ? 1 : 0,
-                    borderColor: errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops ? theme.semantic.errorLight : "transparent",
-                    borderRadius: 12,
-                  }}
-                >
-                  <CropSelector
-                    value={landEntries[0].crops || []}
-                    onValueChange={(crops) => handleCropsChange(landEntries[0].id, crops)}
-                    otherValue={landEntries[0].otherCropsText || ""}
-                    onOtherValueChange={(text) => updateLandEntry(landEntries[0].id, { otherCropsText: text })}
-                    language={currentLanguage as "en" | "hi"}
-                  />
-                </View>
-                {errors[landEntries[0].id]?.crops && touched[landEntries[0].id]?.crops && (
-                  <AppText variant="bodySm" className="text-red-500 mt-2">
-                    {errors[landEntries[0].id].crops}
-                  </AppText>
-                )}
-              </View>
             </View>
           )}
         </KeyboardAwareScrollView>

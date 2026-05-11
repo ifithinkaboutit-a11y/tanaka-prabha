@@ -59,7 +59,7 @@ export default function Connect() {
     const id = profile?.id ?? "Unknown";
     const location = [profile?.village, profile?.district].filter(Boolean).join(", ") || "Unknown";
     const body = encodeURIComponent(
-      `Name: ${name}\nMobile: ${mobile}\nBeneficiary ID: ${id}\nLocation: ${location}\n\nReason:\n${reason}`
+      `Name: ${name}\nMobile: ${mobile}\nFarmer ID: ${id}\nLocation: ${location}\n\nReason:\n${reason}`
     );
     const subject = encodeURIComponent("SOS After-Hours Support Request");
     // Audit log: track SOS email trigger
@@ -222,9 +222,9 @@ export default function Connect() {
             >
               <Ionicons name="call" size={28} color="#e90f0f" style={{borderRadius: 12, }} />
             </View>
-            <View style={{ flex: 1, }}>
+            <View style={{ flex: 1 }}>
               <AppText style={{ color: "#111827", fontWeight: "700", fontSize: 18 }}>
-                24/7 Helpline
+                {t("connect.emergencyTitle")}
               </AppText>
 
               <AppText
@@ -240,7 +240,7 @@ export default function Connect() {
             </View>
 
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-2          </Pressable>
+          </Pressable>
         </View>
 
         <View style={{ height: 100 }} />
@@ -277,7 +277,7 @@ export default function Connect() {
             <View style={s.infoCard}>
               <InfoLine icon="person-outline" label="Name" value={profile?.name ?? "—"} />
               <InfoLine icon="call-outline" label="Mobile" value={profile?.mobileNumber ?? "—"} />
-              <InfoLine icon="id-card-outline" label="Beneficiary ID" value={profile?.id ?? "—"} />
+              <InfoLine icon="id-card-outline" label="Farmer ID" value={profile?.id ?? "—"} />
               <InfoLine
                 icon="location-outline"
                 label="Location"
@@ -308,7 +308,6 @@ export default function Connect() {
               <Pressable
                 onPress={handleCallAnyway}
                 style={({ pressed }) => [s.btnSecondary, pressed && { opacity: 0.7 }]}
-                className="flex flex-row border rounded-xl itms-center justify-center p-4"
               >
                 <Ionicons name="call-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
                 <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>

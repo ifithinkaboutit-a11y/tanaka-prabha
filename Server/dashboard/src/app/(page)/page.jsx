@@ -14,14 +14,10 @@ export default function Page() {
         {/* Quick Actions */}
         <QuickActions />
 
-        {/* Chart + Recent Activity */}
-        <div className="grid gap-6 px-4 lg:px-6 lg:grid-cols-2 md:gap-8">
+        {/* Chart + Recent Activity + Top Regions */}
+        <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch px-4 lg:px-6">
           <HighlightsChart />
           <RecentActivity />
-        </div>
-
-        {/* Top Regions */}
-        <div className="px-4 lg:px-6">
           <TopRegionsPanel />
         </div>
       </div>

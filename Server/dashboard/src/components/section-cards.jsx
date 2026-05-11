@@ -189,14 +189,14 @@ export function SectionCards() {
 
   if (stats.loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {STAT_CONFIG.map(c => <StatCardSkeleton key={c.key} />)}
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 sm:grid-cols-2 xl:grid-cols-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       {STAT_CONFIG.map((config, i) => (
         <StatCard key={config.key} config={config} value={stats[config.key]} index={i} />
       ))}

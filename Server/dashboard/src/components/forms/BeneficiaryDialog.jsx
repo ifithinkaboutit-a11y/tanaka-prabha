@@ -77,16 +77,16 @@ export function BeneficiaryDialog({ user, mode = "add", onSuccess, customTrigger
         try {
             if (isEdit) {
                 await usersApi.update(user.id, form)
-                toast.success("Beneficiary updated successfully")
+                toast.success("Farmer updated successfully")
             } else {
                 await usersApi.create(form)
-                toast.success("Beneficiary added successfully")
+                toast.success("Farmer added successfully")
             }
             setOpen(false)
             setStep(1)
             onSuccess?.()
         } catch (err) {
-            toast.error(err.message || `Failed to ${isEdit ? "update" : "add"} beneficiary`)
+            toast.error(err.message || `Failed to ${isEdit ? "update" : "add"} farmer`)
         } finally {
             setSaving(false)
         }
@@ -102,7 +102,7 @@ export function BeneficiaryDialog({ user, mode = "add", onSuccess, customTrigger
                         </Button>
                     ) : (
                         <Button size="sm" className="gap-2">
-                            <UserPlus className="size-4" /> Add Beneficiary
+                            <UserPlus className="size-4" /> Add Farmer
                         </Button>
                     )
                 )}
@@ -110,9 +110,9 @@ export function BeneficiaryDialog({ user, mode = "add", onSuccess, customTrigger
             <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
                 <div className="px-6 pt-6 pb-4 border-b bg-muted/30">
                     <DialogHeader>
-                        <DialogTitle>{isEdit ? "Edit Beneficiary" : "Add New Beneficiary"}</DialogTitle>
+                        <DialogTitle>{isEdit ? "Edit Farmer" : "Add New Farmer"}</DialogTitle>
                         <DialogDescription>
-                            {isEdit ? "Update farmer details." : "Register a new farmer beneficiary."}
+                            {isEdit ? "Update farmer details." : "Register a new farmer."}
                         </DialogDescription>
                     </DialogHeader>
                     {/* Stepper Progress */}

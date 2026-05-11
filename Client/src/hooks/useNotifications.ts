@@ -1,5 +1,6 @@
 // src/hooks/useNotifications.ts
 import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   registerForPushNotificationsAsync,
@@ -50,7 +51,43 @@ export function useNotifications() {
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data as any;
         console.log("🔔 Notification tapped:", data);
-        // TODO: navigate based on data.screen when router is available here
+
+        // Navigate based on the screen specified in the notification payload
+        try {
+          const { router: navRouter } = require("expo-router");
+          const screen = data?.screen;
+          const id = data?.id;
+
+          if (screen) {
+            // Map notification screen names to app routes
+            const routeMap: Record<string, string> = {
+              "scheme-details": "/scheme-details",
+              "scheme": "/scheme-details",
+              "event-details": "/event-details",
+              "event": "/event-details",
+              "program-details": "/program-details",
+              "program": "/program-details",
+              "connect-detail": "/connect-detail",
+              "connect": "/connect-detail",
+              "notifications": "/notifications",
+              "all-events": "/all-events",
+              "my-schedule": "/my-schedule",
+            };
+
+            const route = routeMap[screen] || `/${screen}`;
+
+            if (id) {
+              navRouter.push({ pathname: route, params: { id: String(id) } });
+            } else {
+              navRouter.push(route);
+            }
+          } else if (data?.type === "approval" || data?.type === "reminder") {
+            // Default: navigate to notifications list for approval/reminder types
+            navRouter.push("/notifications");
+          }
+        } catch (navError) {
+          console.warn("🔔 Navigation from notification failed:", navError);
+        }
       });
 
     return () => {

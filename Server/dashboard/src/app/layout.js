@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata = {
   title: "Tanak Prabha | Admin Dashboard",
-  description: "Government farmer welfare management — beneficiaries, professionals, schemes & analytics",
+  description: "Government farmer welfare management — farmers, professionals, schemes & analytics",
 };
 
 export default function RootLayout({ children }) {

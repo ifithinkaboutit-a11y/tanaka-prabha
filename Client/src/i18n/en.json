@@ -368,6 +368,8 @@
     "areaError": "Land area cannot be negative",
     "fieldsAdded": "{{count}} field added",
     "infoMessage": "Accurate land and crop information helps us recommend relevant schemes and programs for you.",
+    "savedMessage": "Your land details have been updated.",
+    "saveError": "Failed to save. Please check your connection.",
     "save": "Save",
     "cancel": "Cancel"
   },

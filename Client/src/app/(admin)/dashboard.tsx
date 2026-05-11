@@ -105,13 +105,10 @@
 //     label: { fontSize: 13, fontWeight: "600" },
 // });
 
-// // ─── Section Header ───────────────────────────────────────────
-// function SectionHeader({ label }: { label: string }) {
-//     return <AppText style={sh.label}>{label}</AppText>;
-// }
-// const sh = StyleSheet.create({
-//     label: { fontSize: 18, fontWeight: "800", color: theme.text.primary, marginBottom: 14 },
-// });
+// ─── Section Header ───────────────────────────────────────────
+function SectionHeader({ label }: { label: string }) {
+    return <AppText style={{ fontSize: 18, fontWeight: "800", color: theme.text.primary, marginBottom: 14 }}>{label}</AppText>;
+}
 
 // // ─── Main Dashboard ───────────────────────────────────────────
 // export default function AdminDashboard() {
@@ -180,7 +177,7 @@
 //                 <QuickPill icon="list" label="View Records" color="#8B5CF6" onPress={() => goTo("/(admin)/view-attendance")} />
 //                 <QuickPill icon="newspaper" label="CMS" color="#F59E0B" onPress={() => goTo("/(admin)/content-management")} />
 //                 <QuickPill icon="notifications" label="Notify" color="#EF4444" onPress={() => goTo("/(admin)/send-notification")} />
-//                 <QuickPill icon="people" label="Beneficiaries" color="#0EA5E9" onPress={() => goTo("/(admin)/beneficiaries")} />
+//                 <QuickPill icon="people" label="Farmers" color="#0EA5E9" onPress={() => goTo("/(admin)/beneficiaries")} />
 //             </ScrollView>
 
 //             {/* ── Stats Grid ── */}
@@ -265,8 +262,8 @@
 
 //             <View style={s.divider} />
 
-//             {/* ── Beneficiaries ── */}
-//             <SectionHeader label="Beneficiaries & Verification" />
+//             {/* ── Farmers ── */}
+//             <SectionHeader label="Farmers & Verification" />
 //             <ActionCard
 //                 icon="shield-checkmark"
 //                 title="Verify Farmers"
@@ -576,30 +573,33 @@ export default function AdminDashboard() {
                 <ActivityIndicator size="small" />
             ) : (
                 <View style={s.statsGrid}>
-                    <StatCard 
-                        title="Farmers" 
-                        value={stats?.totalFarmers ?? 0} 
-                        icon="people" 
-                        color="#3B82F6" 
+                    <StatCard
+                        title="Farmers"
+                        value={stats?.totalFarmers ?? 0}
+                        icon="people"
+                        color="#3B82F6"
+                        onPress={() => router.push("/(admin)/beneficiaries")}
                     />
-                    <StatCard 
-                        title="Land Coverage" 
-                        value={`${stats?.totalLandCoverage?.toFixed(1) ?? 0}B`} 
-                        icon="leaf" 
-                        color="#10B981" 
+                    <StatCard
+                        title="Land Coverage"
+                        value={`${stats?.totalLandCoverage?.toFixed(1) ?? 0}B`}
+                        icon="leaf"
+                        color="#10B981"
+                        onPress={() => router.push("/(admin)/beneficiaries")}
                     />
-                    <StatCard 
-                        title="Livestock" 
-                        value={stats?.livestockCount ?? 0} 
-                        icon="paw" 
-                        color="#F59E0B" 
+                    <StatCard
+                        title="Livestock"
+                        value={stats?.livestockCount ?? 0}
+                        icon="paw"
+                        color="#F59E0B"
                         onPress={() => setLivestockVisible(true)}
                     />
-                    <StatCard 
-                        title="Active Schemes" 
-                        value={stats?.activeSchemes?? 0} 
-                        icon="document-text" 
-                        color="#8B5CF6" 
+                    <StatCard
+                        title="Active Schemes"
+                        value={stats?.activeSchemes?? 0}
+                        icon="document-text"
+                        color="#8B5CF6"
+                        onPress={() => router.push("/(admin)/content-management")}
                     />
                 </View>
             )}

@@ -106,7 +106,7 @@ function LoginForm() {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="text-zinc-100 text-lg leading-relaxed mb-10"
           >
-            Admin dashboard for farmer welfare management. Manage beneficiaries, professionals, and content all in one place.
+            Admin dashboard for farmer welfare management. Manage farmers, professionals, and content all in one place.
           </motion.p>
 
           {/* Feature pills */}
@@ -117,7 +117,7 @@ function LoginForm() {
             className="flex flex-col gap-3 text-left"
           >
             {[
-              { icon: "🌾", text: "Manage farmer beneficiaries" },
+              { icon: "🌾", text: "Manage registered farmers" },
               { icon: "👨‍⚕️", text: "Track agricultural professionals" },
               { icon: "📋", text: "Publish schemes & banners" },
             ].map((item, i) => (

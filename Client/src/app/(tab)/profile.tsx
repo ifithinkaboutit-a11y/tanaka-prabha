@@ -437,11 +437,11 @@ const Profile = () => {
             {[
               { key: "cow", label: t("livestockDetails.cow"), count: profile.livestockDetails?.cow, icon: "cow", lib: "mci" },
               { key: "buffalo", label: t("livestockDetails.buffalo"), count: profile.livestockDetails?.buffalo, icon: "water-outline", lib: "ion" },
-              { key: "goat", label: t("livestockDetails.goat"), count: profile.livestockDetails?.goat, icon: "goat", lib: "mci" },
+              { key: "goat", label: t("livestockDetails.goat"), count: profile.livestockDetails?.goat, icon: "paw", lib: "mci" },
               { key: "sheep", label: t("livestockDetails.sheep"), count: profile.livestockDetails?.sheep, icon: "sheep", lib: "mci" },
               { key: "pig", label: t("livestockDetails.pig"), count: profile.livestockDetails?.pig, icon: "pig-variant", lib: "mci" },
               { key: "poultry", label: t("livestockDetails.hen"), count: profile.livestockDetails?.poultry, icon: "bird", lib: "mci" },
-              { key: "others", label: t("livestockDetails.others"), count: profile.livestockDetails?.others, icon: "dots-horizontal-circle-outline", lib: "ion" },
+              { key: "others", label: t("livestockDetails.others"), count: profile.livestockDetails?.others, icon: "ellipsis-horizontal-circle-outline", lib: "ion" },
             ]
               .filter((item) => item.count && item.count > 0)
               .map((item, idx, arr) => (

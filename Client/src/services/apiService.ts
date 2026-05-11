@@ -457,7 +457,7 @@ export const userApi = {
   },
 
   /**
-   * Get all registered farmers/users (for admin beneficiaries screen)
+   * Get all registered farmers/users (for admin farmers screen)
    */
   async getAll(params?: { limit?: number; offset?: number }): Promise<ApiUserProfile[]> {
     const limit = params?.limit ?? 100;
@@ -469,7 +469,7 @@ export const userApi = {
   },
 
   /**
-   * Get a single user by ID (for admin beneficiary detail screen)
+   * Get a single user by ID (for admin farmer detail screen)
    */
   async getById(id: string): Promise<ApiUserProfile | null> {
     const response = await fetchWithAuth<{ user: ApiUserProfile }>(`/users/${id}`);

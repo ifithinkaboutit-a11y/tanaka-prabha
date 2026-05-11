@@ -9,7 +9,6 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     StyleSheet,
     TextInput,
@@ -273,7 +272,10 @@ export default function SendNotificationScreen() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: theme.background.screen },
+    root: { 
+        flex: 1, 
+        backgroundColor: theme.background.screen,   
+    },
 
     // header
     header: {

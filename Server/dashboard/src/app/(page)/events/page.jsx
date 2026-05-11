@@ -239,7 +239,7 @@ export default function EventsPage() {
 
     return (
         <div className="@container/main flex flex-1 flex-col">
-            <div className="flex flex-col py-6 px-4 md:py-8 lg:px-6">
+            <div className="flex flex-col pb-6 px-4 md:py-8 lg:px-6">
                 <div className="flex justify-between items-start mb-8">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -333,17 +333,17 @@ function EventCard({ event, router, onViewGallery }) {
         : ""
 
     return (
-        <Card>
+        <Card className="border-border/60 bg-card transition-all hover:shadow-md w-full h-full flex flex-col min-h-[300px]">
             <CardHeader className="p-0 relative">
                 {event.hero_image_url ? (
-                    <img src={event.hero_image_url} alt={event.title} className="w-full h-40 object-cover rounded-t-lg" />
+                    <img src={event.hero_image_url} alt={event.title} className="w-full h-[200px] object-cover rounded-t-lg" />
                 ) : (
-                    <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
+                    <div className="w-full h-[200px] bg-gradient-to-br from-primary/20 to-primary/5 rounded-t-lg flex items-center justify-center">
                         <IconCalendarEvent className="size-10 text-primary/40" />
                     </div>
                 )}
                 <div className="absolute top-2 right-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${sc.color}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border  ${sc.color}`}>
                         {sc.label}
                     </span>
                 </div>

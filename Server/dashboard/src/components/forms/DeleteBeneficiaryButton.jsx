@@ -21,11 +21,11 @@ export function DeleteBeneficiaryButton({ userId, userName }) {
         setDeleting(true)
         try {
             await usersApi.delete(userId)
-            toast.success("Beneficiary deleted successfully")
+            toast.success("Farmer deleted successfully")
             router.push("/beneficiaries")
             router.refresh()
         } catch (err) {
-            toast.error("Failed to delete beneficiary")
+            toast.error("Failed to delete farmer")
             setDeleting(false)
             setOpen(false)
         }
@@ -44,9 +44,9 @@ export function DeleteBeneficiaryButton({ userId, userName }) {
             <AlertDialog open={open} onOpenChange={setOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Beneficiary</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Farmer</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete <strong>{userName || "this beneficiary"}</strong>?
+                            Are you sure you want to delete <strong>{userName || "this farmer"}</strong>?
                             This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

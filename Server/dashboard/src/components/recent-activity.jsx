@@ -174,7 +174,7 @@ export function RecentActivity() {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full w-full max-w-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <div className="flex size-8 items-center justify-center rounded-lg bg-muted">

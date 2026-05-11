@@ -14,7 +14,7 @@ export function TopRegionsPanel() {
         async function fetchRegions() {
             try {
                 const res = await analyticsApi.getUserDistribution()
-                const data = res.data?.topRegions || res.data || []
+                const data = res.data?.distribution || res.data?.topRegions || res.data || []
                 setRegions(Array.isArray(data) ? data.slice(0, 8) : [])
             } catch {
                 setRegions([])
@@ -26,7 +26,7 @@ export function TopRegionsPanel() {
     }, [])
 
     return (
-        <Card className="h-full">
+        <Card className="h-full w-full max-w-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                     <div className="flex size-8 items-center justify-center rounded-lg bg-muted">

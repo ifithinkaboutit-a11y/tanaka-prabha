@@ -29,11 +29,11 @@ const ANIMAL_DATA: {
     { key: "cow", icon: "cow", iconLib: "mci", accentBg: "#EEF2FF", accentText: "#3730A3" },
     { key: "buffalo", icon: "water-outline", iconLib: "ion", accentBg: "#F5F3FF", accentText: "#6D28D9" },
     { key: "sheep", icon: "sheep", iconLib: "mci", accentBg: "#ECFDF5", accentText: "#065F46" },
-    { key: "goat", icon: "goat", iconLib: "mci", accentBg: "#FFFBEB", accentText: "#92400E" },
+    { key: "goat", icon: "paw", iconLib: "mci", accentBg: "#FFFBEB", accentText: "#92400E" },
     { key: "pig", icon: "pig-variant", iconLib: "mci", accentBg: "#FFF1F2", accentText: "#9F1239" },
     { key: "poultry", icon: "bird", iconLib: "mci", accentBg: "#FFF7ED", accentText: "#C2410C" },
     { key: "horse", icon: "horse-variant", iconLib: "mci", accentBg: "#F0FDFA", accentText: "#0D9488" },
-    { key: "others", icon: "dots-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
+    { key: "others", icon: "ellipsis-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
   ];
 
 // ─── Counter Row ──────────────────────────────────────────────────────────────

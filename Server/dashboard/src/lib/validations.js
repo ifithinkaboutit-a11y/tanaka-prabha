@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Beneficiary (User/Farmer) schema
-export const BeneficiarySchema = z.object({
+// Farmer (User) schema
+export const FarmerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     mobile_number: z.string().min(10, "Enter a valid 10-digit mobile number").max(15),
     age: z.coerce.number().min(1).max(120).optional().or(z.literal("")),

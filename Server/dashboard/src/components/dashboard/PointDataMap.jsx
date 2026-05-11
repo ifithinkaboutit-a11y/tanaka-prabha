@@ -97,16 +97,10 @@ export default function PointDataMap() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const [farmerRes, proRes, eventRes] = await Promise.all([
-                    analyticsApi.getFarmerLocations().catch(() => ({ data: { locations: [] } })),
-                    analyticsApi.getFarmerLocations().catch(() => ({ data: { locations: [] } })),
-                    analyticsApi.getFarmerLocations().catch(() => ({ data: { locations: [] } })),
-                ]);
-
-                const farmerData = farmerRes.data?.locations || farmerRes.data || [];
+                const res = await analyticsApi.getFarmerLocations();
+                const farmerData = res.data?.locations || res.data || [];
                 setFarmers(Array.isArray(farmerData) ? farmerData : []);
-                // For now, professionals and events use the same location data
-                // In production, these would come from dedicated endpoints
+                // Professionals and events endpoints not yet available
                 setProfessionals([]);
                 setEvents([]);
             } catch {

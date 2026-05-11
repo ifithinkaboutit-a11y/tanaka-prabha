@@ -125,11 +125,11 @@ export default function BeneficiaryDetailPage() {
         return (
             <div className="@container/main flex flex-1 flex-col items-center justify-center gap-4 py-20">
                 <p className="text-lg font-medium">User not found</p>
-                <p className="text-sm text-muted-foreground">{error || "The requested beneficiary could not be loaded."}</p>
+                <p className="text-sm text-muted-foreground">{error || "The requested farmer could not be loaded."}</p>
                 <Button variant="outline" asChild>
                     <Link href="/beneficiaries">
                         <ArrowLeft className="size-4 mr-2" />
-                        Back to Beneficiaries
+                        Back to Farmers
                     </Link>
                 </Button>
             </div>
@@ -161,8 +161,8 @@ export default function BeneficiaryDetailPage() {
             {/* Breadcrumb */}
             <BreadcrumbNav items={[
                 { label: "Dashboard", href: "/" },
-                { label: "Beneficiaries", href: "/beneficiaries" },
-                { label: user.name || "Beneficiary" },
+                { label: "Farmers", href: "/beneficiaries" },
+                { label: user.name || "Farmer" },
             ]} />
 
             {/* ─── Hero Header Card ─── */}

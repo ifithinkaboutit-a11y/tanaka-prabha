@@ -499,11 +499,11 @@ const LIVESTOCK_CONFIG: {
 }[] = [
     { key: "cow", label: "Cow", labelHi: "गाय", icon: "cow", accentBg: "#EEF2FF", accentText: "#3730A3" },
     { key: "buffalo", label: "Buffalo", labelHi: "भैंस", icon: "water-outline", accentBg: "#F5F3FF", accentText: "#6D28D9" },
-    { key: "goat", label: "Goat", labelHi: "बकरी", icon: "goat", accentBg: "#FFFBEB", accentText: "#92400E" },
+    { key: "goat", label: "Goat", labelHi: "बकरी", icon: "paw", accentBg: "#FFFBEB", accentText: "#92400E" },
     { key: "sheep", label: "Sheep", labelHi: "भेड़", icon: "sheep", accentBg: "#ECFDF5", accentText: "#065F46" },
     { key: "pig", label: "Pig", labelHi: "सुअर", icon: "pig-variant", accentBg: "#FFF1F2", accentText: "#9F1239" },
     { key: "poultry", label: "Poultry / Hen", labelHi: "मुर्गी", icon: "bird", accentBg: "#FFF7ED", accentText: "#C2410C" },
-    { key: "others", label: "Others", labelHi: "अन्य", icon: "dots-horizontal-circle-outline", accentBg: "#F9FAFB", accentText: "#374151" },
+    { key: "others", label: "Others", labelHi: "अन्य", icon: "ellipsis-horizontal-circle-outline", accentBg: "#F9FAFB", accentText: "#374151" },
 ];
 
 function Step4({ form, setForm }: { form: LivestockForm; setForm: (f: LivestockForm) => void }) {
@@ -1010,7 +1010,7 @@ export default function AddBeneficiary() {
                             </>
                         ) : (
                             <>
-                                <AppText style={s.stepTitle}>Add Beneficiary</AppText>
+                                <AppText style={s.stepTitle}>Add Farmer</AppText>
                                 <AppText style={s.stepSubtitle}>Search or register a new farmer</AppText>
                             </>
                         )}

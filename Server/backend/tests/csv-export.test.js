@@ -104,10 +104,10 @@ describe('GET /api/users?format=csv', () => {
     expect(res.headers['content-type']).toMatch(/text\/csv/);
   });
 
-  test('sets Content-Disposition attachment with filename beneficiaries.csv', async () => {
+  test('sets Content-Disposition attachment with filename farmers.csv', async () => {
     const res = await request(app).get('/api/users?format=csv');
     expect(res.headers['content-disposition']).toContain('attachment');
-    expect(res.headers['content-disposition']).toContain('beneficiaries.csv');
+    expect(res.headers['content-disposition']).toContain('farmers.csv');
   });
 
   test('first line is the CSV header row with all required columns', async () => {

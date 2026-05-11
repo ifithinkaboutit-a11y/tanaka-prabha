@@ -412,16 +412,26 @@ const AuthLivestockDetailsScreen = () => {
           {/* Livestock Entries */}
           {hasLivestock && (
             <>
-              {livestockEntries.map((entry, index) => (
+              {livestockEntries.map((entry, index) => {
+                const accentColor = ENTRY_ACCENT_COLORS[index % ENTRY_ACCENT_COLORS.length];
+                return (
                 <View
                   key={entry.id}
                   className="bg-white rounded-2xl p-5 mb-4 shadow-sm elevation-2"
+                  style={{ borderLeftColor: accentColor, borderLeftWidth: 4 }}
                 >
                   {/* Entry Header */}
                   <View className="flex-row justify-between items-center mb-4">
-                    <AppText variant="bodyMd" className="font-bold text-gray-800">
-                      {t("onboarding.livestockEntry")} {index + 1}
-                    </AppText>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: accentColor, alignItems: "center", justifyContent: "center" }}>
+                        <AppText variant="bodySm" style={{ color: "#fff", fontWeight: "700" }}>
+                          {index + 1}
+                        </AppText>
+                      </View>
+                      <AppText variant="bodyMd" className="font-bold text-gray-800">
+                        {t("onboarding.livestockEntry")} {index + 1}
+                      </AppText>
+                    </View>
                     {livestockEntries.length > 1 && (
                       <Pressable
                         onPress={() => removeLivestockEntry(entry.id)}
@@ -487,7 +497,8 @@ const AuthLivestockDetailsScreen = () => {
                     )}
                   </View>
                 </View>
-              ))}
+                );
+              })}
 
               {/* Add Another Entry */}
               <Pressable

@@ -111,7 +111,7 @@ interface OnboardingState {
   eventLocationPick: { lat: number; lng: number } | null;
   setEventLocationPick: (data: { lat: number; lng: number } | null) => void;
 
-  // Beneficiary location pick — set by location-picker when purpose==='beneficiary'
+  // Farmer location pick — set by location-picker when purpose==='beneficiary'
   // add-beneficiary reads this and clears it after consuming
   beneficiaryLocationPick: { lat: number; lng: number; address: string } | null;
   setBeneficiaryLocationPick: (data: { lat: number; lng: number; address: string } | null) => void;

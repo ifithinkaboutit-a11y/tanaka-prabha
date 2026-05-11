@@ -55,7 +55,7 @@ export function HighlightsChart() {
   }
 
   return (
-    <Card className="col-span-1 lg:col-span-2 overflow-hidden border-border/60 bg-card transition-all hover:shadow-md">
+    <Card className="col-span-1 lg:col-span-2 overflow-hidden border-border/60 bg-card transition-all hover:shadow-md w-full max-w-lg h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-bold">Registration Trends</CardTitle>
         <CardDescription>Daily farmer registrations over the last 30 days</CardDescription>

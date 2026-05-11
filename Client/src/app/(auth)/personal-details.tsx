@@ -425,6 +425,7 @@ const AuthPersonalDetailsScreen = () => {
 
   const isValid = () => {
     return (
+      !!personalDetails.photoUrl &&
       personalDetails.name?.trim() !== "" &&
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&

@@ -242,16 +242,23 @@ export const getGrowthTrends = async (req, res) => {
         const { period = '30' } = req.query;
         const days = parseInt(period);
 
-        // Get daily registration counts for the period
+        if (isNaN(days) || days < 1 || days > 365) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Invalid period. Must be between 1 and 365 days.'
+            });
+        }
+
+        // Get daily registration counts for the period (parameterized query)
         const trendsResult = await query(`
-            SELECT 
+            SELECT
                 DATE(created_at) as date,
                 COUNT(*) as registrations
             FROM public.users
-            WHERE created_at >= NOW() - INTERVAL '${days} days'
+            WHERE created_at >= NOW() - INTERVAL '1 day' * $1
             GROUP BY DATE(created_at)
             ORDER BY date ASC
-        `);
+        `, [days]);
 
         res.status(200).json({
             status: 'success',
@@ -278,43 +285,78 @@ export const getFarmerLocations = async (req, res) => {
     try {
         const { limit = 1000, offset = 0 } = req.query;
 
+        // Helper: build nested land_details / livestock_details from a flat row
+        function buildLocationRow(row) {
+            const { rabi_crop, kharif_crop, zaid_crop, total_land_area,
+                    cow, buffalo, goat, sheep, pig, poultry, others, horse,
+                    ...base } = row;
+            return {
+                ...base,
+                land_details: {
+                    rabi_crop: rabi_crop || null,
+                    kharif_crop: kharif_crop || null,
+                    zaid_crop: zaid_crop || null,
+                    total_land_area: total_land_area || null,
+                },
+                livestock_details: {
+                    cow: cow || 0,
+                    buffalo: buffalo || 0,
+                    goat: goat || 0,
+                    sheep: sheep || 0,
+                    pig: pig || 0,
+                    poultry: poultry || 0,
+                    others: others || 0,
+                    horse: horse || 0,
+                },
+            };
+        }
+
         // Primary: users with a proper GPS/PostGIS location point
+        // JOIN land_details & livestock_details so the frontend can render crop/livestock pins
         const locationsResult = await query(`
-            SELECT 
-                id, name, village, district,
-                ST_Y(location::geometry) as latitude,
-                ST_X(location::geometry) as longitude
-            FROM public.users
-            WHERE location IS NOT NULL
-            ORDER BY created_at DESC
+            SELECT
+                u.id, u.name, u.village, u.district,
+                ST_Y(u.location::geometry) as latitude,
+                ST_X(u.location::geometry) as longitude,
+                ld.rabi_crop, ld.kharif_crop, ld.zaid_crop, ld.total_land_area,
+                lst.cow, lst.buffalo, lst.goat, lst.sheep,
+                lst.pig, lst.poultry, lst.others, lst.horse
+            FROM public.users u
+            LEFT JOIN public.land_details ld ON ld.user_id = u.id
+            LEFT JOIN public.livestock_details lst ON lst.user_id = u.id
+            WHERE u.location IS NOT NULL
+            ORDER BY u.created_at DESC
             LIMIT $1 OFFSET $2
         `, [parseInt(limit), parseInt(offset)]);
 
         // Supplemental: users who have a district but no GPS location yet.
         // Use district-centroid coords so they appear on the map too.
         const noGpsResult = await query(`
-            SELECT id, name, village, district
-            FROM public.users
-            WHERE location IS NULL
-              AND district IS NOT NULL
-              AND district != ''
-            ORDER BY created_at DESC
+            SELECT
+                u.id, u.name, u.village, u.district,
+                ld.rabi_crop, ld.kharif_crop, ld.zaid_crop, ld.total_land_area,
+                lst.cow, lst.buffalo, lst.goat, lst.sheep,
+                lst.pig, lst.poultry, lst.others, lst.horse
+            FROM public.users u
+            LEFT JOIN public.land_details ld ON ld.user_id = u.id
+            LEFT JOIN public.livestock_details lst ON lst.user_id = u.id
+            WHERE u.location IS NULL
+              AND u.district IS NOT NULL
+              AND u.district != ''
+            ORDER BY u.created_at DESC
         `);
 
-        const locations = [...locationsResult.rows];
+        const locations = locationsResult.rows.map(buildLocationRow);
 
         for (const row of noGpsResult.rows) {
             const coords = DISTRICT_COORDS[row.district];
             if (coords) {
                 const jitter = () => (Math.random() - 0.5) * 0.02;
-                locations.push({
-                    id: row.id,
-                    name: row.name,
-                    village: row.village,
-                    district: row.district,
+                locations.push(buildLocationRow({
+                    ...row,
                     latitude: coords[0] + jitter(),
                     longitude: coords[1] + jitter(),
-                });
+                }));
             }
         }
 

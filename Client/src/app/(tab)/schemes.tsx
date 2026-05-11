@@ -296,7 +296,8 @@ export default function Schemes() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.background.screen }}
-      showsVerticalScrollIndicator={false}
+      showsVerticalScrollIndicator={true}
+      indicatorStyle="black"
       stickyHeaderIndices={[0]}
       refreshControl={
         <RefreshControl

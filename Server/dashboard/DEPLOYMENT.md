@@ -162,7 +162,7 @@ pm2 startup
 
 - **Authentication**: NextAuth.js with credentials provider
 - **Dashboard Overview**: Statistics cards, farmer density map, recent activity
-- **Beneficiaries Management**: View, add, edit, delete farmers
+- **Farmers Management**: View, add, edit, delete farmers
 - **Professionals Management**: Manage doctors, veterinarians, agricultural experts
 - **Content Management**: 
   - Schemes (with English/Hindi support)
