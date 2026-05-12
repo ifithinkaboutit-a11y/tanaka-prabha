@@ -5,6 +5,7 @@ import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import {
     ActivityIndicator,
     Alert,

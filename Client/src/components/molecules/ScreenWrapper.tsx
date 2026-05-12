@@ -1,8 +1,7 @@
 // components/ScreenWrapper.tsx
 
 import React from "react";
-import { Platform } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 
 type Props = {
     children: React.ReactNode;
@@ -15,9 +14,7 @@ export default function ScreenWrapper({
 }: Props) {
     return (
         <KeyboardAwareScrollView
-            enableOnAndroid
             extraScrollHeight={extraScrollHeight}
-            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
         >

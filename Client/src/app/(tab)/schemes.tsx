@@ -17,23 +17,44 @@ import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
 import { useTranslation } from "../../i18n";
 import { useLanguageStore } from "../../stores/languageStore";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import { cdn } from "@/utils/cloudinaryUtils";
 import { theme } from "@/styles/colors";
+import { SchemeEligibilityBadge, checkSchemeEligibility } from "@/components/molecules/SchemeEligibilityBadge";
 
 // Scheme Card Component
 const SchemeCard = ({
   scheme,
   onPress,
   width,
+  userProfile,
 }: {
   scheme: Scheme;
   onPress: () => void;
   width?: number;
+  userProfile?: {
+    landDetails?: { totalLandArea?: number };
+    livestockDetails?: Record<string, number>;
+    district?: string;
+    interests?: string[];
+  };
 }) => {
   const { currentLanguage } = useLanguageStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const displayTitle = currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title;
+
+  // Check eligibility based on user profile
+  const eligibility = useMemo(() => {
+    if (!userProfile) return { isEligible: true, matchDetails: undefined };
+    // Check if scheme has specific criteria (you can add these fields to your API/schema)
+    const schemeCriteria = {
+      minLandArea: (scheme as any).minLandArea,
+      maxLandArea: (scheme as any).maxLandArea,
+      districts: (scheme as any).districts,
+    };
+    return checkSchemeEligibility(schemeCriteria, userProfile);
+  }, [scheme, userProfile]);
 
   return (
     <Pressable
@@ -46,7 +67,7 @@ const SchemeCard = ({
         style={{
           borderRadius: 24,
           overflow: "hidden",
-          marginBottom:"16",
+          marginBottom: 16,
           backgroundColor: theme.background.input,
           borderWidth: 1.5,
           borderColor: "rgba(0,0,0,0.06)",
@@ -86,13 +107,16 @@ const SchemeCard = ({
         </View>
 
         <View style={{ padding: 18 }}>
-          <AppText
-            variant="bodyMd"
-            style={{ fontWeight: "800", color: theme.text.primary, fontSize: 16, lineHeight: 22, letterSpacing: -0.3 }}
-            numberOfLines={2}
-          >
-            {displayTitle}
-          </AppText>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <AppText
+              variant="bodyMd"
+              style={{ fontWeight: "800", color: theme.text.primary, fontSize: 16, lineHeight: 22, letterSpacing: -0.3, flex: 1, marginRight: 8 }}
+              numberOfLines={2}
+            >
+              {displayTitle}
+            </AppText>
+            <SchemeEligibilityBadge isEligible={eligibility.isEligible} matchDetails={eligibility.matchDetails} />
+          </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>
               Explore Details
@@ -171,12 +195,21 @@ export default function Schemes() {
   const router = useRouter();
   const { t } = useTranslation();
   const { currentLanguage } = useLanguageStore();
+  const { profile: userProfile } = useUserProfile();
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // Real counts per category from backend
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
+  // Transform userProfile for eligibility check
+  const eligibilityProfile = userProfile ? {
+    landDetails: userProfile.landDetails,
+    livestockDetails: userProfile.livestockDetails,
+    district: userProfile.district,
+    interests: [],
+  } : undefined;
 
   const fetchSchemes = async () => {
     try {
@@ -419,6 +452,7 @@ export default function Schemes() {
                   scheme={scheme}
                   onPress={() => handleSchemePress(scheme.id)}
                   width={290}
+                  userProfile={eligibilityProfile}
                 />
             ))}
             {/* End spacing for scroll cue */}
@@ -537,6 +571,7 @@ export default function Schemes() {
               key={scheme.id}
               scheme={scheme}
               onPress={() => handleSchemePress(scheme.id)}
+              userProfile={eligibilityProfile}
             />
           ))}
         </View>

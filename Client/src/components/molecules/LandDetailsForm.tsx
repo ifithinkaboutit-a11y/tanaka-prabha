@@ -67,12 +67,13 @@ const SEASONS = [
  * custom "others" text and the OTHERS_VALUE sentinel is added to selected.
  */
 function parseCropField(
-  stored: string | undefined,
+  stored: string | string[] | undefined,
   knownValues: string[]
 ): { selected: string[]; other: string } {
-  if (!stored?.trim()) return { selected: [], other: "" };
+  const str = Array.isArray(stored) ? stored.join(",") : stored;
+  if (!str?.trim()) return { selected: [], other: "" };
 
-  const parts = stored.split(",").map((s) => s.trim()).filter(Boolean);
+  const parts = str.split(",").map((s) => s.trim()).filter(Boolean);
   const selected: string[] = [];
   const otherParts: string[] = [];
 

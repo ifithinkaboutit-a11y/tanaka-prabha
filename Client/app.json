@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tanakprabha.app",
+      "bundleIdentifier": "com.tanakprabha.ifi.app",
       "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -30,7 +30,7 @@
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
-      "package": "com.tanakprabha.app",
+      "package": "com.tanakprabha.ifi.app",
       "versionCode": 2,
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -108,7 +108,7 @@
       "eas": {
         "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
       },
-      "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.app"
+      "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.ifi.app"
     }
   }
 }

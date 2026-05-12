@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(pip install *)",
+      "PowerShell(python _ast_extract.py)",
+      "PowerShell(python -c \"import sys; open\\('.graphify_python', 'w'\\).write\\(sys.executable\\)\")",
+      "Bash(python _ast_extract.py)",
+      "Bash(python *)",
+      "Read(//d/Internship/Tanak-Prabha/**)",
+      "Bash(dir \"D:\\\\Internship\\\\Tanak-Prabha\")",
+      "Bash(npx tsc *)",
+      "Bash(Select-Object -First 40)",
+      "Bash(npx expo *)",
+      "Bash(curl -s http://localhost:8081)",
+      "Bash(npm install *)",
+      "Bash(where choco *)",
+      "Bash(where chocolatey *)",
+      "Bash(where winget *)"
+    ]
+  }
+}

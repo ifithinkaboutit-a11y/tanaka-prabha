@@ -1,10 +1,11 @@
 // src/components/atoms/EventCard.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, View, Linking } from "react-native";
 import { ApiEvent } from "@/services/apiService";
 import { theme } from "../../styles/colors";
 import AppText from "./AppText";
+import { EventCountdown } from "../molecules/EventCountdown";
 
 type EventCardProps = {
     event: ApiEvent;
@@ -65,6 +66,20 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
             day: "numeric", month: "short", year: "numeric",
         })
         : "";
+
+    // Location for map integration
+    const eventLocation = (event as any).latitude && (event as any).longitude
+        ? { latitude: (event as any).latitude, longitude: (event as any).longitude, address: event.location_name }
+        : undefined;
+
+    const openMaps = async () => {
+        if (!eventLocation) return;
+        const { latitude, longitude, address } = eventLocation;
+        const url = address
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+            : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+        await Linking.openURL(url).catch(() => {});
+    };
 
     return (
         <Pressable
@@ -132,6 +147,16 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
                             </>
                         ) : null}
                     </View>
+
+                    {/* ── Countdown Timer (for upcoming events) ── */}
+                    {liveStatus === 'upcoming' && event.date && (
+                        <View style={styles.countdownRow}>
+                            <EventCountdown
+                                eventDate={event.date}
+                                eventLocation={eventLocation}
+                            />
+                        </View>
+                    )}
 
                     {/* ── CTA Button ── */}
                     {sc.disabled ? (
@@ -236,6 +261,10 @@ const styles = StyleSheet.create({
         color: theme.text.subtle,
         fontSize: 12,
         fontWeight: "500",
+    },
+    countdownRow: {
+        marginTop: 12,
+        marginBottom: 4,
     },
     ctaRow: {
         flexDirection: "row",

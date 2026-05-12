@@ -30,6 +30,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
+import ExpoLinking from "expo-linking";
 import * as ImagePicker from "expo-image-picker";
 import { theme } from "../../styles/colors";
 
@@ -111,7 +112,7 @@ const AuthPersonalDetailsScreen = () => {
         "Please allow camera access to take your profile photo.",
         [
           { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => Linking.openSettings() },
+          { text: "Open Settings", onPress: () => ExpoLinking.openSettings() },
         ]
       );
       return;
@@ -139,7 +140,7 @@ const AuthPersonalDetailsScreen = () => {
         "Please allow gallery access to pick your profile photo.",
         [
           { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => Linking.openSettings() },
+          { text: "Open Settings", onPress: () => ExpoLinking.openSettings() },
         ]
       );
       return;

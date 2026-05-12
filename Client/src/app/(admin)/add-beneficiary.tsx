@@ -252,14 +252,13 @@ function Step2({
                     const stateSlug = firstPO.State.trim().toLowerCase().replace(/[\s-]+/g, "_");
                     const districtName = firstPO.District;
 
-                    setForm(prev => ({
-                        ...prev,
+                    setForm({
+                        ...form,
                         pinCode: pin,
                         state: stateSlug,
                         district: districtName,
-                        // Block/Tehsil/Village will be manually confirmed or selected via dropdown
-                        postOffice: poOptions.length === 1 ? poOptions[0].value : (prev.postOffice || "")
-                    }));
+                        postOffice: poOptions.length === 1 ? poOptions[0].value : form.postOffice
+                    });
                 }
             } catch (e) {
                 console.error("Error fetching PIN:", e);

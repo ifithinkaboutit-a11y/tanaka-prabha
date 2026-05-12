@@ -653,7 +653,6 @@ export default function ContentManagement() {
 
             {/* Tab Content */}
             <View style={s.content}>
-                {activeTab === "banners" && <BannersTab />}
                 {activeTab === "schemes" && <SchemesTab />}
                 {activeTab === "professionals" && <ProfessionalsTab />}
             </View>

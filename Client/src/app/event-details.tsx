@@ -291,7 +291,7 @@ const EventDetails = () => {
                                     >
                                         <Ionicons name="map" size={16} color={theme.primary.green} />
                                         <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "800", fontSize: 13, marginLeft: 8 }}>
-                                            {"Open on Maps" || t("events.openOnMaps") || t("events.getDirections")}
+                                            {t("events.openOnMaps") || t("events.getDirections") || "Open on Maps"}
                                         </AppText>
                                     </Pressable>
                                 )}
@@ -314,7 +314,7 @@ const EventDetails = () => {
                         </AppText>
                     </Card>
 
-                    {(event.instructors?.length > 0) && (
+                    {(event.instructors?.length ?? 0) > 0 && (
                         <View style={{ marginBottom: 24 }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
                                 <View style={{ width: 30, height: 30, borderRadius: 12, backgroundColor: theme.primary.green, alignItems: "center", justifyContent: "center" }}>

@@ -110,6 +110,40 @@ function SectionHeader({ label }: { label: string }) {
     return <AppText style={{ fontSize: 18, fontWeight: "800", color: theme.text.primary, marginBottom: 14 }}>{label}</AppText>;
 }
 
+// ─── Action Card ─────────────────────────────────────────────
+function ActionCard({ icon, title, description, color, onPress }: {
+    icon: string; title: string; description: string; color: string; onPress: () => void;
+}) {
+    return (
+        <TouchableOpacity style={[ac.card]} onPress={onPress} activeOpacity={0.8}>
+            <View style={[ac.iconBox, { backgroundColor: color + "15" }]}>
+                <Ionicons name={icon as any} size={26} color={color} />
+            </View>
+            <View style={ac.text}>
+                <AppText style={ac.title}>{title}</AppText>
+                <AppText style={ac.description}>{description}</AppText>
+            </View>
+            <View style={[ac.arrow, { backgroundColor: color + "15" }]}>
+                <Ionicons name="chevron-forward" size={18} color={color} />
+            </View>
+        </TouchableOpacity>
+    );
+}
+
+const ac = StyleSheet.create({
+    card: {
+        flexDirection: "row", alignItems: "center", gap: 14,
+        backgroundColor: theme.background.input,
+        borderRadius: 16, padding: 16, marginBottom: 10,
+        shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    },
+    iconBox: { width: 50, height: 50, borderRadius: 14, justifyContent: "center", alignItems: "center" },
+    text: { flex: 1 },
+    title: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
+    description: { fontSize: 12, color: theme.text.muted, marginTop: 2 },
+    arrow: { width: 32, height: 32, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+});
+
 // // ─── Main Dashboard ───────────────────────────────────────────
 // export default function AdminDashboard() {
 //     const { signOut } = useAuth();

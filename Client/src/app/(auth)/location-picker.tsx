@@ -698,7 +698,7 @@ export default function LocationPickerScreen() {
 
                 <View style={styles.nudgeRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
-                    <AppText variant="bodyXxs" style={styles.nudgeText}>
+                    <AppText variant="caption" style={styles.nudgeText}>
                         Sharing your location helps us show accurate farming data for your region
                     </AppText>
                 </View>

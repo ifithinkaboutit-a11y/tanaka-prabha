@@ -40,6 +40,7 @@ const LivestockDetailsScreen = () => {
     goat: profile?.livestockDetails?.goat || 0,
     pig: profile?.livestockDetails?.pig || 0,
     poultry: profile?.livestockDetails?.poultry || 0,
+    horse: (profile?.livestockDetails as any)?.horse || 0,
     others: profile?.livestockDetails?.others || 0,
   };
 
@@ -92,7 +93,7 @@ const LivestockDetailsScreen = () => {
       <View style={s.formContainer}>
         <LivestockDetailsForm
           initialData={initialData}
-          onSave={handleSave}
+          onSave={handleSave as any}
           onCancel={() => router.back()}
         />
       </View>

@@ -6,27 +6,61 @@ import { useState } from "react";
 import { colors, theme } from "../../styles/colors";
 import AppText from "../atoms/AppText";
 import Card from "../atoms/Card";
+import { SchemeEligibilityBadge, checkSchemeEligibility } from "../molecules/SchemeEligibilityBadge";
 
 type SchemePreviewCardProps = {
   title: string;
+  titleHi?: string;
   description: string;
+  descriptionHi?: string;
   category: string;
   imageUrl?: string;
   onPress?: () => void;
   showBookmark?: boolean;
   interestCount?: number;
+  isEligible?: boolean;
+  eligibilityDetails?: {
+    minLandArea?: number;
+    maxLandArea?: number;
+    requiredCategories?: string[];
+    districts?: string[];
+  };
+  userProfile?: {
+    landDetails?: { totalLandArea?: number };
+    livestockDetails?: Record<string, number>;
+    district?: string;
+    interests?: string[];
+  };
 };
 
 export default function SchemePreviewCard({
   title,
+  titleHi,
   description,
+  descriptionHi,
   category,
   imageUrl,
   onPress,
   showBookmark = true,
   interestCount,
+  isEligible: propEligible,
+  eligibilityDetails,
+  userProfile,
 }: SchemePreviewCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // Calculate eligibility if not provided
+  const { isEligible, matchDetails } = React.useMemo(() => {
+    if (propEligible !== undefined) {
+      return { isEligible: propEligible, matchDetails: undefined };
+    }
+    if (eligibilityDetails && userProfile) {
+      return checkSchemeEligibility(eligibilityDetails, userProfile);
+    }
+    return { isEligible: true, matchDetails: undefined };
+  }, [propEligible, eligibilityDetails, userProfile]);
+
+  const isHindi = require('@/stores/languageStore').useLanguageStore.getState?.()?.currentLanguage === 'hi' || false;
 
   return (
     <Pressable onPress={onPress}>
@@ -38,7 +72,7 @@ export default function SchemePreviewCard({
             style={styles.title}
             numberOfLines={2}
           >
-            {title}
+            {(isHindi && titleHi) || title}
           </AppText>
           {showBookmark && (
             <TouchableOpacity
@@ -61,7 +95,7 @@ export default function SchemePreviewCard({
           ellipsizeMode="tail"
           style={styles.description}
         >
-          {description}
+          {(isHindi && descriptionHi) || description}
         </AppText>
 
         {/* Category Badge + Interest Count */}
@@ -79,6 +113,14 @@ export default function SchemePreviewCard({
               </AppText>
             </View>
           )}
+        </View>
+
+        {/* Eligibility Badge */}
+        <View style={styles.eligibilityRow}>
+          <SchemeEligibilityBadge
+            isEligible={isEligible}
+            matchDetails={matchDetails}
+          />
         </View>
       </Card>
     </Pressable>
@@ -146,5 +188,8 @@ const styles = StyleSheet.create({
   interestText: {
     color: theme.semantic.like,
     fontWeight: "500",
+  },
+  eligibilityRow: {
+    marginTop: 12,
   },
 });

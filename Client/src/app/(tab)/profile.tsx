@@ -120,6 +120,7 @@ const Profile = () => {
   const { profile, loading, refreshProfile, updateProfile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarProgress, setAvatarProgress] = useState(0);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
@@ -139,15 +140,28 @@ const Profile = () => {
   const processAvatarUri = async (uri: string) => {
     setLocalAvatarUri(uri); // instant preview
     setAvatarUploading(true);
+    setAvatarProgress(0);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setAvatarProgress(prev => Math.min(prev + Math.random() * 15, 90));
+    }, 200);
+
     try {
       const cloudUrl = await uploadApi.uploadUserPhoto(uri);
+      clearInterval(progressInterval);
+      setAvatarProgress(100);
       await updateProfile({ photo_url: cloudUrl });
       setLocalAvatarUri(null); // let profile reload handle it
     } catch (e: any) {
+      clearInterval(progressInterval);
       Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
       setLocalAvatarUri(null);
     } finally {
-      setAvatarUploading(false);
+      setTimeout(() => {
+        setAvatarUploading(false);
+        setAvatarProgress(0);
+      }, 500);
     }
   };
 
@@ -283,10 +297,14 @@ const Profile = () => {
                 shape="circle"
                 bgColor="#FFFFFF"
               />
-              {/* Upload spinner overlay */}
+              {/* Upload spinner overlay with progress */}
               {avatarUploading && (
                 <View style={s.avatarLoadingOverlay}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <View style={s.progressContainer}>
+                    <View style={s.progressBackground} />
+                    <View style={[s.progressFill, { width: `${avatarProgress}%` }]} />
+                  </View>
+                  <Text style={s.progressText}>{Math.round(avatarProgress)}%</Text>
                 </View>
               )}
             </View>
@@ -640,10 +658,32 @@ const s = StyleSheet.create({
   },
   avatarLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: "rgba(0,0,0,0.6)",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 46,
+    borderRadius: 44,
+    gap: 8,
+  },
+  progressContainer: {
+    width: 60,
+    height: 5,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 2.5,
+    overflow: "hidden",
+  },
+  progressBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 2.5,
+  },
+  progressText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
   },
   heroName: { color: "#FFFFFF", fontSize: 22, fontWeight: "700", letterSpacing: -0.2, marginBottom: 8 },
   heroPill: {

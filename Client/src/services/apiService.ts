@@ -1,21 +1,9 @@
 // src/services/apiService.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// API Configuration
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "https://tanak-prabha.onrender.com/api";
 
-// Log API URL on startup for debugging
-console.log("🔗 API Base URL:", API_BASE_URL);
-
-if (!process.env.EXPO_PUBLIC_API_URL) {
-  console.warn(
-    "⚠️ EXPO_PUBLIC_API_URL is not set! Using hardcoded fallback. " +
-    "Set it in eas.json env or .env file."
-  );
-}
-
-// Storage keys
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "auth_token",
   USER_DATA: "user_data",

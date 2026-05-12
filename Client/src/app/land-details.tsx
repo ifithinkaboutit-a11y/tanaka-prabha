@@ -89,7 +89,7 @@ const LandDetailsScreen = () => {
       <View style={s.formContainer}>
         <LandDetailsForm
           initialData={initialData}
-          onSave={handleSave}
+          onSave={handleSave as any}
           onCancel={() => router.back()}
         />
       </View>

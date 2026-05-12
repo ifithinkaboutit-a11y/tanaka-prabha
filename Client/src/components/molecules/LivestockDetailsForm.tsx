@@ -36,6 +36,11 @@ const ANIMAL_DATA: {
     { key: "others", icon: "ellipsis-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
   ];
 
+const ANIMAL_EMOJIS: Record<keyof LivestockDetails, string> = {
+  cow: "🐄", buffalo: "🐃", sheep: "🐑", goat: "🐐",
+  pig: "🐷", poultry: "🐔", horse: "🐴", others: "🐾",
+};
+
 // ─── Counter Row ──────────────────────────────────────────────────────────────
 const AnimalCounter = ({
   label,
@@ -216,6 +221,7 @@ export default function LivestockDetailsForm({
           <AnimalCounter
             key={animal.key}
             label={t(`livestockDetails.${animal.key}`)}
+            emoji={ANIMAL_EMOJIS[animal.key]}
             value={formData[animal.key]}
             onChange={(v) => update(animal.key, v)}
             icon={animal.icon}
