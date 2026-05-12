@@ -105,10 +105,10 @@
     },
     "extra": {
       "router": {},
+      "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.ifi.app",
       "eas": {
-        "projectId": "0cb05082-c3de-4ef4-9414-16f90f7e90fb"
-      },
-      "attendanceFallbackUrl": "https://play.google.com/store/apps/details?id=com.tanakprabha.ifi.app"
+        "projectId": "561dfc69-b0a6-4007-b5a0-3d5ef234641b"
+      }
     }
   }
 }

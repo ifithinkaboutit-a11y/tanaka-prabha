@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:226494517512:android:302139171a45b395015cbd",
+        "mobilesdk_app_id": "1:226494517512:android:c9f5077e272ea58a015cbd",
         "android_client_info": {
-          "package_name": "com.tanakprabha.app"
+          "package_name": "com.tanakprabha.ifi.app"
         }
       },
       "oauth_client": [],
