@@ -4,7 +4,6 @@ import { Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -60,7 +59,6 @@ const groupNotificationsByDate = (notifs: Notification[]) => {
 const NotificationItem = ({ notification, onPress }: { notification: Notification; onPress?: () => void }) => {
   const { t } = useTranslation();
   const config = getTypeConfig(notification.type);
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
   const safeT = (key?: string, fallback?: string): string => {
     if (!key) return fallback || "";
@@ -81,34 +79,23 @@ const NotificationItem = ({ notification, onPress }: { notification: Notificatio
     ? safeT(notification.descriptionKey, notification.description)
     : notification.description;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
-  };
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
-  };
-
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <Pressable
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={onPress}
-        style={{
-          marginBottom: 10,
-          flexDirection: "row",
-          backgroundColor: notification.isRead ? theme.background.input : "#F0FDF4",
-          borderRadius: 16,
-          padding: 16,
-          borderLeftWidth: 4,
-          borderLeftColor: notification.isRead ? "transparent" : config.color,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: notification.isRead ? 0 : 0.06,
-          shadowRadius: 4,
-          elevation: notification.isRead ? 0 : 2,
-        }}
-      >
+    <Pressable
+      onPress={onPress}
+      style={{
+        marginBottom: 10,
+        flexDirection: "row",
+        // Background tint replaces side-stripe (absolute ban)
+        backgroundColor: notification.isRead ? theme.background.input : theme.background.successSubtle,
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: notification.isRead ? 0 : 0.06,
+        shadowRadius: 4,
+        elevation: notification.isRead ? 0 : 2,
+      }}
+    >
         {/* Icon badge */}
         <View
           style={{
@@ -138,27 +125,17 @@ const NotificationItem = ({ notification, onPress }: { notification: Notificatio
                 color: theme.text.primary,
                 flex: 1,
                 marginRight: 12,
-                fontSize: 14.5,
               }}
               numberOfLines={2}
             >
               {title}
             </AppText>
-            {!notification.isRead && (
-              <View style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: config.color,
-                marginTop: 4,
-              }} />
-            )}
           </View>
 
           {description ? (
             <AppText
               variant="bodySm"
-              style={{ color: theme.text.muted, fontSize: 13, lineHeight: 18, marginTop: 4 }}
+              style={{ color: theme.text.muted, marginTop: 4 }}
               numberOfLines={2}
             >
               {description}
@@ -166,8 +143,8 @@ const NotificationItem = ({ notification, onPress }: { notification: Notificatio
           ) : null}
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 6 }}>
-            <Ionicons name="time-outline" size={12} color="#9CA3AF" />
-            <AppText variant="caption" style={{ color: "#9CA3AF", fontSize: 11, fontWeight: "500" }}>
+            <Ionicons name="time-outline" size={12} color={theme.text.placeholder} />
+            <AppText variant="caption" style={{ color: theme.text.placeholder }}>
               {notification.time}
             </AppText>
             {/* Type badge */}
@@ -185,7 +162,6 @@ const NotificationItem = ({ notification, onPress }: { notification: Notificatio
           </View>
         </View>
       </Pressable>
-    </Animated.View>
   );
 };
 
@@ -269,7 +245,7 @@ export default function NotificationsScreen() {
           </AppText>
           {unreadCount > 0 && (
             <AppText variant="caption" style={{ color: theme.text.muted, fontSize: 12, marginTop: 2 }}>
-              {unreadCount} unread
+              {unreadCount} {t("notifications.unread")}
             </AppText>
           )}
         </View>
@@ -283,10 +259,10 @@ export default function NotificationsScreen() {
               paddingHorizontal: 12,
               paddingVertical: 6,
               borderRadius: 12,
-              backgroundColor: "#EFF6FF",
+              backgroundColor: theme.primary.green + "15",
             }}
           >
-            <AppText style={{ fontSize: 12, fontWeight: "600", color: "#2563EB" }}>
+            <AppText style={{ fontSize: 12, fontWeight: "600", color: theme.primary.green }}>
               {t("notifications.markAllRead")}
             </AppText>
           </TouchableOpacity>

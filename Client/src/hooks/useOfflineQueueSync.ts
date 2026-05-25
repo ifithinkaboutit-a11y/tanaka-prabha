@@ -4,6 +4,7 @@ import { Alert, AppState, AppStateStatus } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
 import { offlineQueue } from "../utils/offlineQueue";
 import { eventsApi } from "../services/apiService";
+import T from "../i18n";
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
@@ -41,9 +42,13 @@ async function syncQueue(): Promise<void> {
       await offlineQueue.dequeue(entry.id);
     } catch {
       await offlineQueue.markAttempt(entry.id, false);
+      const typeLabel =
+        entry.type === "create-event"
+          ? T.translate("offlineQueue.type.event")
+          : T.translate("offlineQueue.type.attendance");
       Alert.alert(
-        "Upload Failed",
-        `A cached ${entry.type === "create-event" ? "event" : "attendance"} submission could not be uploaded. It will be retried later.`
+        T.translate("offlineQueue.uploadFailedTitle"),
+        T.translate("offlineQueue.uploadFailedMessage", { type: typeLabel })
       );
     }
   }

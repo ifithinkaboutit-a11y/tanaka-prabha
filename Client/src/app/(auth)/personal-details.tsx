@@ -27,6 +27,7 @@ import {
 import {
   validateName,
 } from "../../utils/validation";
+import { translateKnownError } from "../../utils/translatedErrors";
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi, uploadApi } from "../../services/apiService";
 import { Ionicons } from "@expo/vector-icons";
@@ -108,11 +109,11 @@ const AuthPersonalDetailsScreen = () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        "Camera Required",
-        "Please allow camera access to take your profile photo.",
+        t("profile.permissionNeeded"),
+        t("profile.cameraPermissionMessage"),
         [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => ExpoLinking.openSettings() },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.openSettings"), onPress: () => ExpoLinking.openSettings() },
         ]
       );
       return;
@@ -127,7 +128,7 @@ const AuthPersonalDetailsScreen = () => {
       if (result.canceled || !result.assets?.[0]) return;
       await processPhoto(result.assets[0].uri);
     } catch {
-      Alert.alert("Camera Error", "Could not start camera, please use the gallery instead.");
+      Alert.alert(t("profile.cameraError"), t("profile.cameraErrorMessage"));
     }
   };
 
@@ -136,11 +137,11 @@ const AuthPersonalDetailsScreen = () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        "Gallery Required",
-        "Please allow gallery access to pick your profile photo.",
+        t("profile.permissionNeeded"),
+        t("profile.galleryPermissionMessage"),
         [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => ExpoLinking.openSettings() },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.openSettings"), onPress: () => ExpoLinking.openSettings() },
         ]
       );
       return;
@@ -156,7 +157,7 @@ const AuthPersonalDetailsScreen = () => {
       if (result.canceled || !result.assets?.[0]) return;
       await processPhoto(result.assets[0].uri);
     } catch {
-      Alert.alert("Gallery Error", "Could not open gallery.");
+      Alert.alert(t("profile.galleryError"), t("profile.galleryErrorMessage"));
     }
   };
 
@@ -193,8 +194,8 @@ const AuthPersonalDetailsScreen = () => {
       setLocalPhotoUri(null);
     } catch (e: any) {
       Alert.alert(
-        "Upload Failed",
-        e.message || "Could not upload photo. Please try again."
+        t("profile.uploadFailed"),
+        e.message || t("profile.uploadFailedMessage")
       );
 
       // rollback
@@ -327,7 +328,7 @@ const AuthPersonalDetailsScreen = () => {
           error = t("validation.nameRequired") || "Name is required";
         } else {
           const nameValidation = validateName(value, "Name");
-          error = nameValidation.errors[0];
+          error = translateKnownError(nameValidation.errors[0], t) || nameValidation.errors[0];
         }
         break;
       case "age":
@@ -353,13 +354,13 @@ const AuthPersonalDetailsScreen = () => {
           error = t("validation.fathersNameRequired") || "Father's name is required";
         } else {
           const nameValidation = validateName(value, "Father's name");
-          error = nameValidation.errors[0];
+          error = translateKnownError(nameValidation.errors[0], t) || nameValidation.errors[0];
         }
         break;
       case "mothersName":
         if (value.trim()) {
           const nameValidation = validateName(value, "Mother's name");
-          error = nameValidation.errors[0];
+          error = translateKnownError(nameValidation.errors[0], t) || nameValidation.errors[0];
         }
         break;
     }
@@ -410,7 +411,7 @@ const AuthPersonalDetailsScreen = () => {
       setErrors(newErrors);
       Alert.alert(
         t("validation.validationError") || "Validation Error",
-        Object.values(newErrors)[0] || "Please fill all required fields"
+        Object.values(newErrors)[0] || t("validation.requiredFields")
       );
       return;
     }
@@ -474,12 +475,12 @@ const AuthPersonalDetailsScreen = () => {
             onPress={handlePhotoUpload}
             style={photoStyles.avatarRing}
             disabled={photoUploading}
-            accessibilityLabel="Upload profile photo"
+            accessibilityLabel={t("profile.uploadPhotoAccessibility")}
             accessibilityRole="button"
           >
             <Avatar
               uri={localPhotoUri || personalDetails.photoUrl || undefined}
-              name={personalDetails.name || "User"}
+              name={personalDetails.name || t("common.user")}
               size="xl"
               shape="circle"
             />
@@ -491,7 +492,7 @@ const AuthPersonalDetailsScreen = () => {
             )}
           </Pressable>
           <AppText variant="bodySm" style={{ color: personalDetails.photoUrl ? theme.semantic.successText : theme.semantic.errorLight, marginTop: 10, fontWeight: "700" }}>
-            {personalDetails.photoUrl ? "✓ Profile photo added" : "Profile photo is required *"}
+            {personalDetails.photoUrl ? t("profile.photoAdded") : t("profile.photoRequired")}
           </AppText>
         </View>
         <View style={{ paddingHorizontal: 20 }}>
@@ -735,21 +736,21 @@ const AuthPersonalDetailsScreen = () => {
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 }}>
           <View style={{ width: "100%", backgroundColor: theme.background.input, borderRadius: 16, padding: 24, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
             <AppText variant="h2" style={{ color: theme.text.primary, fontSize: 18, fontWeight: "700", marginBottom: 16, textAlign: "center" }}>
-              Update Profile Photo
+              {t("profile.updatePhotoTitle")}
             </AppText>
 
             <Pressable onPress={launchCamera} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
               <Ionicons name="camera-outline" size={22} color={theme.primary.green} />
-              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>Take a Photo</AppText>
+              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>{t("profile.takePhoto")}</AppText>
             </Pressable>
 
             <Pressable onPress={launchGallery} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
               <Ionicons name="images-outline" size={22} color={theme.primary.green} />
-              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>Choose from Gallery</AppText>
+              <AppText variant="bodyMd" style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600" }}>{t("profile.chooseFromGallery")}</AppText>
             </Pressable>
 
             <Pressable onPress={() => setShowAvatarModal(false)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: theme.background.neutralSubtle, borderRadius: 12, alignItems: "center" }}>
-              <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "700" }}>Cancel</AppText>
+              <AppText variant="bodySm" style={{ color: theme.text.muted, fontWeight: "700" }}>{t("common.cancel")}</AppText>
             </Pressable>
           </View>
         </View>

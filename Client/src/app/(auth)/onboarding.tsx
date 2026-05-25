@@ -163,8 +163,6 @@ const Onboarding = () => {
           onChangeText={(text) => updatePersonalDetails({ name: text })}
         />
 
-// Let me look first, I don't see gender on this file segment.
-
         <Select
           label={t("onboarding.personal.state")}
           placeholder={t("onboarding.personal.selectState")}
@@ -250,7 +248,7 @@ const Onboarding = () => {
                   <View style={{ flex: 1 }}>
                     <FormInput
                       label={t("onboarding.land.totalArea")}
-                      placeholder="Eg. 47"
+                      placeholder={t("onboarding.enterArea")}
                       keyboardType="numeric"
                       value={entry.area ? entry.area.toString() : ""}
                       onChangeText={(text) =>
@@ -263,7 +261,7 @@ const Onboarding = () => {
                   <View style={{ flex: 1 }}>
                     <Select
                       label={t("onboarding.land.unit")}
-                      placeholder="Select"
+                      placeholder={t("common.select")}
                       value={entry.unit}
                       options={unitOptions}
                       onChange={(value) =>
@@ -277,7 +275,7 @@ const Onboarding = () => {
 
                 <MultiSelect
                   label={t("onboarding.land.mainCrop")}
-                  placeholder="Select Multiple"
+                  placeholder={t("common.selectMultiple")}
                   values={entry.crops || []}
                   options={cropOptions}
                   onChange={(values) =>
@@ -369,7 +367,7 @@ const Onboarding = () => {
                   <View style={{ flex: 1.5 }}>
                     <Select
                       label={t("onboarding.livestock.animal")}
-                      placeholder="Select"
+                      placeholder={t("common.select")}
                       value={entry.type}
                       options={animalOptions}
                       onChange={(value) =>
@@ -380,7 +378,7 @@ const Onboarding = () => {
                       onOtherChange={(text) =>
                         updateLivestockEntry(entry.id, { otherTypeText: text })
                       }
-                      otherPlaceholder="Enter livestock type..."
+                      otherPlaceholder={t("onboarding.enterLivestockType")}
                     />
                     {entry.type === "other" && (
                       <TextArea
@@ -397,7 +395,7 @@ const Onboarding = () => {
                   <View style={{ flex: 1 }}>
                     <FormInput
                       label={t("onboarding.livestock.numberOfAnimals")}
-                      placeholder="Eg. 5"
+                      placeholder={t("onboarding.enterCount")}
                       keyboardType="numeric"
                       value={entry.count ? entry.count.toString() : ""}
                       onChangeText={(text) =>

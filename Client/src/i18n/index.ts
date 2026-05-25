@@ -5,6 +5,15 @@ import hi from "./hi.json";
 
 const translationData: Record<string, any> = { en, hi };
 
+const resolveKey = (language: string, key: string) => {
+  const keys = key.split(".");
+  let value: any = translationData[language] || translationData.en;
+  for (const k of keys) {
+    value = value?.[k];
+  }
+  return value;
+};
+
 // For backward compatibility - this won't be reactive
 const T = {
   translate: (key: string) => {
@@ -27,12 +36,7 @@ export const useTranslation = () => {
   const setLanguage = useLanguageStore((s) => s.setLanguage);
 
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const keys = key.split(".");
-    let value: any = translationData[currentLanguage];
-    for (const k of keys) {
-      value = value?.[k];
-    }
-
+    const value = resolveKey(currentLanguage, key) ?? resolveKey("en", key);
     let result = typeof value === "string" ? value : key;
 
     if (params && typeof result === "string") {

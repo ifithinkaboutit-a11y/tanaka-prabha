@@ -2,56 +2,61 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLanguageStore } from '@/stores/languageStore';
+import { useTranslation } from '@/i18n';
 import { theme } from '@/styles/colors';
 
-// Local color definitions
-const successColor = '#22c55e';
-const errorColor = '#ef4444';
+// Theme-based status colors
+const successColor = theme.semantic.success;
+const errorColor = theme.semantic.error;
 
 // Validation rule interface
 export interface ValidationRule {
   validate: (value: string) => boolean;
-  message: string; // Bilingual message in format: "English | Hindi"
+  message?: string; // Bilingual fallback message in format: "English | Hindi"
+  messageKey?: string;
+  messageParams?: Record<string, string | number>;
 }
 
 // Common validation patterns
 export const ValidationPatterns = {
   required: (fieldName: string): ValidationRule => ({
     validate: (v) => v.trim().length > 0,
-    message: `${fieldName} is required | ${fieldName} आवश्यक है`,
+    messageKey: "validation.required",
+    messageParams: { field: fieldName },
   }),
-  minLength: (min: number, fieldName: string): ValidationRule => ({
+  minLength: (min: number, _fieldName: string): ValidationRule => ({
     validate: (v) => v.length >= min,
-    message: `Minimum ${min} characters | न्यूनतम ${min} अक्षर`,
+    messageKey: "validation.minLength",
+    messageParams: { min },
   }),
-  maxLength: (max: number, fieldName: string): ValidationRule => ({
+  maxLength: (max: number, _fieldName: string): ValidationRule => ({
     validate: (v) => v.length <= max,
-    message: `Maximum ${max} characters | अधिकतम ${max} अक्षर`,
+    messageKey: "validation.maxLength",
+    messageParams: { max },
   }),
   numeric: (): ValidationRule => ({
     validate: (v) => !v || /^\d+$/.test(v),
-    message: `Please enter a valid number | कृपया एक वैध संख्या दर्ज करें`,
+    messageKey: "validation.numeric",
   }),
   phone: (): ValidationRule => ({
     validate: (v) => !v || /^[6-9]\d{9}$/.test(v),
-    message: `Enter valid 10-digit number | 10 अंकों का नंबर दर्ज करें`,
+    messageKey: "validation.phone",
   }),
   pincode: (): ValidationRule => ({
     validate: (v) => !v || /^[1-9]\d{5}$/.test(v),
-    message: `Enter valid 6-digit pincode | 6 अंकों का पिनकोड दर्ज करें`,
+    messageKey: "validation.pincode",
   }),
   aadhaar: (): ValidationRule => ({
     validate: (v) => !v || /^\d{4}\s?\d{4}\s?\d{4}$/.test(v),
-    message: `Enter valid 12-digit Aadhaar | 12 अंकों का आधार दर्ज करें`,
+    messageKey: "validation.aadhaar",
   }),
   name: (): ValidationRule => ({
     validate: (v) => !v || /^[a-zA-Zऀ-ॳ\s]+$/.test(v),
-    message: `Enter valid name (letters only) | केवल अक्षर दर्ज करें`,
+    messageKey: "validation.name",
   }),
   email: (): ValidationRule => ({
     validate: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-    message: `Enter valid email | वैध ईमेल दर्ज करें`,
+    messageKey: "validation.email",
   }),
 };
 
@@ -88,7 +93,7 @@ export function BilingualFormInput({
   containerStyle,
   showSuccess = true,
 }: BilingualFormInputProps) {
-  const { currentLanguage } = useLanguageStore();
+  const { currentLanguage, t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -96,20 +101,24 @@ export function BilingualFormInput({
   const isHindi = currentLanguage === 'hi';
 
   // Parse bilingual message
-  const getMessage = useCallback((message: string): string => {
+  const getMessage = useCallback((rule: ValidationRule): string => {
+    if (rule.messageKey) {
+      return t(rule.messageKey, rule.messageParams);
+    }
+    const message = rule.message || "";
     const parts = message.split('|');
     if (parts.length >= 2) {
       return isHindi ? parts[1].trim() : parts[0].trim();
     }
     return message;
-  }, [isHindi]);
+  }, [isHindi, t]);
 
   // Validate on value change (only if touched)
   useEffect(() => {
     if (touched && rules.length > 0) {
       for (const rule of rules) {
         if (!rule.validate(value)) {
-          setError(getMessage(rule.message));
+          setError(getMessage(rule));
           return;
         }
       }
@@ -125,7 +134,7 @@ export function BilingualFormInput({
     if (rules.length > 0) {
       for (const rule of rules) {
         if (!rule.validate(value)) {
-          setError(getMessage(rule.message));
+          setError(getMessage(rule));
           return;
         }
       }
@@ -212,23 +221,23 @@ export function NameInput({
   label?: string;
   required?: boolean;
 }) {
+  const { t } = useTranslation();
+  const resolvedLabel = label || t("forms.labels.name");
   const rules = [
-    ValidationPatterns.minLength(2, label || 'Name'),
+    ValidationPatterns.minLength(2, resolvedLabel),
     ValidationPatterns.name(),
   ];
   if (required) {
-    rules.unshift(ValidationPatterns.required(label || 'Name'));
+    rules.unshift(ValidationPatterns.required(resolvedLabel));
   }
 
   return (
     <BilingualFormInput
-      label={label || 'Name'}
-      labelHi={label ? undefined : 'नाम'}
+      label={resolvedLabel}
       value={value}
       onChangeText={onChangeText}
       rules={rules}
-      placeholder="Enter your name"
-      placeholderHi="अपना नाम दर्ज करें"
+      placeholder={t("forms.placeholders.name")}
       autoCapitalize="words"
     />
   );
@@ -245,20 +254,20 @@ export function PhoneInput({
   label?: string;
   required?: boolean;
 }) {
+  const { t } = useTranslation();
+  const resolvedLabel = label || t("forms.labels.phoneNumber");
   const rules = [ValidationPatterns.phone()];
   if (required) {
-    rules.unshift(ValidationPatterns.required(label || 'Phone'));
+    rules.unshift(ValidationPatterns.required(resolvedLabel));
   }
 
   return (
     <BilingualFormInput
-      label={label || 'Phone Number'}
-      labelHi={label ? undefined : 'फोन नंबर'}
+      label={resolvedLabel}
       value={value}
       onChangeText={onChangeText}
       rules={rules}
-      placeholder="Enter 10-digit number"
-      placeholderHi="10 अंकों का नंबर दर्ज करें"
+      placeholder={t("forms.placeholders.phoneNumber")}
       keyboardType="phone-pad"
     />
   );
@@ -275,20 +284,20 @@ export function PincodeInput({
   label?: string;
   required?: boolean;
 }) {
+  const { t } = useTranslation();
+  const resolvedLabel = label || t("forms.labels.pincode");
   const rules = [ValidationPatterns.pincode()];
   if (required) {
-    rules.unshift(ValidationPatterns.required(label || 'Pincode'));
+    rules.unshift(ValidationPatterns.required(resolvedLabel));
   }
 
   return (
     <BilingualFormInput
-      label={label || 'Pincode'}
-      labelHi={label ? undefined : 'पिनकोड'}
+      label={resolvedLabel}
       value={value}
       onChangeText={onChangeText}
       rules={rules}
-      placeholder="Enter 6-digit pincode"
-      placeholderHi="6 अंकों का पिनकोड दर्ज करें"
+      placeholder={t("forms.placeholders.pincode")}
       keyboardType="numeric"
     />
   );
@@ -309,30 +318,34 @@ export function NumericInput({
   min?: number;
   max?: number;
 }) {
+  const { t } = useTranslation();
+  const resolvedLabel = label || t("forms.labels.number");
   const rules: ValidationRule[] = [ValidationPatterns.numeric()];
   if (required) {
-    rules.unshift(ValidationPatterns.required(label || 'Number'));
+    rules.unshift(ValidationPatterns.required(resolvedLabel));
   }
   if (min !== undefined) {
     rules.push({
       validate: (v) => !v || parseFloat(v) >= min,
-      message: `Minimum value is ${min} | न्यूनतम मान ${min} है`,
+      messageKey: "validation.minValue",
+      messageParams: { min },
     });
   }
   if (max !== undefined) {
     rules.push({
       validate: (v) => !v || parseFloat(v) <= max,
-      message: `Maximum value is ${max} | अधिकतम मान ${max} है`,
+      messageKey: "validation.maxValue",
+      messageParams: { max },
     });
   }
 
   return (
     <BilingualFormInput
-      label={label || 'Number'}
+      label={resolvedLabel}
       value={value}
       onChangeText={onChangeText}
       rules={rules}
-      placeholder="Enter number"
+      placeholder={t("forms.placeholders.number")}
       keyboardType="decimal-pad"
     />
   );

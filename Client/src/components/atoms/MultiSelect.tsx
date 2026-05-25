@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { colors, theme } from "../../styles/colors";
+import { useTranslation } from "../../i18n";
 
 interface SelectOption {
   label: string;
@@ -39,7 +40,7 @@ interface MultiSelectProps {
 
 export default function MultiSelect({
   label,
-  placeholder = "Select Multiple...",
+  placeholder,
   value,
   values,
   options,
@@ -49,8 +50,11 @@ export default function MultiSelect({
   enableOtherInput = false,
   otherValue = "",
   onOtherChange,
-  otherPlaceholder = "Please specify...",
+  otherPlaceholder,
 }: MultiSelectProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder || t("common.selectMultiple");
+  const resolvedOtherPlaceholder = otherPlaceholder || t("common.specifyOther");
   const [isOpen, setIsOpen] = useState(false);
 
   const selected = value ?? values ?? [];
@@ -64,7 +68,7 @@ export default function MultiSelect({
   const displayText =
     selectedOptions.length > 0
       ? selectedOptions.map((o) => o.label).join(", ")
-      : placeholder;
+      : resolvedPlaceholder;
 
   const handleToggleOption = (optionValue: string) => {
     if (selected.includes(optionValue)) {
@@ -114,7 +118,7 @@ export default function MultiSelect({
               fontSize: 16,
               color: theme.text.dark,
             }}
-            placeholder={otherPlaceholder}
+            placeholder={resolvedOtherPlaceholder}
             placeholderTextColor={theme.text.light}
             value={otherValue}
             onChangeText={onOtherChange}
@@ -132,7 +136,7 @@ export default function MultiSelect({
         <Pressable style={s.overlay} onPress={() => setIsOpen(false)}>
           <Pressable style={s.modalContent} onPress={(e) => e.stopPropagation()}>
             <View style={s.header}>
-              <Text style={s.headerTitle}>{label || "Select"}</Text>
+              <Text style={s.headerTitle}>{label || t("common.select")}</Text>
               <TouchableOpacity onPress={() => setIsOpen(false)}>
                 <Ionicons name="checkmark" size={24} color={colors.primary.green} />
               </TouchableOpacity>

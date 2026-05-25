@@ -28,6 +28,7 @@ import {
 import { theme } from "../../styles/colors";
 import { indianDistricts } from "../../data/indianLocations";
 import { validateLivestockEntry, validateLivestockCount } from "../../utils/validation";
+import { translateKnownError } from "../../utils/translatedErrors";
 
 import { userApi } from "../../services/apiService";
 
@@ -121,9 +122,9 @@ const AuthLivestockDetailsScreen = () => {
 
         validation.errors.forEach((error) => {
           if (error.toLowerCase().includes("type") || error.toLowerCase().includes("animal")) {
-            entryErrors.type = error;
+            entryErrors.type = translateKnownError(error, t) || error;
           } else if (error.toLowerCase().includes("count")) {
-            entryErrors.count = error;
+            entryErrors.count = translateKnownError(error, t) || error;
           }
         });
 
@@ -143,7 +144,10 @@ const AuthLivestockDetailsScreen = () => {
       const validation = validateLivestockCount(num);
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], count: validation.errors[0] },
+        [entryId]: {
+          ...prev[entryId],
+          count: translateKnownError(validation.errors[0], t),
+        },
       }));
     }
   };
@@ -158,12 +162,15 @@ const AuthLivestockDetailsScreen = () => {
     if (count <= 0) {
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], count: "Animal count must be greater than 0" },
+        [entryId]: { ...prev[entryId], count: t("validation.animalCountPositive") },
       }));
     } else if (!validation.isValid) {
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], count: validation.errors[0] },
+        [entryId]: {
+          ...prev[entryId],
+          count: translateKnownError(validation.errors[0], t),
+        },
       }));
     } else {
       setErrors((prev) => ({
@@ -339,7 +346,9 @@ const AuthLivestockDetailsScreen = () => {
     } catch (error) {
       Alert.alert(
         t("common.error") || "Error",
-        error instanceof Error ? error.message : "Failed to save your profile. Please try again."
+        error instanceof Error
+          ? translateKnownError(error.message, t) || error.message
+          : t("validation.profileSaveFailed")
       );
     } finally {
       setIsSubmitting(false);

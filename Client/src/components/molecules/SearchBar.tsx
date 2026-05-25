@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "@/styles/colors";
+import { useTranslation } from "@/i18n";
 
 type SearchBarProps = {
   placeholder?: string;
@@ -11,12 +12,14 @@ type SearchBarProps = {
 };
 
 export default function SearchBar({
-  placeholder = "Search...",
+  placeholder,
   onSearch,
 }: SearchBarProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
+  const resolvedPlaceholder = placeholder || t("common.searchPlaceholder");
 
   const handleSubmit = () => {
     if (searchQuery.trim()) {
@@ -56,7 +59,7 @@ export default function SearchBar({
       <TextInput
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         style={{
           flex: 1,
           marginLeft: 12,

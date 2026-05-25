@@ -25,20 +25,20 @@ import { theme } from "@/styles/colors";
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 const educationOptions = [
-  { value: "illiterate", label: "Illiterate", labelHi: "अशिक्षित" },
-  { value: "5th", label: "5th Pass", labelHi: "5वीं पास" },
-  { value: "8th", label: "8th Pass", labelHi: "8वीं पास" },
-  { value: "10th", label: "10th Pass", labelHi: "10वीं पास" },
-  { value: "12th", label: "12th Pass", labelHi: "12वीं पास" },
-  { value: "graduate", label: "Graduate", labelHi: "स्नातक" },
-  { value: "postgraduate", label: "Post Graduate", labelHi: "स्नातकोत्तर" },
-  { value: "phd", label: "PhD", labelHi: "पीएचडी" },
+  { value: "illiterate", label: "Illiterate / अशिक्षित" },
+  { value: "5th", label: "5th Pass / 5वीं पास" },
+  { value: "8th", label: "8th Pass / 8वीं पास" },
+  { value: "10th", label: "10th Pass / 10वीं पास" },
+  { value: "12th", label: "12th Pass / 12वीं पास" },
+  { value: "graduate", label: "Graduate / स्नातक" },
+  { value: "postgraduate", label: "Post Graduate / स्नातकोत्तर" },
+  { value: "phd", label: "PhD / पीएचडी" },
 ];
 
 const genderOptions = [
-  { value: "male", label: "Male", labelHi: "पुरुष" },
-  { value: "female", label: "Female", labelHi: "महिला" },
-  { value: "other", label: "Other", labelHi: "अन्य" },
+  { value: "male", label: "Male / पुरुष" },
+  { value: "female", label: "Female / महिला" },
+  { value: "other", label: "Other / अन्य" },
 ];
 
 // ─── FormInput ────────────────────────────────────────────────────────────────
@@ -100,8 +100,8 @@ const fi = StyleSheet.create({
     color: theme.text.secondary,
   },
   inputFocused: {
-    borderColor: "#2563EB",
-    shadowColor: "#2563EB",
+    borderColor: theme.primary.green,
+    shadowColor: theme.primary.green,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.12,
     shadowRadius: 4,
@@ -149,21 +149,21 @@ const CounterInput = ({
 
 const ci = StyleSheet.create({
   wrap: { flex: 1 },
-  label: { color: "#6B7280", fontSize: 12, fontWeight: "500", marginBottom: 8 },
+  label: { color: theme.text.placeholder, fontSize: 12, fontWeight: "500", marginBottom: 8 },
   row: { flexDirection: "row", alignItems: "center", gap: 4 },
   btn: {
-    width: 34,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
   },
-  btnMinus: { borderColor: theme.border.subtle, backgroundColor: "#F9FAFB" },
-  btnPlus: { borderColor: "#BFDBFE", backgroundColor: "#EFF6FF" },
+  btnMinus: { borderColor: theme.border.subtle, backgroundColor: theme.background.neutralSubtle },
+  btnPlus: { borderColor: theme.primary.green + "40", backgroundColor: theme.background.successSubtle },
   input: {
     flex: 1,
-    height: 40,
+    height: 44,
     backgroundColor: theme.background.input,
     borderWidth: 1.5,
     borderColor: theme.border.subtle,
@@ -339,12 +339,14 @@ export default function PersonalDetailsForm({
   const lang = useLanguageStore((s) => s.currentLanguage);
   const stateOptions = getStateOptions(lang);
   const districtOptions = formData.state ? getDistrictOptions(formData.state, lang) : [];
-  const localizedGenderOptions = genderOptions.map((g) => ({ value: g.value, label: lang === "hi" ? g.labelHi : g.label }));
-  const localizedEducationOptions = educationOptions.map((e) => ({ value: e.value, label: lang === "hi" ? e.labelHi : e.label }));
+  // Options already contain bilingual labels (Hindi + English)
 
   const handleSave = () => {
     if (!formData.name.trim()) {
-      Alert.alert("Validation Error", "Name is required to save your profile.");
+      Alert.alert(
+        String(T.translate("validation.validationError")),
+        String(T.translate("validation.nameRequiredToSaveProfile"))
+      );
       return;
     }
     onSave(formData);
@@ -367,7 +369,7 @@ export default function PersonalDetailsForm({
           label={String(T.translate("personalDetails.name") || "Full Name")}
           value={formData.name}
           onChangeText={(v) => update("name", v)}
-          placeholder="Enter your full name"
+          placeholder={String(T.translate("personalDetails.placeholders.fullName"))}
           icon="person-outline"
           required
         />
@@ -384,7 +386,7 @@ export default function PersonalDetailsForm({
               value={formData.age > 0 ? formData.age.toString() : ""}
               onChangeText={(t) => update("age", parseInt(t) || 0)}
               keyboardType="numeric"
-              placeholder="Years"
+              placeholder={String(T.translate("personalDetails.placeholders.years"))}
               placeholderTextColor="#C4C9D4"
             />
           </View>
@@ -394,14 +396,14 @@ export default function PersonalDetailsForm({
             <Select
               value={formData.gender}
               onChange={(v) => update("gender", v)}
-              options={localizedGenderOptions}
-              placeholder="Select..."
+              options={genderOptions}
+              placeholder={String(T.translate("common.selectPlaceholder"))}
             />
             {formData.gender === "other" && (
               <TextArea
                 value={genderOtherText}
                 onChangeText={setGenderOtherText}
-                placeholder="Please specify…"
+                placeholder={String(T.translate("common.specifyOther"))}
                 numberOfLines={3}
                 style={{ marginTop: 8 }}
               />
@@ -418,7 +420,7 @@ export default function PersonalDetailsForm({
           label={String(T.translate("personalDetails.fathersName"))}
           value={formData.fathersName}
           onChangeText={(v) => update("fathersName", v)}
-          placeholder="Enter father's name"
+          placeholder={String(T.translate("personalDetails.placeholders.fathersName"))}
           icon="man-outline"
           required
         />
@@ -427,7 +429,7 @@ export default function PersonalDetailsForm({
           label={String(T.translate("personalDetails.mothersName"))}
           value={formData.mothersName}
           onChangeText={(v) => update("mothersName", v)}
-          placeholder="Enter mother's name"
+          placeholder={String(T.translate("personalDetails.placeholders.mothersName"))}
           icon="woman-outline"
         />
 
@@ -436,8 +438,8 @@ export default function PersonalDetailsForm({
           <Select
             value={formData.educationalQualification}
             onChange={(v) => update("educationalQualification", v)}
-            options={localizedEducationOptions}
-            placeholder="Select education level"
+            options={educationOptions}
+            placeholder={String(T.translate("personalDetails.placeholders.educationLevel"))}
           />
         </View>
       </View>
@@ -537,7 +539,7 @@ export default function PersonalDetailsForm({
             value={formData.state}
             onChange={(v) => { update("state", v); update("district", ""); update("tehsil", ""); update("block", ""); update("village", ""); }}
             options={stateOptions}
-            placeholder="Select state"
+            placeholder={String(T.translate("onboarding.selectState"))}
           />
         </View>
 
@@ -550,7 +552,7 @@ export default function PersonalDetailsForm({
             value={formData.district}
             onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); update("gramPanchayat", ""); update("nyayPanchayat", ""); }}
             options={districtOptions}
-            placeholder={formData.state ? "Select district" : "Select state first"}
+            placeholder={String(T.translate(formData.state ? "onboarding.selectDistrict" : "onboarding.selectStateFirst"))}
             disabled={!formData.state}
           />
         </View>
@@ -584,14 +586,14 @@ export default function PersonalDetailsForm({
               label={String(T.translate("personalDetails.tehsil") || "Tehsil")}
               value={formData.tehsil}
               onChangeText={(v) => update("tehsil", v)}
-              placeholder="e.g. Sadar, Kotwali..."
+              placeholder={String(T.translate("personalDetails.placeholders.tehsilExample"))}
               icon="layers-outline"
             />
             <FormInput
               label={String(T.translate("personalDetails.village") || "Village / Town")}
               value={formData.village}
               onChangeText={(v) => update("village", v)}
-              placeholder="e.g. Rampur, Sector 12..."
+              placeholder={String(T.translate("personalDetails.placeholders.villageExample"))}
               icon="home-outline"
             />
             <View style={s.twoCol}>
@@ -600,7 +602,7 @@ export default function PersonalDetailsForm({
                   label={String(T.translate("personalDetails.gramPanchayat"))}
                   value={formData.gramPanchayat}
                   onChangeText={(v) => update("gramPanchayat", v)}
-                  placeholder="Gram panchayat"
+                  placeholder={String(T.translate("personalDetails.placeholders.gramPanchayat"))}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -608,7 +610,7 @@ export default function PersonalDetailsForm({
                   label={String(T.translate("personalDetails.nyayPanchayat"))}
                   value={formData.nyayPanchayat}
                   onChangeText={(v) => update("nyayPanchayat", v)}
-                  placeholder="Nyay panchayat"
+                  placeholder={String(T.translate("personalDetails.placeholders.nyayPanchayat"))}
                 />
               </View>
             </View>
@@ -619,7 +621,7 @@ export default function PersonalDetailsForm({
           label={String(T.translate("personalDetails.block") || "Block")}
           value={formData.block}
           onChangeText={(v) => update("block", v)}
-          placeholder="e.g. Phulpur, Allahabad..."
+          placeholder={String(T.translate("personalDetails.placeholders.blockExample"))}
           icon="grid-outline"
         />
 
@@ -645,7 +647,7 @@ export default function PersonalDetailsForm({
               label={String(T.translate("personalDetails.postOffice"))}
               value={formData.postOffice}
               onChangeText={(v) => update("postOffice", v)}
-              placeholder="Post office"
+              placeholder={String(T.translate("personalDetails.placeholders.postOffice"))}
             />
           </View>
         </View>
@@ -663,7 +665,7 @@ export default function PersonalDetailsForm({
           variant="primary"
           label={String(T.translate("personalDetails.save"))}
           onPress={handleSave}
-          style={{ flex: 2, backgroundColor: "#2563EB" }}
+          style={{ flex: 2 }}
         />
       </View>
     </KeyboardAwareScrollView>

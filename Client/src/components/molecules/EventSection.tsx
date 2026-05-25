@@ -40,14 +40,14 @@ export default function EventSection({
             >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <AppText
-                        variant="h3"
-                        style={{ fontWeight: "700", color: theme.text.primary, fontSize: 20, letterSpacing: -0.2 }}
+                        variant="bodyMd"
+                        style={{ fontWeight: "700", color: theme.text.primary }}
                     >
                         {title}
                     </AppText>
                     <View
                         style={{
-                            backgroundColor: "#E0E7FF",
+                            backgroundColor: theme.primary.green + "15",
                             borderRadius: 12,
                             paddingHorizontal: 8,
                             paddingVertical: 2,
@@ -55,8 +55,8 @@ export default function EventSection({
                         }}
                     >
                         <AppText
-                            variant="bodySm"
-                            style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}
+                            variant="caption"
+                            style={{ color: theme.primary.green, fontWeight: "700" }}
                         >
                             {events.length}
                         </AppText>
@@ -74,11 +74,11 @@ export default function EventSection({
                               >
                                 <AppText
                                   variant="bodySm"
-                                  style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
+                                  style={{ color: theme.primary.green, fontWeight: "600" }}
                                 >
                                   {t("schemesPage.viewAll")}
                                 </AppText>
-                                <Ionicons name="chevron-forward" size={16} color="#16A34A" style={{ marginLeft: 2 }} />
+                                <Ionicons name="chevron-forward" size={16} color={theme.primary.green} style={{ marginLeft: 2 }} />
                               </Pressable>
                 )}
             </View>

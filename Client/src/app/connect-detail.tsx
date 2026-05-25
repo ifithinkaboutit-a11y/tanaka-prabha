@@ -13,6 +13,7 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
+import Constants from "expo-constants";
 import AppText from "../components/atoms/AppText";
 import { professionalsApi, Professional } from "@/services/apiService";
 import { ProfessionalDetailSkeleton } from "../components/atoms/Skeleton";
@@ -144,9 +145,10 @@ const ConnectDetailScreen = () => {
         </AppText>
         <Pressable
           onPress={() => router.back()}
-          className="mt-5 bg-[#386641] px-7 py-3.5 rounded-xl"
+          className="mt-5 px-7 py-3.5 rounded-xl"
+          style={{ backgroundColor: theme.primary.green }}
         >
-          <AppText style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 15 }}>
+          <AppText style={{ color: theme.text.onPrimary, fontWeight: "700", fontSize: 15 }}>
             {t("common.goBack")}
           </AppText>
         </Pressable>
@@ -182,7 +184,7 @@ const ConnectDetailScreen = () => {
 
   const handleBookAppointment = () => {
     setShowConnectModal(false);
-    const email = professional.email || "bookings@tanakaprabha.com";
+    const email = professional.email || Constants.expoConfig?.extra?.EXPO_PUBLIC_BOOKING_EMAIL || "bookings@tanakaprabha.com";
     Linking.openURL(`mailto:${email}?subject=Booking Request for ${professional.name}`).catch(() => {
       Alert.alert(t("connect.error"), "Could not open email client.");
     });
@@ -210,7 +212,7 @@ Please let me know the available slots.
 Thank you.`
   );
 
-  const url = `mailto:ifithinkaboutit@gmail.com?subject=${subject}&body=${body}`;
+  const url = `mailto:${Constants.expoConfig?.extra?.EXPO_PUBLIC_BOOKING_EMAIL || "bookings@tanakaprabha.com"}?subject=${subject}&body=${body}`;
 
   Linking.openURL(url).catch(() => {
     Alert.alert(t("connect.error"), t("connect.cannotOpenMail"));
@@ -339,10 +341,11 @@ Thank you.`
               params: { professionalId: professional.id, professionalName: professional.name }
             } as any);
           }}
-          className="bg-[#386641] rounded-2xl py-4 flex-row items-center justify-center gap-2.5 active:opacity-90"
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2.5 active:opacity-90"
+          style={{ backgroundColor: theme.primary.green }}
         >
           {/* <Ionicons name="mail" size={21} color="#FFFFFF" /> */}
-          <AppText style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
+          <AppText style={{ color: theme.text.onPrimary, fontSize: 16, fontWeight: "800" }}>
             Book Appointment
           </AppText>
         </Pressable>
@@ -362,7 +365,7 @@ Thank you.`
         >
           <View className="bg-white rounded-t-[28px] px-5 pt-4 pb-9">
             <View className="w-10 h-1 bg-slate-200 rounded-full self-center mb-5" />
-            <AppText style={{ fontSize: 19, fontWeight: "800", color: "#1F2937", marginBottom: 16 }}>
+            <AppText style={{ fontSize: 19, fontWeight: "800", color: theme.text.secondary, marginBottom: 16 }}>
               {t("connect.howToConnect")}
             </AppText>
 
@@ -372,7 +375,7 @@ Thank you.`
               {
                 icon: "mail" as const, label: "Email for Booking", sub: "Send an email to book inquiry", bg: "#EFF6FF", iconBg: theme.primary.green, onPress: () => {
                   if (!professional) return;
-                  const email = professional.email || "support@tanakaprabha.com";
+                  const email = professional.email || Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_EMAIL || "ifithinkaboutit@gmail.com";
                   const subject = `Booking Inquiry for ${professional.name}`;
                   const body = `Hello ${professional.name},\n\nI would like to book a consultation for...`;
                   Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);

@@ -19,8 +19,8 @@ export default function IconButton({ children, onPress, style }: IconButtonProps
 
 const styles = StyleSheet.create({
   container: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.neutral.surface,

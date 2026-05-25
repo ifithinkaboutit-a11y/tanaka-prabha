@@ -2,6 +2,8 @@
 import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n";
+import { translateKnownError } from "@/utils/translatedErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -25,6 +27,7 @@ export default function AdminLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
     const { loginAsAdmin } = useAuth();
+    const { t } = useTranslation();
 
     const handleLogin = async () => {
         if (!email || !password) return;
@@ -49,10 +52,16 @@ export default function AdminLogin() {
                 };
                 await loginAsAdmin(data.token, adminData as any);
             } else {
-                Alert.alert("Login Failed", data.error || data.message || "Invalid credentials");
+                Alert.alert(
+                    t("auth.admin.loginFailedTitle"),
+                    translateKnownError(data.error || data.message, t) ||
+                    data.error ||
+                    data.message ||
+                    t("auth.admin.invalidCredentials")
+                );
             }
         } catch (error) {
-            Alert.alert("Error", "Network error. Please try again.");
+            Alert.alert(t("common.error"), t("auth.admin.networkError"));
             console.error("Admin login error:", error);
         } finally {
             setLoading(false);
@@ -67,13 +76,13 @@ export default function AdminLogin() {
             <View style={s.card}>
                 <View style={s.header}>
                     <Ionicons name="shield-checkmark" size={48} color={theme.primary.green} />
-                    <AppText variant="h2" style={s.title}>Admin Login</AppText>
-                    <Text style={s.subtitle}>Restricted access</Text>
+                    <AppText variant="h2" style={s.title}>{t("auth.admin.title")}</AppText>
+                    <Text style={s.subtitle}>{t("auth.admin.restricted")}</Text>
                 </View>
 
                 <TextInput
                     style={s.input}
-                    placeholder="Email Address"
+                    placeholder={t("auth.admin.emailPlaceholder")}
                     placeholderTextColor={theme.text.placeholder}
                     value={email}
                     onChangeText={setEmail}
@@ -84,7 +93,7 @@ export default function AdminLogin() {
                 <View style={s.passwordRow}>
                     <TextInput
                         style={[s.input, { marginBottom: 0, flex: 1, borderWidth: 0 }]}
-                        placeholder="Password"
+                        placeholder={t("auth.admin.passwordPlaceholder")}
                         placeholderTextColor={theme.text.placeholder}
                         value={password}
                         onChangeText={setPassword}
@@ -111,12 +120,12 @@ export default function AdminLogin() {
                     {loading ? (
                         <ActivityIndicator color="white" />
                     ) : (
-                        <Text style={s.btnText}>Login as Admin</Text>
+                        <Text style={s.btnText}>{t("auth.admin.loginButton")}</Text>
                     )}
                 </Button>
                 <Button
                     variant="outline"
-                    label="Cancel"
+                    label={t("common.cancel")}
                     onPress={() => router.back()}
                     style={s.btn}
                 />

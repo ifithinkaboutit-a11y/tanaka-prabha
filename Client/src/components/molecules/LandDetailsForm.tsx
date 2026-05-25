@@ -22,9 +22,9 @@ import { theme } from "@/styles/colors";
 const OTHERS_VALUE = "other";
 
 const unitOptions = [
-  { value: "acre",    label: "Acres",    labelHi: "एकड़" },
-  { value: "hectare", label: "Hectares", labelHi: "हेक्टेयर" },
-  { value: "bigha",   label: "Bigha",    labelHi: "बीघा" },
+  { value: "acre", labelKey: "landDetails.units.acre" },
+  { value: "hectare", labelKey: "landDetails.units.hectare" },
+  { value: "bigha", labelKey: "landDetails.units.bigha" },
 ];
 
 // Season config — 3-section UI (Rabi / Kharif / Zaid)
@@ -32,7 +32,7 @@ const SEASONS = [
   {
     field: "rabiCrop"   as const,
     labelKey: "landDetails.rabiCrop",
-    period: "Oct – Mar",
+    periodKey: "landDetails.seasons.rabiPeriod",
     dotColor: "#3B82F6",
     bg: "#EFF6FF",
     iconName: "snowflake",
@@ -41,7 +41,7 @@ const SEASONS = [
   {
     field: "kharifCrop" as const,
     labelKey: "landDetails.kharifCrop",
-    period: "Jun – Sep",
+    periodKey: "landDetails.seasons.kharifPeriod",
     dotColor: "#16A34A",
     bg: "#F0FDF4",
     iconName: "weather-rainy",
@@ -50,7 +50,7 @@ const SEASONS = [
   {
     field: "zaidCrop"   as const,
     labelKey: "landDetails.zaidCrop",
-    period: "Mar – Jun",
+    periodKey: "landDetails.seasons.zaidPeriod",
     dotColor: "#EAB308",
     bg: "#FEFCE8",
     iconName: "weather-sunny",
@@ -165,13 +165,13 @@ export default function LandDetailsForm({
     })),
     {
       value: OTHERS_VALUE,
-      label: currentLanguage === "hi" ? "अन्य (नाम लिखें)" : "Others (type name)",
+      label: t("landDetails.othersTypeName"),
     },
   ];
 
   const localizedUnitOptions = unitOptions.map((u) => ({
     value: u.value,
-    label: currentLanguage === "hi" ? u.labelHi : u.label,
+    label: t(u.labelKey),
   }));
 
   // ── Season state map ─────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ export default function LandDetailsForm({
 
         <View style={s.tipRow}>
           <Ionicons name="information-circle-outline" size={14} color={theme.text.placeholder} />
-          <Text style={s.tipText}>1 Bigha ≈ 0.4 Acres ≈ 0.16 Hectares</Text>
+          <Text style={s.tipText}>{t("landDetails.bighaConversionHint")}</Text>
         </View>
       </View>
 
@@ -260,7 +260,7 @@ export default function LandDetailsForm({
                   <Text style={[s.seasonLabel, { color: season.dotColor }]}>
                     {t(season.labelKey)}
                   </Text>
-                  <Text style={s.seasonPeriod}>{season.period}</Text>
+                  <Text style={s.seasonPeriod}>{t(season.periodKey)}</Text>
                 </View>
                 <View style={[s.seasonDot, { backgroundColor: season.dotColor }]} />
               </View>

@@ -14,10 +14,12 @@ import {
 import AppText from "../components/atoms/AppText";
 import { Professional, professionalsApi } from "../services/apiService";
 import { theme } from "../styles/colors";
+import { useTranslation } from "../i18n";
 
 export default function ProfessionalDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const { t } = useTranslation();
     const [professional, setProfessional] = useState<Professional | null>(null);
     const [loading, setLoading] = useState(true);
     const [showMore, setShowMore] = useState(false);
@@ -70,14 +72,14 @@ export default function ProfessionalDetail() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
                 {/* Hero / Header */}
                 <View style={{ backgroundColor: theme.primary.green, paddingTop: 52, paddingBottom: 32, paddingHorizontal: 20, alignItems: "center" }}>
-                    <Pressable onPress={() => router.back()} style={{ position: "absolute", top: 52, left: 20 }}>
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                    <Pressable onPress={() => router.back()} style={{ position: "absolute", top: 52, left: 20, padding: 8 }}>
+                        <Ionicons name="arrow-back" size={24} color={theme.text.onPrimary} />
                     </Pressable>
                     <Image
                         source={{ uri: imageUrl }}
-                        style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: "#fff", backgroundColor: "#E5E7EB" }}
+                        style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: theme.text.onPrimary, backgroundColor: theme.background.card }}
                     />
-                    <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: isAvailable ? "#22C55E" : "#EF4444", borderWidth: 2, borderColor: "#fff", marginTop: -10, marginLeft: 68 }} />
+                    <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: isAvailable ? theme.semantic.success : theme.semantic.error, borderWidth: 2, borderColor: theme.text.onPrimary, marginTop: -10, marginLeft: 68 }} />
                     <AppText variant="h2" style={{ color: "#fff", fontWeight: "800", fontSize: 24, marginTop: 12, textAlign: "center" }}>
                         {professional.name}
                     </AppText>
@@ -93,13 +95,13 @@ export default function ProfessionalDetail() {
                     {/* Top Side Email Action */}
                     <Pressable
                         onPress={() => {
-                            const email = professional.email || "support@tanakaprabha.com";
+                            const email = professional.email || t("connect.booking.supportEmail");
                             const subject = `Inquiry for ${professional.name}`;
                             Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}`);
                         }}
                         style={({ pressed }) => ({
                             marginTop: 16,
-                            backgroundColor: "#EAB308", // Yellow
+                            backgroundColor: theme.semantic.warning,
                             paddingHorizontal: 20,
                             paddingVertical: 10,
                             borderRadius: 20,
@@ -112,9 +114,9 @@ export default function ProfessionalDetail() {
                             shadowRadius: 4,
                         })}
                     >
-                        <Ionicons name="mail" size={18} color="#000" />
-                        <AppText style={{ color: "#000", fontWeight: "700", marginLeft: 8, fontSize: 13 }}>
-                            Email Expert
+                        <Ionicons name="mail" size={18} color={theme.text.primary} />
+                        <AppText style={{ color: theme.text.primary, fontWeight: "700", marginLeft: 8, fontSize: 13 }}>
+                            {t("connect.professional.emailExpert")}
                         </AppText>
                     </Pressable>
                 </View>
@@ -125,7 +127,7 @@ export default function ProfessionalDetail() {
                     style={{ alignItems: "center", paddingVertical: 12 }}
                 >
                     <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>
-                        {showMore ? "See less ↑" : "See more details ↓"}
+                        {showMore ? t("connect.professional.seeLess") + " ↑" : t("connect.professional.seeMore") + " ↓"}
                     </AppText>
                 </Pressable>
 
@@ -136,12 +138,12 @@ export default function ProfessionalDetail() {
                             <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20 }}>
                                 <View style={{
                                     flexDirection: "row", alignItems: "center",
-                                    backgroundColor: isAvailable ? "#DCFCE7" : "#FEE2E2",
+                                    backgroundColor: isAvailable ? theme.semantic.successLight : theme.semantic.errorLight,
                                     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
                                 }}>
-                                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isAvailable ? "#16A34A" : "#DC2626", marginRight: 8 }} />
-                                    <AppText variant="bodySm" style={{ color: isAvailable ? "#16A34A" : "#DC2626", fontWeight: "700" }}>
-                                        {isAvailable ? "Currently Available" : "Currently Unavailable"}
+                                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isAvailable ? theme.semantic.success : theme.semantic.error, marginRight: 8 }} />
+                                    <AppText variant="bodySm" style={{ color: isAvailable ? theme.semantic.success : theme.semantic.error, fontWeight: "700" }}>
+                                        {isAvailable ? t("connect.professional.currentlyAvailable") : t("connect.professional.currentlyUnavailable")}
                                     </AppText>
                                 </View>
                             </View>
@@ -151,17 +153,17 @@ export default function ProfessionalDetail() {
                                 <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
                                     <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
                                         <Ionicons name="location" size={18} color={theme.primary.green} />
-                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Service Area</AppText>
+                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>{t("connect.professional.serviceArea")}</AppText>
                                     </View>
                                     {professional.district && (
-                                        <AppText variant="bodySm" style={{ color: theme.text.secondary }}>District: {professional.district}</AppText>
+                                        <AppText variant="bodySm" style={{ color: theme.text.secondary }}>{t("connect.professional.district")}: {professional.district}</AppText>
                                     )}
                                     {serviceArea?.state && (
-                                        <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 2 }}>State: {serviceArea.state}</AppText>
+                                        <AppText variant="bodySm" style={{ color: theme.text.muted, marginTop: 2 }}>{t("connect.professional.state")}: {serviceArea.state}</AppText>
                                     )}
                                     {serviceArea?.blocks && serviceArea.blocks.length > 0 && (
                                         <AppText variant="bodySm" style={{ color: theme.text.placeholder, marginTop: 4 }}>
-                                            Blocks: {serviceArea.blocks.join(", ")}
+                                            {t("connect.professional.blocks")}: {serviceArea.blocks.join(", ")}
                                         </AppText>
                                     )}
                                 </View>
@@ -172,7 +174,7 @@ export default function ProfessionalDetail() {
                                 <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
                                     <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
                                         <Ionicons name="ribbon" size={18} color={theme.primary.green} />
-                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>Specializations</AppText>
+                                        <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginLeft: 8 }}>{t("connect.professional.specializations")}</AppText>
                                     </View>
                                     {specializations.map((spec, i) => (
                                         <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
@@ -188,22 +190,22 @@ export default function ProfessionalDetail() {
                     {/* Contact Quick Actions */}
                     {phone && (
                         <View style={{ backgroundColor: theme.background.input, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 }}>
-                            <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginBottom: 12 }}>Quick Contact</AppText>
+                            <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.secondary, marginBottom: 12 }}>{t("connect.professional.quickContact")}</AppText>
                             <View style={{ flexDirection: "row", gap: 12 }}>
                                 <Pressable
                                     onPress={() => Linking.openURL(`tel:${phone}`)}
                                     style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#DBEAFE", borderRadius: 12, padding: 12 }}
                                 >
-                                    <Ionicons name="call" size={20} color="#2563EB" />
-                                    <AppText variant="bodySm" style={{ color: "#2563EB", fontWeight: "700", marginLeft: 8 }}>Call Now</AppText>
+                                    <Ionicons name="call" size={20} color={theme.semantic.info} />
+                                    <AppText variant="bodySm" style={{ color: theme.semantic.info, fontWeight: "700", marginLeft: 8 }}>{t("connect.professional.callNow")}</AppText>
                                 </Pressable>
                                 {whatsapp && (
                                     <Pressable
                                         onPress={() => Linking.openURL(`https://wa.me/${whatsapp?.replace(/\D/g, "")}`)}
                                         style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#DCFCE7", borderRadius: 12, padding: 12 }}
                                     >
-                                        <Ionicons name="logo-whatsapp" size={20} color="#16A34A" />
-                                        <AppText variant="bodySm" style={{ color: "#16A34A", fontWeight: "700", marginLeft: 8 }}>WhatsApp</AppText>
+                                        <Ionicons name="logo-whatsapp" size={20} color={theme.primary.green} />
+                                        <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700", marginLeft: 8 }}>{t("connect.professional.whatsapp")}</AppText>
                                     </Pressable>
                                 )}
                             </View>
@@ -232,9 +234,9 @@ export default function ProfessionalDetail() {
                         shadowRadius: 12, elevation: 4,
                     })}
                 >
-                    <Ionicons name="calendar" size={20} color="#fff" />
-                    <AppText variant="bodyMd" style={{ color: "#fff", fontWeight: "800", marginLeft: 10, fontSize: 17 }}>
-                        Book Appointment
+                    <Ionicons name="calendar" size={20} color={theme.text.onPrimary} />
+                    <AppText variant="bodyMd" style={{ color: theme.text.onPrimary, fontWeight: "800", marginLeft: 10, fontSize: 17 }}>
+                        {t("connect.professional.bookAppointment")}
                     </AppText>
                 </Pressable>
             </View>

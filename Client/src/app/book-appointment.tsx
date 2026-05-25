@@ -15,6 +15,7 @@ import {
 import AppText from "../components/atoms/AppText";
 import { useAuth } from "../contexts/AuthContext";
 import { appointmentsApi } from "../services/apiService";
+import { useTranslation } from "../i18n";
 import { theme } from "../styles/colors";
 
 function generateDays() {
@@ -39,6 +40,7 @@ export default function BookAppointment() {
     }>();
     const router = useRouter();
     const { user } = useAuth();
+    const { t } = useTranslation();
 
     const [days] = useState(generateDays);
     const [selectedDay, setSelectedDay] = useState<string>(generateDays()[0].value);
@@ -146,7 +148,8 @@ export default function BookAppointment() {
                 {/* ── Success Buttons ── */}
                 <Pressable
                     onPress={() => router.replace("/(tab)/connect" as any)}
-                    className="w-full bg-[#386641] rounded-2xl py-4 items-center active:opacity-90 mb-3"
+                    className="w-full rounded-2xl py-4 items-center active:opacity-90 mb-3"
+                    style={{ backgroundColor: theme.primary.green }}
                 >
                     <AppText style={{ color: theme.text.onPrimary, fontSize: 16, fontWeight: "800" }}>
                         Back to Connect
@@ -180,7 +183,7 @@ export default function BookAppointment() {
                     <Ionicons name="arrow-back" size={22} color={theme.text.onPrimary} />
                 </Pressable>
                 <View style={{ flex: 1, marginLeft: 14 }}>
-                    <AppText style={styles.headerTitle}>Book Appointment</AppText>
+                    <AppText style={styles.headerTitle}>{t("connect.booking.title")}</AppText>
                     <AppText style={styles.headerSub}>with {professionalName}</AppText>
                 </View>
             </View>
@@ -190,7 +193,7 @@ export default function BookAppointment() {
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* ── Date Strip ── */}
-                <AppText style={styles.sectionLabel}>Select Date</AppText>
+                <AppText style={styles.sectionLabel}>{t("connect.booking.selectDate")}</AppText>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -220,19 +223,19 @@ export default function BookAppointment() {
                 </ScrollView>
 
                 {/* ── Time Slots ── */}
-                <AppText style={[styles.sectionLabel, { marginTop: 24 }]}>Select Time Slot</AppText>
+                <AppText style={[styles.sectionLabel, { marginTop: 24 }]}>{t("connect.booking.selectTimeSlot")}</AppText>
 
                 {loadingSlots ? (
                     <View style={styles.slotsLoading}>
                         <ActivityIndicator size="large" color={theme.primary.green} />
-                        <AppText style={styles.loadingText}>Fetching available slots…</AppText>
+                        <AppText style={styles.loadingText}>{t("connect.booking.fetchingSlots")}</AppText>
                     </View>
                 ) : isFullyBooked ? (
                     <View style={styles.fullyBookedCard}>
                         <Ionicons name="close-circle" size={40} color="#DC2626" />
-                        <AppText style={styles.fullyBookedTitle}>Fully Booked</AppText>
+                        <AppText style={styles.fullyBookedTitle}>{t("connect.booking.fullyBookedNoMore")}</AppText>
                         <AppText style={styles.fullyBookedSub}>
-                            No more slots on this day. Try another date.
+                            {t("connect.booking.fullyBookedNoMoreSub")}
                         </AppText>
                     </View>
                 ) : (
@@ -240,7 +243,7 @@ export default function BookAppointment() {
                         {slots.length === 0 ? (
                             <View style={styles.noSlots}>
                                 <Ionicons name="time-outline" size={40} color="#D1D5DB" />
-                                <AppText style={styles.noSlotsText}>No slots available</AppText>
+                                <AppText style={styles.noSlotsText}>{t("connect.booking.noSlotsAvailable")}</AppText>
                             </View>
                         ) : (
                             slots.map((slot) => {
@@ -298,8 +301,9 @@ export default function BookAppointment() {
                 <Pressable
                     onPress={handleBook}
                     disabled={!selectedSlot || submitting}
-                    className={`w-full rounded-2xl py-[18px] flex-row items-center justify-center gap-2.5 ${selectedSlot ? "bg-[#386641] active:opacity-90" : "bg-slate-200"
+                    className={`w-full rounded-2xl py-[18px] flex-row items-center justify-center gap-2.5 ${selectedSlot ? "active:opacity-90" : "bg-slate-200"
                         }`}
+                    style={{ backgroundColor: selectedSlot ? theme.primary.green : undefined }}
                 >
                     {submitting ? (
                         <ActivityIndicator color="#FFFFFF" size="small" />
@@ -308,14 +312,14 @@ export default function BookAppointment() {
                             <Ionicons
                                 name="checkmark-circle"
                                 size={22}
-                                color={selectedSlot ? "#FFFFFF" : "#9CA3AF"}
+                                color={selectedSlot ? theme.text.onPrimary : theme.text.placeholder}
                             />
                             <AppText style={{
                                 fontSize: 17,
                                 fontWeight: "800",
-                                color: selectedSlot ? "#FFFFFF" : "#9CA3AF",
+                                color: selectedSlot ? theme.text.onPrimary : theme.text.placeholder,
                             }}>
-                                Confirm Appointment
+                                {t("connect.booking.confirmAppointment")}
                             </AppText>
                         </>
                     )}

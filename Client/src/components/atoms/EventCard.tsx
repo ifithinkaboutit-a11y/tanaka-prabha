@@ -55,7 +55,6 @@ function computeStatus(event: ApiEvent): string {
 const fmtTime = (t?: string) => (t ? t.substring(0, 5) : "");
 
 export default function EventCard({ event, onPress, onParticipate }: EventCardProps) {
-    const [isPressed, setIsPressed] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
 
     const liveStatus = computeStatus(event);
@@ -82,12 +81,8 @@ export default function EventCard({ event, onPress, onParticipate }: EventCardPr
     };
 
     return (
-        <Pressable
-            onPress={onPress}
-            onPressIn={() => setIsPressed(true)}
-            onPressOut={() => setIsPressed(false)}
-        >
-            <View style={[styles.card, { transform: [{ scale: isPressed ? 0.98 : 1 }] }]}>
+        <Pressable onPress={onPress}>
+            <View style={styles.card}>
 
                 {/* ── Hero Image ── */}
                 <View style={styles.imageContainer}>

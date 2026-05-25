@@ -64,11 +64,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: theme.border.card,
     backgroundColor: theme.background.input,
+    minHeight: 48,
   },
   containerActive: {
     borderColor: theme.semantic.likeSubtle,

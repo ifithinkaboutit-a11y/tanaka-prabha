@@ -2,8 +2,8 @@
 // Shown after OTP verify (new signup OR forgot-password reset).
 import AppText from "@/components/atoms/AppText";
 import { useTranslation } from "@/i18n";
-import { authApi, tokenManager } from "@/services/apiService";
-import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/services/apiService";
+import { translateKnownError } from "@/utils/translatedErrors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState, useRef } from "react";
@@ -52,22 +52,22 @@ const SetPasswordScreen = () => {
         setError(null);
 
         if (password.length < 6) {
-            const msg = "Password must be at least 6 characters";
+            const msg = t("validation.passwordMinLength", { min: 6 });
             setError(msg);
             shake();
-            Alert.alert("Invalid Password", msg);
+            Alert.alert(t("auth.setPassword.invalidPasswordTitle"), msg);
             return;
         }
         if (password !== confirmPassword) {
-            const msg = "Passwords do not match";
+            const msg = t("auth.setPassword.mismatchMessage");
             setError(msg);
             shake();
-            Alert.alert("Mismatch", msg);
+            Alert.alert(t("auth.setPassword.mismatchTitle"), msg);
             return;
         }
 
         if (!phoneNumber) {
-            Alert.alert("Error", "Phone number missing. Please restart the flow.");
+            Alert.alert(t("common.error"), t("auth.setPassword.phoneMissing"));
             return;
         }
 
@@ -75,16 +75,20 @@ const SetPasswordScreen = () => {
         try {
             await authApi.setPassword(phoneNumber, password);
             Alert.alert(
-                "✅ Password Set",
+                t("auth.setPassword.successTitle"),
                 mode === "reset"
-                    ? "Your password has been reset. Please log in."
-                    : "Your password has been set. Welcome aboard!",
+                    ? t("auth.setPassword.resetSuccessMessage")
+                    : mode === "setup"
+                        ? t("auth.setPassword.setupSuccessMessage")
+                    : t("auth.setPassword.successMessage"),
                 [
                     {
-                        text: "OK",
+                        text: t("common.ok"),
                         onPress: () => {
                             if (mode === "reset") {
                                 router.replace("/(auth)/" as any);
+                            } else if (mode === "setup") {
+                                router.replace("/(tab)/" as any);
                             } else {
                                 // First-time signup: continue to onboarding
                                 router.replace("/(auth)/personal-details" as any);
@@ -94,10 +98,10 @@ const SetPasswordScreen = () => {
                 ]
             );
         } catch (e: any) {
-            const msg = e.message || "Failed to set password. Please try again.";
+            const msg = translateKnownError(e.message, t) || e.message || t("auth.setPassword.failedMessage");
             setError(msg);
             shake();
-            Alert.alert("Error", msg);
+            Alert.alert(t("common.error"), msg);
         } finally {
             setLoading(false);
         }
@@ -111,12 +115,12 @@ const SetPasswordScreen = () => {
             {/* Static Header */}
             <View style={s.header}>
                 <AppText variant="h2" style={s.headerTitle}>
-                    {mode === "reset" ? "Reset Password" : "Set Password"}
+                    {mode === "reset" ? t("auth.setPassword.resetTitle") : t("auth.setPassword.title")}
                 </AppText>
                 <Text style={s.headerSubtitle}>
                     {mode === "reset"
-                        ? "Create a new password for your account"
-                        : "Set a password to log in faster next time"}
+                        ? t("auth.setPassword.resetSubtitle")
+                        : t("auth.setPassword.subtitle")}
                 </Text>
             </View>
             <KeyboardAwareScrollView
@@ -129,13 +133,13 @@ const SetPasswordScreen = () => {
                 <View style={s.card}>
 
                     {/* Password Field */}
-                    <Text style={s.inputLabel}>NEW PASSWORD</Text>
+                    <Text style={s.inputLabel}>{t("auth.setPassword.newPasswordLabel")}</Text>
                     <Animated.View style={[s.inputRow, { transform: [{ translateX: shakeAnim }] }, error ? s.inputRowError : null]}>
                         <TextInput
                             style={s.input}
                             value={password}
                             onChangeText={(v) => { setPassword(v); setError(null); }}
-                            placeholder="At least 6 characters"
+                            placeholder={t("auth.setPassword.passwordPlaceholder")}
                             placeholderTextColor="#C4C9D4"
                             secureTextEntry={!showPassword}
                             autoCapitalize="none"
@@ -147,13 +151,13 @@ const SetPasswordScreen = () => {
                     </Animated.View>
 
                     {/* Confirm Field */}
-                    <Text style={[s.inputLabel, { marginTop: 12 }]}>CONFIRM PASSWORD</Text>
+                    <Text style={[s.inputLabel, { marginTop: 12 }]}>{t("auth.setPassword.confirmPasswordLabel")}</Text>
                     <View style={[s.inputRow, error ? s.inputRowError : null]}>
                         <TextInput
                             style={s.input}
                             value={confirmPassword}
                             onChangeText={(v) => { setConfirmPassword(v); setError(null); }}
-                            placeholder="Re-enter password"
+                            placeholder={t("auth.setPassword.confirmPasswordPlaceholder")}
                             placeholderTextColor="#C4C9D4"
                             secureTextEntry={!showConfirm}
                             autoCapitalize="none"
@@ -173,7 +177,7 @@ const SetPasswordScreen = () => {
                                 <Text style={s.errorText}>{error}</Text>
                             </View>
                         ) : (
-                            <Text style={s.charCount}>Minimum 6 characters</Text>
+                            <Text style={s.charCount}>{t("auth.setPassword.minCharsHint", { min: 6 })}</Text>
                         )}
                     </View>
 
@@ -186,11 +190,13 @@ const SetPasswordScreen = () => {
                         {loading ? (
                             <View style={s.loadingRow}>
                                 <ActivityIndicator color="white" size="small" />
-                                <Text style={[s.ctaText, { marginLeft: 8 }]}>Saving…</Text>
+                                <Text style={[s.ctaText, { marginLeft: 8 }]}>{t("auth.setPassword.saving")}</Text>
                             </View>
                         ) : (
                             <View style={s.loadingRow}>
-                                <Text style={s.ctaText}>{mode === "reset" ? "Reset Password" : "Set Password"}</Text>
+                                <Text style={s.ctaText}>
+                                    {mode === "reset" ? t("auth.setPassword.resetAction") : t("auth.setPassword.action")}
+                                </Text>
                                 <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
                             </View>
                         )}
@@ -199,7 +205,7 @@ const SetPasswordScreen = () => {
                     {/* Security note */}
                     <View style={s.securityRow}>
                         <Ionicons name="lock-closed-outline" size={12} color="#9CA3AF" />
-                        <Text style={s.securityText}>Your password is encrypted and stored securely</Text>
+                        <Text style={s.securityText}>{t("auth.setPassword.securityNote")}</Text>
                     </View>
                 </View>
             </KeyboardAwareScrollView>

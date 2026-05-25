@@ -32,7 +32,7 @@ export const theme = {
     onPrimary: "#FFFFFF",
     onSecondary: "#FFFFFF",
     subtle: "#4B5563",
-    placeholder: "#9CA3AF",
+    placeholder: "#6B7280",
   },
   border: {
     default: "#D9D9D9",

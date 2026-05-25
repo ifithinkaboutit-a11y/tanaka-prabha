@@ -30,13 +30,6 @@ const AVAILABLE_TIMES = [
   "04:00 PM",
 ];
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 export default function BookingModal({
   visible,
   onClose,
@@ -53,6 +46,35 @@ export default function BookingModal({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const months = useMemo(
+    () => [
+      t("calendar.months.jan"),
+      t("calendar.months.feb"),
+      t("calendar.months.mar"),
+      t("calendar.months.apr"),
+      t("calendar.months.may"),
+      t("calendar.months.jun"),
+      t("calendar.months.jul"),
+      t("calendar.months.aug"),
+      t("calendar.months.sep"),
+      t("calendar.months.oct"),
+      t("calendar.months.nov"),
+      t("calendar.months.dec"),
+    ],
+    [t]
+  );
+  const days = useMemo(
+    () => [
+      t("calendar.daysShort.sun"),
+      t("calendar.daysShort.mon"),
+      t("calendar.daysShort.tue"),
+      t("calendar.daysShort.wed"),
+      t("calendar.daysShort.thu"),
+      t("calendar.daysShort.fri"),
+      t("calendar.daysShort.sat"),
+    ],
+    [t]
+  );
 
   // Get days in month
   const getDaysInMonth = (month: number, year: number) => {
@@ -269,7 +291,7 @@ export default function BookingModal({
                 variant="h3"
                 style={{ fontWeight: "600", color: theme.text.secondary, fontSize: 18 }}
               >
-                {MONTHS[currentMonth]} {currentYear}
+                {months[currentMonth]} {currentYear}
               </AppText>
               <Pressable
                 onPress={handleNextMonth}
@@ -294,7 +316,7 @@ export default function BookingModal({
                 marginBottom: 8,
               }}
             >
-              {DAYS.map((day) => (
+              {days.map((day) => (
                 <View
                   key={day}
                   style={{ flex: 1, alignItems: "center", paddingVertical: 8 }}
@@ -557,7 +579,7 @@ export default function BookingModal({
                 variant="bodySm"
                 style={{ color: theme.text.placeholder, textAlign: "center", marginTop: 8, fontSize: 12 }}
               >
-                {t("connect.booking.selectDate")} {"&"} {t("connect.booking.selectTime")}
+                {t("connect.booking.selectDate")} {t("common.and")} {t("connect.booking.selectTime")}
               </AppText>
             )}
             {selectedDate && !selectedTime && (

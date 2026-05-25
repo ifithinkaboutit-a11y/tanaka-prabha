@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollView";
 import AppText from "../../components/atoms/AppText";
-import Button from "../../components/atoms/Button";
 import Toggle from "../../components/atoms/Toggle";
 import Select from "../../components/atoms/Select";
 import { useOnboardingStore } from "../../stores/onboardingStore";
@@ -22,6 +21,7 @@ import {
 } from "../../data/content/onboardingOptions";
 import { theme } from "../../styles/colors";
 import { validateLandArea } from "../../utils/validation";
+import { translateKnownError } from "../../utils/translatedErrors";
 
 export const unstable_settings = {
   headerShown: false,
@@ -57,7 +57,7 @@ const AuthLandDetailsScreen = () => {
     const entryErrors: EntryErrors = {};
 
     if (!entry.area || entry.area <= 0) {
-      entryErrors.area = "Land area must be greater than 0";
+      entryErrors.area = t("validation.landAreaPositive");
     }
 
     if (Object.keys(entryErrors).length > 0) {
@@ -77,7 +77,10 @@ const AuthLandDetailsScreen = () => {
       const validation = validateLandArea(num);
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+        [entryId]: {
+          ...prev[entryId],
+          area: translateKnownError(validation.errors[0], t),
+        },
       }));
     }
   };
@@ -92,12 +95,15 @@ const AuthLandDetailsScreen = () => {
     if (area <= 0) {
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], area: "Land area must be greater than 0" },
+        [entryId]: { ...prev[entryId], area: t("validation.landAreaPositive") },
       }));
     } else if (!validation.isValid) {
       setErrors((prev) => ({
         ...prev,
-        [entryId]: { ...prev[entryId], area: validation.errors[0] },
+        [entryId]: {
+          ...prev[entryId],
+          area: translateKnownError(validation.errors[0], t),
+        },
       }));
     } else {
       setErrors((prev) => ({
@@ -113,18 +119,14 @@ const AuthLandDetailsScreen = () => {
       const errorMessage =
         errors[entryId]?.area ||
         errors[entryId]?.crops ||
-        "Please fill in all land details correctly";
+        t("validation.landDetailsError");
 
-      Alert.alert("Validation Error", errorMessage);
+      Alert.alert(t("validation.validationError"), errorMessage);
 
       setTouched({ [entryId]: { area: true, crops: true } });
       return;
     }
 
-    router.push("/(auth)/livestock-details");
-  };
-
-  const handleSkip = () => {
     router.push("/(auth)/livestock-details");
   };
 

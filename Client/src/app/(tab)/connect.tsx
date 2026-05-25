@@ -2,14 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from "react-native";
+import Constants from "expo-constants";
 import AppText from "../../components/atoms/AppText";
 import QuickActionGrid from "../../components/molecules/QuickActionGrid";
 import { useTranslation } from "../../i18n";
@@ -17,7 +20,8 @@ import { useUserProfile } from "../../contexts/UserProfileContext";
 import { auditLogApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
 
-const HELPLINE_EMAIL = "support@example.com"; // replace with real address
+const HELPLINE_EMAIL = Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_EMAIL || "ifithinkaboutit@gmail.com";
+const HELPLINE_PHONE = Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_PHONE || "7355045954";
 const AFTER_HOURS = 18; // 6:00 PM
 
 /** Returns true if current local hour >= 18 (6 PM) */
@@ -43,14 +47,14 @@ export default function Connect() {
       timestamp: new Date().toISOString(),
       userId: profile?.id,
     });
-    const emergencyNumber = "tel:1800180111";
+    const emergencyNumber = `tel:${HELPLINE_PHONE}`;
     Linking.openURL(emergencyNumber);
   };
 
   // ── After-hours modal handlers ────────────────────────────────────────────
   const handleCallAnyway = () => {
     setModalVisible(false);
-    Linking.openURL("tel:1800180111");
+    Linking.openURL(`tel:${HELPLINE_PHONE}`);
   };
 
   const handleSendEmail = () => {
@@ -120,15 +124,15 @@ export default function Connect() {
         {/* Page header */}
         <View
           style={{
-            backgroundColor: theme.background.header,
+            backgroundColor: theme.primary.green,
             paddingTop: 52,
             paddingBottom: 20,
             paddingHorizontal: 20,
             borderBottomLeftRadius: 24,
             borderBottomRightRadius: 24,
-            shadowColor: "#000",
+            shadowColor: theme.primary.green,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
+            shadowOpacity: 0.15,
             shadowRadius: 12,
             elevation: 4,
             marginBottom: 16,
@@ -139,7 +143,7 @@ export default function Connect() {
             style={{
               fontSize: 24,
               fontWeight: "800",
-              color: theme.text.primary,
+              color: theme.text.onPrimary,
               letterSpacing: -0.5,
             }}
           >
@@ -147,7 +151,7 @@ export default function Connect() {
           </AppText>
           <AppText
             variant="bodySm"
-            style={{ color: theme.text.muted, marginTop: 4, fontSize: 13 }}
+            style={{ color: "rgba(255,255,255,0.85)", marginTop: 4, fontSize: 13 }}
           >
             {t("connect.subtitle")}
           </AppText>
@@ -169,165 +173,282 @@ export default function Connect() {
           <QuickActionGrid actions={serviceActions} />
         </View>
 
-        {/* ── Emergency / Helpline section ── */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 32 }}>
-          <AppText
-            variant="h3"
-            style={{
-              fontWeight: "700",
-              color: theme.text.secondary,
-              marginBottom: 6,
-              fontSize: 18,
-            }}
-          >
-            {t("connect.emergencyTitle")}
-          </AppText>
-          <AppText
-            variant="bodySm"
-            style={{
-              color: theme.text.muted,
-              marginBottom: 16,
-              fontSize: 13,
-            }}
-          >
-            {t("connect.emergencySubtitle")}
-          </AppText>
+        <View className="flex-col md:flex-row gap-4 px-5 py-6 w-full">
 
-          {/* Emergency Button */}
-          <Pressable
-            onPress={afterHours ? () => setModalVisible(true) : handleEmergencyPress}
-            style={({ pressed }) => ({
-              paddingVertical: 14,
-              paddingHorizontal: 10,
-              borderRadius: 16,
-              backgroundColor: pressed ? "#981c1c" : "#DC2626",
-              borderWidth: 1.5,
-              borderColor: "#FEE2E2",
-            })}
-            className="flex flex-row items-center"
-          >
-            <View
-              style={{
-                width: 50,
-                backgroundColor: "#d7d6d6",
-                padding: 10,
-                borderRadius: 12,
-                marginRight: 16,
-                borderWidth:1,
-                display:"flex",
-                alignItems:"center",
-                justifyContent:"center",
-                aspectRatio:1,
-              }}
+          {/* ── Emergency / Helpline section ── */}
+          <View className="w-full md:w-1/2">
+            <AppText
+              variant="h3"
+              className="font-bold text-lg mb-1.5"
+              style={{ color: theme.text.secondary }}
             >
-              <Ionicons name="call" size={28} color="#e90f0f" style={{borderRadius: 12, }} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText style={{ color: "#111827", fontWeight: "700", fontSize: 18 }}>
-                {t("connect.emergencyTitle")}
-              </AppText>
+              {t("connect.emergencyTitle")}
+            </AppText>
 
-              <AppText
-                style={{
-                  color: theme.text.muted,
-                  fontWeight: "500",
-                  fontSize: 14,
-                  marginTop: 1,
-                }}
+            <AppText
+              variant="bodySm"
+              className="mb-4 text-[13px]"
+              style={{ color: theme.text.muted }}
+            >
+              {t("connect.emergencySubtitle")}
+            </AppText>
+
+            <Pressable
+              onPress={afterHours ? () => setModalVisible(true) : handleEmergencyPress}
+              className={`
+                flex-row items-center
+                p-4 my-4 rounded-lg border
+                bg-red-600 border-red-800
+                active:bg-red-800
+                min-h-[80px]
+              `}
+              accessibilityRole="button"
+              accessibilityLabel={t("connect.emergencyA11yLabel")}
+              accessibilityHint={t("connect.emergencyA11yHint")}
+            >
+              <View
+                className="w-14 h-14 rounded-2xl bg-white/30 items-center justify-center mr-4"
               >
-                {t("connect.tapToCall")}
-              </AppText>
-            </View>
+                <Ionicons name="call" size={28} color={theme.text.onPrimary} />
+              </View>
 
-            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-          </Pressable>
+              <View className="flex-1">
+                <AppText className="font-bold text-xl" style={{ color: theme.text.onPrimary }}>
+                  {t("connect.emergencyTitle")}
+                </AppText>
+                <AppText
+                  className="text-white font-medium text-sm mt-0.5"
+                  style={{ color: theme.text.onPrimary }}
+                >
+                  {t("connect.tapToCall")}
+                </AppText>
+              </View>
+
+              <Ionicons name="chevron-forward" size={22} color={theme.text.onPrimary} />
+            </Pressable>
+          </View>
+
+          {/* ── My Schedule section ── */}
+          <View className="w-full md:w-1/2">
+            <AppText
+              variant="h3"
+              className="font-bold text-lg mb-1.5"
+              style={{ color: theme.text.secondary }}
+            >
+              {t("connect.mySchedule")}
+            </AppText>
+
+            <AppText
+              variant="bodySm"
+              className="mb-4 text-[13px]"
+              style={{ color: theme.text.muted }}
+            >
+              {t("connect.myScheduleSubtitle") || "View your upcoming appointments"}
+            </AppText>
+
+            <Pressable
+              onPress={() => router.push("/my-schedule")}
+              className={`
+                flex-row items-center
+                p-4 my-4 rounded-lg border
+                bg-green-600 border-green-800
+                active:bg-green-800
+                min-h-[80px]
+              `}
+              accessibilityRole="button"
+              accessibilityLabel={t("connect.myScheduleA11yLabel") || "My Schedule button"}
+              accessibilityHint={t("connect.myScheduleA11yHint") || "Double tap to view your appointments"}
+            >
+              <View
+                className="w-14 h-14 rounded-2xl bg-white/40 items-center justify-center mr-4"
+              >
+                <Ionicons name="calendar" size={28} color={theme.text.onPrimary} />
+              </View>
+
+              <View className="flex-1">
+                <AppText className="font-bold text-xl" style={{ color: theme.text.onPrimary }}>
+                  {t("connect.mySchedule")}
+                </AppText>
+                <AppText
+                  className="text-white font-medium text-sm mt-0.5"
+                  style={{ color: theme.text.onPrimary }}
+                >
+                  {t("connect.myScheduleTap")}
+                </AppText>
+              </View>
+
+              <Ionicons name="chevron-forward" size={22} color={theme.text.onPrimary} />
+            </Pressable>
+          </View>
+
         </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* ── After-hours reason modal ── */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable style={s.overlay} onPress={() => setModalVisible(false)}>
-          <Pressable style={s.sheet} onPress={(e) => e.stopPropagation()}>
-            {/* Handle */}
-            <View style={s.handle} />
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View className="flex-1 justify-end bg-black/50">
+            <Pressable className="absolute inset-0" onPress={() => setModalVisible(false)} />
 
-            {/* Header */}
-            <View style={s.sheetHeader}>
-              <View style={s.sheetIconBg}>
-                <Ionicons name="mail" size={22} color="#DC2626" />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <AppText variant="h3" style={{ fontWeight: "700", color: "#1F2937", fontSize: 17 }}>
-                  {t("connect.sosAfterHoursTitle")}
-                </AppText>
-                <AppText variant="bodySm" style={{ color: "#6B7280", fontSize: 12, marginTop: 2 }}>
-                  {t("connect.sosAfterHoursMessage")}
-                </AppText>
-              </View>
-            </View>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              className="bg-white dark:bg-zinc-900 rounded-t-3xl px-5 pt-4 pb-8"
+            >
+              {/* Handle */}
+              <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-zinc-700 self-center mb-5" />
 
-            {/* Pre-filled user info preview */}
-            <View style={s.infoCard}>
-              <InfoLine icon="person-outline" label="Name" value={profile?.name ?? "—"} />
-              <InfoLine icon="call-outline" label="Mobile" value={profile?.mobileNumber ?? "—"} />
-              <InfoLine icon="id-card-outline" label="Farmer ID" value={profile?.id ?? "—"} />
-              <InfoLine
-                icon="location-outline"
-                label="Location"
-                value={[profile?.village, profile?.district].filter(Boolean).join(", ") || "—"}
-                isLast
+              {/* Header */}
+              <View className="flex-row items-start mb-5">
+                <View
+                  className="w-11 h-11 rounded-xl items-center justify-center"
+                  style={{ backgroundColor: theme.semantic.errorBackground }}
+                >
+                  <Ionicons name="mail" size={22} color={theme.semantic.error} />
+                </View>
+
+                <View className="flex-1 ml-3">
+                  <AppText
+                    variant="h3"
+                    className="font-bold text-[17px]"
+                    style={{ color: theme.text.primary }}
+                  >
+                    {t("connect.sosAfterHoursTitle")}
+                  </AppText>
+                  <AppText
+                    variant="bodySm"
+                    className="text-xs mt-0.5"
+                    style={{ color: theme.text.muted }}
+                  >
+                    {t("connect.sosAfterHoursMessage")}
+                  </AppText>
+                </View>
+              </View>
+
+              {/* Pre-filled user info preview */}
+              <View className="bg-gray-50 dark:bg-zinc-800 rounded-2xl px-4 py-1 mb-5">
+                <InfoLine
+                  icon="person-outline"
+                  label={t("connect.sosNameLabel") || "Name"}
+                  value={profile?.name ?? "—"}
+                />
+                <InfoLine
+                  icon="call-outline"
+                  label={t("connect.sosMobileLabel") || "Mobile"}
+                  value={profile?.mobileNumber ?? "—"}
+                />
+                <InfoLine
+                  icon="id-card-outline"
+                  label={t("connect.sosFarmerIdLabel") || "Farmer ID"}
+                  value={profile?.id ?? "—"}
+                />
+                <InfoLine
+                  icon="location-outline"
+                  label={t("connect.sosLocationLabel") || "Location"}
+                  value={
+                    [profile?.village, profile?.district].filter(Boolean).join(", ") || "—"
+                  }
+                  isLast
+                />
+              </View>
+
+              {/* Reason input */}
+              <AppText
+                variant="bodySm"
+                className="text-sm font-semibold mb-2"
+                style={{ color: theme.text.primary }}
+              >
+                {t("connect.sosReasonTitle")}
+              </AppText>
+              <TextInput
+                className={`
+                  rounded-xl px-4 py-3 text-sm min-h-[88px]
+                  border
+                  ${reasonFocused
+                    ? "border-red-500 bg-red-50 dark:bg-red-950/20"
+                    : "border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800"
+                  }
+                `}
+                value={reason}
+                onChangeText={setReason}
+                placeholder={t("connect.sosReasonPlaceholder")}
+                placeholderTextColor={theme.text.placeholder}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+                returnKeyType="done"
+                blurOnSubmit
+                onFocus={() => setReasonFocused(true)}
+                onBlur={() => setReasonFocused(false)}
+                style={{ color: theme.text.primary }}
               />
-            </View>
 
-            {/* Reason input */}
-            <AppText variant="bodySm" style={s.reasonLabel}>
-              {t("connect.sosReasonTitle")}
-            </AppText>
-            <TextInput
-              style={[s.reasonInput, reasonFocused && s.reasonInputFocused]}
-              value={reason}
-              onChangeText={setReason}
-              placeholder={t("connect.sosReasonPlaceholder")}
-              placeholderTextColor="#9CA3AF"
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              onFocus={() => setReasonFocused(true)}
-              onBlur={() => setReasonFocused(false)}
-            />
+              {/* Actions */}
+              <View className="flex-row gap-3 mt-5">
+                {/* Call anyway */}
+                <Pressable
+                  onPress={handleCallAnyway}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("connect.sosCallInstead")}
+                  className="flex-1 flex-row items-center justify-center
+                    py-3.5 px-4 rounded-xl
+                    border border-gray-200 dark:border-zinc-700
+                    bg-white dark:bg-zinc-800
+                    active:opacity-70"
+                >
+                  <Ionicons
+                    name="call-outline"
+                    size={16}
+                    color={theme.text.secondary}
+                    style={{ marginRight: 6 }}
+                  />
+                  <AppText
+                    variant="bodySm"
+                    className="font-semibold text-sm"
+                    style={{ color: theme.text.secondary }}
+                  >
+                    {t("connect.sosCallInstead")}
+                  </AppText>
+                </Pressable>
 
-            {/* Actions */}
-            <View style={s.btnRow}>
-              <Pressable
-                onPress={handleCallAnyway}
-                style={({ pressed }) => [s.btnSecondary, pressed && { opacity: 0.7 }]}
-              >
-                <Ionicons name="call-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
-                <AppText variant="bodySm" style={{ color: "#374151", fontWeight: "600", fontSize: 14 }}>
-                  {t("connect.sosCallInstead")}
-                </AppText>
-              </Pressable>
+                {/* Send email */}
+                <Pressable
+                  onPress={handleSendEmail}
+                  disabled={!reason.trim()}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("connect.sosSendEmail")}
+                  accessibilityState={{ disabled: !reason.trim() }}
+                  className={`
+                    flex-1 flex-row items-center justify-center
+                    py-3.5 px-4 rounded-xl
+                    bg-red-600 active:bg-red-800
+                    ${!reason.trim() ? "opacity-40" : "opacity-100"}
+                  `}
+                >
+                  <Ionicons
+                    name="mail-outline"
+                    size={16}
+                    color={theme.text.onPrimary}
+                    style={{ marginRight: 6 }}
+                  />
+                  <AppText
+                    variant="bodySm"
+                    className="font-bold text-sm"
+                    style={{ color: theme.text.onPrimary }}
+                  >
+                    {t("connect.sosSendEmail")}
+                  </AppText>
+                </Pressable>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </Modal>
 
-              <Pressable
-                onPress={handleSendEmail}
-                style={({ pressed }) => [s.btnPrimary, pressed && { opacity: 0.85 }]}
-              >
-                <Ionicons name="mail-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <AppText variant="bodySm" style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
-                  {t("connect.sosSendEmail")}
-                </AppText>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </>
   );
 }
@@ -345,7 +466,7 @@ const InfoLine = ({
   isLast?: boolean;
 }) => (
   <View style={[il.row, !isLast && il.rowBorder]}>
-    <Ionicons name={icon} size={14} color="#6B7280" style={{ marginRight: 8 }} />
+    <Ionicons name={icon} size={14} color={theme.text.subtle} style={{ marginRight: 8 }} />
     <AppText variant="bodySm" style={il.label}>{label}</AppText>
     <AppText variant="bodySm" style={il.value} numberOfLines={1}>{value}</AppText>
   </View>
@@ -353,9 +474,9 @@ const InfoLine = ({
 
 const il = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
-  rowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#F3F4F6" },
-  label: { color: "#6B7280", fontSize: 12, width: 90 },
-  value: { flex: 1, color: "#1F2937", fontSize: 13, fontWeight: "600", textAlign: "right" },
+  rowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border.default },
+  label: { color: theme.text.muted, fontSize: 12, width: 90 },
+  value: { flex: 1, color: theme.text.primary, fontSize: 13, fontWeight: "600", textAlign: "right" },
 });
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -377,7 +498,7 @@ const s = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: theme.border.subtle,
     alignSelf: "center",
     marginBottom: 20,
   },
@@ -390,43 +511,42 @@ const s = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#FEF2F2",
     alignItems: "center",
     justifyContent: "center",
   },
 
   // Info card
   infoCard: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: theme.background.neutralSubtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F3F4F6",
+    borderColor: theme.border.card,
   },
 
   // Reason input
   reasonLabel: {
-    color: "#374151",
+    color: theme.text.secondary,
     fontWeight: "600",
     fontSize: 13,
     marginBottom: 8,
   },
   reasonInput: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: theme.background.neutralSubtle,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: theme.border.default,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
-    color: "#1F2937",
+    color: theme.text.primary,
     minHeight: 80,
     marginBottom: 20,
   },
   reasonInputFocused: {
-    borderColor: "#DC2626",
+    borderColor: theme.semantic.error,
     backgroundColor: "#FFFFFF",
   },
 
@@ -443,8 +563,8 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderColor: theme.semantic.error,
+    backgroundColor: theme.semantic.errorBackground,
   },
   btnPrimary: {
     flex: 2,
@@ -453,6 +573,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: "#DC2626",
+    borderWidth: 1.5,
+    borderColor: theme.semantic.errorDark,
+    backgroundColor: theme.semantic.error,
   },
 });

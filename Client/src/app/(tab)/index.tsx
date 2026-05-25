@@ -145,13 +145,11 @@ export default function Home() {
       {/* Quick Actions Section */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <AppText
-          variant="h2"
+          variant="bodyMd"
           style={{
-            fontSize: 18,
             fontWeight: "700",
             color: theme.text.primary,
             marginBottom: 16,
-            letterSpacing: -0.2,
           }}
         >
           {t("home.quickActions")}
@@ -159,7 +157,7 @@ export default function Home() {
         <QuickActionGrid actions={quickActions} />
       </View>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: 10 }} />
     </ScrollView>
   );
 };

@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { colors, theme } from "../../styles/colors";
+import { useTranslation } from "../../i18n";
 import AppText from "./AppText";
 
 // Enable LayoutAnimation on Android
@@ -51,7 +52,7 @@ interface SelectProps {
 
 export default function Select({
   label,
-  placeholder = "Select...",
+  placeholder,
   value,
   options,
   onChange,
@@ -61,8 +62,11 @@ export default function Select({
   enableOtherInput = false,
   otherValue = "",
   onOtherChange,
-  otherPlaceholder = "Please specify...",
+  otherPlaceholder,
 }: SelectProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder || t("common.selectPlaceholder");
+  const resolvedOtherPlaceholder = otherPlaceholder || t("common.specifyOther");
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const triggerRef = useRef<View>(null);
@@ -75,9 +79,9 @@ export default function Select({
   }, [options, value, isMulti]);
 
   const displayLabel = useMemo(() => {
-    if (selectedOptions.length === 0) return placeholder;
+    if (selectedOptions.length === 0) return resolvedPlaceholder;
     return selectedOptions.map((opt) => opt.label).join(", ");
-  }, [selectedOptions, placeholder]);
+  }, [selectedOptions, resolvedPlaceholder]);
 
   const showSearch = options.length > searchThreshold;
 
@@ -170,7 +174,7 @@ export default function Select({
               fontSize: 16,
               color: colors.neutral.textDark,
             }}
-            placeholder={otherPlaceholder}
+            placeholder={resolvedOtherPlaceholder}
             placeholderTextColor={colors.neutral.textLight}
             value={otherValue}
             onChangeText={onOtherChange}
@@ -222,9 +226,9 @@ export default function Select({
                   color: colors.neutral.textDark,
                 }}
               >
-                {label || "Select Option"}
+                {label || t("common.selectOption")}
               </AppText>
-              <TouchableOpacity onPress={closeModal} style={{ padding: 11, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel="Close" accessibilityRole="button">
+              <TouchableOpacity onPress={closeModal} style={{ padding: 11, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel={t("common.close")} accessibilityRole="button">
                 <Ionicons name="close" size={22} color={colors.neutral.textDark} />
               </TouchableOpacity>
             </View>
@@ -236,7 +240,7 @@ export default function Select({
                 <TextInput
                   className="flex-1 py-2.5 text-gray-800"
                   style={{ fontSize: 15 }}
-                  placeholder="Search..."
+                  placeholder={t("common.searchPlaceholder")}
                   placeholderTextColor={theme.text.placeholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -264,7 +268,7 @@ export default function Select({
                     variant="bodySm"
                     className="text-gray-400 mt-2"
                   >
-                    No results for "{searchQuery}"
+                    {t("common.noResultsFor", { query: searchQuery })}
                   </AppText>
                 </View>
               ) : (

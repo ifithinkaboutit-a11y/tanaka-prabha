@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { schemesApi } from "../services/apiService";
+import { useTranslation } from "../i18n";
 
 const storageKey = (id: string) => `interest:${id}`;
 
@@ -30,6 +31,7 @@ export function useInterest(
   const [isInterested, setIsInterested] = useState(false);
   const [interestCount, setInterestCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   // Sync interestCount when the parent provides a fresh value from the API
   useEffect(() => {
@@ -89,10 +91,10 @@ export function useInterest(
           setInterestCount(prevCount);
           await AsyncStorage.setItem(storageKey(id), String(prevInterested));
           Alert.alert(
-            "Error",
+            t("common.error"),
             nextInterested
-              ? "Could not add interest. Please try again."
-              : "Could not remove interest. Please try again."
+              ? t("interested.addError")
+              : t("interested.removeError")
           );
         }
       }

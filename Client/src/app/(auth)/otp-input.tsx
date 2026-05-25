@@ -4,6 +4,7 @@ import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/services/apiService";
 import { validateOTP, validateMobileNumber } from "@/utils/validation";
+import { translateKnownError } from "@/utils/translatedErrors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
@@ -38,7 +39,7 @@ const OTPInput = () => {
   const { phoneNumber, mode } = useLocalSearchParams<{ phoneNumber: string; mode?: string }>();
   const { t } = useTranslation();
   const { signIn, resendOTP } = useAuth();
-  const isLogin = mode === "login";
+  const isPasswordSetup = mode === "password-setup";
 
   // Countdown timer
   useEffect(() => {
@@ -97,14 +98,15 @@ const OTPInput = () => {
     const otpString = otp.join("");
     const otpValidation = validateOTP(otpString);
     if (!otpValidation.isValid) {
-      setValidationError(otpValidation.errors[0]);
+      const message = translateKnownError(otpValidation.errors[0], t) || otpValidation.errors[0];
+      setValidationError(message);
       shake();
-      Alert.alert(t("common.error") || "Error", otpValidation.errors[0]);
+      Alert.alert(t("common.error") || "Error", message);
       return;
     }
 
     if (!phoneNumber) {
-      const error = "Phone number not found. Please go back and try again.";
+      const error = t("auth.phoneNotFound");
       setValidationError(error);
       shake();
       Alert.alert(t("common.error") || "Error", error);
@@ -114,9 +116,10 @@ const OTPInput = () => {
     const cleanedNumber = phoneNumber.replace(/^\+91/, "");
     const phoneValidation = validateMobileNumber(cleanedNumber);
     if (!phoneValidation.isValid) {
-      setValidationError(phoneValidation.errors[0]);
+      const message = translateKnownError(phoneValidation.errors[0], t) || phoneValidation.errors[0];
+      setValidationError(message);
       shake();
-      Alert.alert(t("common.error") || "Error", phoneValidation.errors[0]);
+      Alert.alert(t("common.error") || "Error", message);
       return;
     }
 
@@ -128,7 +131,7 @@ const OTPInput = () => {
         const cleanedNumber = phoneNumber.replace(/^\+91/, "");
         const response = await authApi.verifyOtpOnly(cleanedNumber, otpString);
         if (response.status !== "success") {
-          throw new Error(response.message || "Invalid OTP");
+          throw new Error(response.message || t("auth.invalidOtp"));
         }
         router.replace({
           pathname: "/(auth)/set-password" as any,
@@ -140,17 +143,19 @@ const OTPInput = () => {
       const { isNewUser: serverIsNewUser } = await signIn(phoneNumber, otpString, mode === "login");
       const isNewUser = mode === "login" ? false : serverIsNewUser;
 
-      if (isNewUser) {
-        // New signup → set password first, then onboard
+      if (isNewUser || isPasswordSetup) {
+        // New signup or password bootstrap: set password before continuing.
         router.replace({
           pathname: "/(auth)/set-password" as any,
-          params: { phoneNumber, mode: "signup" },
+          params: { phoneNumber, mode: isNewUser ? "signup" : "setup" },
         });
       } else {
         router.replace("/(tab)");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Invalid OTP";
+      const errorMessage = error instanceof Error
+        ? translateKnownError(error.message, t) || error.message
+        : t("auth.invalidOtp");
       setValidationError(errorMessage);
       shake();
       Alert.alert(t("common.error") || "Error", errorMessage);
@@ -163,7 +168,7 @@ const OTPInput = () => {
 
   const handleResendOTP = async () => {
     if (!phoneNumber) {
-      Alert.alert("Error", "Phone number not found");
+      Alert.alert(t("common.error"), t("auth.phoneNotFoundShort"));
       return;
     }
     try {
@@ -172,9 +177,14 @@ const OTPInput = () => {
       setCanResend(false);
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
-      Alert.alert("✅ OTP Sent", "A new OTP has been sent to your number.");
+      Alert.alert(t("auth.otpSentTitle"), t("auth.otpSentMessage"));
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Failed to resend OTP");
+      Alert.alert(
+        t("common.error"),
+        error instanceof Error
+          ? translateKnownError(error.message, t) || error.message
+          : t("auth.resendOtpFailed")
+      );
     }
   };
 
@@ -208,7 +218,7 @@ const OTPInput = () => {
         {/* Card */}
         <View style={s.card}>
           {/* Input label */}
-          <Text style={s.inputLabel}>Enter 6-digit OTP</Text>
+          <Text style={s.inputLabel}>{t("auth.otpInputLabel")}</Text>
 
           {/* OTP boxes — animated, shake on error */}
           <Animated.View
@@ -254,9 +264,9 @@ const OTPInput = () => {
               </View>
             ) : (
               <Text style={s.charCount}>
-                {filledCount}/{OTP_LENGTH} digits entered
+                {t("auth.digitsEntered", { count: filledCount, total: OTP_LENGTH })}
                 {!canResend && (
-                  <Text style={s.countdownInline}>{`  ·  Expires in ${countdown}s`}</Text>
+                  <Text style={s.countdownInline}>{t("auth.otpExpiresIn", { seconds: countdown })}</Text>
                 )}
               </Text>
             )}
@@ -274,7 +284,7 @@ const OTPInput = () => {
             {loading ? (
               <View style={s.loadingRow}>
                 <ActivityIndicator color="white" size="small" />
-                <Text style={[s.ctaText, { marginLeft: 8 }]}>Verifying…</Text>
+                <Text style={[s.ctaText, { marginLeft: 8 }]}>{t("auth.verifying")}</Text>
               </View>
             ) : (
               <View style={s.loadingRow}>
@@ -297,7 +307,7 @@ const OTPInput = () => {
               </TouchableOpacity>
             ) : (
               <Text style={s.charCount}>
-                Resend in <Text style={s.countdownInline}>{countdown}s</Text>
+                {t("auth.resendIn", { seconds: countdown })}
               </Text>
             )}
 
@@ -316,7 +326,7 @@ const OTPInput = () => {
           {/* Security note — mirrors phone-input securityRow */}
           <View style={s.securityRow}>
             <Ionicons name="lock-closed-outline" size={12} color="#9CA3AF" />
-            <Text style={s.securityText}>OTP is valid for 10 minutes only</Text>
+            <Text style={s.securityText}>{t("auth.otpValidityNote")}</Text>
           </View>
         </View>
       </KeyboardAwareScrollView>

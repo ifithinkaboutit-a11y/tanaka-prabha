@@ -19,6 +19,17 @@ const translations: Record<string, any> = {
   hi,
 };
 
+const resolveTranslation = (language: string, key: string) => {
+  const keys = key.split(".");
+  let value: any = translations[language] || translations.en;
+
+  for (const k of keys) {
+    value = value?.[k];
+  }
+
+  return value;
+};
+
 export const useLanguageStore = create<LanguageState>()(
   persist(
     (set, get) => ({
@@ -33,12 +44,7 @@ export const useLanguageStore = create<LanguageState>()(
       },
       translate: (key: string) => {
         const { currentLanguage } = get();
-        const keys = key.split(".");
-        let value: any = translations[currentLanguage];
-
-        for (const k of keys) {
-          value = value?.[k];
-        }
+        const value = resolveTranslation(currentLanguage, key) ?? resolveTranslation("en", key);
 
         return typeof value === "string" ? value : key;
       },

@@ -3,6 +3,7 @@ import AppText from "@/components/atoms/AppText";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateMobileNumber } from "@/utils/validation";
+import { translateKnownError } from "@/utils/translatedErrors";
 import { authApi, tokenManager } from "@/services/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -35,7 +36,7 @@ const PhoneInput = () => {
 
   const router = useRouter();
   const { t } = useTranslation();
-  const { sendOTP, signIn, refreshUser } = useAuth();
+  const { sendOTP, refreshUser } = useAuth();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isLogin = mode === "login";
 
@@ -69,28 +70,35 @@ const PhoneInput = () => {
     );
   };
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (nextMode?: string) => {
     const validation = validateMobileNumber(phoneNumber);
     if (!validation.isValid) {
-      setValidationError(validation.errors[0]);
+      const message = translateKnownError(validation.errors[0], t) || validation.errors[0];
+      setValidationError(message);
       shake();
-      Alert.alert(t("common.error") || "Error", validation.errors[0]);
+      Alert.alert(t("common.error") || "Error", message);
       return;
     }
 
     setLoading(true);
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
+      const targetMode = typeof nextMode === "string" ? nextMode : mode || "signup";
       await sendOTP(fullPhoneNumber);
       router.push({
         pathname: "/(auth)/otp-input",
-        params: { phoneNumber: fullPhoneNumber, mode: mode || "signup" },
+        params: { phoneNumber: fullPhoneNumber, mode: targetMode },
       });
     } catch (error) {
       if (isDuplicatePhoneError(error)) {
         setDuplicateBanner(true);
       } else {
-        Alert.alert("Error", error instanceof Error ? error.message : "Failed to send OTP");
+        Alert.alert(
+          t("common.error"),
+          error instanceof Error
+            ? translateKnownError(error.message, t) || error.message
+            : t("auth.otpSendFailed")
+        );
       }
     } finally {
       setLoading(false);
@@ -101,12 +109,12 @@ const PhoneInput = () => {
   const handleLoginWithPassword = async () => {
     const validation = validateMobileNumber(phoneNumber);
     if (!validation.isValid) {
-      setValidationError(validation.errors[0]);
+      setValidationError(translateKnownError(validation.errors[0], t) || validation.errors[0]);
       shake();
       return;
     }
     if (!password) {
-      setValidationError("Please enter your password");
+      setValidationError(t("validation.passwordRequired"));
       shake();
       return;
     }
@@ -131,15 +139,15 @@ const PhoneInput = () => {
     } catch (e: any) {
       if (e?.data?.needs_password_setup) {
         Alert.alert(
-          "No Password Set",
-          "This account doesn't have a password yet. We'll send you an OTP to log in and set one.",
+          t("auth.noPasswordTitle"),
+          t("auth.noPasswordMessage"),
           [
-            { text: "Send OTP", onPress: () => handleSendOTP() },
-            { text: "Cancel", style: "cancel" },
+            { text: t("auth.sendOtpAction"), onPress: () => handleSendOTP("password-setup") },
+            { text: t("common.cancel"), style: "cancel" },
           ]
         );
       } else {
-        setValidationError(e.message || "Invalid phone number or password");
+        setValidationError(translateKnownError(e.message, t) || e.message || t("auth.invalidCredentials"));
         shake();
       }
     } finally {
@@ -151,7 +159,7 @@ const PhoneInput = () => {
   const handleForgotPassword = async () => {
     const validation = validateMobileNumber(phoneNumber);
     if (!validation.isValid) {
-      setValidationError("Please enter your 10-digit mobile number first.");
+      setValidationError(t("validation.phoneNumberRequired"));
       shake();
       return;
     }
@@ -164,7 +172,7 @@ const PhoneInput = () => {
         params: { phoneNumber: fullPhoneNumber, mode: "forgot-password" },
       });
     } catch (e: any) {
-      setValidationError(e.message || "Failed to send OTP. Please try again.");
+      setValidationError(translateKnownError(e.message, t) || e.message || t("auth.otpSendFailedRetry"));
       shake();
     } finally {
       setLoading(false);
@@ -230,7 +238,7 @@ const PhoneInput = () => {
             <View style={s.divider} />
             <TextInput
               style={s.phoneInput}
-              placeholder="00000 00000"
+              placeholder={t("auth.phonePlaceholder")}
               placeholderTextColor="#C4C9D4"
               keyboardType="phone-pad"
               value={displayPhone}
@@ -257,7 +265,7 @@ const PhoneInput = () => {
               </View>
             ) : (
               <Text style={s.charCount}>
-                {phoneNumber.length}/10 digits entered
+                {t("auth.digitsEntered", { count: phoneNumber.length })}
               </Text>
             )}
           </View>
@@ -268,7 +276,7 @@ const PhoneInput = () => {
               <View style={s.duplicateBannerContent}>
                 <Ionicons name="warning-outline" size={18} color="#92400E" style={{ marginTop: 1 }} />
                 <Text style={s.duplicateBannerText}>
-                  This number is already registered. Please log in instead.
+                  {t("auth.duplicatePhoneMessage")}
                 </Text>
               </View>
               <View style={s.duplicateBannerActions}>
@@ -277,14 +285,14 @@ const PhoneInput = () => {
                   style={s.duplicateBannerLogIn}
                   activeOpacity={0.75}
                 >
-                  <Text style={s.duplicateBannerLogInText}>Log In</Text>
+                  <Text style={s.duplicateBannerLogInText}>{t("auth.duplicatePhoneLogin")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setDuplicateBanner(false)}
                   style={s.duplicateBannerDismiss}
                   activeOpacity={0.75}
                 >
-                  <Text style={s.duplicateBannerDismissText}>Dismiss</Text>
+                  <Text style={s.duplicateBannerDismissText}>{t("auth.duplicatePhoneDismiss")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -293,11 +301,11 @@ const PhoneInput = () => {
           {/* Password field — only shown in login mode */}
           {isLogin && (
             <>
-              <Text style={[s.inputLabel, { marginTop: 4 }]}>PASSWORD</Text>
+              <Text style={[s.inputLabel, { marginTop: 4 }]}>{t("auth.passwordLabel")}</Text>
               <View style={[s.inputRow, { marginBottom: 4 }]}>
                 <TextInput
                   style={[s.phoneInput, { flex: 1 }]}
-                  placeholder="Enter your password"
+                  placeholder={t("auth.passwordPlaceholder")}
                   placeholderTextColor="#C4C9D4"
                   value={password}
                   onChangeText={(v) => { setPassword(v); setValidationError(null); }}
@@ -316,13 +324,13 @@ const PhoneInput = () => {
                 style={{ alignSelf: "flex-end", marginBottom: 16, marginTop: 4 }}
                 activeOpacity={0.65}
               >
-                <Text style={[s.switchLink, { fontSize: 13 }]}>Forgot Password?</Text>
+                <Text style={[s.switchLink, { fontSize: 13 }]}>{t("auth.forgotPassword")}</Text>
               </TouchableOpacity>
             </>
           )}
 
           <Pressable
-            onPress={isLogin ? handleLoginWithPassword : handleSendOTP}
+            onPress={isLogin ? handleLoginWithPassword : () => handleSendOTP()}
             disabled={!isReady}
             style={[
               s.ctaBtn,
@@ -333,7 +341,7 @@ const PhoneInput = () => {
               <View style={s.loadingRow}>
                 <ActivityIndicator color="white" size="small" />
                 <Text style={[s.ctaText, { marginLeft: 8 }]}>
-                  {isLogin ? "Logging in…" : "Sending OTP…"}
+                  {isLogin ? t("auth.loggingIn") : t("auth.sendingOtp")}
                 </Text>
               </View>
             ) : (
@@ -361,7 +369,7 @@ const PhoneInput = () => {
           {/* Security note */}
           <View style={s.securityRow}>
             <Ionicons name="lock-closed-outline" size={12} color="#9CA3AF" />
-            <Text style={s.securityText}>Your number is encrypted and never shared</Text>
+            <Text style={s.securityText}>{t("auth.securityNote")}</Text>
           </View>
         </View>
       </KeyboardAwareScrollView>

@@ -28,13 +28,13 @@ import {
 import MapView, { Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import AppText from "../../components/atoms/AppText";
 import { useOnboardingStore } from "../../stores/onboardingStore";
+import { useTranslation } from "../../i18n";
 import { theme } from "../../styles/colors";
 import {
     googleReverseGeocode,
     parseGoogleAddress,
     fetchPlacePredictions,
     fetchPlaceLatLng,
-    formatAccuracyLabel,
     type PlacePrediction,
 } from "../../utils/locationUtils";
 
@@ -55,6 +55,7 @@ type GpsStatus = "loading" | "acquired" | "no-fix" | "denied";
 
 export default function LocationPickerScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
     const { fromProfile, purpose } = useLocalSearchParams<{
         fromProfile?: string;
         purpose?: string;
@@ -136,12 +137,12 @@ export default function LocationPickerScreen() {
         if (isProfileMode || locationData === null) return;
         const onBack = () => {
             Alert.alert(
-                "Change location?",
-                "Going back will clear your confirmed pin.",
+                t("locationPicker.changeLocationTitle"),
+                t("locationPicker.changeLocationMessage"),
                 [
-                    { text: "Stay here", style: "cancel" },
+                    { text: t("locationPicker.stayHere"), style: "cancel" },
                     {
-                        text: "Go back",
+                        text: t("locationPicker.goBack"),
                         style: "destructive",
                         onPress: () => { setLocationData(null); router.back(); },
                     },
@@ -151,7 +152,7 @@ export default function LocationPickerScreen() {
         };
         const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
         return () => sub.remove();
-    }, [isProfileMode, locationData, setLocationData, router]);
+    }, [isProfileMode, locationData, setLocationData, router, t]);
 
     // ── Reverse geocode ────────────────────────────────────────────────────────
     const geocodeCoords = useCallback(async (lat: number, lng: number) => {
@@ -177,9 +178,9 @@ export default function LocationPickerScreen() {
             const gpsAddr = await googleReverseGeocode(lat, lng);
             if (isMountedRef.current) setGpsAddress(gpsAddr);
         } catch {
-            if (isMountedRef.current) setGpsAddress("GPS Location Acquired");
+            if (isMountedRef.current) setGpsAddress(t("locationPicker.gpsLocationAcquired"));
         }
-    }, []);
+    }, [t]);
 
     // ── GPS acquisition on mount ───────────────────────────────────────────────
     useEffect(() => {
@@ -234,7 +235,7 @@ export default function LocationPickerScreen() {
         })();
 
         return () => { if (timeoutId) clearTimeout(timeoutId); };
-    }, [geocodeCoords]);
+    }, [geocodeCoords, geocodeGpsCoords]);
 
     // ── Fly map to coords ──────────────────────────────────────────────────────
     const flyTo = useCallback((lat: number, lng: number, zoom = 15) => {
@@ -266,7 +267,7 @@ export default function LocationPickerScreen() {
         } catch {
             return false;
         }
-    }, [flyTo, geocodeCoords]);
+    }, [flyTo, geocodeCoords, geocodeGpsCoords]);
 
     // ── My-location button ─────────────────────────────────────────────────────
     const handleMyLocation = useCallback(async () => {
@@ -279,7 +280,7 @@ export default function LocationPickerScreen() {
             if (!isMountedRef.current) return;
             setMyLocationLoading(false);
             if (!ok) {
-                setMyLocationError("Could not get GPS location. Try moving to an open area.");
+                setMyLocationError(t("locationPicker.gpsError"));
                 myLocationErrorTimer.current = setTimeout(() => {
                     if (isMountedRef.current) setMyLocationError(null);
                 }, 4000);
@@ -287,7 +288,7 @@ export default function LocationPickerScreen() {
         } else if (initialPos) {
             flyTo(initialPos.lat, initialPos.lng, 15);
         }
-    }, [gpsStatus, initialPos, flyTo, reacquireGPS]);
+    }, [gpsStatus, initialPos, flyTo, reacquireGPS, t]);
 
     // ── Search ─────────────────────────────────────────────────────────────────
     const handleSearchChange = useCallback((text: string) => {
@@ -335,24 +336,6 @@ export default function LocationPickerScreen() {
         }
     }, [flyTo, geocodeCoords]);
 
-    // ── Confirm ────────────────────────────────────────────────────────────────
-    const handleConfirm = useCallback(async () => {
-        if (!pinCoords) return;
-
-        if (gpsStatus === "acquired" && gpsAccuracy > GPS_ACCURACY_THRESHOLD_M) {
-            Alert.alert(
-                "Low GPS Accuracy",
-                `Your GPS accuracy is ±${Math.round(gpsAccuracy)}m. For best results, move to an open area and try again.`,
-                [
-                    { text: "Try Again", style: "cancel", onPress: reacquireGPS },
-                    { text: "Confirm Anyway", onPress: doConfirm },
-                ]
-            );
-            return;
-        }
-        doConfirm();
-    }, [pinCoords, gpsStatus, gpsAccuracy, reacquireGPS]);
-
     const doConfirm = useCallback(async () => {
         if (!pinCoords) return;
         setSaving(true);
@@ -360,7 +343,7 @@ export default function LocationPickerScreen() {
         const newLocInfo = {
             lat: pinCoords.lat,
             lng: pinCoords.lng,
-            address: address || "Unknown location",
+            address: address || t("locationPicker.unknownLocation"),
             accuracy: gpsAccuracy,
             setAt: new Date().toISOString(),
             method: "gps" as const,
@@ -378,7 +361,7 @@ export default function LocationPickerScreen() {
                     setBeneficiaryLocationPick({
                         lat: pinCoords.lat,
                         lng: pinCoords.lng,
-                        address: address || "Unknown location",
+                        address: address || t("locationPicker.unknownLocation"),
                     });
                     router.back();
                     return;
@@ -435,15 +418,33 @@ export default function LocationPickerScreen() {
             router.push("/(auth)/land-details" as any);
         } catch (error) {
             console.error("doConfirm failed:", error);
-            Alert.alert("Error", "Failed to save location. Please try again.");
+            Alert.alert(t("common.error"), t("locationPicker.saveError"));
         } finally {
             if (isMountedRef.current) setSaving(false);
         }
     }, [
         pinCoords, address, gpsAccuracy, isProfileMode, purpose,
         personalDetails, setLocationData, setProfileAddressOverride,
-        setEventLocationPick, setBeneficiaryLocationPick, updatePersonalDetails, router,
+        setEventLocationPick, setBeneficiaryLocationPick, updatePersonalDetails, router, t,
     ]);
+
+    // ── Confirm ────────────────────────────────────────────────────────────────
+    const handleConfirm = useCallback(async () => {
+        if (!pinCoords) return;
+
+        if (gpsStatus === "acquired" && gpsAccuracy > GPS_ACCURACY_THRESHOLD_M) {
+            Alert.alert(
+                t("locationPicker.lowAccuracyTitle"),
+                t("locationPicker.lowAccuracyMessage", { meters: Math.round(gpsAccuracy) }),
+                [
+                    { text: t("locationPicker.tryAgain"), style: "cancel", onPress: reacquireGPS },
+                    { text: t("locationPicker.confirmAnyway"), onPress: doConfirm },
+                ]
+            );
+            return;
+        }
+        doConfirm();
+    }, [pinCoords, gpsStatus, gpsAccuracy, reacquireGPS, doConfirm, t]);
 
     // ── Skip ───────────────────────────────────────────────────────────────────
     const handleSkip = useCallback(() => {
@@ -471,18 +472,17 @@ export default function LocationPickerScreen() {
                     <View style={styles.deniedIconBg}>
                         <Ionicons name="location-outline" size={40} color={theme.secondary.harvest} />
                     </View>
-                    <AppText variant="h3" style={styles.deniedTitle}>Location Access Needed</AppText>
+                    <AppText variant="h3" style={styles.deniedTitle}>{t("locationPicker.accessNeededTitle")}</AppText>
                     <AppText variant="bodySm" style={styles.deniedBody}>
-                        To place your home on the map, Tanak Prabha needs location permission.
-                        Your location is only used to build the farming heatmap.
+                        {t("locationPicker.accessNeededBody")}
                     </AppText>
                     <Pressable style={styles.settingsBtn} onPress={() => Linking.openSettings()}>
                         <Ionicons name="settings-outline" size={18} color="#fff" />
-                        <AppText variant="bodyMd" style={styles.settingsBtnText}>Enable in Settings</AppText>
+                        <AppText variant="bodyMd" style={styles.settingsBtnText}>{t("locationPicker.enableInSettings")}</AppText>
                     </Pressable>
                     {isProfileMode && (
                         <Pressable style={styles.skipLinkBtn} onPress={handleSkip}>
-                            <AppText variant="bodySm" style={styles.skipLinkText}>Skip for now</AppText>
+                            <AppText variant="bodySm" style={styles.skipLinkText}>{t("auth.skipForNow")}</AppText>
                         </Pressable>
                     )}
                 </View>
@@ -496,7 +496,7 @@ export default function LocationPickerScreen() {
             <View style={[styles.root, styles.centred]}>
                 <StatusBar barStyle="dark-content" />
                 <Ionicons name="locate-outline" size={44} color={theme.primary.green} />
-                <AppText variant="bodyMd" style={styles.loadingText}>Finding your location…</AppText>
+                <AppText variant="bodyMd" style={styles.loadingText}>{t("locationPicker.findingLocation")}</AppText>
             </View>
         );
     }
@@ -554,7 +554,7 @@ export default function LocationPickerScreen() {
                 {gpsStatus === "acquired" && initialPos && (
                     <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.95)", alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
                         <Ionicons name="hardware-chip-outline" size={14} color={theme.primary.green} />
-                        <AppText variant="bodySm" style={{ marginLeft: 6, color: theme.text.secondary, fontWeight: "700", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>Current GPS Tag</AppText>
+                        <AppText variant="bodySm" style={{ marginLeft: 6, color: theme.text.secondary, fontWeight: "700", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("locationPicker.currentGpsTag")}</AppText>
                         <View style={{ width: 1, height: 12, backgroundColor: theme.border.subtle, marginHorizontal: 8 }} />
                         <AppText variant="bodySm" numberOfLines={1} style={{ color: theme.text.muted, fontSize: 11, maxWidth: 180 }}>
                             {gpsAddress || `${initialPos.lat.toFixed(4)}, ${initialPos.lng.toFixed(4)}`}
@@ -566,7 +566,7 @@ export default function LocationPickerScreen() {
                     <Ionicons name="search-outline" size={18} color="#6B7280" style={{ marginRight: 8 }} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search village, city, district…"
+                        placeholder={t("locationPicker.searchPlaceholder")}
                         placeholderTextColor="#9CA3AF"
                         value={searchText}
                         onChangeText={handleSearchChange}
@@ -596,7 +596,7 @@ export default function LocationPickerScreen() {
                     <View style={styles.searchErrorBanner} pointerEvents="none">
                         <Ionicons name="warning-outline" size={13} color="#92400E" />
                         <AppText variant="bodySm" style={styles.searchErrorText}>
-                            Couldn't load location — drag the map to place your pin manually
+                            {t("locationPicker.searchSelectError")}
                         </AppText>
                     </View>
                 )}
@@ -607,12 +607,12 @@ export default function LocationPickerScreen() {
                             <View style={[styles.resultRow, { justifyContent: "center" }]}>
                                 <ActivityIndicator size="small" color={theme.primary.green} />
                                 <AppText variant="bodySm" style={[styles.noResultsText, { marginLeft: 8 }]}>
-                                    Searching…
+                                    {t("locationPicker.searching")}
                                 </AppText>
                             </View>
                         ) : predictions.length === 0 ? (
                             <View style={styles.resultRow}>
-                                <AppText variant="bodySm" style={styles.noResultsText}>No results found</AppText>
+                                <AppText variant="bodySm" style={styles.noResultsText}>{t("locationPicker.noResults")}</AppText>
                             </View>
                         ) : (
                             predictions.map((p, idx) => (
@@ -647,7 +647,7 @@ export default function LocationPickerScreen() {
                 <View style={styles.fallbackBanner} pointerEvents="none">
                     <Ionicons name="warning-outline" size={14} color="#92400E" />
                     <AppText variant="bodySm" style={styles.fallbackText}>
-                        GPS unavailable — search or drag the map to your location
+                        {t("locationPicker.gpsUnavailable")}
                     </AppText>
                 </View>
             )}
@@ -657,7 +657,7 @@ export default function LocationPickerScreen() {
                 style={styles.myLocationBtn}
                 onPress={handleMyLocation}
                 disabled={myLocationLoading}
-                accessibilityLabel="My location"
+                accessibilityLabel={t("locationPicker.myLocation")}
                 accessibilityRole="button"
             >
                 {myLocationLoading
@@ -678,20 +678,20 @@ export default function LocationPickerScreen() {
             <View style={styles.bottomSheet}>
                 {/* <View style={styles.sheetHandle} /> */}
 
-                <AppText variant="bodySm" style={styles.sheetLabel}>PRIMARY FARMING LOCATION</AppText>
+                <AppText variant="bodySm" style={styles.sheetLabel}>{t("locationPicker.primaryLocationLabel")}</AppText>
 
                 {geocodeLoading ? (
-                    <AppText variant="bodySm" style={styles.sheetHint}>Resolving address…</AppText>
+                    <AppText variant="bodySm" style={styles.sheetHint}>{t("locationPicker.resolvingAddress")}</AppText>
                 ) : geocodeError ? (
                     <View style={styles.geocodeErrorRow}>
                         <Ionicons name="wifi-outline" size={14} color="#EF4444" />
                         <AppText variant="bodySm" style={styles.geocodeErrorText}>
-                            Address unavailable — you can still confirm your pin
+                            {t("locationPicker.addressUnavailable")}
                         </AppText>
                     </View>
                 ) : (
                     <AppText variant="bodyMd" style={styles.sheetAddress} numberOfLines={2}>
-                        {address || "Drag the map to place your pin"}
+                        {address || t("locationPicker.dragMapHint")}
                     </AppText>
                 )}
 
@@ -699,7 +699,7 @@ export default function LocationPickerScreen() {
                 <View style={styles.nudgeRow}>
                     <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
                     <AppText variant="caption" style={styles.nudgeText}>
-                        Sharing your location helps us show accurate farming data for your region
+                        {t("locationPicker.locationHelpText")}
                     </AppText>
                 </View>
 
@@ -707,11 +707,11 @@ export default function LocationPickerScreen() {
                     style={[styles.confirmBtn, (!pinCoords || saving) && styles.confirmBtnDisabled]}
                     onPress={handleConfirm}
                     disabled={!pinCoords || saving}
-                    accessibilityLabel="Confirm location"
+                    accessibilityLabel={t("locationPicker.confirmLocation")}
                     accessibilityRole="button"
                 >
                     <AppText variant="bodyMd" style={styles.confirmBtnText}>
-                        {saving ? "Saving…" : "Confirm Location"}
+                        {saving ? t("locationPicker.saving") : t("locationPicker.confirmLocation")}
                     </AppText>
                 </Pressable>
             </View>

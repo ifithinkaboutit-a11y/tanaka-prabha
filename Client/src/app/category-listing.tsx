@@ -272,7 +272,6 @@ const CategoryListing = () => {
               description={scheme.description || ""}
               category={scheme.category}
               imageUrl={scheme.imageUrl}
-              interestCount={scheme.interestCount}
               onPress={() => handleSchemePress(scheme)}
             />
           ))}

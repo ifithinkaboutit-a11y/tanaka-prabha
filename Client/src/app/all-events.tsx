@@ -7,6 +7,7 @@ import AppText from "../components/atoms/AppText";
 import EventCard from "../components/atoms/EventCard";
 import { eventsApi, ApiEvent } from "@/services/apiService";
 import { useLanguageStore } from "../stores/languageStore";
+import { useTranslation } from "../i18n";
 import { theme } from "@/styles/colors";
 import { colors } from "@/styles/colors";
 
@@ -27,6 +28,7 @@ function computeStatus(ev: ApiEvent) {
 export default function AllEvents() {
   const router = useRouter();
   const { currentLanguage } = useLanguageStore();
+  const { t } = useTranslation();
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,8 +61,8 @@ export default function AllEvents() {
           <Ionicons name="arrow-back" size={20} color={theme.text.secondary} onPress={() => router.back()} />
         </View>
         <View>
-          <AppText style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>Past Events</AppText>
-          {!loading && <AppText style={{ fontSize: 12, color: theme.text.muted }}>{events.length} events</AppText>}
+          <AppText style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>{t("schemesPage.pastEvents")}</AppText>
+          {!loading && <AppText style={{ fontSize: 12, color: theme.text.muted }}>{events.length} {t("events.events")}</AppText>}
         </View>
       </View>
 
@@ -71,7 +73,7 @@ export default function AllEvents() {
       ) : events.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <Ionicons name="calendar-outline" size={56} color={theme.border.card} />
-          <AppText style={{ fontSize: 16, color: theme.text.muted, marginTop: 12, textAlign: "center" }}>No past events yet</AppText>
+          <AppText style={{ fontSize: 16, color: theme.text.muted, marginTop: 12, textAlign: "center" }}>{t("events.noPastEvents")}</AppText>
         </View>
       ) : (
         <ScrollView

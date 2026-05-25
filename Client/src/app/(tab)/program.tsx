@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import {
   ScrollView, View, ActivityIndicator, RefreshControl,
-  Modal, Pressable, Alert, Animated, TouchableOpacity,
+  Modal, Pressable, Alert, Animated,
   StyleSheet, StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,20 +37,11 @@ function buildDateKey(ev: ApiEvent) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-/** Pulsing "LIVE" badge for ongoing events */
+// LiveBadge — static indicator, no animation (PRODUCT.md: no micro-animations)
 function LiveBadge() {
-  const pulse = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.4, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
   return (
     <View style={s.liveBadge}>
-      <Animated.View style={[s.liveDot, { opacity: pulse }]} />
+      <View style={s.liveDot} />
       <AppText style={s.liveText}>LIVE</AppText>
     </View>
   );
@@ -95,9 +86,6 @@ const Program = () => {
   const [registering, setRegistering] = useState(false);
   const modalAnim = useRef(new Animated.Value(0)).current;
 
-  // Header entrance
-  const headerAnim = useRef(new Animated.Value(0)).current;
-
   // ── Data ────────────────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async () => {
@@ -114,9 +102,6 @@ const Program = () => {
       setLoading(true);
       await fetchData();
       setLoading(false);
-      Animated.spring(headerAnim, {
-        toValue: 1, damping: 18, stiffness: 160, useNativeDriver: true,
-      }).start();
     })();
   }, [fetchData]);
 
@@ -232,7 +217,6 @@ const Program = () => {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  const headerTranslateY = headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
   const modalTranslateY = modalAnim.interpolate({ inputRange: [0, 1], outputRange: [300, 0] });
 
   return (
@@ -253,9 +237,7 @@ const Program = () => {
         }
       >
         {/* ── Sticky Header ── */}
-        <Animated.View
-          style={[s.header, { opacity: headerAnim, transform: [{ translateY: headerTranslateY }] }]}
-        >
+        <View style={s.header}>
           {/* Title + stats row */}
           <View style={s.headerTop}>
             <View style={{ flex: 1 }}>
@@ -279,7 +261,7 @@ const Program = () => {
               onSearch={setSearchQuery}
             />
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Empty state ── */}
         {allFiltered.length === 0 && searchQuery.trim() !== "" && (

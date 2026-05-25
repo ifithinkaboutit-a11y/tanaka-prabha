@@ -44,18 +44,6 @@ const SchemeCard = ({
   const [isPressed, setIsPressed] = useState(false);
   const displayTitle = currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title;
 
-  // Check eligibility based on user profile
-  const eligibility = useMemo(() => {
-    if (!userProfile) return { isEligible: true, matchDetails: undefined };
-    // Check if scheme has specific criteria (you can add these fields to your API/schema)
-    const schemeCriteria = {
-      minLandArea: (scheme as any).minLandArea,
-      maxLandArea: (scheme as any).maxLandArea,
-      districts: (scheme as any).districts,
-    };
-    return checkSchemeEligibility(schemeCriteria, userProfile);
-  }, [scheme, userProfile]);
-
   return (
     <Pressable
       onPress={onPress}
@@ -115,7 +103,6 @@ const SchemeCard = ({
             >
               {displayTitle}
             </AppText>
-            <SchemeEligibilityBadge isEligible={eligibility.isEligible} matchDetails={eligibility.matchDetails} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>

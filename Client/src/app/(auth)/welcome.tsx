@@ -79,7 +79,7 @@ export default function Welcome() {
             style={s.adminLink}
           >
             <Ionicons name="shield-checkmark-outline" size={14} color="#6B7280" />
-            <Text style={s.adminText}>Admin Portal</Text>
+            <Text style={s.adminText}>{t("auth.admin.portal")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

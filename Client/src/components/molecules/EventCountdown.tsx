@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLanguageStore } from '@/stores/languageStore';
+import { useTranslation } from '@/i18n';
 import { theme } from '@/styles/colors';
 
 interface EventLocation {
@@ -40,7 +40,7 @@ function formatNumber(n: number): string {
 }
 
 export function EventCountdown({ eventDate, eventLocation, compact = false }: EventCountdownProps) {
-  const { currentLanguage } = useLanguageStore();
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() => {
     const date = typeof eventDate === 'string' ? new Date(eventDate) : eventDate;
     return calculateTimeLeft(date);
@@ -77,22 +77,22 @@ export function EventCountdown({ eventDate, eventLocation, compact = false }: Ev
       }
     } catch (error) {
       Alert.alert(
-        currentLanguage === 'hi' ? 'मानचित्र खोल नहीं सका' : 'Could not open maps',
-        currentLanguage === 'hi' ? 'कृपया Google Maps इंस्टॉल करें' : 'Please install Google Maps'
+        t('events.countdown.mapErrorTitle'),
+        t('events.countdown.mapErrorMessage')
       );
     }
   };
 
-  // Event is live/ongoing
+  // Event is live/ongoing — static indicator (PRODUCT.md: no micro-animations)
   if (!timeLeft) {
     return (
       <View style={[styles.container, styles.liveContainer, compact && styles.compact]}>
         <View style={styles.liveDot} />
         <Text style={styles.liveText}>
-          {currentLanguage === 'hi' ? 'लाइव' : 'LIVE'}
+          {t('events.countdown.live')}
         </Text>
         <Text style={styles.liveSubtext}>
-          {currentLanguage === 'hi' ? 'अभी चल रहा है' : 'Started'}
+          {t('events.countdown.liveSubtext')}
         </Text>
       </View>
     );
@@ -104,7 +104,7 @@ export function EventCountdown({ eventDate, eventLocation, compact = false }: Ev
       <View style={[styles.container, styles.passedContainer, compact && styles.compact]}>
         <Ionicons name="checkmark-circle" size={16} color={theme.text.muted} />
         <Text style={styles.passedText}>
-          {currentLanguage === 'hi' ? 'समाप्त' : 'Ended'}
+          {t('events.countdown.ended')}
         </Text>
       </View>
     );
@@ -121,7 +121,7 @@ export function EventCountdown({ eventDate, eventLocation, compact = false }: Ev
             <View style={styles.timeBlock}>
               <Text style={styles.timeValue}>{days}</Text>
               <Text style={styles.timeLabel}>
-                {currentLanguage === 'hi' ? 'दिन' : 'days'}
+                {t('events.countdown.days')}
               </Text>
             </View>
             <Text style={styles.separator}>:</Text>
@@ -130,14 +130,14 @@ export function EventCountdown({ eventDate, eventLocation, compact = false }: Ev
         <View style={styles.timeBlock}>
           <Text style={styles.timeValue}>{formatNumber(hours)}</Text>
           <Text style={styles.timeLabel}>
-            {currentLanguage === 'hi' ? 'घंटे' : 'hrs'}
+            {t('events.countdown.hoursShort')}
           </Text>
         </View>
         <Text style={styles.separator}>:</Text>
         <View style={styles.timeBlock}>
           <Text style={styles.timeValue}>{formatNumber(minutes)}</Text>
           <Text style={styles.timeLabel}>
-            {currentLanguage === 'hi' ? 'मिनट' : 'min'}
+            {t('events.countdown.minutesShort')}
           </Text>
         </View>
       </View>
@@ -150,7 +150,7 @@ export function EventCountdown({ eventDate, eventLocation, compact = false }: Ev
         >
           <Ionicons name="location" size={14} color={theme.primary.green} />
           <Text style={styles.mapText}>
-            {currentLanguage === 'hi' ? 'मानचित्र' : 'Map'}
+            {t('events.countdown.map')}
           </Text>
           <Ionicons name="chevron-forward" size={12} color={theme.primary.green} />
         </TouchableOpacity>

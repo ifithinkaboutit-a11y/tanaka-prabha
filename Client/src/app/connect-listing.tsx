@@ -199,7 +199,7 @@ const ConnectListingScreen = () => {
             {service ? t(service.titleKey) : t("connect.allExperts")}
           </AppText>
           <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, marginTop: 2 }}>
-            Find your specialist
+            {t("connect.findYourSpecialist")}
           </AppText>
         </View>
       </View>

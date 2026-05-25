@@ -1,10 +1,9 @@
 // src/components/molecules/LivestockDetailsForm.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Alert,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -14,34 +13,40 @@ import {
   LivestockDetails,
   LivestockDetailsFormProps,
 } from "../../data/interfaces";
-import T, { useTranslation } from "../../i18n";
+import { useTranslation } from "../../i18n";
 import Button from "../atoms/Button";
 import { theme } from "@/styles/colors";
 
 // ─── Animal config — standardized with emojis matching profile display ────────
-const ANIMAL_DATA: {
-  key: keyof LivestockDetails;
+const ANIMAL_DATA = [
+  { key: "cow", icon: "cow", iconLib: "mci", accentBg: "#EEF2FF", accentText: "#3730A3" },
+  { key: "buffalo", icon: "water-outline", iconLib: "ion", accentBg: "#F5F3FF", accentText: "#6D28D9" },
+  { key: "sheep", icon: "sheep", iconLib: "mci", accentBg: "#ECFDF5", accentText: "#065F46" },
+  { key: "goat", icon: "paw", iconLib: "mci", accentBg: "#FFFBEB", accentText: "#92400E" },
+  { key: "pig", icon: "pig-variant", iconLib: "mci", accentBg: "#FFF1F2", accentText: "#9F1239" },
+  { key: "poultry", icon: "bird", iconLib: "mci", accentBg: "#FFF7ED", accentText: "#C2410C" },
+  { key: "horse", icon: "horse-variant", iconLib: "mci", accentBg: "#F0FDFA", accentText: "#0D9488" },
+  { key: "others", icon: "ellipsis-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
+] as const;
+
+const ANIMAL_EMOJIS = {
+  cow: "🐄", buffalo: "🐃", sheep: "🐑", goat: "🐐",
+  pig: "🐷", poultry: "🐔", horse: "🐴", others: "🐾",
+} as const;
+
+// ─── Counter Row ──────────────────────────────────────────────────────────────
+type AnimalCounterProps = {
+  label: string;
+  emoji: string;
+  value: number | undefined;
+  onChange: (v: number) => void;
   icon: string;
   iconLib: "mci" | "ion";
   accentBg: string;
   accentText: string;
-}[] = [
-    { key: "cow", icon: "cow", iconLib: "mci", accentBg: "#EEF2FF", accentText: "#3730A3" },
-    { key: "buffalo", icon: "water-outline", iconLib: "ion", accentBg: "#F5F3FF", accentText: "#6D28D9" },
-    { key: "sheep", icon: "sheep", iconLib: "mci", accentBg: "#ECFDF5", accentText: "#065F46" },
-    { key: "goat", icon: "paw", iconLib: "mci", accentBg: "#FFFBEB", accentText: "#92400E" },
-    { key: "pig", icon: "pig-variant", iconLib: "mci", accentBg: "#FFF1F2", accentText: "#9F1239" },
-    { key: "poultry", icon: "bird", iconLib: "mci", accentBg: "#FFF7ED", accentText: "#C2410C" },
-    { key: "horse", icon: "horse-variant", iconLib: "mci", accentBg: "#F0FDFA", accentText: "#0D9488" },
-    { key: "others", icon: "ellipsis-horizontal-circle-outline", iconLib: "ion", accentBg: "#F9FAFB", accentText: "#374151" },
-  ];
-
-const ANIMAL_EMOJIS: Record<keyof LivestockDetails, string> = {
-  cow: "🐄", buffalo: "🐃", sheep: "🐑", goat: "🐐",
-  pig: "🐷", poultry: "🐔", horse: "🐴", others: "🐾",
+  isLast?: boolean;
 };
 
-// ─── Counter Row ──────────────────────────────────────────────────────────────
 const AnimalCounter = ({
   label,
   emoji,
@@ -52,53 +57,48 @@ const AnimalCounter = ({
   accentBg,
   accentText,
   isLast = false,
-}: {
-  label: string;
-  emoji: string;
-  value: number | undefined;
-  onChange: (v: number) => void;
-  icon: string;
-  iconLib: "mci" | "ion";
-  accentBg: string;
-  accentText: string;
-  isLast?: boolean;
-}) => {
+}: AnimalCounterProps) => {
   const safeValue = value ?? 0;
+
   return (
-    <View style={[ac.row, !isLast && ac.rowBorder]}>
-      <View style={ac.left}>
-        <View style={[ac.badge, { backgroundColor: accentBg }]}>
+    <View
+      className={`flex-row items-center justify-between py-3.5 ${!isLast ? "border-b border-gray-200" : ""}`}
+    >
+      <View className="flex-row items-center gap-3 flex-1">
+        <View
+          className="w-10 h-10 rounded-lg items-center justify-center"
+          style={{ backgroundColor: accentBg }}
+        >
           {iconLib === "mci" ? (
             <MaterialCommunityIcons name={icon as any} size={20} color={accentText} />
           ) : (
             <Ionicons name={icon as any} size={20} color={accentText} />
           )}
         </View>
-        <Text style={ac.label}>{label}</Text>
+        <Text className="text-base font-medium text-gray-800">{label}</Text>
       </View>
 
-      <View style={ac.stepper}>
+      <View className="flex-row items-center gap-2">
         <Pressable
           onPress={() => onChange(Math.max(0, safeValue - 1))}
-          style={({ pressed }) => [ac.stepBtn, pressed && ac.stepBtnPressed]}
+          className="w-8 h-8 rounded border border-gray-300 items-center justify-center"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="remove" size={16} color={theme.text.subtle} />
         </Pressable>
 
         <TextInput
-          style={ac.countInput}
+          className="w-12 h-8 rounded border border-gray-300 bg-gray-100 text-center text-base text-gray-800 px-0"
           value={safeValue > 0 ? safeValue.toString() : ""}
           onChangeText={(t) => onChange(parseInt(t) || 0)}
           keyboardType="numeric"
-          textAlign="center"
           placeholder="0"
           placeholderTextColor={theme.border.card}
         />
 
         <Pressable
           onPress={() => onChange(safeValue + 1)}
-          style={({ pressed }) => [ac.stepBtn, ac.stepBtnAdd, pressed && ac.stepBtnPressed]}
+          className="w-8 h-8 rounded border border-green-400 bg-green-50 items-center justify-center"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="add" size={16} color={theme.primary.green} />
@@ -107,58 +107,6 @@ const AnimalCounter = ({
     </View>
   );
 };
-
-const ac = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 13,
-  },
-  rowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.border.subtle,
-  },
-  left: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-  badge: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeEmoji: {
-    fontSize: 20,
-  },
-  label: { fontSize: 15, fontWeight: "500", color: theme.text.secondary },
-  stepper: { flexDirection: "row", alignItems: "center", gap: 8 },
-  stepBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.border.subtle,
-    backgroundColor: "#F9FAFB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepBtnAdd: {
-    borderColor: "#BBF7D0",
-    backgroundColor: "#F0FDF4",
-  },
-  stepBtnPressed: { opacity: 0.6 },
-  countInput: {
-    width: 48,
-    height: 34,
-    borderWidth: 1,
-    borderColor: theme.border.subtle,
-    borderRadius: 8,
-    backgroundColor: theme.background.input,
-    fontSize: 15,
-    color: theme.text.primary,
-    padding: 0,
-  },
-});
 
 // ─── Main Form ────────────────────────────────────────────────────────────────
 export default function LivestockDetailsForm({
@@ -169,52 +117,75 @@ export default function LivestockDetailsForm({
   const [formData, setFormData] = useState<LivestockDetails>(initialData);
   const { t } = useTranslation();
 
-  const handleSave = () => {
+  // Memoized calculations
+  const totalAnimals = useMemo(
+    () => Object.values(formData).reduce((sum, v) => sum + v, 0),
+    [formData],
+  );
+
+  const farmSizeLabel = useMemo(() => {
+    if (totalAnimals > 10) return t("livestockDetails.largeFarm");
+    if (totalAnimals > 0) return t("livestockDetails.smallFarm");
+    return t("livestockDetails.noLivestock");
+  }, [totalAnimals, t]);
+
+  // Validation
+  const validate = useCallback(() => {
+    if (totalAnimals === 0) {
+      Alert.alert(t("common.error"), t("livestockDetails.emptyError"));
+      return false;
+    }
     if (Object.values(formData).some((v) => v < 0)) {
       Alert.alert(t("common.error"), t("livestockDetails.negativeError"));
-      return;
+      return false;
     }
+    return true;
+  }, [formData, totalAnimals, t]);
+
+  const handleSave = useCallback(() => {
+    if (!validate()) return;
     onSave(formData);
-  };
+  }, [formData, onSave, validate]);
 
-  const update = (field: keyof LivestockDetails, value: number) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-  const totalAnimals = Object.values(formData).reduce((sum, v) => sum + v, 0);
-
-  const farmSizeLabel =
-    totalAnimals > 10
-      ? t("livestockDetails.largeFarm")
-      : totalAnimals > 0
-      ? t("livestockDetails.smallFarm")
-      : t("livestockDetails.noLivestock");
+  const update = useCallback(
+    (field: keyof LivestockDetails, value: number) =>
+      setFormData((prev) => ({ ...prev, [field]: value })),
+    [],
+  );
 
   return (
     <KeyboardAwareScrollView
-      style={s.scroll}
+      className="flex-1 bg-white"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={s.content}
+      contentContainerClassName="pb-10"
+      keyboardShouldPersistTaps="handled"
     >
       {/* ── Summary strip ── */}
-      <View style={s.summaryStrip}>
-        <View style={s.summaryLeft}>
-          <Text style={s.summaryNumber}>{totalAnimals}</Text>
-          <Text style={s.summaryLabel}>
+      <View className="flex-row items-center justify-between bg-gray-100 rounded-3xl px-5 py-4 mb-3 border border-gray-200">
+        <View className="flex-row items-baseline gap-2">
+          <Text className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            {totalAnimals}
+          </Text>
+          <Text className="text-sm font-medium text-gray-500">
             {t("livestockDetails.totalAnimals")}
           </Text>
         </View>
-        <View style={s.summaryBadge}>
-          <Text style={s.summaryBadgeText}>{farmSizeLabel}</Text>
+        <View className="bg-gray-200 px-3 py-1.5 rounded-full">
+          <Text className="text-xs font-semibold text-gray-600">
+            {farmSizeLabel}
+          </Text>
         </View>
       </View>
 
       {/* ── Counter rows ── */}
-      <View style={s.card}>
-        <View style={s.cardHeader}>
-          <Text style={s.cardTitle}>
+      <View className="bg-white rounded-3xl px-4 pt-4 pb-1 mb-3 border border-gray-200">
+        <View className="flex-row items-baseline justify-between mb-1">
+          <Text className="text-base font-bold text-gray-900">
             {t("livestockDetails.livestockCount")}
           </Text>
-          <Text style={s.cardHint}>Tap + / − or type a number</Text>
+          <Text className="text-xs text-gray-400">
+            {t("livestockDetails.tapHint")}
+          </Text>
         </View>
 
         {ANIMAL_DATA.map((animal, i) => (
@@ -234,91 +205,28 @@ export default function LivestockDetailsForm({
       </View>
 
       {/* ── Info note ── */}
-      <View style={s.infoRow}>
+      <View className="flex-row items-start gap-2 px-1 mb-4">
         <Ionicons name="information-circle-outline" size={15} color="#6B7280" />
-        <Text style={s.infoText}>
+        <Text className="flex-1 text-xs text-gray-500 leading-5">
           {t("livestockDetails.infoMessage")}
         </Text>
       </View>
 
       {/* ── Actions ── */}
-      <View style={s.btnRow}>
+      <View className="flex-row gap-3">
         <Button
           variant="outline"
           label={t("livestockDetails.cancel")}
           onPress={onCancel}
-          style={{ flex: 1 }}
+          className="flex-1"
         />
         <Button
           variant="primary"
           label={t("livestockDetails.save")}
           onPress={handleSave}
-          style={{ flex: 2, backgroundColor: "#EA580C" }}
+          className="flex-2 bg-orange-500"
         />
       </View>
     </KeyboardAwareScrollView>
   );
 }
-
-const s = StyleSheet.create({
-  scroll: { flex: 1 },
-  content: { paddingBottom: 40 },
-
-  summaryStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: theme.background.input,
-    borderRadius: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: theme.border.subtle,
-  },
-  summaryLeft: { flexDirection: "row", alignItems: "baseline", gap: 8 },
-  summaryNumber: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: theme.text.primary,
-    letterSpacing: -1,
-  },
-  summaryLabel: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
-  summaryBadge: {
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  summaryBadgeText: { fontSize: 12, fontWeight: "600", color: theme.text.subtle },
-
-  card: {
-    backgroundColor: theme.background.input,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 4,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: theme.border.subtle,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  cardTitle: { fontSize: 15, fontWeight: "700", color: theme.text.primary },
-  cardHint: { fontSize: 11, color: theme.text.placeholder },
-
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    paddingHorizontal: 4,
-    marginBottom: 16,
-  },
-  infoText: { flex: 1, fontSize: 12, color: "#6B7280", lineHeight: 18 },
-
-  btnRow: { flexDirection: "row", gap: 12 },
-});

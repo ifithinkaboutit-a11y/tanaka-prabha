@@ -1,7 +1,6 @@
 // src/components/molecules/GreetingHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef } from "react";
-import { Animated, View } from "react-native";
+import { View } from "react-native";
 import { useTranslation } from "../../i18n";
 import AppText from "../atoms/AppText";
 import Avatar from "../atoms/Avatar";
@@ -25,7 +24,6 @@ export default function GreetingHeader({
   hasNotifications = false,
 }: GreetingHeaderProps) {
   const { t } = useTranslation();
-  const bellRotate = useRef(new Animated.Value(0)).current;
 
   const getGreeting = (): string => {
     const hour = new Date().getHours();
@@ -33,30 +31,6 @@ export default function GreetingHeader({
     if (hour < 17) return t("home.greeting.afternoon");
     return t("home.greeting.evening");
   };
-
-  // Wiggle the bell when there are unread notifications
-  useEffect(() => {
-    if (!hasNotifications) return;
-    const wiggle = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bellRotate, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(bellRotate, { toValue: -1, duration: 80, useNativeDriver: true }),
-        Animated.timing(bellRotate, { toValue: 0.7, duration: 80, useNativeDriver: true }),
-        Animated.timing(bellRotate, { toValue: -0.7, duration: 80, useNativeDriver: true }),
-        Animated.timing(bellRotate, { toValue: 0, duration: 80, useNativeDriver: true }),
-        // Pause between wiggles
-        Animated.delay(3000),
-      ]),
-      { iterations: -1 }
-    );
-    wiggle.start();
-    return () => wiggle.stop();
-  }, [hasNotifications, bellRotate]);
-
-  const bellRotateDeg = bellRotate.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-18deg", "18deg"],
-  });
 
   const greeting = getGreeting();
 
@@ -106,14 +80,11 @@ export default function GreetingHeader({
         <AnimatedPressable
           onPress={onNotificationPress}
           scaleOnPress={0.88}
-          className="relative items-center justify-center rounded-[18px] bg-gray-100"
-          style={{ width: 52, height: 52 }}
+          className="relative items-center justify-center rounded-full bg-gray-100 py-2 w-12 h-12"
           accessibilityLabel={hasNotifications ? "Notifications, unread" : "Notifications"}
           accessibilityRole="button"
         >
-          <Animated.View style={{ transform: [{ rotate: bellRotateDeg }] }}>
-            <Ionicons name="notifications-outline" size={28} color={theme.text.secondary} />
-          </Animated.View>
+          <Ionicons name="notifications-outline" size={24} color={theme.text.secondary} />
 
           {/* Pulsing red dot */}
           {hasNotifications && (

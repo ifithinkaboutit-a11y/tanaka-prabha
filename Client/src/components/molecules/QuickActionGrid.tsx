@@ -38,6 +38,10 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
 
   const rows = [actions.slice(0, 2), actions.slice(2, 4)];
 
+  // Ensure minimum 16sp font size (PRODUCT.md: 16sp minimum)
+  const actualFontSize = Math.max(fontSize, 16);
+  const actualLineHeight = Math.round(actualFontSize * 1.35);
+
   return (
     <View className="gap-3">
       {rows.map((row, rowIndex) => (
@@ -59,7 +63,7 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
               }}
             >
               <View
-                className="bg-white items-center justify-center border border-gray-100 rounded-[20px]"
+                className="bg-white items-center justify-center border border-gray-200 rounded-[20px]"
                 style={{ padding, aspectRatio: 1 }}
               >
                 {/* Icon pill */}
@@ -86,8 +90,8 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
                     textAlign: "center",
                     color: theme.text.secondary,
                     fontWeight: "700",
-                    fontSize,
-                    lineHeight,
+                    fontSize: actualFontSize,
+                    lineHeight: actualLineHeight,
                   }}
                 >
                   {action.title}

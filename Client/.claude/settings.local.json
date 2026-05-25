@@ -15,7 +15,11 @@
       "Bash(npm install *)",
       "Bash(where choco *)",
       "Bash(where chocolatey *)",
-      "Bash(where winget *)"
+      "Bash(where winget *)",
+      "Bash(node .claude/skills/impeccable/scripts/load-context.mjs)",
+      "Skill(impeccable)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\yasht\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--Internship-Tanak-Prabha-Client\\\\82bcc890-95ab-4961-9d57-6ab57ab5a5d3\\\\tasks\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name, Length, LastWriteTime)"
     ]
   }
 }

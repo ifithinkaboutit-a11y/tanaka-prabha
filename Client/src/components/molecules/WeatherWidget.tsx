@@ -188,9 +188,7 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
       shadowOpacity: 0.35, shadowRadius: 14, elevation: 5,
       overflow: "hidden",
     }}>
-      {/* Decorative blobs */}
-      <View style={{ position: "absolute", top: -18, right: -18, width: 90, height: 90, borderRadius: 45, backgroundColor: weatherTheme.iconBg, opacity: 0.45 }} />
-      <View style={{ position: "absolute", bottom: -24, left: -8, width: 70, height: 70, borderRadius: 35, backgroundColor: weatherTheme.iconBg, opacity: 0.25 }} />
+      {/* Decorative blobs removed — unnecessary visual noise for clarity-first design */}
 
       <View style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 14 }}>
         {/* Icon circle */}

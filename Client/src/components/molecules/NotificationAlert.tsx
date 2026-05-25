@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import AppText from "../atoms/AppText";
 import { theme } from "@/styles/colors";
+import { useTranslation } from "@/i18n";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,15 +29,17 @@ interface NotificationAlertProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function relativeTime(isoString: string): string {
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+function relativeTime(isoString: string, t: TranslateFn): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
   const diffMin = Math.floor(diffMs / 60_000);
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHour < 24) return `${diffHour}h ago`;
-  return `${diffDay}d ago`;
+  if (diffMin < 1) return t("common.time.justNow");
+  if (diffMin < 60) return t("common.time.minutesAgo", { count: diffMin });
+  if (diffHour < 24) return t("common.time.hoursAgo", { count: diffHour });
+  return t("common.time.daysAgo", { count: diffDay });
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -46,6 +49,7 @@ export default function NotificationAlert({
   onDismiss,
   onViewAll,
 }: NotificationAlertProps) {
+  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(-8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -72,7 +76,10 @@ export default function NotificationAlert({
 
     // Announce to screen readers
     AccessibilityInfo.announceForAccessibility(
-      `New notification: ${notifications[0].title}. ${notifications[0].description}`
+      t("notifications.accessibilityNew", {
+        title: notifications[0].title,
+        description: notifications[0].description,
+      })
     );
   }, [notifications.length]);
 
@@ -80,21 +87,27 @@ export default function NotificationAlert({
 
   const latest = notifications[0];
   const extraCount = notifications.length - 1;
-  const timeLabel = relativeTime(latest.createdAt);
+  const timeLabel = relativeTime(latest.createdAt, t);
 
   return (
     <Animated.View
       style={[
         styles.container,
-        { opacity: opacityAnim, transform: [{ translateY: slideAnim }] },
+        {
+          opacity: opacityAnim,
+          transform: [{ translateY: slideAnim }],
+          // Background tint replaces side-stripe (absolute ban)
+          backgroundColor: "#FFFBEB",
+        },
       ]}
       accessible
       accessibilityRole="alert"
-      accessibilityLabel={`Notification: ${latest.title}. ${latest.description}. Received ${timeLabel}.`}
+      accessibilityLabel={t("notifications.accessibilityLabel", {
+        title: latest.title,
+        description: latest.description,
+        time: timeLabel,
+      })}
     >
-      {/* Left accent bar */}
-      <View style={styles.accentBar} />
-
       <View style={styles.inner}>
         {/* ── Header row ── */}
         <View style={styles.headerRow}>
@@ -125,7 +138,7 @@ export default function NotificationAlert({
             onPress={() => onDismiss(latest.id)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityRole="button"
-            accessibilityLabel="Dismiss notification"
+            accessibilityLabel={t("notifications.dismissAccessibility")}
             style={styles.dismissButton}
           >
             <Ionicons name="close-circle" size={18} color={COLORS.amber600} />
@@ -141,7 +154,9 @@ export default function NotificationAlert({
         <View style={styles.footer}>
           {extraCount > 0 ? (
             <View style={styles.badge}>
-              <AppText style={styles.badgeText}>+{extraCount} more</AppText>
+              <AppText style={styles.badgeText}>
+                {t("notifications.moreCount", { count: extraCount })}
+              </AppText>
             </View>
           ) : (
             <View />
@@ -151,9 +166,9 @@ export default function NotificationAlert({
             onPress={onViewAll}
             style={styles.viewAllButton}
             accessibilityRole="button"
-            accessibilityLabel={`View all ${notifications.length} notifications`}
+            accessibilityLabel={t("notifications.viewAllAccessibility", { count: notifications.length })}
           >
-            <AppText style={styles.viewAllText}>View All</AppText>
+            <AppText style={styles.viewAllText}>{t("common.viewAll")}</AppText>
             <Ionicons name="arrow-forward" size={12} color={theme.primary.green} />
           </TouchableOpacity>
         </View>
@@ -198,16 +213,8 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  accentBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    backgroundColor: COLORS.accentBar,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-  },
+  // Side-stripe removed — absolute ban (PRODUCT.md)
+  // Using background tint instead
   inner: {
     paddingLeft: 20,
     paddingRight: 12,
