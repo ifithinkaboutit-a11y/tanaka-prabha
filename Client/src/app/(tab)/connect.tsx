@@ -297,7 +297,7 @@ export default function Connect() {
             <Pressable className="absolute inset-0" onPress={() => setModalVisible(false)} />
 
             <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              behavior="padding"
               className="bg-white dark:bg-zinc-900 rounded-t-3xl px-5 pt-4 pb-8"
             >
               {/* Handle */}

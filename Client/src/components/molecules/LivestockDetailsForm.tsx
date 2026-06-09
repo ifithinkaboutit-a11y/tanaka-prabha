@@ -218,13 +218,13 @@ export default function LivestockDetailsForm({
           variant="outline"
           label={t("livestockDetails.cancel")}
           onPress={onCancel}
-          className="flex-1"
+          style={{ flex: 1 }}
         />
         <Button
           variant="primary"
           label={t("livestockDetails.save")}
           onPress={handleSave}
-          className="flex-2 bg-orange-500"
+          style={{ flex: 2, backgroundColor: "#F97316" }}
         />
       </View>
     </KeyboardAwareScrollView>

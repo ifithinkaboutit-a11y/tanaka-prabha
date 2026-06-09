@@ -224,6 +224,10 @@
     "schemesAvailable": "schemes available",
     "allSchemes": "All Schemes",
     "more": "more",
+    "noProcess": "No process/procedure information available.",
+    "noEligibility": "No eligibility information available.",
+    "noOverview": "No overview information available.",
+    "noKeyObjectives": "No key objectives listed.",
     "scrollForMore": "Scroll for more ↓",
     "categoriesList": {
       "financialSupport": "Financial & Credit Support",

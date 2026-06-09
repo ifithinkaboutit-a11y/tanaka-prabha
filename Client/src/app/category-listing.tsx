@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState, useEffect } from "react";
 import {
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   TextInput,
@@ -157,7 +158,7 @@ const CategoryListing = () => {
       : category;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: theme.background.screen }}>
       {/* Sticky Top Header Area */}
       <View style={{
         backgroundColor: theme.background.input,
@@ -380,7 +381,7 @@ const CategoryListing = () => {
         onClear={() => { clearFilters(); setShowFilterPanel(false); }}
         onClose={() => setShowFilterPanel(false)}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

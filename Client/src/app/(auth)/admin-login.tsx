@@ -9,7 +9,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -71,7 +70,7 @@ export default function AdminLogin() {
     return (
         <KeyboardAvoidingView
             style={s.root}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            behavior="padding"
         >
             <View style={s.card}>
                 <View style={s.header}>

@@ -99,22 +99,32 @@ export default function LocationPickerScreen() {
     // ── Save state ─────────────────────────────────────────────────────────────
     const [saving, setSaving] = useState(false);
 
-    // ── Pre-populate address override from profile when purpose === "profile" ──
-    useEffect(() => {
-        if (purpose !== "profile") return;
-        userApi.getProfile().then((res) => {
-            if (!isMountedRef.current) return;
-            const profile = res.data?.user;
-            if (!profile) return;
-            const initial: Record<string, string> = {};
-            if (profile.state) initial.state = profile.state;
-            if (profile.district) initial.district = profile.district;
-            if (Object.keys(initial).length > 0) {
-                setProfileAddressOverride(initial);
-            }
-        }).catch(() => { /* silently ignore — pre-population is best-effort */ });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [purpose]);
+  // ── Pre-populate address override and saved coords from profile when purpose === "profile" ──
+  useEffect(() => {
+    if (purpose !== "profile") return;
+    userApi.getProfile().then((res) => {
+      if (!isMountedRef.current) return;
+      const profile = res.data?.user;
+      if (!profile) return;
+      const initial: Record<string, string> = {};
+      if (profile.state) initial.state = profile.state;
+      if (profile.district) initial.district = profile.district;
+      if (Object.keys(initial).length > 0) {
+        setProfileAddressOverride(initial);
+      }
+      // If saved coordinates exist, use them instead of GPS/fallback
+      if (profile.latitude && profile.longitude) {
+        const savedLat = profile.latitude;
+        const savedLng = profile.longitude;
+        setInitialPos({ lat: savedLat, lng: savedLng });
+        setPinCoords({ lat: savedLat, lng: savedLng });
+        setAccuracyCircleVisible(false);
+        geocodeCoords(savedLat, savedLng);
+        geocodeGpsCoords(savedLat, savedLng);
+      }
+    }).catch(() => { /* silently ignore — pre-population is best-effort */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purpose]);
 
     // ── Refs ───────────────────────────────────────────────────────────────────
     const mapRef = useRef<MapView>(null);

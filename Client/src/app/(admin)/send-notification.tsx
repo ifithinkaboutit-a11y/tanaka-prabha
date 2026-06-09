@@ -5,11 +5,9 @@ import { theme } from "@/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Platform } from "react-native";
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Pressable,
     StyleSheet,
     TextInput,
@@ -109,11 +107,7 @@ export default function SendNotificationScreen() {
     const canSend = title.trim().length > 0 && !sending;
 
     return (
-        <KeyboardAvoidingView
-            style={s.root}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-        >
+        <View style={s.root}>
         <View style={{ flex: 1 }}>
             {/* Header */}
             <View style={s.header}>
@@ -268,7 +262,7 @@ export default function SendNotificationScreen() {
                 </TouchableOpacity>
             </View>
         </View>
-        </KeyboardAvoidingView>
+        </View>
     );
 }
 

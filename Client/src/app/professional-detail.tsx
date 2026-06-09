@@ -138,7 +138,7 @@ export default function ProfessionalDetail() {
                             <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20 }}>
                                 <View style={{
                                     flexDirection: "row", alignItems: "center",
-                                    backgroundColor: isAvailable ? theme.semantic.successLight : theme.semantic.errorLight,
+                                    backgroundColor: isAvailable ? theme.semantic.successBackground : theme.semantic.errorLight,
                                     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
                                 }}>
                                     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isAvailable ? theme.semantic.success : theme.semantic.error, marginRight: 8 }} />

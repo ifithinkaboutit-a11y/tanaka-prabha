@@ -16,9 +16,15 @@ const resolveKey = (language: string, key: string) => {
 
 // For backward compatibility - this won't be reactive
 const T = {
-  translate: (key: string) => {
+  translate: (key: string, params?: Record<string, string | number>) => {
     const store = useLanguageStore.getState();
-    return store.translate(key);
+    let result = store.translate(key);
+    if (params && typeof result === "string") {
+      Object.entries(params).forEach(([k, v]) => {
+        result = result.replace(new RegExp(`{{${k}}}`, "g"), String(v));
+      });
+    }
+    return result;
   },
   setLocale: (locale: string) => {
     useLanguageStore.getState().setLanguage(locale);

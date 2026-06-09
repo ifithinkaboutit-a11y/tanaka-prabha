@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import SearchResults from "../components/molecules/SearchResults";
 import { useSearch } from "../hooks/useSearch";
@@ -29,7 +29,7 @@ export default function SearchScreen() {
   const showEmpty = hasQuery && totalResults === 0 && !isSearching && !loading;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: theme.background.screen }}>
 
       {/* ── Header ── */}
       <View style={{ paddingTop: 48, paddingBottom: 12, paddingHorizontal: 16, backgroundColor: theme.background.input, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
@@ -185,6 +185,6 @@ export default function SearchScreen() {
       ) : (
         <SearchResults results={searchResults} />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }

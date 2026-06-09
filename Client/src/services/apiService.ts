@@ -210,7 +210,20 @@ async function fetchWithAuth<T>(
 
     clearTimeout(timeoutId);
 
-    const data = await response.json();
+    let data: any;
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error(`❌ Non-JSON response (${response.status}):`, text.slice(0, 300));
+      throw new ApiError(
+        `Server returned ${response.status} ${response.statusText} — expected JSON`,
+        response.status,
+        { body: text.slice(0, 500) }
+      );
+    }
+
     console.log(`📥 API Response (${response.status}):`, JSON.stringify(data).slice(0, 200));
 
     if (!response.ok) {
@@ -376,6 +389,8 @@ function convertApiUserToUserProfile(apiUser: ApiUserProfile): UserProfile {
     district: apiUser.district,
     pinCode: apiUser.pin_code,
     state: apiUser.state,
+    latitude: apiUser.latitude,
+    longitude: apiUser.longitude,
     location: apiUser.location,
     landDetails: apiUser.land_details
       ? {
@@ -642,6 +657,8 @@ export interface ApiUserProfile {
   district?: string;
   pin_code?: string;
   state?: string;
+  latitude?: number;
+  longitude?: number;
   location?: any;
   land_details?: ApiLandDetails;
   livestock_details?: ApiLivestockDetails;
@@ -674,6 +691,8 @@ export interface UserProfile {
   district?: string;
   pinCode?: string;
   state?: string;
+  latitude?: number;
+  longitude?: number;
   location?: any;
   landDetails?: {
     totalLandArea?: number;

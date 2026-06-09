@@ -85,44 +85,60 @@ const SchemeDetailsScreen = () => {
     }
   };
 
-  const renderTabContent = () => {
-    const overviewText = currentLanguage === 'hi' && scheme.overviewHi ? scheme.overviewHi : scheme.overview;
-    const processText = currentLanguage === 'hi' && scheme.processHi ? scheme.processHi : scheme.process;
-    const keyObjectives = currentLanguage === 'hi' && scheme.keyObjectivesHi ? scheme.keyObjectivesHi : scheme.keyObjectives;
-    // eligibility comes from the DB as a plain text string — convert to an array of lines
-    const eligibilityRaw = currentLanguage === 'hi' && scheme.eligibilityHi ? scheme.eligibilityHi : scheme.eligibility;
-    const eligibility: string[] = Array.isArray(eligibilityRaw)
-      ? eligibilityRaw
-      : typeof eligibilityRaw === 'string' && eligibilityRaw.trim()
-        ? eligibilityRaw.split(/\n|(?<=\.)\s+(?=[A-Z])/).map(s => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
-        : [];
+  const overviewText = currentLanguage === 'hi' && scheme.overviewHi ? scheme.overviewHi : scheme.overview;
+  const processText = currentLanguage === 'hi' && scheme.processHi ? scheme.processHi : scheme.process;
+  const keyObjectives = currentLanguage === 'hi' && scheme.keyObjectivesHi ? scheme.keyObjectivesHi : scheme.keyObjectives;
+  const eligibilityRaw = currentLanguage === 'hi' && scheme.eligibilityHi ? scheme.eligibilityHi : scheme.eligibility;
+  const eligibility: string[] = Array.isArray(eligibilityRaw)
+    ? eligibilityRaw
+    : typeof eligibilityRaw === 'string' && eligibilityRaw.trim()
+      ? eligibilityRaw.split(/\n|(?<=\.)\s+(?=[A-Z])/).map(s => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+      : [];
 
-    switch (activeTab) {
+  const hasProcessData = !!processText;
+  const hasEligibilityData = eligibility.length > 0;
+  const hasOverviewData = !!overviewText;
+
+  const tabs = [
+    { key: "overview" as const, label: t("programReader.tabs.overview"), hasData: hasOverviewData },
+    { key: "eligibility" as const, label: t("schemesPage.eligibility"), hasData: hasEligibilityData },
+    { key: "process" as const, label: t("programReader.tabs.process"), hasData: hasProcessData },
+  ];
+
+  // Auto-switch to first tab that has data if current tab has no data
+  const effectiveTab = tabs.find(t => t.key === activeTab && t.hasData)
+    || tabs.find(t => t.hasData)
+    || activeTab;
+
+  const renderTabContent = () => {
+    switch (effectiveTab) {
       case "overview":
         return (
           <View>
-            <AppText
-              variant="bodyLg"
-              style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}
-            >
-              {overviewText}
-            </AppText>
+            {hasOverviewData ? (
+              <AppText variant="bodyLg" style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}>
+                {overviewText}
+              </AppText>
+            ) : (
+              <AppText variant="bodyMd" style={{ color: theme.text.placeholder, fontStyle: "italic", marginBottom: 24 }}>
+                {t("schemesPage.noOverview") || "No overview information available."}
+              </AppText>
+            )}
 
-            {/* Key Objectives */}
             <AppText variant="h3" style={{ color: theme.text.dark, marginBottom: 16 }}>
               {t("programReader.keyObjectives")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {keyObjectives?.map((objective: string, index: number) => (
+              {keyObjectives?.length ? keyObjectives.map((objective: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
-                    •
-                  </AppText>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
-                    {objective}
-                  </AppText>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>•</AppText>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>{objective}</AppText>
                 </View>
-              ))}
+              )) : (
+                <AppText variant="bodyMd" style={{ color: theme.text.placeholder, fontStyle: "italic" }}>
+                  {t("schemesPage.noKeyObjectives") || "No key objectives listed."}
+                </AppText>
+              )}
             </View>
           </View>
         );
@@ -133,23 +149,27 @@ const SchemeDetailsScreen = () => {
               {t("schemesPage.eligibility")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {eligibility?.map((criterion: string, index: number) => (
+              {hasEligibilityData ? eligibility.map((criterion: string, index: number) => (
                 <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
-                    •
-                  </AppText>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
-                    {criterion}
-                  </AppText>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>•</AppText>
+                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>{criterion}</AppText>
                 </View>
-              ))}
+              )) : (
+                <AppText variant="bodyMd" style={{ color: theme.text.placeholder, fontStyle: "italic" }}>
+                  {t("schemesPage.noEligibility") || "No eligibility information available."}
+                </AppText>
+              )}
             </View>
           </View>
         );
       case "process":
-        return (
+        return hasProcessData ? (
           <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {processText}
+          </AppText>
+        ) : (
+          <AppText variant="bodyMd" style={{ color: theme.text.placeholder, fontStyle: "italic" }}>
+            {t("schemesPage.noProcess") || "No process/procedure information available."}
           </AppText>
         );
       default:
@@ -211,44 +231,42 @@ const SchemeDetailsScreen = () => {
           />
         </View>
 
-        {/* Segmented Tab Buttons */}
-        <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
-          <View style={{ flexDirection: "row", backgroundColor: theme.background.screen, borderRadius: 12, padding: 4 }}>
-            {[
-              { key: "overview", label: t("programReader.tabs.overview") },
-              { key: "eligibility", label: t("schemesPage.eligibility") },
-              { key: "process", label: t("programReader.tabs.process") },
-            ].map((tab) => (
-              <Pressable
-                key={tab.key}
-                onPress={() => setActiveTab(tab.key as any)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  alignItems: "center",
-                  borderRadius: 10,
-                  backgroundColor: activeTab === tab.key ? theme.background.input : "transparent",
-                  shadowColor: activeTab === tab.key ? "#000" : "transparent",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: activeTab === tab.key ? 0.05 : 0,
-                  shadowRadius: 2,
-                  elevation: activeTab === tab.key ? 2 : 0,
-                }}
-              >
-                <AppText
-                  variant="bodyMd"
+        {/* Segmented Tab Buttons — only show tabs that have data */}
+        {tabs.some(t => t.hasData) && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", backgroundColor: theme.background.screen, borderRadius: 12, padding: 4 }}>
+              {tabs.filter(t => t.hasData).map((tab) => (
+                <Pressable
+                  key={tab.key}
+                  onPress={() => setActiveTab(tab.key)}
                   style={{
-                    fontWeight: activeTab === tab.key ? "700" : "500",
-                    color: activeTab === tab.key ? theme.text.primary : theme.text.muted,
-                    fontSize: 14,
+                    flex: 1,
+                    paddingVertical: 10,
+                    alignItems: "center",
+                    borderRadius: 10,
+                    backgroundColor: effectiveTab === tab.key ? theme.background.input : "transparent",
+                    shadowColor: effectiveTab === tab.key ? "#000" : "transparent",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: effectiveTab === tab.key ? 0.05 : 0,
+                    shadowRadius: 2,
+                    elevation: effectiveTab === tab.key ? 2 : 0,
                   }}
                 >
-                  {tab.label}
-                </AppText>
-              </Pressable>
-            ))}
+                  <AppText
+                    variant="bodyMd"
+                    style={{
+                      fontWeight: effectiveTab === tab.key ? "700" : "500",
+                      color: effectiveTab === tab.key ? theme.text.primary : theme.text.muted,
+                      fontSize: 14,
+                    }}
+                  >
+                    {tab.label}
+                  </AppText>
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Tab Content */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>{renderTabContent()}</View>

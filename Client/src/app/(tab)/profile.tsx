@@ -13,6 +13,7 @@ import {
   View,
   Modal,
 } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import Button from "@/components/atoms/Button";
 import Avatar from "../../components/atoms/Avatar";
 import { useTranslation } from "../../i18n";
@@ -393,6 +394,29 @@ const Profile = () => {
           value={[profile.village, profile.gramPanchayat, profile.district, profile.state].filter(Boolean).map(formatFieldValue).join(", ")}
           accent
         />
+        {profile.latitude && profile.longitude && (
+          <View style={{ height: 160, borderRadius: 12, overflow: "hidden", marginTop: 12, marginBottom: 4 }}>
+            <MapView
+              style={{ flex: 1 }}
+              provider={PROVIDER_GOOGLE}
+              initialRegion={{
+                latitude: profile.latitude,
+                longitude: profile.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+            >
+              <Marker
+                coordinate={{ latitude: profile.latitude, longitude: profile.longitude }}
+                title={t("profile.yourLocation") || "Your Location"}
+              />
+            </MapView>
+          </View>
+        )}
       </SectionCard>
 
       {/* ── Land Card ── */}

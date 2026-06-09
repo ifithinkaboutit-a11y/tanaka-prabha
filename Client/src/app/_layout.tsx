@@ -20,21 +20,15 @@ export default function RootLayout() {
   useOfflineQueueSync();
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Warm up the API server
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
-        fetch(apiUrl.replace(/\/api\/?$/, "/health"), { method: "HEAD" }).catch(() => {});
-        await new Promise((resolve) => setTimeout(resolve, 800));
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        if (Platform.OS !== "web") {
-          await SplashScreen.hideAsync();
-        }
-      }
+    // Hide splash screen immediately for fast perceived load
+    if (Platform.OS !== "web") {
+      SplashScreen.hideAsync();
     }
-    prepare();
+
+    // Warm up the API server in background (non-blocking)
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
+    fetch(apiUrl.replace(/\/api\/?$/, "/health"), { method: "HEAD" }).catch(() => {});
+
     if (Platform.OS === "android") {
       NavigationBar.setVisibilityAsync("hidden").catch(() => {});
     }

@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import {
   ScrollView, View, ActivityIndicator, RefreshControl,
-  Modal, Pressable, Alert, Animated,
+  Modal, Pressable, Alert, Animated, TouchableOpacity,
   StyleSheet, StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";

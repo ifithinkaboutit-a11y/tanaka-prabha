@@ -15,7 +15,6 @@ import {
     Image,
     KeyboardAvoidingView,
     Modal,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -312,7 +311,7 @@ function SchemesTab() {
 
             <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
                 <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
-                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
+                    <KeyboardAvoidingView behavior="padding" style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
                             <AppText style={cms.sheetTitle}>{editingItem ? "Edit Scheme" : "Add Scheme"}</AppText>
@@ -539,7 +538,7 @@ function ProfessionalsTab() {
 
             <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => { setShowModal(false); reset(); }}>
                 <Pressable style={cms.overlay} onPress={() => { setShowModal(false); reset(); }}>
-                    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
+                    <KeyboardAvoidingView behavior="padding" style={{ width: "100%" }}>
                         <Pressable style={cms.sheet} onPress={e => e.stopPropagation()}>
                             <View style={cms.sheetHandle} />
                             <AppText style={cms.sheetTitle}>{editingItem ? "Edit Professional" : "Add Professional"}</AppText>

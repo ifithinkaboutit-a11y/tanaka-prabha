@@ -11,13 +11,12 @@ import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "@/i18n";
+import { KeyboardAwareScrollView } from "@/components/atoms/KeyboardAwareScrollView";
 import {
     ActivityIndicator,
     Alert,
     Image,
-    KeyboardAvoidingView,
     Modal,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -467,12 +466,10 @@ export default function CreateEvent() {
                 onSelect={setEndTime}
             />
 
-            <KeyboardAvoidingView
+            <KeyboardAwareScrollView
                 style={s.root}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+                contentContainerStyle={s.scrollContent}
             >
-                <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
                     {/* Page header */}
                     <View style={s.pageHeader}>
                         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
@@ -791,8 +788,7 @@ export default function CreateEvent() {
                             style={s.btn}
                         />
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
         </>
     );
 }

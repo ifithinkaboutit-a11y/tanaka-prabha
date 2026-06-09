@@ -178,6 +178,13 @@ export default function ContentDetailPage() {
                             </div>
                         )}
 
+                        {isScheme && content.process && (
+                            <div>
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Application Process</p>
+                                <p className="text-sm leading-relaxed whitespace-pre-line">{content.process}</p>
+                            </div>
+                        )}
+
                         {(content.apply_url || content.redirect_url) && (
                             <div>
                                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">

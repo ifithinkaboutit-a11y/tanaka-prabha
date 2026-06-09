@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import {
     ArrowLeft, Phone, MapPin, User, Calendar, Home, Building2, FileText,
     Wheat, Sprout, Ruler, MapPinned, Users, GraduationCap, IdCard,
@@ -87,6 +88,59 @@ function LoadingSkeleton() {
         </div>
     )
 }
+
+// ───── Embedded pinpoint map ─────
+const LocationMap = dynamic(() => Promise.resolve(({ lat, lng }: { lat: number; lng: number }) => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const mapInitializedRef = useRef(false)
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (mapInitializedRef.current || !mapContainerRef.current) return
+    mapInitializedRef.current = true
+
+    import("leaflet").then((L) => {
+      import("leaflet/dist/leaflet.css")
+
+      const map = L.map(mapContainerRef.current!, {
+        center: [lat, lng],
+        zoom: 15,
+        scrollWheelZoom: false,
+        zoomControl: true,
+      })
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map)
+
+      const icon = L.icon({
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      })
+
+      L.marker([lat, lng], { icon })
+        .addTo(map)
+        .bindPopup(`<b>Exact Location</b><br/>${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+        .openPopup()
+    })
+  }, [lat, lng])
+
+  return (
+    <div
+      ref={mapContainerRef}
+      className="w-full rounded-xl overflow-hidden border"
+      style={{ height: "240px", minHeight: "240px" }}
+    />
+  )
+}), { ssr: false })
 
 export default function BeneficiaryDetailPage() {
     const params = useParams()
@@ -298,28 +352,31 @@ export default function BeneficiaryDetailPage() {
                                 <InfoItem icon={FileText} label="Pin Code" value={user.pin_code} />
                             </div>
 
-                            {/* GPS Location */}
+                            {/* GPS Location — with embedded pinpoint map */}
                             {(user.latitude && user.longitude) && (
-                                <div className="mt-6 p-4 rounded-xl bg-muted/40 border flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                                            <MapPinned className="size-4 text-primary" />
+                                <div className="mt-6 space-y-3">
+                                    <LocationMap lat={Number(user.latitude)} lng={Number(user.longitude)} />
+                                    <div className="p-3 rounded-xl bg-muted/40 border flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <MapPinned className="size-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">GPS Location</p>
+                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                    {Number(user.latitude).toFixed(6)}, {Number(user.longitude).toFixed(6)}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium">GPS Location</p>
-                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                                {Number(user.latitude).toFixed(6)}, {Number(user.longitude).toFixed(6)}
-                                            </p>
-                                        </div>
+                                        <a
+                                            href={`https://www.google.com/maps?q=${user.latitude},${user.longitude}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            View on Map →
+                                        </a>
                                     </div>
-                                    <a
-                                        href={`https://www.google.com/maps?q=${user.latitude},${user.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline font-medium"
-                                    >
-                                        View on Map →
-                                    </a>
                                 </div>
                             )}
                         </CardContent>
