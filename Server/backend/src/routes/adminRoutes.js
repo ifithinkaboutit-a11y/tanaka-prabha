@@ -15,7 +15,11 @@ const adminAuth = (req, res, next) => {
             return res.status(401).json({ error: 'Unauthorized — token required' });
         }
         const token = authHeader.substring(7);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        if (!process.env.JWT_SECRET) {
+            console.error('[adminAuth] CRITICAL: JWT_SECRET not configured');
+            return res.status(500).json({ error: 'Server configuration error' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.admin = { id: decoded.id, email: decoded.email };
         next();
     } catch {
@@ -26,9 +30,14 @@ const adminAuth = (req, res, next) => {
 /**
  * @route   POST /api/admin/setup
  * @desc    Create a single admin user
- * @access  Public (should be protected or disabled in production after setup)
+ * @access  Disabled in production — only available when ADMIN_SETUP_ENABLED=true
  */
-router.post('/setup', createAdmin);
+router.post('/setup', (req, res, next) => {
+    if (process.env.ADMIN_SETUP_ENABLED !== 'true') {
+        return res.status(403).json({ error: 'Admin setup is disabled in production' });
+    }
+    next();
+}, createAdmin);
 
 /**
  * @route   POST /api/admin/login

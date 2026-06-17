@@ -65,8 +65,6 @@ export default function LocationPickerScreen() {
     const {
         locationData,
         setLocationData,
-        personalDetails,
-        updatePersonalDetails,
         setProfileAddressOverride,
         setEventLocationPick,
         setBeneficiaryLocationPick,
@@ -400,30 +398,8 @@ export default function LocationPickerScreen() {
                 return;
             }
 
-            // Onboarding flow
+            // Onboarding flow — GPS stored separately; manual address is NOT overwritten.
             setLocationData(newLocInfo);
-
-            let parsed;
-            try {
-                parsed = await parseGoogleAddress(pinCoords.lat, pinCoords.lng, {
-                    state: personalDetails.state,
-                    district: personalDetails.district,
-                    tehsil: personalDetails.tehsil,
-                    block: personalDetails.block,
-                    village: personalDetails.village,
-                    pinCode: personalDetails.pinCode,
-                    postOffice: personalDetails.postOffice,
-                });
-            } catch { parsed = null; }
-            const updates: Record<string, string> = {};
-            if (parsed?.state) updates.state = parsed.state;
-            if (parsed?.district) updates.district = parsed.district;
-            if (parsed?.tehsil) updates.tehsil = parsed.tehsil;
-            if (parsed?.block) updates.block = parsed.block;
-            if (parsed?.village) updates.village = parsed.village;
-            if (parsed?.pinCode) updates.pinCode = parsed.pinCode;
-            if (parsed?.postOffice) updates.postOffice = parsed.postOffice;
-            if (Object.keys(updates).length > 0) updatePersonalDetails(updates);
 
             router.push("/(auth)/land-details" as any);
         } catch (error) {
@@ -434,8 +410,8 @@ export default function LocationPickerScreen() {
         }
     }, [
         pinCoords, address, gpsAccuracy, isProfileMode, purpose,
-        personalDetails, setLocationData, setProfileAddressOverride,
-        setEventLocationPick, setBeneficiaryLocationPick, updatePersonalDetails, router, t,
+        setLocationData, setProfileAddressOverride,
+        setEventLocationPick, setBeneficiaryLocationPick, router, t,
     ]);
 
     // ── Confirm ────────────────────────────────────────────────────────────────

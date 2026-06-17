@@ -53,16 +53,22 @@ class Event {
     }
 
     static async update(id, eventData) {
+        // Whitelist of allowed columns to prevent SQL injection via column names
+        const ALLOWED_COLUMNS = new Set([
+            'title', 'description', 'date', 'start_time', 'end_time',
+            'location_name', 'location_address', 'instructors',
+            'guidelines_and_rules', 'requirements', 'hero_image_url', 'status'
+        ]);
         const fields = [];
         const values = [];
         let paramCount = 1;
 
         Object.keys(eventData).forEach(key => {
+            if (!ALLOWED_COLUMNS.has(key)) return;
             fields.push(key + ' = $' + paramCount);
             if (key === 'instructors') {
                 values.push(JSON.stringify(eventData[key]));
             } else {
-                // media_urls is a TEXT[] column — pass the array directly (not JSON-stringified)
                 values.push(eventData[key]);
             }
             paramCount++;

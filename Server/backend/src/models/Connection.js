@@ -168,11 +168,11 @@ class Connection {
                 COUNT(CASE WHEN method = 'chat' THEN 1 END) as chats,
                 COUNT(CASE WHEN method = 'appointment' THEN 1 END) as appointments
             FROM public.connections
-            WHERE connected_on >= NOW() - INTERVAL '${days} days'
+            WHERE connected_on >= NOW() - INTERVAL '1 days' * $1
             GROUP BY DATE(connected_on)
             ORDER BY date DESC
         `;
-        const result = await query(text);
+        const result = await query(text, [days]);
         return result.rows;
     }
 }

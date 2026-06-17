@@ -12,7 +12,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState, useEffect } from "react";
-import AddressDropdowns, { type AddressValue } from "@/components/molecules/AddressDropdowns";
 import { getStateOptions, getDistrictOptions } from "@/data/indianLocations";
 import { useLanguageStore } from "@/stores/languageStore";
 import {
@@ -228,17 +227,36 @@ function Step2({
     const lang = useLanguageStore((s) => s.currentLanguage);
     const [pinLoading, setPinLoading] = useState(false);
     const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
-    const [addressLists, setAddressLists] = useState<{
-        districts: { label: string; value: string }[];
-        blocks: { label: string; value: string }[];
-    }>({ districts: [], blocks: [] });
+    const [blockOptions, setBlockOptions] = useState<{ label: string; value: string }[]>([]);
 
     const hasMapPin = form.lat !== null;
+
+    const matchPinToStateSlug = (stateName: string): string => {
+        const normalized = stateName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+        const all = getStateOptions("en");
+        const found = all.find(s =>
+            s.value === normalized ||
+            s.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+        );
+        return found?.value || normalized;
+    };
+
+    const matchPinToDistrictSlug = (stateValue: string, districtName: string): string => {
+        const normalized = districtName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+        const districts = getDistrictOptions(stateValue, "en");
+        const found = districts.find(d =>
+            d.value === normalized ||
+            d.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+        );
+        return found?.value || normalized;
+    };
 
     const handlePinCodeChange = async (pin: string) => {
         setForm({ ...form, pinCode: pin });
         if (pin.length === 6) {
             setPinLoading(true);
+            setPostOfficeOptions([]);
+            setBlockOptions([]);
             try {
                 const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
                 const data = await response.json();
@@ -247,17 +265,20 @@ function Step2({
                     const poOptions = postOffices.map((po: any) => ({ label: po.Name, value: po.Name }));
                     setPostOfficeOptions(poOptions);
 
-                    // Normalize for comparison
+                    const blocks = Array.from(new Set(postOffices.map((po: any) => po.Block))) as string[];
+                    setBlockOptions(blocks.map(b => ({ label: b, value: b })));
+
                     const firstPO = postOffices[0];
-                    const stateSlug = firstPO.State.trim().toLowerCase().replace(/[\s-]+/g, "_");
-                    const districtName = firstPO.District;
+                    const matchedState = matchPinToStateSlug(firstPO.State);
+                    const matchedDistrict = matchPinToDistrictSlug(matchedState, firstPO.District);
 
                     setForm({
                         ...form,
                         pinCode: pin,
-                        state: stateSlug,
-                        district: districtName,
-                        postOffice: poOptions.length === 1 ? poOptions[0].value : form.postOffice
+                        state: matchedState || form.state,
+                        district: matchedDistrict || form.district,
+                        block: blocks.length === 1 ? blocks[0] : form.block,
+                        postOffice: poOptions.length === 1 ? poOptions[0].value : form.postOffice,
                     });
                 }
             } catch (e) {
@@ -275,7 +296,7 @@ function Step2({
         <>
             <AppText style={lc.stepNotice}>BOTH GPS location and full address are compulsory.</AppText>
 
-            {/* Part A: GPS Map Picker */}
+            {/* Part A: GPS Map Picker — stored separately, does NOT fill address fields */}
             <AppText style={f.label}>Step 2A: GPS Coordinates *</AppText>
             <Pressable onPress={onPickOnMap} style={[lc.mapBtn, hasMapPin && lc.mapBtnPinned]}>
                 <View style={[lc.mapBtnIcon, hasMapPin && lc.mapBtnIconPinned]}>
@@ -305,7 +326,9 @@ function Step2({
                 <View style={lc.dividerLine} />
             </View>
 
-            {/* Part B: Manual Address Fields */}
+            {/* Part B: Manual Address — standardized cascading dropdowns for ALL districts */}
+
+            {/* PIN Code → auto-populates Post Office + Block options */}
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="PIN Code *" />
                 <View style={{ position: "relative" }}>
@@ -318,84 +341,46 @@ function Step2({
                 <FieldError message={errors.pinCode} />
             </View>
 
+            {/* Step 1: State */}
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="State *" />
-                <Select value={form.state} onChange={(v) => setForm({ ...form, state: v, district: "" })}
+                <Select value={form.state} onChange={(v) => setForm({ ...form, state: v, district: "", block: "" })}
                     options={stateOptions} placeholder="Select State" />
                 <FieldError message={errors.state} />
             </View>
 
+            {/* Step 2: District (always a dropdown, filtered by state) */}
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="District *" />
-                <Select value={form.district} onChange={(v) => setForm({ ...form, district: v, tehsil: "", block: "", gramPanchayat: "", nyayPanchayat: "", village: "" })}
+                <Select value={form.district} onChange={(v) => setForm({ ...form, district: v, block: "" })}
                     options={districtOptions} placeholder={form.state ? "Select District" : "Select State first"} disabled={!form.state} />
                 <FieldError message={errors.district} />
             </View>
 
-            {/* Specialized Dropdowns for Bhadohi / Mirzapur */}
-            {(form.district?.toLowerCase() === "bhadohi" || form.district?.toLowerCase() === "mirzapur") ? (
-                <AddressDropdowns
-                    district={form.district}
-                    language={lang as "en" | "hi"}
-                    value={{
-                        tehsil: form.tehsil || "",
-                        nyayPanchayat: form.nyayPanchayat || "",
-                        gramPanchayat: form.gramPanchayat || "",
-                        village: form.village || "",
-                    }}
-                    onChange={(v: AddressValue) => setForm({
-                        ...form,
-                        tehsil: v.tehsil,
-                        nyayPanchayat: v.nyayPanchayat,
-                        gramPanchayat: v.gramPanchayat,
-                        village: v.village
-                    })}
-                />
-            ) : (
-                <>
-                    <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
-                        <View style={{ flex: 1 }}>
-                            <FieldLabel text="Tehsil *" />
-                            <TextInput style={inputStyle(!!errors.tehsil)} value={form.tehsil}
-                                onChangeText={(v) => setForm({ ...form, tehsil: v })}
-                                placeholder="Tehsil" placeholderTextColor="#9CA3AF" />
-                            <FieldError message={errors.tehsil} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <FieldLabel text="Block *" />
-                            <TextInput style={inputStyle(!!errors.block)} value={form.block}
-                                onChangeText={(v) => setForm({ ...form, block: v })}
-                                placeholder="Block" placeholderTextColor="#9CA3AF" />
-                            <FieldError message={errors.block} />
-                        </View>
-                    </View>
+            {/* Step 3: Block / Tehsil (dropdown from PIN or free-text) */}
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="Block / Tehsil *" />
+                {blockOptions.length > 0 ? (
+                    <Select value={form.block} onChange={(v) => setForm({ ...form, block: v })}
+                        options={blockOptions} placeholder="Select Block" />
+                ) : (
+                    <TextInput style={inputStyle(!!errors.block)} value={form.block}
+                        onChangeText={(v) => setForm({ ...form, block: v })}
+                        placeholder="Enter Tehsil/Block" placeholderTextColor="#9CA3AF" />
+                )}
+                <FieldError message={errors.block} />
+            </View>
 
-                    <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="Nyay Panchayat *" />
-                        <TextInput style={inputStyle(!!errors.nyayPanchayat)} value={form.nyayPanchayat}
-                            onChangeText={(v) => setForm({ ...form, nyayPanchayat: v })}
-                            placeholder="Enter Nyay Panchayat" placeholderTextColor="#9CA3AF" />
-                        <FieldError message={errors.nyayPanchayat} />
-                    </View>
+            {/* Step 4: Village (free-text — no comprehensive India-wide data) */}
+            <View style={{ marginBottom: 16 }}>
+                <FieldLabel text="Village *" />
+                <TextInput style={inputStyle(!!errors.village)} value={form.village}
+                    onChangeText={(v) => setForm({ ...form, village: v })}
+                    placeholder="Enter Village" placeholderTextColor="#9CA3AF" />
+                <FieldError message={errors.village} />
+            </View>
 
-                    <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="Gram Panchayat *" />
-                        <TextInput style={inputStyle(!!errors.gramPanchayat)} value={form.gramPanchayat}
-                            onChangeText={(v) => setForm({ ...form, gramPanchayat: v })}
-                            placeholder="Enter Gram Panchayat" placeholderTextColor="#9CA3AF" />
-                        <FieldError message={errors.gramPanchayat} />
-                    </View>
-
-                    <View style={{ marginBottom: 16 }}>
-                        <FieldLabel text="Village *" />
-                        <TextInput style={inputStyle(!!errors.village)} value={form.village}
-                            onChangeText={(v) => setForm({ ...form, village: v })}
-                            placeholder="Enter Village" placeholderTextColor="#9CA3AF" />
-                        <FieldError message={errors.village} />
-                    </View>
-                </>
-            )}
-
+            {/* Post Office (dropdown from PIN or free-text) */}
             <View style={{ marginBottom: 16 }}>
                 <FieldLabel text="Post Office *" />
                 {postOfficeOptions.length > 0 ? (
@@ -793,8 +778,10 @@ export default function AddBeneficiary() {
         cow: "", buffalo: "", goat: "", sheep: "", pig: "", poultry: "", others: "",
     });
 
-    // Consume beneficiary location pick when screen comes back into focus
-    // Also reverse-geocode to extract state/district for the payload
+    // Consume beneficiary location pick when screen comes back into focus.
+    // GPS lat/lng/address are stored separately — manual address fields are NOT
+    // auto-filled from geocoding. The admin fills the address independently via
+    // standardized dropdowns (State → District → Tehsil/Block → Village).
     useFocusEffect(useCallback(() => {
         if (!beneficiaryLocationPick) return;
         const pick = beneficiaryLocationPick;
@@ -806,27 +793,6 @@ export default function AddBeneficiary() {
             lng: pick.lng,
             address: pick.address,
         }));
-
-        // Best-effort: parse state/district from the address string
-        // so the backend payload has location context even without manual entry
-        (async () => {
-            try {
-                const { parseGoogleAddress } = await import("@/utils/locationUtils");
-                const parsed = await parseGoogleAddress(pick.lat, pick.lng);
-                if (parsed) {
-                    setLocation((prev) => ({
-                        ...prev,
-                        state: parsed.state || prev.state,
-                        district: parsed.district || prev.district,
-                        tehsil: parsed.tehsil || prev.tehsil,
-                        block: parsed.block || prev.block,
-                        village: parsed.village || prev.village,
-                        pinCode: parsed.pinCode || prev.pinCode,
-                        postOffice: parsed.postOffice || prev.postOffice,
-                    }));
-                }
-            } catch { /* silent — lat/lng is enough */ }
-        })();
     }, [beneficiaryLocationPick, setBeneficiaryLocationPick]));
 
     // ── Photo capture ─────────────────────────────────────────
@@ -875,13 +841,10 @@ export default function AddBeneficiary() {
         if (location.lat === null) errs.address = "GPS location is mandatory";
         if (!location.state.trim()) errs.state = "State is required";
         if (!location.district.trim()) errs.district = "District is required";
-        if (!location.tehsil.trim()) errs.tehsil = "Tehsil is required";
-        if (!location.block.trim()) errs.block = "Block is required";
+        if (!location.block.trim()) errs.block = "Block / Tehsil is required";
+        if (!location.village.trim()) errs.village = "Village is required";
         if (!location.pinCode.trim() || location.pinCode.length !== 6) errs.pinCode = "Valid 6-digit PIN required";
         if (!location.postOffice.trim()) errs.postOffice = "Post Office is required";
-        if (!location.nyayPanchayat.trim()) errs.nyayPanchayat = "Nyay Panchayat is required";
-        if (!location.gramPanchayat.trim()) errs.gramPanchayat = "Gram Panchayat is required";
-        if (!location.village.trim()) errs.village = "Village is required";
         
         setLocationErrors(errs);
         return Object.keys(errs).length === 0;
@@ -918,12 +881,9 @@ export default function AddBeneficiary() {
                 fathers_name: personal.fathersName.trim(),
                 state: location.state.trim(),
                 district: location.district.trim(),
-                tehsil: location.tehsil.trim(),
                 block: location.block.trim(),
                 pin_code: location.pinCode.trim(),
                 post_office: location.postOffice.trim(),
-                nyay_panchayat: location.nyayPanchayat.trim(),
-                gram_panchayat: location.gramPanchayat.trim(),
                 village: location.village.trim(),
                 registered_by: user?.id,
             };

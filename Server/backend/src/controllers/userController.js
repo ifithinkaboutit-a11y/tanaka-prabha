@@ -91,7 +91,7 @@ export const getAllUsers = async (req, res) => {
             const like = `%${search}%`;
             usersResult = await query(`
                 SELECT
-                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number, u.aadhaar_number,
+                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number,
                     u.fathers_name, u.mothers_name, u.educational_qualification,
                     u.sons_married, u.sons_unmarried, u.daughters_married, u.daughters_unmarried,
                     u.other_family_members, u.village, u.gram_panchayat, u.nyay_panchayat,
@@ -118,7 +118,7 @@ export const getAllUsers = async (req, res) => {
         } else {
             usersResult = await query(`
                 SELECT
-                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number, u.aadhaar_number,
+                    u.id, u.name, u.age, u.gender, u.photo_url, u.mobile_number,
                     u.fathers_name, u.mothers_name, u.educational_qualification,
                     u.sons_married, u.sons_unmarried, u.daughters_married, u.daughters_unmarried,
                     u.other_family_members, u.village, u.gram_panchayat, u.nyay_panchayat,

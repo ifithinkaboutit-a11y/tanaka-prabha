@@ -2,6 +2,9 @@ import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globa
 import request from 'supertest';
 import express from 'express';
 
+// Set required env before imports
+process.env.JWT_SECRET = 'test-secret';
+
 // Mock dependencies BEFORE importing anything
 jest.unstable_mockModule('../src/config/db.js', () => ({
   pool: {
@@ -69,6 +72,7 @@ app.use(express.json());
 app.post('/api/auth/send-otp', sendOTP);
 app.post('/api/auth/verify-otp', verifyOTP);
 app.post('/api/auth/resend-otp', resendOTP);
+
 app.get('/api/auth/verify-token', verifyToken);
 
 describe('Authentication API Tests', () => {
@@ -85,6 +89,7 @@ describe('Authentication API Tests', () => {
     
     // Setup default mock implementations
     otpUtils.isValidIndianPhone.mockImplementation((num) => {
+      if (typeof num !== 'string') return false;
       const cleaned = num.replace(/\D/g, '');
       return /^[6-9]\d{9}$/.test(cleaned) || /^91[6-9]\d{9}$/.test(cleaned);
     });
@@ -350,9 +355,9 @@ describe('Authentication API Tests', () => {
       expect(response.body.message).toBe('OTP resent successfully');
     });
 
-    test('should resend OTP successfully even if a recent OTP exists (rate limit disabled for testing)', async () => {
+    test('should resend OTP successfully even if a recent OTP exists (rate limit cooldown passed)', async () => {
       OTP.getOTP.mockResolvedValue({
-        created_at: new Date(), // recent OTP exists, but rate limit is disabled
+        created_at: new Date(Date.now() - 180 * 1000), // 3 min old — past 2 min cooldown
       });
       OTP.createOTP.mockResolvedValue({
         id: '125',

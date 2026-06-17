@@ -1,37 +1,34 @@
 import jwt from 'jsonwebtoken';
 
-// Dashboard API Key for admin dashboard access
-const DASHBOARD_API_KEY = process.env.DASHBOARD_API_KEY || 'tanak-prabha-dashboard-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+const DASHBOARD_API_KEY = process.env.DASHBOARD_API_KEY;
 
-if (!process.env.DASHBOARD_API_KEY) {
-    console.warn('[authMiddleware] WARNING: DASHBOARD_API_KEY env var is not set. Using hardcoded fallback — set this in production.');
+if (!DASHBOARD_API_KEY) {
+    console.warn('[authMiddleware] WARNING: DASHBOARD_API_KEY env var is not set. Dashboard API key auth will be unavailable.');
 }
 
 /**
- * Check if request has valid dashboard API key
- */
-const isDashboardRequest = (req) => {
-    const apiKey = req.headers['x-dashboard-api-key'] || req.headers['x-api-key'];
-    return apiKey === DASHBOARD_API_KEY;
-};
-
-/**
  * Authentication middleware to protect routes
- * Verifies JWT token from Authorization header OR Dashboard API key
+ * Supports:
+ *   1. x-dashboard-api-key header (for dashboard backend requests)
+ *   2. Bearer JWT token in Authorization header (for mobile app users)
  */
 const authMiddleware = (req, res, next) => {
     try {
-        // Check for Dashboard API key first (for admin dashboard)
-        if (isDashboardRequest(req)) {
-            req.user = { 
-                id: 'dashboard-admin',
-                role: 'admin',
-                source: 'dashboard'
-            };
-            return next();
+        // 1. Check dashboard API key first
+        const apiKey = req.headers['x-dashboard-api-key'];
+        if (apiKey) {
+            if (DASHBOARD_API_KEY && apiKey === DASHBOARD_API_KEY) {
+                req.user = { role: 'dashboard', userId: null, mobile_number: null };
+                return next();
+            }
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid API key.'
+            });
         }
 
-        // Get token from header
+        // 2. Fall back to JWT Bearer token
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -42,10 +39,10 @@ const authMiddleware = (req, res, next) => {
         }
 
         // Extract token
-        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const token = authHeader.substring(7);
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
 
         // Add user info to request object
         req.user = decoded;
@@ -76,15 +73,22 @@ const authMiddleware = (req, res, next) => {
 
 /**
  * Optional authentication middleware
- * Doesn't block request if no token, but adds user info if token exists
+ * Doesn't block request if no auth, but adds user info if credentials exist
  */
 const optionalAuth = (req, res, next) => {
     try {
-        const authHeader = req.headers.authorization;
+        // 1. Check dashboard API key
+        const apiKey = req.headers['x-dashboard-api-key'];
+        if (apiKey && DASHBOARD_API_KEY && apiKey === DASHBOARD_API_KEY) {
+            req.user = { role: 'dashboard', userId: null, mobile_number: null };
+            return next();
+        }
 
+        // 2. Check Bearer JWT token
+        const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            const decoded = jwt.verify(token, JWT_SECRET);
             req.user = decoded;
         }
 

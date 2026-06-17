@@ -28,9 +28,17 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration — restrict to specific origins in production
+const ALLOWED_ORIGINS = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : ['http://localhost:3000', 'http://localhost:8081', 'https://tanaka-prabha.onrender.com'];
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (server-to-server, mobile apps, curl)
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+        callback(null, false);
+    },
     credentials: true
 }));
 

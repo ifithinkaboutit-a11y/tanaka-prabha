@@ -106,10 +106,10 @@ class OTP {
             SELECT COUNT(*) as count
             FROM public.otps
             WHERE mobile_number = $1
-            AND created_at > timezone('utc', now()) - INTERVAL '${minutes} minutes'
+            AND created_at > timezone('utc', now()) - INTERVAL '1 minutes' * $2
         `;
 
-        const result = await query(text, [mobile_number]);
+        const result = await query(text, [mobile_number, minutes]);
         return parseInt(result.rows[0].count);
     }
 }

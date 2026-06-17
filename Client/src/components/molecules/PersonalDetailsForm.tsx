@@ -2,6 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useRef } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   StyleSheet,
@@ -341,6 +342,72 @@ export default function PersonalDetailsForm({
   const districtOptions = formData.state ? getDistrictOptions(formData.state, lang) : [];
   // Options already contain bilingual labels (Hindi + English)
 
+  // ── PIN-based Post Office + Block auto-population ──────────────────────────
+  const [pinCodeLoading, setPinCodeLoading] = useState(false);
+  const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
+  const [blockOptions, setBlockOptions] = useState<{ label: string; value: string }[]>([]);
+
+  const matchPinToStateSlug = (stateName: string): string => {
+    const normalized = stateName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const all = getStateOptions("en");
+    const found = all.find(s =>
+      s.value === normalized ||
+      s.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+    );
+    return found?.value || normalized;
+  };
+
+  const matchPinToDistrictSlug = (stateValue: string, districtName: string): string => {
+    const normalized = districtName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const districts = getDistrictOptions(stateValue, "en");
+    const found = districts.find(d =>
+      d.value === normalized ||
+      d.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+    );
+    return found?.value || normalized;
+  };
+
+  const handlePinCodeChange = async (pin: string) => {
+    update("pinCode", pin);
+    if (pin.length === 6) {
+      setPinCodeLoading(true);
+      setPostOfficeOptions([]);
+      setBlockOptions([]);
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const data = await response.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffices = data[0].PostOffice;
+          const poOptions = postOffices.map((po: any) => ({ label: po.Name, value: po.Name }));
+          setPostOfficeOptions(poOptions);
+
+          const blocks = Array.from(new Set(postOffices.map((po: any) => po.Block))) as string[];
+          setBlockOptions(blocks.map(b => ({ label: b, value: b })));
+
+          const firstPO = postOffices[0];
+          const matchedState = matchPinToStateSlug(firstPO.State);
+          const matchedDistrict = matchPinToDistrictSlug(matchedState, firstPO.District);
+
+          setFormData((prev) => ({
+            ...prev,
+            pinCode: pin,
+            state: matchedState || prev.state,
+            district: matchedDistrict || prev.district,
+            block: blocks.length === 1 ? blocks[0] : prev.block,
+            postOffice: poOptions.length === 1 ? poOptions[0].value : prev.postOffice,
+          }));
+        }
+      } catch (e) {
+        console.error("Error fetching PIN code:", e);
+      } finally {
+        setPinCodeLoading(false);
+      }
+    } else {
+      setPostOfficeOptions([]);
+      setBlockOptions([]);
+    }
+  };
+
   const handleSave = () => {
     if (!formData.name.trim()) {
       Alert.alert(
@@ -496,23 +563,19 @@ export default function PersonalDetailsForm({
       <View style={s.card}>
         <SectionHeader icon="location" title={String(T.translate("personalDetails.addressInformation"))} iconBg="#FFFBEB" iconColor="#D97706" />
 
-        {/* ── Prominent Map Auto-fill Button ── */}
+        {/* ── Prominent GPS location button (stores lat/lng separately) ── */}
         {onOpenMap && (
           <Pressable
             onPress={onOpenMap}
             style={({ pressed }) => [mapCard.btn, pressed && mapCard.btnPressed]}
           >
-            {/* Dark overlay stripe for premium depth */}
             <View style={mapCard.innerRow}>
-              {/* Left: icon block with pulse ring */}
               <View style={mapCard.iconOuter}>
                 <View style={mapCard.iconRing} />
                 <View style={mapCard.iconWrap}>
                   <Ionicons name="map" size={24} color="#FFFFFF" />
                 </View>
               </View>
-
-              {/* Centre: text */}
               <View style={mapCard.textWrap}>
                 <Text style={mapCard.title}>
                   {String(T.translate("personalDetails.updateAddressViaMap"))}
@@ -521,8 +584,6 @@ export default function PersonalDetailsForm({
                   {String(T.translate("personalDetails.pinLocationToAutoFill"))}
                 </Text>
               </View>
-
-              {/* Right: chevron */}
               <View style={mapCard.chevronWrap}>
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
               </View>
@@ -530,6 +591,7 @@ export default function PersonalDetailsForm({
           </Pressable>
         )}
 
+        {/* Step 1: State */}
         <View style={fi.wrap}>
           <View style={fi.labelRow}>
             <Ionicons name="map-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
@@ -537,12 +599,13 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.state}
-            onChange={(v) => { update("state", v); update("district", ""); update("tehsil", ""); update("block", ""); update("village", ""); }}
+            onChange={(v) => { update("state", v); update("district", ""); update("block", ""); update("village", ""); }}
             options={stateOptions}
             placeholder={String(T.translate("onboarding.selectState"))}
           />
         </View>
 
+        {/* Step 2: District (always a dropdown, filtered by state) */}
         <View style={fi.wrap}>
           <View style={fi.labelRow}>
             <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
@@ -550,107 +613,99 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.district}
-            onChange={(v) => { update("district", v); update("tehsil", ""); update("block", ""); update("village", ""); update("gramPanchayat", ""); update("nyayPanchayat", ""); }}
+            onChange={(v) => { update("district", v); update("block", ""); }}
             options={districtOptions}
             placeholder={String(T.translate(formData.state ? "onboarding.selectDistrict" : "onboarding.selectStateFirst"))}
             disabled={!formData.state}
           />
         </View>
 
-        {/* Cascading address dropdowns for Bhadohi/Mirzapur */}
-        {(formData.district?.toLowerCase() === "bhadohi" ||
-          formData.district?.toLowerCase() === "mirzapur") ? (
-          <AddressDropdowns
-            district={formData.district}
-            value={{
-              tehsil: formData.tehsil || "",
-              nyayPanchayat: formData.nyayPanchayat || "",
-              gramPanchayat: formData.gramPanchayat || "",
-              village: formData.village || "",
-            }}
-            onChange={(v: AddressValue) =>
-              setFormData((prev) => ({
-                ...prev,
-                tehsil: v.tehsil,
-                nyayPanchayat: v.nyayPanchayat,
-                gramPanchayat: v.gramPanchayat,
-                village: v.village,
-              }))
-            }
-            language={lang as "en" | "hi"}
+        {/* Step 3: Block / Tehsil (dropdown from PIN, or free-text) */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="layers-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block / Tehsil")}</Text>
+          </View>
+          {blockOptions.length > 0 ? (
+            <Select
+              value={formData.block}
+              onChange={(v) => update("block", v)}
+              options={blockOptions}
+              placeholder={String(T.translate("onboarding.selectBlock") || "Select Block")}
+            />
+          ) : (
+            <TextInput
+              style={fi.input}
+              value={formData.block}
+              onChangeText={(v) => update("block", v)}
+              placeholder={String(T.translate("personalDetails.placeholders.blockExample"))}
+              placeholderTextColor="#C4C9D4"
+            />
+          )}
+        </View>
+
+        {/* Step 4: Village (free-text) */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
+          </View>
+          <TextInput
+            style={fi.input}
+            value={formData.village}
+            onChangeText={(v) => update("village", v)}
+            placeholder={String(T.translate("personalDetails.placeholders.villageExample"))}
+            placeholderTextColor="#C4C9D4"
           />
-        ) : (
-          <>
-            {/* Keep existing free-text inputs for non-Bhadohi/Mirzapur districts */}
-            <FormInput
-              label={String(T.translate("personalDetails.tehsil") || "Tehsil")}
-              value={formData.tehsil}
-              onChangeText={(v) => update("tehsil", v)}
-              placeholder={String(T.translate("personalDetails.placeholders.tehsilExample"))}
-              icon="layers-outline"
-            />
-            <FormInput
-              label={String(T.translate("personalDetails.village") || "Village / Town")}
-              value={formData.village}
-              onChangeText={(v) => update("village", v)}
-              placeholder={String(T.translate("personalDetails.placeholders.villageExample"))}
-              icon="home-outline"
-            />
-            <View style={s.twoCol}>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label={String(T.translate("personalDetails.gramPanchayat"))}
-                  value={formData.gramPanchayat}
-                  onChangeText={(v) => update("gramPanchayat", v)}
-                  placeholder={String(T.translate("personalDetails.placeholders.gramPanchayat"))}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label={String(T.translate("personalDetails.nyayPanchayat"))}
-                  value={formData.nyayPanchayat}
-                  onChangeText={(v) => update("nyayPanchayat", v)}
-                  placeholder={String(T.translate("personalDetails.placeholders.nyayPanchayat"))}
-                />
-              </View>
-            </View>
-          </>
-        )}
+        </View>
 
-        <FormInput
-          label={String(T.translate("personalDetails.block") || "Block")}
-          value={formData.block}
-          onChangeText={(v) => update("block", v)}
-          placeholder={String(T.translate("personalDetails.placeholders.blockExample"))}
-          icon="grid-outline"
-        />
-
-        <View style={s.twoCol}>
-          <View style={{ flex: 1 }}>
-            <View style={fi.labelRow}>
-              <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-              <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
-            </View>
+        {/* PIN Code → auto-populates Post Office + Block options */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
+          </View>
+          <View style={{ position: "relative" }}>
             <TextInput
               style={fi.input}
               value={formData.pinCode}
-              onChangeText={(v) => update("pinCode", v)}
+              onChangeText={handlePinCodeChange}
               keyboardType="numeric"
               maxLength={6}
               placeholder="000000"
               placeholderTextColor="#C4C9D4"
               returnKeyType="next"
             />
+            {pinCodeLoading && (
+              <ActivityIndicator style={{ position: "absolute", right: 12, top: 14 }} size="small" color={theme.primary.green} />
+            )}
           </View>
-          <View style={{ flex: 1 }} className="mb-[5rem]">
-            <FormInput
-              label={String(T.translate("personalDetails.postOffice"))}
+        </View>
+
+        {/* Post Office (dropdown from PIN or free-text) */}
+        <View style={fi.wrap}>
+          <View style={fi.labelRow}>
+            <Ionicons name="mail-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+            <Text style={fi.label}>{String(T.translate("personalDetails.postOffice"))}</Text>
+          </View>
+          {postOfficeOptions.length > 0 ? (
+            <Select
+              value={formData.postOffice}
+              onChange={(v) => update("postOffice", v)}
+              options={postOfficeOptions}
+              placeholder={String(T.translate("onboarding.selectPostOffice") || "Select Post Office")}
+            />
+          ) : (
+            <TextInput
+              style={fi.input}
               value={formData.postOffice}
               onChangeText={(v) => update("postOffice", v)}
               placeholder={String(T.translate("personalDetails.placeholders.postOffice"))}
+              placeholderTextColor="#C4C9D4"
             />
-          </View>
+          )}
         </View>
+
         {/* Extra space so keyboard doesn't cover the last field */}
         <View style={{ height: 100 }} />
       </View>

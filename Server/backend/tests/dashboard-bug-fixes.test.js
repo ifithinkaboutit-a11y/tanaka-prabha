@@ -8,6 +8,8 @@
  *   Bug 4 — ARIA attributes present on corrected elements (checked via source)
  */
 
+process.env.DASHBOARD_API_KEY = 'tanak-prabha-dashboard-secret-key-2024';
+
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';

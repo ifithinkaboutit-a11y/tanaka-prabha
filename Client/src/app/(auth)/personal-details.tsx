@@ -16,14 +16,13 @@ import KeyboardAwareScrollView from "../../components/atoms/KeyboardAwareScrollV
 import AppText from "../../components/atoms/AppText";
 import Avatar from "../../components/atoms/Avatar";
 import Select from "../../components/atoms/Select";
-import TextArea from "../../components/atoms/TextArea";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useTranslation } from "../../i18n";
 import {
   genderOptions,
-  indianStates,
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
+import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
 import {
   validateName,
 } from "../../utils/validation";
@@ -77,13 +76,6 @@ interface FieldErrors {
   village?: string;
   pinCode?: string;
   postOffice?: string;
-}
-
-interface AddressLists {
-  districts: { label: string; value: string }[];
-  tehsils: { label: string; value: string }[];
-  blocks: { label: string; value: string }[];
-  villages: { label: string; value: string }[];
 }
 
 const AuthPersonalDetailsScreen = () => {
@@ -259,18 +251,35 @@ const AuthPersonalDetailsScreen = () => {
   }, []);
 
   const [pinCodeLoading, setPinCodeLoading] = useState(false);
-  const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string, value: string }[]>([]);
-  const [addressLists, setAddressLists] = useState<AddressLists>({
-    districts: [],
-    tehsils: [],
-    blocks: [],
-    villages: [],
-  });
+  const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
+  const [blockOptions, setBlockOptions] = useState<{ label: string; value: string }[]>([]);
+
+  const matchPinToSlug = (stateName: string): string => {
+    const normalized = stateName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const all = getStateOptions("en");
+    const found = all.find(s =>
+      s.value === normalized ||
+      s.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+    );
+    return found?.value || normalized;
+  };
+
+  const matchDistrictSlug = (stateValue: string, districtName: string): string => {
+    const normalized = districtName.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const districts = getDistrictOptions(stateValue, "en");
+    const found = districts.find(d =>
+      d.value === normalized ||
+      d.label.toLowerCase().replace(/[\s-]+/g, "_") === normalized
+    );
+    return found?.value || normalized;
+  };
 
   const handlePinCodeChange = async (pin: string) => {
     updatePersonalDetails({ pinCode: pin });
     if (pin.length === 6) {
       setPinCodeLoading(true);
+      setPostOfficeOptions([]);
+      setBlockOptions([]);
       try {
         const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
         const data = await response.json();
@@ -279,34 +288,22 @@ const AuthPersonalDetailsScreen = () => {
           const poOptions = postOffices.map((po: any) => ({ label: po.Name, value: po.Name }));
           setPostOfficeOptions(poOptions);
 
-          // Get unique districts/blocks from PO results
-          const districts = Array.from(new Set(postOffices.map((po: any) => po.District))) as string[];
           const blocks = Array.from(new Set(postOffices.map((po: any) => po.Block))) as string[];
-
-          setAddressLists(prev => ({
-            ...prev,
-            districts: districts.map(d => ({ label: d, value: d })),
-            blocks: blocks.map(b => ({ label: b, value: b })),
-            // Use blocks as Tehsils if not explicitly provided
-            tehsils: blocks.map(b => ({ label: b, value: b })),
-          }));
+          setBlockOptions(blocks.map(b => ({ label: b, value: b })));
 
           const firstPO = postOffices[0];
-
-          // Auto-select state
-          const stateOpt = getLocalizedOptions(indianStates, currentLanguage).find(s =>
-            s.label.toLowerCase() === firstPO.State.toLowerCase() ||
-            s.value.toLowerCase() === firstPO.State.toLowerCase().replace(/ /g, "_")
-          );
+          const matchedState = matchPinToSlug(firstPO.State);
+          const matchedDistrict = matchDistrictSlug(matchedState, firstPO.District);
 
           updatePersonalDetails({
-            state: stateOpt ? stateOpt.value : (personalDetails.state || ""),
-            district: districts.length === 1 ? districts[0] : (personalDetails.district || ""),
-            block: blocks.length === 1 ? blocks[0] : (personalDetails.block || ""),
-            postOffice: poOptions.length === 1 ? poOptions[0].value : (personalDetails.postOffice || "")
+            state: matchedState || personalDetails.state,
+            district: blocks.length > 0 && matchedDistrict ? matchedDistrict : personalDetails.district,
+            block: blocks.length === 1 ? blocks[0] : personalDetails.block,
+            postOffice: poOptions.length === 1 ? poOptions[0].value : personalDetails.postOffice,
           });
         } else {
           setPostOfficeOptions([]);
+          setBlockOptions([]);
         }
       } catch (e) {
         console.error("Error fetching PIN code:", e);
@@ -315,6 +312,7 @@ const AuthPersonalDetailsScreen = () => {
       }
     } else {
       setPostOfficeOptions([]);
+      setBlockOptions([]);
     }
   };
 
@@ -606,41 +604,35 @@ const AuthPersonalDetailsScreen = () => {
               {t("onboarding.locationDetails") || "Location Details"}
             </AppText>
 
+            {/* Step 1: State */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.state") || "State"} />
               <Select
-                options={getLocalizedOptions(indianStates, currentLanguage)}
+                options={getStateOptions(currentLanguage)}
                 value={personalDetails.state}
-                onChange={(val) => updatePersonalDetails({ state: val })}
+                onChange={(val) => updatePersonalDetails({ state: val, district: "", block: "" })}
                 placeholder={t("onboarding.selectState") || "Select State"}
               />
             </FieldWrapper>
 
+            {/* Step 2: District (always a dropdown, filtered by state) */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.district") || "District"} />
-              {addressLists.districts.length > 0 ? (
-                <Select
-                  options={addressLists.districts}
-                  value={personalDetails.district}
-                  onChange={(val) => updatePersonalDetails({ district: val })}
-                  placeholder={t("onboarding.selectDistrict") || "Select District"}
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("district" as any)}
-                  value={personalDetails.district}
-                  onChangeText={(text) => handleFieldChange("district" as any, text)}
-                  placeholder={t("onboarding.enterDistrict") || "Enter District"}
-                  placeholderTextColor={theme.text.placeholder}
-                />
-              )}
+              <Select
+                options={getDistrictOptions(personalDetails.state, currentLanguage)}
+                value={personalDetails.district}
+                onChange={(val) => updatePersonalDetails({ district: val })}
+                placeholder={t("onboarding.selectDistrict") || "Select District"}
+                disabled={!personalDetails.state}
+              />
             </FieldWrapper>
 
+            {/* Step 3: Block / Tehsil (dropdown from PIN or free-text) */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.block") || "Tehsil / Block"} />
-              {addressLists.blocks.length > 0 ? (
+              {blockOptions.length > 0 ? (
                 <Select
-                  options={addressLists.blocks}
+                  options={blockOptions}
                   value={personalDetails.block}
                   onChange={(val) => updatePersonalDetails({ block: val })}
                   placeholder={t("onboarding.selectBlock") || "Select Block"}
@@ -656,6 +648,7 @@ const AuthPersonalDetailsScreen = () => {
               )}
             </FieldWrapper>
 
+            {/* Step 4: Village (free-text — no comprehensive India-wide data) */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.village") || "Village / Gram Panchayat"} />
               <TextInput
@@ -667,6 +660,7 @@ const AuthPersonalDetailsScreen = () => {
               />
             </FieldWrapper>
 
+            {/* PIN Code → auto-populates Post Office + Block options */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
               <View style={{ position: "relative" }}>
@@ -685,6 +679,7 @@ const AuthPersonalDetailsScreen = () => {
               </View>
             </FieldWrapper>
 
+            {/* Post Office (dropdown from PIN or free-text) */}
             <FieldWrapper>
               <FieldLabel text={t("onboarding.postOffice") || "Post Office"} />
               {postOfficeOptions.length > 0 ? (
