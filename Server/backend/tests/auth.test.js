@@ -62,7 +62,7 @@ jest.unstable_mockModule('../src/utils/otp.js', () => ({
 }));
 
 // Dynamic import of authController with mocked dependencies
-const { sendOTP, verifyOTP, resendOTP, verifyToken } = await import('../src/controllers/authController.js');
+const { sendOTP, verifyOTP, resendOTP, verifyToken, forgotPassword } = await import('../src/controllers/authController.js');
 
 // Create Express app for testing WITHOUT rate limiters
 const app = express();
@@ -72,6 +72,7 @@ app.use(express.json());
 app.post('/api/auth/send-otp', sendOTP);
 app.post('/api/auth/verify-otp', verifyOTP);
 app.post('/api/auth/resend-otp', resendOTP);
+app.post('/api/auth/forgot-password', forgotPassword);
 
 app.get('/api/auth/verify-token', verifyToken);
 
@@ -374,6 +375,184 @@ describe('Authentication API Tests', () => {
         .expect(200);
 
       expect(response.body.status).toBe('success');
+    });
+  });
+
+  describe('Google Play review account', () => {
+    const REVIEW_PHONE = '9999999999';
+    const REVIEW_OTP = '123456';
+
+    test('send-otp for review phone returns success without creating or sending an OTP', async () => {
+      const response = await request(app)
+        .post('/api/auth/send-otp')
+        .send({ mobile_number: REVIEW_PHONE })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(OTP.createOTP).not.toHaveBeenCalled();
+      expect(otpUtils.sendSMS).not.toHaveBeenCalled();
+      // Response must never leak an OTP value
+      expect(response.body.data).not.toHaveProperty('otp');
+    });
+
+    test('send-otp for review phone succeeds even when the review user already exists', async () => {
+      User.findByMobile.mockResolvedValue({
+        id: 'review-user',
+        name: 'Google Play Review',
+        mobile_number: '919999999999',
+      });
+
+      const response = await request(app)
+        .post('/api/auth/send-otp')
+        .send({ mobile_number: REVIEW_PHONE })
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(otpUtils.sendSMS).not.toHaveBeenCalled();
+    });
+
+    test('verify-otp with review phone and correct OTP authenticates and auto-creates the user', async () => {
+      User.findByMobile.mockResolvedValue(null);
+      User.create.mockResolvedValue({
+        id: 'review-user',
+        name: 'Google Play Review',
+        mobile_number: '919999999999',
+      });
+
+      const response = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({ mobile_number: REVIEW_PHONE, otp: REVIEW_OTP })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(response.body.authenticated).toBe(true);
+      expect(response.body.data.token).toBeTruthy();
+      expect(response.body.data.token_type).toBe('Bearer');
+      expect(response.body.data.is_new_user).toBe(false);
+      expect(User.create).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Google Play Review' })
+      );
+      // OTP store must never be touched for the review account
+      expect(OTP.verifyOTP).not.toHaveBeenCalled();
+      expect(OTP.deleteOTP).not.toHaveBeenCalled();
+    });
+
+    test('verify-otp with review phone and correct OTP works for existing review user', async () => {
+      User.findByMobile.mockResolvedValue({
+        id: 'review-user',
+        name: 'Google Play Review',
+        mobile_number: '919999999999',
+      });
+
+      const response = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({ mobile_number: REVIEW_PHONE, otp: REVIEW_OTP })
+        .expect(200);
+
+      expect(response.body.authenticated).toBe(true);
+      expect(User.create).not.toHaveBeenCalled();
+      expect(OTP.verifyOTP).not.toHaveBeenCalled();
+    });
+
+    test('verify-otp with review phone and wrong OTP is rejected', async () => {
+      const response = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({ mobile_number: REVIEW_PHONE, otp: '000000' })
+        .expect('Content-Type', /json/)
+        .expect(401);
+
+      expect(response.body.status).toBe('error');
+      expect(response.body.authenticated).toBe(false);
+      // Wrong review OTP must not fall through to the OTP database
+      expect(OTP.verifyOTP).not.toHaveBeenCalled();
+      expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('resend-otp for review phone returns success without sending SMS', async () => {
+      const response = await request(app)
+        .post('/api/auth/resend-otp')
+        .send({ mobile_number: REVIEW_PHONE })
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(OTP.createOTP).not.toHaveBeenCalled();
+      expect(otpUtils.sendSMS).not.toHaveBeenCalled();
+    });
+
+    test('forgot-password for review phone returns success without sending SMS', async () => {
+      // Even with the review user existing, no OTP may be created or sent
+      User.findByMobile.mockResolvedValue({
+        id: 'review-user',
+        name: 'Google Play Review',
+        mobile_number: '919999999999',
+      });
+
+      const response = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ mobile_number: REVIEW_PHONE })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(OTP.createOTP).not.toHaveBeenCalled();
+      expect(otpUtils.sendSMS).not.toHaveBeenCalled();
+      expect(response.body.data).not.toHaveProperty('otp');
+    });
+
+    test('forgot-password for normal users still creates and sends an OTP', async () => {
+      User.findByMobile.mockResolvedValue({
+        id: 'user-456',
+        name: 'Ramesh Kumar',
+        mobile_number: '919876543210',
+      });
+      OTP.createOTP.mockResolvedValue({
+        id: '300',
+        mobile_number: '919876543210',
+        otp: '777777',
+        expires_at: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      otpUtils.sendSMS.mockResolvedValue(true);
+
+      const response = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ mobile_number: '9876543210' })
+        .expect(200);
+
+      expect(response.body.status).toBe('success');
+      expect(OTP.createOTP).toHaveBeenCalled();
+      expect(otpUtils.sendSMS).toHaveBeenCalled();
+    });
+
+    test('normal users are unaffected: OTP is still created, sent, and verified via the database', async () => {
+      OTP.getRecentAttempts.mockResolvedValue(0);
+      OTP.createOTP.mockResolvedValue({
+        id: '200',
+        mobile_number: '919876543210',
+        otp: '555555',
+        expires_at: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      User.findByMobile.mockResolvedValue(null);
+      otpUtils.sendSMS.mockResolvedValue(true);
+
+      await request(app)
+        .post('/api/auth/send-otp')
+        .send({ mobile_number: '9876543210' })
+        .expect(200);
+
+      expect(OTP.createOTP).toHaveBeenCalled();
+      expect(otpUtils.sendSMS).toHaveBeenCalled();
+
+      // The fixed review OTP does NOT work for a normal number
+      OTP.verifyOTP.mockResolvedValue({ valid: false, message: 'Invalid OTP' });
+      const response = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({ mobile_number: '9876543210', otp: REVIEW_OTP })
+        .expect(401);
+
+      expect(response.body.authenticated).toBe(false);
+      expect(OTP.verifyOTP).toHaveBeenCalled();
     });
   });
 

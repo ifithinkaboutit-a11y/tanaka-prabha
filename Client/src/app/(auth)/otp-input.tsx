@@ -26,6 +26,11 @@ import { theme } from "@/styles/colors";
 
 const OTP_LENGTH = 6;
 
+// Google Play review account — the backend accepts this fixed OTP for this
+// number only, so it is shown on screen for the Play Store reviewer.
+const GOOGLE_PLAY_REVIEW_PHONE = "9999999999";
+const GOOGLE_PLAY_REVIEW_OTP = "123456";
+
 const OTPInput = () => {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
@@ -196,6 +201,9 @@ const OTPInput = () => {
   const filledCount = otp.filter(Boolean).length;
   const isComplete = filledCount === OTP_LENGTH;
 
+  const isReviewPhone =
+    (phoneNumber ?? "").replace(/\D/g, "").slice(-10) === GOOGLE_PLAY_REVIEW_PHONE;
+
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
@@ -217,6 +225,16 @@ const OTPInput = () => {
       >
         {/* Card */}
         <View style={s.card}>
+          {/* Google Play review account only — never rendered for real users */}
+          {isReviewPhone && (
+            <View style={s.reviewBox}>
+              <Ionicons name="information-circle-outline" size={16} color="#DC2626" />
+              <Text style={s.reviewBoxText}>
+                Google Play Review Mode{"\n"}Use OTP: {GOOGLE_PLAY_REVIEW_OTP}
+              </Text>
+            </View>
+          )}
+
           {/* Input label */}
           <Text style={s.inputLabel}>{t("auth.otpInputLabel")}</Text>
 
@@ -372,6 +390,27 @@ const s = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
   },
+  // ── Google Play review box ──
+  reviewBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(239,68,68,0.08)",
+    borderWidth: 1.5,
+    borderColor: "#DC2626",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 18,
+  },
+  reviewBoxText: {
+    color: "#DC2626",
+    fontSize: 13,
+    fontWeight: "700",
+    flex: 1,
+    lineHeight: 18,
+  },
+
   inputLabel: {
     color: theme.text.subtle,
     fontSize: 13,

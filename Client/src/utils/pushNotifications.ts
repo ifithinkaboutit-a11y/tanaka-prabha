@@ -5,6 +5,7 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import { router } from "expo-router";
 import { tokenManager } from "@/services/apiService";
 
 // ── Detect if running inside Expo Go ─────────────────────────────────────────
@@ -142,6 +143,62 @@ export async function setupPushNotifications(): Promise<string | null> {
     return token ?? null;
 }
 
+// ── Deep-link routing from a notification payload ─────────────────────────────
+// Maps the `screen` field of a notification's data payload to an app route.
+const NOTIFICATION_ROUTE_MAP: Record<string, string> = {
+    "scheme-details": "/scheme-details",
+    "scheme": "/scheme-details",
+    "event-details": "/event-details",
+    "event": "/event-details",
+    "program-details": "/program-details",
+    "program": "/program-details",
+    "connect-detail": "/connect-detail",
+    "connect": "/connect-detail",
+    "notifications": "/notifications",
+    "all-events": "/all-events",
+    "my-schedule": "/my-schedule",
+};
+
+/**
+ * Navigate to the screen referenced by a notification's data payload.
+ * Safe to call with any/undefined data — it no-ops when there's nothing to route to.
+ */
+export function navigateFromNotification(data: any): void {
+    try {
+        if (!data) return;
+        const screen = data.screen;
+        const id = data.id;
+
+        if (screen) {
+            const pathname = NOTIFICATION_ROUTE_MAP[screen] || `/${screen}`;
+            if (id) {
+                router.push({ pathname: pathname as any, params: { id: String(id) } });
+            } else {
+                router.push(pathname as any);
+            }
+        } else if (data.type === "approval" || data.type === "reminder") {
+            router.push("/notifications" as any);
+        }
+    } catch (err) {
+        console.warn("🔔 Notification navigation failed:", err);
+    }
+}
+
+/**
+ * Handle the case where the app was launched (cold start) by tapping a
+ * notification. Call once after the navigation tree has mounted.
+ */
+export async function handleColdStartNotification(): Promise<void> {
+    try {
+        const response = await Notifications.getLastNotificationResponseAsync();
+        if (response) {
+            navigateFromNotification(response.notification.request.content.data);
+        }
+    } catch (err) {
+        console.warn("🔔 Cold-start notification handling failed:", err);
+    }
+}
+
 // ── Notification listeners (use in App root) ──────────────────────────────────
 /**
  * Call this in your root component to listen for incoming notifications.
@@ -187,8 +244,3 @@ export async function sendLocalNotification(title: string, body: string, data?: 
         trigger: null, // fire immediately
     });
 }
-
-// ── Convenience alias used by (tab)/_layout.tsx ───────────────────────────────
-// (tab)/_layout.tsx imports `registerForPushNotificationsAsync` from this file.
-// Keeping the alias here avoids changing the import in the layout file.
-export const registerForPushNotificationsAsync = getExpoPushToken;

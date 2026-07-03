@@ -6,6 +6,12 @@ import { sendSMS, formatPhoneNumber, isValidIndianPhone } from '../utils/otp.js'
 
 const BCRYPT_ROUNDS = 12;
 
+// Google Play review account — allows Play Store reviewers to log in without a real SMS OTP.
+// Only this exact phone/OTP pair bypasses SMS; every other user goes through the normal flow.
+const GOOGLE_PLAY_REVIEW_PHONE = '919999999999'; // formatted: 91 + 9999999999
+const GOOGLE_PLAY_REVIEW_OTP = '123456';
+const GOOGLE_PLAY_REVIEW_NAME = 'Google Play Review';
+
 /**
  * Generate JWT token
  */
@@ -38,6 +44,19 @@ export const sendOTP = async (req, res) => {
 
         // Format phone number
         const formattedNumber = formatPhoneNumber(mobile_number);
+
+        // Google Play review account: never generate/send a real OTP, always report success
+        if (formattedNumber === GOOGLE_PLAY_REVIEW_PHONE) {
+            console.log('Google Play Review Login');
+            return res.status(200).json({
+                status: 'success',
+                message: 'OTP sent successfully',
+                data: {
+                    mobile_number: formattedNumber,
+                    expires_in: '10 minutes'
+                }
+            });
+        }
 
         // Check for duplicate phone number BEFORE sending OTP (Bug 9 fix)
         const existingUser = await User.findByMobile(formattedNumber);
@@ -105,15 +124,30 @@ export const verifyOTP = async (req, res) => {
         // Format phone number
         const formattedNumber = formatPhoneNumber(mobile_number);
 
-        // Verify OTP
-        const verification = await OTP.verifyOTP(formattedNumber, otp);
+        // Google Play review account: verify against the fixed review OTP,
+        // skipping the SMS provider and OTP database entirely
+        const isReviewLogin = (formattedNumber === GOOGLE_PLAY_REVIEW_PHONE);
 
-        if (!verification.valid) {
-            return res.status(401).json({
-                status: 'error',
-                message: verification.message,
-                authenticated: false
-            });
+        if (isReviewLogin) {
+            if (otp !== GOOGLE_PLAY_REVIEW_OTP) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Invalid OTP. Please try again.',
+                    authenticated: false
+                });
+            }
+            console.log('Google Play Review Login');
+        } else {
+            // Verify OTP
+            const verification = await OTP.verifyOTP(formattedNumber, otp);
+
+            if (!verification.valid) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: verification.message,
+                    authenticated: false
+                });
+            }
         }
 
         // Check if user exists, if not create new user
@@ -122,12 +156,13 @@ export const verifyOTP = async (req, res) => {
 
         if (!user) {
             // Brand new account — create with placeholder name
+            // (review account gets a real name so it skips onboarding)
             try {
                 user = await User.create({
-                    name: 'New User', // Placeholder; updated during onboarding
+                    name: isReviewLogin ? GOOGLE_PLAY_REVIEW_NAME : 'New User',
                     mobile_number: formattedNumber
                 });
-                isNewUser = true;
+                isNewUser = !isReviewLogin;
             } catch (createError) {
                 // If a race condition caused a duplicate key error (PostgreSQL code 23505),
                 // another request just created this user. Let's fetch them instead.
@@ -153,8 +188,10 @@ export const verifyOTP = async (req, res) => {
         // Generate JWT token
         const token = generateToken(user.id, formattedNumber);
 
-        // Delete used OTP
-        await OTP.deleteOTP(formattedNumber);
+        // Delete used OTP (review login never stored one)
+        if (!isReviewLogin) {
+            await OTP.deleteOTP(formattedNumber);
+        }
 
         res.status(200).json({
             status: 'success',
@@ -264,6 +301,19 @@ export const resendOTP = async (req, res) => {
         }
 
         const formattedNumber = formatPhoneNumber(mobile_number);
+
+        // Google Play review account: never generate/send a real OTP, always report success
+        if (formattedNumber === GOOGLE_PLAY_REVIEW_PHONE) {
+            console.log('Google Play Review Login');
+            return res.status(200).json({
+                status: 'success',
+                message: 'OTP resent successfully',
+                data: {
+                    mobile_number: formattedNumber,
+                    expires_in: '10 minutes'
+                }
+            });
+        }
 
         // Rate limit: max 1 OTP per 2 minutes per phone number
         const existingOTP = await OTP.getOTP(formattedNumber);
@@ -498,6 +548,20 @@ export const forgotPassword = async (req, res) => {
         }
 
         const formattedNumber = formatPhoneNumber(mobile_number);
+
+        // Google Play review account: never generate/send a real OTP, always report success
+        if (formattedNumber === GOOGLE_PLAY_REVIEW_PHONE) {
+            console.log('Google Play Review Login');
+            return res.status(200).json({
+                status: 'success',
+                message: 'OTP sent for password reset',
+                data: {
+                    mobile_number: formattedNumber,
+                    expires_in: '10 minutes'
+                }
+            });
+        }
+
         const user = await User.findByMobile(formattedNumber);
         if (!user) {
             // Don't reveal whether account exists

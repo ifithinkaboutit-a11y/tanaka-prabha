@@ -9,6 +9,11 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { UserProfileProvider } from "../contexts/UserProfileContext";
 import { useOfflineQueueSync } from "../hooks/useOfflineQueueSync";
+import {
+  addNotificationListeners,
+  handleColdStartNotification,
+  navigateFromNotification,
+} from "@/utils/pushNotifications";
 import { theme } from "@/styles/colors";
 import "../i18n";
 
@@ -32,6 +37,16 @@ export default function RootLayout() {
     if (Platform.OS === "android") {
       NavigationBar.setVisibilityAsync("hidden").catch(() => {});
     }
+  }, []);
+
+  // Notification tap handling: navigate to the referenced screen both when the
+  // app is already running and when it was cold-started from a notification.
+  useEffect(() => {
+    handleColdStartNotification();
+    const cleanup = addNotificationListeners(undefined, (response) => {
+      navigateFromNotification(response.notification.request.content.data);
+    });
+    return cleanup;
   }, []);
 
   return (

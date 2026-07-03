@@ -8,6 +8,14 @@
     "scheme": "tanakprabha",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/561dfc69-b0a6-4007-b5a0-3d5ef234641b",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tanakprabha.ifi.app",
