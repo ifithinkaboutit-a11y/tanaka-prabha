@@ -164,6 +164,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Block non-admins (including regular authenticated users) from the
+    // admin route group — e.g. via a direct deep link to /(admin)/dashboard.
+    if (segments[0] === "(admin)") {
+      router.replace(isAuthenticated ? ("/(tab)/" as any) : ("/(auth)/" as any));
+      return;
+    }
+
     const inAuthGroup = segments[0] === "(auth)";
 
     // Screens that belong exclusively to the onboarding flow.

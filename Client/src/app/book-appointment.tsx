@@ -12,11 +12,14 @@ import {
     StyleSheet,
     View,
 } from "react-native";
+import Constants from "expo-constants";
 import AppText from "../components/atoms/AppText";
 import { useAuth } from "../contexts/AuthContext";
 import { appointmentsApi } from "../services/apiService";
 import { useTranslation } from "../i18n";
 import { theme } from "../styles/colors";
+
+const BOOKING_EMAIL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BOOKING_EMAIL || "bookings@tanakaprabha.com";
 
 function generateDays() {
     const days: { label: string; value: string; dayName: string }[] = [];
@@ -47,6 +50,7 @@ export default function BookAppointment() {
     const [slots, setSlots] = useState<string[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
     const [loadingSlots, setLoadingSlots] = useState(false);
+    const [slotsError, setSlotsError] = useState(false);
     const [isFullyBooked, setIsFullyBooked] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -57,6 +61,7 @@ export default function BookAppointment() {
             setSelectedSlot(null);
             setSlots([]);
             setIsFullyBooked(false);
+            setSlotsError(false);
             try {
                 const [available, fullyBooked] = await Promise.all([
                     appointmentsApi.getAvailableSlots(professionalId!, date),
@@ -65,7 +70,10 @@ export default function BookAppointment() {
                 setSlots(available);
                 setIsFullyBooked(fullyBooked);
             } catch {
-                setSlots(["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]);
+                // Don't fabricate availability on a fetch failure — an invented
+                // slot list could let the user "book" a time that was never
+                // actually free. Show a real error with a retry instead.
+                setSlotsError(true);
             } finally {
                 setLoadingSlots(false);
             }
@@ -89,12 +97,12 @@ export default function BookAppointment() {
             setSuccess(true);
             const userName = user?.name ?? "";
             Linking.openURL(
-                `mailto:ifithinkaboutit@gmail.com?subject=New Appointment Booking&body=Professional: ${professionalName}%0ADate: ${selectedDay}%0ATime: ${selectedSlot}%0AUser: ${userName}`
+                `mailto:${BOOKING_EMAIL}?subject=New Appointment Booking&body=Professional: ${professionalName}%0ADate: ${selectedDay}%0ATime: ${selectedSlot}%0AUser: ${userName}`
             );
         } catch (error: any) {
             Alert.alert(
-                "Booking Failed",
-                error?.message || "Could not complete your booking. Please try again.",
+                t("connect.booking.error"),
+                error?.message || t("connect.booking.errorMessage"),
                 [{ text: "OK" }]
             );
         } finally {
@@ -113,18 +121,18 @@ export default function BookAppointment() {
                         <Ionicons name="checkmark" size={52} color="#FFFFFF" />
                     </View>
                 </View>
-                <AppText style={styles.successTitle}>Appointment Booked!</AppText>
+                <AppText style={styles.successTitle}>{t("connect.booking.success")}</AppText>
                 <AppText style={styles.successSub}>
-                    Your appointment with{" "}
+                    {t("connect.booking.successSubtitlePrefix")}{" "}
                     <AppText style={{ fontWeight: "700", color: theme.text.secondary }}>{professionalName}</AppText>
-                    {" "}has been confirmed.
+                    {" "}{t("connect.booking.successSubtitleSuffix")}
                 </AppText>
 
                 <View style={styles.successCard}>
                     {[
-                        { icon: "person" as const, label: "Professional", value: professionalName ?? "" },
-                        { icon: "calendar" as const, label: "Date", value: successDate ? `${successDate.dayName}, ${successDate.label}` : selectedDay },
-                        { icon: "time" as const, label: "Time", value: selectedSlot ?? "" },
+                        { icon: "person" as const, label: t("connect.booking.professionalLabel"), value: professionalName ?? "" },
+                        { icon: "calendar" as const, label: t("connect.booking.dateLabel"), value: successDate ? `${successDate.dayName}, ${successDate.label}` : selectedDay },
+                        { icon: "time" as const, label: t("connect.booking.timeLabel"), value: selectedSlot ?? "" },
                     ].map((row) => (
                         <View key={row.label} style={styles.successRow}>
                             <View style={styles.successRowIcon}>
@@ -141,7 +149,7 @@ export default function BookAppointment() {
                 <View style={styles.reminderBox}>
                     <Ionicons name="notifications" size={16} color={theme.secondary.sky} style={{ marginRight: 8 }} />
                     <AppText style={styles.reminderText}>
-                        You'll receive a reminder before your appointment.
+                        {t("connect.booking.reminderMessage")}
                     </AppText>
                 </View>
 
@@ -152,7 +160,7 @@ export default function BookAppointment() {
                     style={{ backgroundColor: theme.primary.green }}
                 >
                     <AppText style={{ color: theme.text.onPrimary, fontSize: 16, fontWeight: "800" }}>
-                        Back to Connect
+                        {t("connect.booking.backToConnect")}
                     </AppText>
                 </Pressable>
 
@@ -161,7 +169,7 @@ export default function BookAppointment() {
                     className="mt-1 py-2"
                 >
                     <AppText style={{ color: theme.primary.green, fontWeight: "600", fontSize: 14 }}>
-                        View My Schedule →
+                        {t("connect.booking.viewMySchedule")}
                     </AppText>
                 </Pressable>
             </View>
@@ -230,6 +238,16 @@ export default function BookAppointment() {
                         <ActivityIndicator size="large" color={theme.primary.green} />
                         <AppText style={styles.loadingText}>{t("connect.booking.fetchingSlots")}</AppText>
                     </View>
+                ) : slotsError ? (
+                    <View style={styles.fullyBookedCard}>
+                        <Ionicons name="alert-circle" size={40} color="#DC2626" />
+                        <AppText style={styles.fullyBookedTitle}>{t("connect.booking.fetchSlotsError")}</AppText>
+                        <Pressable onPress={() => fetchSlots(selectedDay)} style={{ marginTop: 12 }}>
+                            <AppText style={{ color: theme.primary.green, fontWeight: "700", fontSize: 14 }}>
+                                {t("common.retry")}
+                            </AppText>
+                        </Pressable>
+                    </View>
                 ) : isFullyBooked ? (
                     <View style={styles.fullyBookedCard}>
                         <Ionicons name="close-circle" size={40} color="#DC2626" />
@@ -273,7 +291,7 @@ export default function BookAppointment() {
                 {/* ── Summary Card ── */}
                 {selectedSlot && (
                     <View style={styles.summaryCard}>
-                        <AppText style={styles.summaryTitle}>Appointment Summary</AppText>
+                        <AppText style={styles.summaryTitle}>{t("connect.booking.appointmentSummary")}</AppText>
                         {[
                             { icon: "person" as const, label: professionalName ?? "" },
                             {

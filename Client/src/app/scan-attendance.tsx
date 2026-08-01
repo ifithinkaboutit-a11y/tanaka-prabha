@@ -13,6 +13,7 @@ import {
 import AppText from "../components/atoms/AppText";
 import { ApiError, eventsApi } from "@/services/apiService";
 import { theme } from "../styles/colors";
+import { useTranslation } from "../i18n";
 
 export const options = {
     headerShown: false,
@@ -28,6 +29,7 @@ type ScreenState =
 
 const ScanAttendance = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const { eventId: paramEventId } = useLocalSearchParams<{ eventId?: string }>();
 
     const [permission, requestPermission] = useCameraPermissions();
@@ -58,7 +60,7 @@ const ScanAttendance = () => {
             const token = queryParams?.token ?? "";
 
             if (!eventId || !token) {
-                setErrorMessage("Invalid QR code. Missing event ID or token.");
+                setErrorMessage(t("scanAttendance.invalidQr"));
                 setScreenState("error_generic");
                 return;
             }
@@ -67,7 +69,7 @@ const ScanAttendance = () => {
 
             // Fetch event name for success screen
             const eventData = await eventsApi.getById(eventId);
-            const name = eventData?.title ?? "Event";
+            const name = eventData?.title ?? t("scanAttendance.defaultEventName");
 
             // Submit attendance
             await eventsApi.submitAttendance(eventId, token);
@@ -81,11 +83,11 @@ const ScanAttendance = () => {
                 } else if (err.status === 409) {
                     setScreenState("error_already");
                 } else {
-                    setErrorMessage(err.message || "Something went wrong. Please try again.");
+                    setErrorMessage(err.message || t("scanAttendance.genericError"));
                     setScreenState("error_generic");
                 }
             } else {
-                setErrorMessage("Something went wrong. Please try again.");
+                setErrorMessage(t("scanAttendance.genericError"));
                 setScreenState("error_generic");
             }
         }
@@ -116,7 +118,7 @@ const ScanAttendance = () => {
                         <Ionicons name="arrow-back" size={20} color="#374151" />
                     </Pressable>
                     <AppText variant="h3" style={styles.headerTitle}>
-                        Scan to Attend
+                        {t("scanAttendance.title")}
                     </AppText>
                 </View>
 
@@ -124,11 +126,10 @@ const ScanAttendance = () => {
                     <View style={styles.permissionBox}>
                         <Ionicons name="camera-outline" size={56} color="#9CA3AF" />
                         <AppText variant="h3" style={styles.permissionTitle}>
-                            Camera Access Required
+                            {t("scanAttendance.permissionTitle")}
                         </AppText>
                         <AppText variant="bodyMd" style={styles.permissionBody}>
-                            Camera access is required to scan the attendance QR code. Please
-                            allow camera access in your device settings.
+                            {t("scanAttendance.permissionBody")}
                         </AppText>
                         <Pressable
                             onPress={() => {
@@ -142,7 +143,7 @@ const ScanAttendance = () => {
                         >
                             <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
                             <AppText variant="bodyMd" style={styles.settingsBtnText}>
-                                {permission.canAskAgain ? "Allow Camera" : "Open Settings"}
+                                {permission.canAskAgain ? t("scanAttendance.allowCamera") : t("common.openSettings")}
                             </AppText>
                         </Pressable>
                     </View>
@@ -157,7 +158,7 @@ const ScanAttendance = () => {
             <View style={styles.centered}>
                 <ActivityIndicator size="large" color="#386641" />
                 <AppText variant="bodyMd" style={styles.loadingText}>
-                    Recording attendance…
+                    {t("scanAttendance.recordingAttendance")}
                 </AppText>
             </View>
         );
@@ -173,20 +174,20 @@ const ScanAttendance = () => {
                             <Ionicons name="checkmark-circle" size={72} color="#16A34A" />
                         </View>
                         <AppText variant="h2" style={styles.successTitle}>
-                            Attendance Recorded!
+                            {t("scanAttendance.successTitle")}
                         </AppText>
                         <AppText variant="bodyMd" style={styles.successEventName}>
                             {eventName}
                         </AppText>
                         <AppText variant="bodySm" style={styles.successBody}>
-                            Your attendance has been successfully recorded for this event.
+                            {t("scanAttendance.successBody")}
                         </AppText>
                         <Pressable
                             onPress={() => router.back()}
                             style={styles.doneBtn}
                         >
                             <AppText variant="bodyMd" style={styles.doneBtnText}>
-                                Done
+                                {t("scanAttendance.done")}
                             </AppText>
                         </Pressable>
                     </View>
@@ -204,21 +205,21 @@ const ScanAttendance = () => {
                         <Ionicons name="arrow-back" size={20} color="#374151" />
                     </Pressable>
                     <AppText variant="h3" style={styles.headerTitle}>
-                        Scan to Attend
+                        {t("scanAttendance.title")}
                     </AppText>
                 </View>
                 <View style={styles.centered}>
                     <View style={styles.errorBox}>
                         <Ionicons name="time-outline" size={56} color="#D97706" />
                         <AppText variant="h3" style={styles.errorTitle}>
-                            QR Code Expired
+                            {t("scanAttendance.expiredTitle")}
                         </AppText>
                         <AppText variant="bodyMd" style={styles.errorBody}>
-                            This QR code has expired. Please ask the organiser for a new one.
+                            {t("scanAttendance.expiredBody")}
                         </AppText>
                         <Pressable onPress={handleRetry} style={styles.retryBtn}>
                             <AppText variant="bodyMd" style={styles.retryBtnText}>
-                                Try Again
+                                {t("common.retry")}
                             </AppText>
                         </Pressable>
                     </View>
@@ -236,21 +237,21 @@ const ScanAttendance = () => {
                         <Ionicons name="arrow-back" size={20} color="#374151" />
                     </Pressable>
                     <AppText variant="h3" style={styles.headerTitle}>
-                        Scan to Attend
+                        {t("scanAttendance.title")}
                     </AppText>
                 </View>
                 <View style={styles.centered}>
                     <View style={styles.alreadyBox}>
                         <Ionicons name="checkmark-done-circle-outline" size={56} color="#386641" />
                         <AppText variant="h3" style={styles.alreadyTitle}>
-                            Already Recorded
+                            {t("scanAttendance.alreadyTitle")}
                         </AppText>
                         <AppText variant="bodyMd" style={styles.errorBody}>
-                            Your attendance has already been recorded.
+                            {t("scanAttendance.alreadyBody")}
                         </AppText>
                         <Pressable onPress={() => router.back()} style={styles.doneBtn}>
                             <AppText variant="bodyMd" style={styles.doneBtnText}>
-                                Done
+                                {t("scanAttendance.done")}
                             </AppText>
                         </Pressable>
                     </View>
@@ -268,21 +269,21 @@ const ScanAttendance = () => {
                         <Ionicons name="arrow-back" size={20} color="#374151" />
                     </Pressable>
                     <AppText variant="h3" style={styles.headerTitle}>
-                        Scan to Attend
+                        {t("scanAttendance.title")}
                     </AppText>
                 </View>
                 <View style={styles.centered}>
                     <View style={styles.errorBox}>
                         <Ionicons name="alert-circle-outline" size={56} color="#EF4444" />
                         <AppText variant="h3" style={styles.errorTitle}>
-                            Something Went Wrong
+                            {t("scanAttendance.genericErrorTitle")}
                         </AppText>
                         <AppText variant="bodyMd" style={styles.errorBody}>
                             {errorMessage}
                         </AppText>
                         <Pressable onPress={handleRetry} style={styles.retryBtn}>
                             <AppText variant="bodyMd" style={styles.retryBtnText}>
-                                Try Again
+                                {t("common.retry")}
                             </AppText>
                         </Pressable>
                     </View>
@@ -320,7 +321,7 @@ const ScanAttendance = () => {
 
                 <View style={styles.scanHintContainer}>
                     <AppText variant="bodyMd" style={styles.scanHint}>
-                        Point your camera at the event QR code
+                        {t("scanAttendance.scanHint")}
                     </AppText>
                 </View>
             </View>

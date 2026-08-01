@@ -191,35 +191,6 @@ const ConnectDetailScreen = () => {
   };
 
 
-  const handleMail = () => {
-  setShowConnectModal(false);
-
-  const subject = encodeURIComponent("Appointment Booking Request");
-
-  const body = encodeURIComponent(
-    `Hello,
-
-I would like to book an appointment.
-
-Name:
-Preferred Professional: ${professional?.name || ""}
-Preferred Date:
-Preferred Time:
-Purpose of Appointment:
-
-Please let me know the available slots.
-
-Thank you.`
-  );
-
-  const url = `mailto:${Constants.expoConfig?.extra?.EXPO_PUBLIC_BOOKING_EMAIL || "bookings@tanakaprabha.com"}?subject=${subject}&body=${body}`;
-
-  Linking.openURL(url).catch(() => {
-    Alert.alert(t("connect.error"), t("connect.cannotOpenMail"));
-  });
-};
-
-
   const avatarUrl =
     professional.imageUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&background=386641&color=fff&size=300&bold=true`;
@@ -375,7 +346,7 @@ Thank you.`
               {
                 icon: "mail" as const, label: "Email for Booking", sub: "Send an email to book inquiry", bg: "#EFF6FF", iconBg: theme.primary.green, onPress: () => {
                   if (!professional) return;
-                  const email = professional.email || Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_EMAIL || "ifithinkaboutit@gmail.com";
+                  const email = professional.email || Constants.expoConfig?.extra?.EXPO_PUBLIC_BOOKING_EMAIL || "bookings@tanakaprabha.com";
                   const subject = `Booking Inquiry for ${professional.name}`;
                   const body = `Hello ${professional.name},\n\nI would like to book a consultation for...`;
                   Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);

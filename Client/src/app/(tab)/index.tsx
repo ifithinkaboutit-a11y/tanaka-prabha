@@ -1,11 +1,9 @@
 import GreetingHeader from "@/components/molecules/GreetingHeader";
 import NotificationAlert from "@/components/molecules/NotificationAlert";
 import QuickActionGrid from "@/components/molecules/QuickActionGrid";
-import SchemePreviewList from "@/components/molecules/SchemePreviewList";
 import WeatherWidget from "@/components/molecules/WeatherWidget";
-import EventCard from "@/components/atoms/EventCard";
 import { quickActions as quickActionsData } from "@/data/content/quickActions";
-import { schemesApi, notificationsApi, eventsApi, Scheme, Notification, ApiEvent } from "@/services/apiService";
+import { notificationsApi, Notification } from "@/services/apiService";
 import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";

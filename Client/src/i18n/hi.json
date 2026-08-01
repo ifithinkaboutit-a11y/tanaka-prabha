@@ -215,6 +215,11 @@
     "sortByDate": "तारीख",
     "filters": "फिल्टर",
     "noSchemesFound": "आपकी खोज से मेल खाने वाली कोई योजना नहीं मिली",
+    "noResultsFound": "कोई परिणाम नहीं मिला",
+    "clearFilters": "फ़िल्टर साफ़ करें",
+    "sortNameLabel": "नाम (A–Z)",
+    "sortNewestLabel": "सबसे नया पहले",
+    "sortInterestedLabel": "सर्वाधिक रुचि",
     "schemesAvailable": "योजनाएं उपलब्ध",
     "allSchemes": "सभी योजनाएं",
     "more": "और",
@@ -227,7 +232,13 @@
       "financialSupport": "वित्तीय और क्रेडिट सहायता",
       "agriculturalDevelopment": "कृषि विकास",
       "soilManagement": "मिट्टी प्रबंधन",
-      "cropInsurance": "फसल बीमा"
+      "cropInsurance": "फसल बीमा",
+      "animalHusbandry": "पशुपालन एवं डेयरी",
+      "training": "प्रशिक्षण एवं कौशल विकास",
+      "irrigationWaterManagement": "सिंचाई एवं जल प्रबंधन",
+      "marketingPostHarvest": "विपणन एवं फसलोपरांत प्रबंधन",
+      "farmMechanization": "कृषि यंत्रीकरण",
+      "fisheries": "मत्स्य पालन"
     }
   },
   "programs": {
@@ -331,6 +342,10 @@
     "state": "राज्य",
     "save": "परिवर्तन सहेजें",
     "cancel": "रद्द करें",
+    "loading": "आपका विवरण लोड हो रहा है...",
+    "saving": "सहेजा जा रहा है...",
+    "savedMessage": "आपका व्यक्तिगत विवरण अपडेट कर दिया गया है।",
+    "saveError": "सहेजने में विफल। कृपया अपना कनेक्शन जांचें।",
     "updateAddressViaMap": "मानचित्र से पता अपडेट करें",
     "pinLocationToAutoFill": "गाँव, ब्लॉक, जिला और राज्य स्वतः भरने के लिए स्थान पिन करें",
     "addressAutoFilled": "मानचित्र से पता भरा गया — नीचे जांचें और सहेजें",
@@ -405,6 +420,7 @@
     "no": "नहीं",
     "ok": "ठीक है",
     "loading": "लोड हो रहा है...",
+    "saved": "सहेजा गया",
     "retry": "पुनः प्रयास",
     "farmer": "किसान",
     "user": "उपयोगकर्ता",
@@ -597,107 +613,6 @@
     "spices": "मसाले",
     "other": "अन्य"
   },
-  "schedule": {
-    "title": "मेरा शेड्यूल",
-    "subtitle": "आपके अपॉइंटमेंट और सत्र",
-    "tabs": {
-      "upcoming": "आगामी",
-      "past": "पिछला"
-    },
-    "emptyUpcomingTitle": "कोई आगामी अपॉइंटमेंट नहीं",
-    "emptyUpcomingDesc": "किसी विशेषज्ञ के साथ एक सत्र बुक करें",
-    "emptyPastTitle": "कोई पिछला अपॉइंटमेंट नहीं",
-    "emptyPastDesc": "आपके पिछले सत्र यहाँ दिखाई देंगे",
-    "bookAppointment": "अपॉइंटमेंट बुक करें",
-    "call": "कॉल करें",
-    "whatsapp": "व्हाट्सएप",
-    "cancel": "रद्द करें",
-    "status": {
-      "pending": "लंबित",
-      "scheduled": "निर्धारित",
-      "completed": "पूरा हो गया",
-      "cancelled": "रद्द कर दिया",
-      "missed": "छूट गया"
-    }
-  },
-  "crops": {
-    "wheat": "गेहूं",
-    "rice": "चावल",
-    "sugarcane": "गन्ना",
-    "potato": "आलू",
-    "tomato": "टमाटर",
-    "mustard": "सरसों",
-    "maize": "मक्का",
-    "pulses": "दलहन",
-    "oilseeds": "तिलहन",
-    "vegetables": "सब्जियां",
-    "fruits": "फल",
-    "cotton": "कपास",
-    "spices": "मसाले",
-    "other": "अन्य"
-  },
-  "schedule": {
-    "title": "मेरा शेड्यूल",
-    "subtitle": "आपके अपॉइंटमेंट और सत्र",
-    "tabs": {
-      "upcoming": "आगामी",
-      "past": "पिछला"
-    },
-    "emptyUpcomingTitle": "कोई आगामी अपॉइंटमेंट नहीं",
-    "emptyUpcomingDesc": "किसी विशेषज्ञ के साथ एक सत्र बुक करें",
-    "emptyPastTitle": "कोई पिछला अपॉइंटमेंट नहीं",
-    "emptyPastDesc": "आपके पिछले सत्र यहाँ दिखाई देंगे",
-    "bookAppointment": "अपॉइंटमेंट बुक करें",
-    "call": "कॉल करें",
-    "whatsapp": "व्हाट्सएप",
-    "cancel": "रद्द करें",
-    "status": {
-      "pending": "लंबित",
-      "scheduled": "निर्धारित",
-      "completed": "पूरा हो गया",
-      "cancelled": "रद्द कर दिया",
-      "missed": "छूट गया"
-    }
-  },
-  "crops": {
-    "wheat": "गेहूं",
-    "rice": "चावल",
-    "sugarcane": "गन्ना",
-    "potato": "आलू",
-    "tomato": "टमाटर",
-    "mustard": "सरसों",
-    "maize": "मक्का",
-    "pulses": "दलहन",
-    "oilseeds": "तिलहन",
-    "vegetables": "सब्जियां",
-    "fruits": "फल",
-    "cotton": "कपास",
-    "spices": "मसाले",
-    "other": "अन्य"
-  },
-  "schedule": {
-    "title": "मेरा शेड्यूल",
-    "subtitle": "आपके अपॉइंटमेंट और सत्र",
-    "tabs": {
-      "upcoming": "आगामी",
-      "past": "पिछला"
-    },
-    "emptyUpcomingTitle": "कोई आगामी अपॉइंटमेंट नहीं",
-    "emptyUpcomingDesc": "किसी विशेषज्ञ के साथ एक सत्र बुक करें",
-    "emptyPastTitle": "कोई पिछला अपॉइंटमेंट नहीं",
-    "emptyPastDesc": "आपके पिछले सत्र यहाँ दिखाई देंगे",
-    "bookAppointment": "अपॉइंटमेंट बुक करें",
-    "call": "कॉल करें",
-    "whatsapp": "व्हाट्सएप",
-    "cancel": "रद्द करें",
-    "status": {
-      "pending": "लंबित",
-      "scheduled": "निर्धारित",
-      "completed": "पूरा हो गया",
-      "cancelled": "रद्द कर दिया",
-      "missed": "छूट गया"
-    }
-  },
   "landDetails": {
     "title": "जमीन और फसल सारांश",
     "editTitle": "जमीन का विवरण संपादित करें",
@@ -763,7 +678,9 @@
     "others": "अन्य",
     "infoMessage": "प्रासंगिक पशुपालन योजनाओं और पशु चिकित्सा सहायता प्राप्त करने के लिए अपने पशुधन की गिनती अपडेट रखें।",
     "save": "सहेजें",
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "savedMessage": "आपके पशुधन का विवरण अपडेट कर दिया गया है।",
+    "saveError": "सहेजने में विफल। कृपया अपना कनेक्शन जांचें।"
   },
   "search": {
     "title": "खोज",
@@ -775,10 +692,12 @@
     "startSearching": "खोजना शुरू करें",
     "startSearchingHint": "योजनाएं, प्रशिक्षण कार्यक्रम, इवेंट और बहुत कुछ खोजें",
     "resultsCount": "{{count}} परिणाम मिला(ए)",
+    "all": "सभी",
     "scheme": "योजना",
     "trainingProgram": "प्रशिक्षण",
     "event": "कार्यक्रम",
-    "quickAction": "त्वरित कार्य"
+    "quickAction": "त्वरित कार्य",
+    "filterBy": "{{label}} के अनुसार फ़िल्टर करें"
   },
   "connect": {
     "title": "कनेक्ट",
@@ -875,8 +794,18 @@
       "error": "बुकिंग विफल",
       "errorMessage": "अपॉइंटमेंट बुक नहीं हो सका। कृपया पुनः प्रयास करें।",
       "fetchingSlots": "उपलब्ध स्लॉट प्राप्त हो रहे हैं...",
+      "fetchSlotsError": "उपलब्ध स्लॉट लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
       "noSlotsAvailable": "कोई स्लॉट उपलब्ध नहीं",
-      "supportEmail": "support@tanakaprabha.com"
+      "supportEmail": "support@tanakaprabha.com",
+      "successSubtitlePrefix": "आपका अपॉइंटमेंट",
+      "successSubtitleSuffix": "के साथ पुष्ट हो गया है।",
+      "professionalLabel": "विशेषज्ञ",
+      "dateLabel": "तारीख",
+      "timeLabel": "समय",
+      "reminderMessage": "आपको अपने अपॉइंटमेंट से पहले एक अनुस्मारक मिलेगा।",
+      "backToConnect": "कनेक्ट पर वापस जाएं",
+      "viewMySchedule": "मेरा शेड्यूल देखें →",
+      "appointmentSummary": "अपॉइंटमेंट सारांश"
     },
     "professional": {
       "emailExpert": "विशेषज्ञ को ईमेल करें",
@@ -1079,10 +1008,30 @@
     "cancel": "रद्द करें",
     "status": {
       "pending": "लंबित",
+      "confirmed": "पुष्टि की गई",
       "scheduled": "निर्धारित",
       "completed": "पूरा हो गया",
       "cancelled": "रद्द कर दिया",
       "missed": "छूट गया"
     }
+  },
+  "scanAttendance": {
+    "title": "उपस्थिति के लिए स्कैन करें",
+    "permissionTitle": "कैमरा एक्सेस आवश्यक है",
+    "permissionBody": "उपस्थिति क्यूआर कोड स्कैन करने के लिए कैमरा एक्सेस आवश्यक है। कृपया अपनी डिवाइस सेटिंग्स में कैमरा एक्सेस की अनुमति दें।",
+    "allowCamera": "कैमरे की अनुमति दें",
+    "recordingAttendance": "उपस्थिति दर्ज की जा रही है…",
+    "successTitle": "उपस्थिति दर्ज हो गई!",
+    "successBody": "आपकी उपस्थिति इस कार्यक्रम के लिए सफलतापूर्वक दर्ज कर ली गई है।",
+    "done": "हो गया",
+    "expiredTitle": "क्यूआर कोड समाप्त हो गया",
+    "expiredBody": "यह क्यूआर कोड समाप्त हो चुका है। कृपया आयोजक से नया कोड मांगें।",
+    "alreadyTitle": "पहले से दर्ज",
+    "alreadyBody": "आपकी उपस्थिति पहले ही दर्ज की जा चुकी है।",
+    "genericErrorTitle": "कुछ गलत हो गया",
+    "scanHint": "कार्यक्रम के क्यूआर कोड पर अपना कैमरा पॉइंट करें",
+    "invalidQr": "अमान्य क्यूआर कोड। इवेंट आईडी या टोकन गायब है।",
+    "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "defaultEventName": "कार्यक्रम"
   }
 }

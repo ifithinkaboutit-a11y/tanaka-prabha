@@ -424,8 +424,10 @@ const AuthPersonalDetailsScreen = () => {
   };
 
   const isValid = () => {
+    // Photo is intentionally not required here — if the upload fails (flaky
+    // network), the user can still proceed and add a photo later from their
+    // profile instead of being stuck on this screen with no way forward.
     return (
-      !!personalDetails.photoUrl &&
       personalDetails.name?.trim() !== "" &&
       personalDetails.age > 0 &&
       personalDetails.gender !== "" &&
@@ -610,7 +612,13 @@ const AuthPersonalDetailsScreen = () => {
               <Select
                 options={getStateOptions(currentLanguage)}
                 value={personalDetails.state}
-                onChange={(val) => updatePersonalDetails({ state: val, district: "", block: "" })}
+                onChange={(val) => {
+                  // Clear PIN-derived block/post-office options too — they were
+                  // looked up for the previous state and no longer apply.
+                  setBlockOptions([]);
+                  setPostOfficeOptions([]);
+                  updatePersonalDetails({ state: val, district: "", block: "" });
+                }}
                 placeholder={t("onboarding.selectState") || "Select State"}
               />
             </FieldWrapper>
@@ -621,7 +629,11 @@ const AuthPersonalDetailsScreen = () => {
               <Select
                 options={getDistrictOptions(personalDetails.state, currentLanguage)}
                 value={personalDetails.district}
-                onChange={(val) => updatePersonalDetails({ district: val })}
+                onChange={(val) => {
+                  setBlockOptions([]);
+                  setPostOfficeOptions([]);
+                  updatePersonalDetails({ district: val, block: "" });
+                }}
                 placeholder={t("onboarding.selectDistrict") || "Select District"}
                 disabled={!personalDetails.state}
               />

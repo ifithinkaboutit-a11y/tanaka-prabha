@@ -43,7 +43,7 @@ const LandDetailsScreen = () => {
   const handleSave = async (data: typeof initialData) => {
     try {
       await updateLandDetails(data);
-      Alert.alert("✅ Saved", t("landDetails.savedMessage") || "Your land details have been updated.");
+      Alert.alert(t("common.saved"), t("landDetails.savedMessage") || "Your land details have been updated.");
       router.back();
     } catch (error) {
       Alert.alert(t("common.error"), t("landDetails.saveError") || "Failed to save. Please check your connection.");

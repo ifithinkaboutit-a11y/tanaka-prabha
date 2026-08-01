@@ -3,6 +3,7 @@ import AppText from "@/components/atoms/AppText";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
+import { authApi, ApiError } from "@/services/apiService";
 import { translateKnownError } from "@/utils/translatedErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -33,34 +34,27 @@ export default function AdminLogin() {
 
         setLoading(true);
         try {
-            const baseUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
-            const response = await fetch(`${baseUrl}/admin/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                const adminData = {
-                    id: data.admin.id,
-                    name: data.admin.email, // backend doesn't return name currently
-                    role: 'admin',
-                    email: data.admin.email
-                };
-                await loginAsAdmin(data.token, adminData as any);
-            } else {
+            const data = await authApi.adminLogin(email, password);
+            const adminData = {
+                id: data.admin.id,
+                name: data.admin.email, // backend doesn't return name currently
+                role: 'admin',
+                email: data.admin.email
+            };
+            await loginAsAdmin(data.token, adminData as any);
+        } catch (error) {
+            const apiError = error instanceof ApiError ? error : null;
+            const backendMessage = apiError?.data?.error || apiError?.data?.message;
+            if (apiError) {
                 Alert.alert(
                     t("auth.admin.loginFailedTitle"),
-                    translateKnownError(data.error || data.message, t) ||
-                    data.error ||
-                    data.message ||
+                    translateKnownError(backendMessage, t) ||
+                    backendMessage ||
                     t("auth.admin.invalidCredentials")
                 );
+            } else {
+                Alert.alert(t("common.error"), t("auth.admin.networkError"));
             }
-        } catch (error) {
-            Alert.alert(t("common.error"), t("auth.admin.networkError"));
             console.error("Admin login error:", error);
         } finally {
             setLoading(false);

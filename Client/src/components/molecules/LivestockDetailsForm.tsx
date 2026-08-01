@@ -89,11 +89,17 @@ const AnimalCounter = ({
 
         <TextInput
           className="w-12 h-8 rounded border border-gray-300 bg-gray-100 text-center text-base text-gray-800 px-0"
+          style={{
+            textAlignVertical: "center",
+            includeFontPadding: false,
+            paddingVertical: 0,
+            lineHeight: 20,
+          }}
           value={safeValue > 0 ? safeValue.toString() : ""}
           onChangeText={(t) => onChange(parseInt(t) || 0)}
           keyboardType="numeric"
           placeholder="0"
-          placeholderTextColor={theme.border.card}
+          placeholderTextColor={theme.text.subtle}
         />
 
         <Pressable
@@ -155,7 +161,7 @@ export default function LivestockDetailsForm({
 
   return (
     <KeyboardAwareScrollView
-      className="flex-1 bg-white"
+      className="flex-1"
       showsVerticalScrollIndicator={false}
       contentContainerClassName="pb-10"
       keyboardShouldPersistTaps="handled"

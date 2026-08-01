@@ -58,8 +58,6 @@ export default function ViewAttendance() {
 
     // —— Step 1: pick event ——
     if (!selectedEvent) {
-        const presentCount = attendees.filter(a => a.status === "present").length;
-
         return (
             <View style={s.root}>
                 <View style={s.header}>

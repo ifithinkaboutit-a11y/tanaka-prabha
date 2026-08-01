@@ -47,10 +47,10 @@ const LivestockDetailsScreen = () => {
   const handleSave = async (data: typeof initialData) => {
     try {
       await updateLivestockDetails(data);
-      Alert.alert("✅ Saved", "Your livestock details have been updated.");
+      Alert.alert(t("common.saved"), t("livestockDetails.savedMessage"));
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to save. Please check your connection.");
+      Alert.alert(t("common.error"), t("livestockDetails.saveError"));
       console.error("Error saving livestock details:", error);
     }
   };

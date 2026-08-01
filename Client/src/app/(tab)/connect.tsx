@@ -19,6 +19,7 @@ import { useTranslation } from "../../i18n";
 import { useUserProfile } from "../../contexts/UserProfileContext";
 import { auditLogApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
+import { connectServices } from "../../data/content/connectServices";
 
 const HELPLINE_EMAIL = Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_EMAIL || "ifithinkaboutit@gmail.com";
 const HELPLINE_PHONE = Constants.expoConfig?.extra?.EXPO_PUBLIC_SOS_PHONE || "7355045954";
@@ -77,41 +78,16 @@ export default function Connect() {
     setModalVisible(false);
   };
 
-  // ── Service grid ──────────────────────────────────────────────────────────
-  const serviceActions = [
-    {
-      title: t("connect.services.trainingGuidance"),
-      icon: "leaf-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: "#16A34A",
-      bgColor: "#DCFCE7",
-      onPress: () =>
-        router.push({ pathname: "/connect-listing", params: { category: "agricultural" } } as any),
-    },
-    {
-      title: t("connect.services.livestockVeterinary"),
-      icon: "paw-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: "#D97706",
-      bgColor: "#FEF3C7",
-      onPress: () =>
-        router.push({ pathname: "/connect-listing", params: { category: "veterinary" } } as any),
-    },
-    {
-      title: t("connect.services.marketBuyers"),
-      icon: "storefront-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: "#DB2777",
-      bgColor: "#FCE7F3",
-      onPress: () =>
-        router.push({ pathname: "/connect-listing", params: { category: "financial" } } as any),
-    },
-    {
-      title: t("connect.services.governmentSchemes"),
-      icon: "business-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: "#2563EB",
-      bgColor: "#DBEAFE",
-      onPress: () =>
-        router.push({ pathname: "/connect-listing", params: { category: "doctor" } } as any),
-    },
-  ];
+  // ── Service grid — sourced from connectServices so category IDs always
+  // match the professionals.category values seeded on the backend ──────────
+  const serviceActions = connectServices.map((service) => ({
+    title: t(service.titleKey),
+    icon: service.icon,
+    iconColor: service.iconColor,
+    bgColor: service.iconBgColor,
+    onPress: () =>
+      router.push({ pathname: "/connect-listing", params: { category: service.id } } as any),
+  }));
 
   const afterHours = isAfterHours();
 

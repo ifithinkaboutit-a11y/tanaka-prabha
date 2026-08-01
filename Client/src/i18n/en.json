@@ -221,6 +221,11 @@
     "sortByDate": "Date",
     "filters": "Filters",
     "noSchemesFound": "No schemes found matching your search",
+    "noResultsFound": "No results found",
+    "clearFilters": "Clear Filters",
+    "sortNameLabel": "Name (A–Z)",
+    "sortNewestLabel": "Newest First",
+    "sortInterestedLabel": "Most Interested",
     "schemesAvailable": "schemes available",
     "allSchemes": "All Schemes",
     "more": "more",
@@ -233,7 +238,13 @@
       "financialSupport": "Financial & Credit Support",
       "agriculturalDevelopment": "Agricultural Development",
       "soilManagement": "Soil Management",
-      "cropInsurance": "Crop Insurance"
+      "cropInsurance": "Crop Insurance",
+      "animalHusbandry": "Animal Husbandry & Dairy",
+      "training": "Training & Skill Development",
+      "irrigationWaterManagement": "Irrigation & Water Management",
+      "marketingPostHarvest": "Marketing & Post-Harvest",
+      "farmMechanization": "Farm Mechanization",
+      "fisheries": "Fisheries"
     }
   },
   "programs": {
@@ -337,6 +348,10 @@
     "state": "State",
     "save": "Save Changes",
     "cancel": "Cancel",
+    "loading": "Loading your details...",
+    "saving": "Saving...",
+    "savedMessage": "Your personal details have been updated.",
+    "saveError": "Failed to save. Please check your connection.",
     "updateAddressViaMap": "Update Address via Map",
     "pinLocationToAutoFill": "Pin your location to auto-fill village, block, district & state",
     "addressAutoFilled": "Address auto-filled from map — review & save below",
@@ -410,6 +425,7 @@
     "no": "No",
     "ok": "OK",
     "loading": "Loading...",
+    "saved": "Saved",
     "skip": "Skip",
     "retry": "Retry",
     "farmer": "Farmer",
@@ -652,7 +668,9 @@
     "others": "Others",
     "infoMessage": "Keep your livestock count updated to receive relevant animal husbandry schemes and veterinary support.",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "savedMessage": "Your livestock details have been updated.",
+    "saveError": "Failed to save. Please check your connection."
   },
   "search": {
     "title": "Search",
@@ -664,10 +682,12 @@
     "startSearching": "Start searching",
     "startSearchingHint": "Search for schemes, training programs, events and more",
     "resultsCount": "{{count}} result(s) found",
+    "all": "All",
     "scheme": "Scheme",
     "trainingProgram": "Training",
     "event": "Event",
-    "quickAction": "Quick Action"
+    "quickAction": "Quick Action",
+    "filterBy": "Filter by {{label}}"
   },
   "connect": {
     "title": "Connect",
@@ -764,8 +784,18 @@
       "error": "Booking Failed",
       "errorMessage": "Unable to book appointment. Please try again.",
       "fetchingSlots": "Fetching available slots...",
+      "fetchSlotsError": "Could not load available slots. Please try again.",
       "noSlotsAvailable": "No slots available",
-      "supportEmail": "support@tanakaprabha.com"
+      "supportEmail": "support@tanakaprabha.com",
+      "successSubtitlePrefix": "Your appointment with",
+      "successSubtitleSuffix": "has been confirmed.",
+      "professionalLabel": "Professional",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "reminderMessage": "You'll receive a reminder before your appointment.",
+      "backToConnect": "Back to Connect",
+      "viewMySchedule": "View My Schedule →",
+      "appointmentSummary": "Appointment Summary"
     },
     "professional": {
       "emailExpert": "Email Expert",
@@ -979,10 +1009,30 @@
     "cancel": "Cancel",
     "status": {
       "pending": "Pending",
+      "confirmed": "Confirmed",
       "scheduled": "Scheduled",
       "completed": "Completed",
       "cancelled": "Cancelled",
       "missed": "Missed"
     }
+  },
+  "scanAttendance": {
+    "title": "Scan to Attend",
+    "permissionTitle": "Camera Access Required",
+    "permissionBody": "Camera access is required to scan the attendance QR code. Please allow camera access in your device settings.",
+    "allowCamera": "Allow Camera",
+    "recordingAttendance": "Recording attendance…",
+    "successTitle": "Attendance Recorded!",
+    "successBody": "Your attendance has been successfully recorded for this event.",
+    "done": "Done",
+    "expiredTitle": "QR Code Expired",
+    "expiredBody": "This QR code has expired. Please ask the organiser for a new one.",
+    "alreadyTitle": "Already Recorded",
+    "alreadyBody": "Your attendance has already been recorded.",
+    "genericErrorTitle": "Something Went Wrong",
+    "scanHint": "Point your camera at the event QR code",
+    "invalidQr": "Invalid QR code. Missing event ID or token.",
+    "genericError": "Something went wrong. Please try again.",
+    "defaultEventName": "Event"
   }
 }

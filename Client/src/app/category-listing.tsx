@@ -285,7 +285,7 @@ const CategoryListing = () => {
                 style={{ color: "#616161", marginTop: 16, textAlign: "center" }}
               >
                 {activeFilterCount > 0
-                  ? "No results found"
+                  ? t("schemesPage.noResultsFound")
                   : t("schemesPage.noSchemesFound") || "No schemes found"}
               </AppText>
               {activeFilterCount > 0 && (
@@ -303,7 +303,7 @@ const CategoryListing = () => {
                   }}
                 >
                   <AppText variant="bodyMd" style={{ color: theme.primary.greenDark, fontWeight: "600" }}>
-                    Clear Filters
+                    {t("schemesPage.clearFilters")}
                   </AppText>
                 </TouchableOpacity>
               )}
@@ -334,9 +334,9 @@ const CategoryListing = () => {
       }}>
         {(
           [
-            { key: "name", label: "Name (A–Z)" },
-            { key: "newest", label: "Newest First" },
-            { key: "interested", label: "Most Interested" },
+            { key: "name", label: t("schemesPage.sortNameLabel") },
+            { key: "newest", label: t("schemesPage.sortNewestLabel") },
+            { key: "interested", label: t("schemesPage.sortInterestedLabel") },
           ] as const
         ).map(({ key, label }, index, arr) => {
           const isActive = sortBy === key;

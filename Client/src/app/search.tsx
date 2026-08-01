@@ -87,10 +87,10 @@ export default function SearchScreen() {
         >
           {(
             [
-              { label: "All", value: "all" },
-              { label: "Scheme", value: "scheme" },
-              { label: "Program", value: "training" },
-              { label: "Event", value: "event" },
+              { label: t("search.all"), value: "all" },
+              { label: t("search.scheme"), value: "scheme" },
+              { label: t("search.trainingProgram"), value: "training" },
+              { label: t("search.event"), value: "event" },
             ] as const
           ).map(({ label, value }) => {
             const active = typeFilter === value;
@@ -100,7 +100,7 @@ export default function SearchScreen() {
                 onPress={() => setTypeFilter(value)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
-                accessibilityLabel={`Filter by ${label}`}
+                accessibilityLabel={t("search.filterBy", { label })}
                 style={{
                   paddingHorizontal: 16,
                   paddingVertical: 6,

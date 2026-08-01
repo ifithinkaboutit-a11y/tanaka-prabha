@@ -17,11 +17,26 @@ import { useTranslation } from "../i18n";
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; dot: string; icon: keyof typeof Ionicons.glyphMap }> = {
     pending:   { color: "#D97706", bg: "#FEF3C7", dot: "#F59E0B", icon: "time-outline" },
+    confirmed: { color: "#2563EB", bg: "#DBEAFE", dot: "#3B82F6", icon: "checkmark-circle-outline" },
     scheduled: { color: "#2563EB", bg: "#DBEAFE", dot: "#3B82F6", icon: "calendar-outline" },
     completed: { color: "#16A34A", bg: "#DCFCE7", dot: "#22C55E", icon: "checkmark-circle-outline" },
     cancelled: { color: "#DC2626", bg: "#FEE2E2", dot: "#EF4444", icon: "close-circle-outline" },
     missed:    { color: "#6B7280", bg: "#F3F4F6", dot: "#9CA3AF", icon: "alert-circle-outline" },
 };
+
+// Builds the camelCase i18n key convention used under connect.roles.* (e.g.
+// "Animal Doctor" -> "animalDoctor") and falls back to the raw role string
+// when no translation exists for it, since t() returns the key itself (not
+// falsy) on a miss.
+function translateRole(role: string, t: (key: string) => string): string {
+    const key = `connect.roles.${role
+        .trim()
+        .split(/\s+/)
+        .map((word, i) => (i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+        .join("")}`;
+    const translated = t(key);
+    return translated !== key ? translated : role;
+}
 
 function formatDate(dateStr: string, currentLanguage: string): string {
     return new Date(dateStr).toLocaleDateString(currentLanguage === "hi" ? "hi-IN" : "en-IN", {
@@ -199,7 +214,7 @@ export default function MySchedule() {
                                             </AppText>
                                             {professionalRole ? (
                                                 <AppText style={{ color: "#6B7280", fontSize: 12, marginTop: 1 }}>
-                                                    {t(`connect.roles.${professionalRole.toLowerCase().replace(/\s+/g, "")}`) || professionalRole}
+                                                    {translateRole(professionalRole, t)}
                                                 </AppText>
                                             ) : null}
                                         </View>

@@ -53,7 +53,7 @@ const PersonalDetailsScreen = () => {
     return (
       <View style={s.loader}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={s.loaderText}>Loading your details...</Text>
+        <Text style={s.loaderText}>{t("personalDetails.loading")}</Text>
       </View>
     );
   }
@@ -64,7 +64,10 @@ const PersonalDetailsScreen = () => {
     name: profile?.name || "",
     age: profile?.age || 0,
     gender: profile?.gender || "",
-    aadhaar: "",
+    // Not editable from this form (PersonalDetailsForm has no Aadhaar field —
+    // it's captured once during onboarding), but keep it faithful to the
+    // stored value rather than hardcoding empty in case that ever changes.
+    aadhaar: profile?.aadhaarNumber || "",
     fathersName: profile?.fathersName || "",
     mothersName: profile?.mothersName || "",
     educationalQualification: profile?.educationalQualification || "",
@@ -88,10 +91,10 @@ const PersonalDetailsScreen = () => {
   const handleSave = async (data: typeof initialData) => {
     try {
       await updatePersonalDetails(data);
-      Alert.alert("✅ Saved", "Your personal details have been updated.");
+      Alert.alert(t("common.saved"), t("personalDetails.savedMessage"));
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to save. Please check your connection.");
+      Alert.alert(t("common.error"), t("personalDetails.saveError"));
       console.error("Error saving personal details:", error);
     }
   };
@@ -137,7 +140,7 @@ const PersonalDetailsScreen = () => {
           {saving && (
             <View style={s.savingIndicator}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={s.savingText}>Saving...</Text>
+              <Text style={s.savingText}>{t("personalDetails.saving")}</Text>
             </View>
           )}
         </View>

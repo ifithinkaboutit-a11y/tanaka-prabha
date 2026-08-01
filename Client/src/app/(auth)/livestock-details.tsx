@@ -259,15 +259,17 @@ const AuthLivestockDetailsScreen = () => {
         const rabiCrops = allCropLabels.filter((l) => rabiKeywords.some((k) => l.toLowerCase().includes(k)));
         const kharifCrops = allCropLabels.filter((l) => kharifKeywords.some((k) => l.toLowerCase().includes(k)));
         const zaidCrops = allCropLabels.filter((l) => zaidKeywords.some((k) => l.toLowerCase().includes(k)));
-        // Any unclassified go to zaid
+        // Any unclassified crops go to zaid rather than being silently
+        // mislabeled as rabi
         const classified = [...rabiCrops, ...kharifCrops, ...zaidCrops];
         const otherCrops = allCropLabels.filter((l) => !classified.includes(l));
+        const allZaidCrops = [...zaidCrops, ...otherCrops];
 
         profileData.land_details = {
           total_land_area: Math.round(totalArea * 100) / 100,
-          rabi_crop: rabiCrops.join(", ") || otherCrops.join(", ") || undefined,
-          kharif_crop: kharifCrops.join(", ") || undefined,
-          zaid_crop: zaidCrops.length > 0 ? zaidCrops.join(", ") : undefined,
+          rabi_crop: rabiCrops.length > 0 ? rabiCrops.join(", ") : undefined,
+          kharif_crop: kharifCrops.length > 0 ? kharifCrops.join(", ") : undefined,
+          zaid_crop: allZaidCrops.length > 0 ? allZaidCrops.join(", ") : undefined,
         };
 
         if (landLocationData && landLocationData.method === 'gps' && landLocationData.lat && landLocationData.lng) {

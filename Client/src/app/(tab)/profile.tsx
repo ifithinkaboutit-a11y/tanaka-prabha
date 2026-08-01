@@ -25,7 +25,6 @@ import * as ImagePicker from "expo-image-picker";
 import { uploadApi } from "../../services/apiService";
 import { theme } from "@/styles/colors";
 import { cropTypes } from "../../data/content/onboardingOptions";
-import { Image } from "react-native";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -118,7 +117,7 @@ const Profile = () => {
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const { currentLanguage, setLanguage } = useLanguageStore();
-  const { profile, loading, refreshProfile, updateProfile } = useUserProfile();
+  const { profile, refreshProfile, updateProfile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarProgress, setAvatarProgress] = useState(0);
@@ -272,17 +271,6 @@ const Profile = () => {
         {/* Top bar */}
         <View style={s.heroTopBar}>
           <Text style={s.heroScreenTitle}>{t("profile.title")}</Text>
-          <Button
-            size="sm"
-            variant="outline"
-            onPress={() => setLanguage(currentLanguage === "en" ? "hi" : "en")}
-            style={{ backgroundColor: "rgba(255,255,255,0.18)", borderColor: "rgba(255,255,255,0.25)", borderRadius: 20 }}
-          >
-            <Ionicons name="language-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>
-              {currentLanguage === "en" ? "हिंदी" : "English"}
-            </Text>
-          </Button>
         </View>
 
         {/* Avatar + Identity */}
@@ -347,7 +335,7 @@ const Profile = () => {
           <View style={s.statsDivider} />
           <StatBadge
             icon="leaf-outline"
-            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea} Bigha` : "0"}
+            value={profile.landDetails?.totalLandArea ? `${profile.landDetails.totalLandArea} Bigha` : "—"}
             label={t("profile.bigha")}
           />
           <View style={s.statsDivider} />
@@ -629,17 +617,6 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   heroScreenTitle: { color: "#FFFFFF", fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
-  langBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.18)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
-  },
-  langBtnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "600" },
 
   heroCenter: { alignItems: "center", marginBottom: 24 },
   avatarRing: {
@@ -737,16 +714,6 @@ const s = StyleSheet.create({
   statBadgeLabel: { color: "rgba(255,255,255,0.65)", fontSize: 10, textAlign: "center" },
   statsDivider: { width: 1, backgroundColor: "rgba(255,255,255,0.2)", marginHorizontal: 4 },
 
-  editProfileBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    paddingVertical: 13,
-  },
-  editProfileBtnText: { color: "#386641", fontSize: 15, fontWeight: "700" },
-
   // Section card
   card: {
     marginHorizontal: 16,
@@ -775,17 +742,6 @@ const s = StyleSheet.create({
   cardHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   cardIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   cardTitle: { fontSize: 16, fontWeight: "700", letterSpacing: -0.1 },
-  editChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0FDF4",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-  },
-  editChipText: { color: "#386641", fontSize: 12, fontWeight: "600" },
   cardBody: { paddingHorizontal: 18, paddingVertical: 10 },
 
   // Info rows
@@ -846,19 +802,6 @@ const s = StyleSheet.create({
   // Empty state
   emptySection: { alignItems: "center", paddingVertical: 20, gap: 8 },
   emptySectionText: { color: "#9CA3AF", fontSize: 14 },
-  addBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: "#BBF7D0",
-    backgroundColor: "#F0FDF4",
-    marginTop: 4,
-  },
-  addBtnText: { color: "#16A34A", fontSize: 13, fontWeight: "600" },
 
   // Settings
   settingRow: {
@@ -882,31 +825,5 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
-  },
-  // Toggle
-  toggleTrack: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    paddingHorizontal: 2,
-  },
-  toggleTrackActive: {
-    backgroundColor: "#16A34A",
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleThumbActive: {
-    transform: [{ translateX: 20 }],
   },
 });

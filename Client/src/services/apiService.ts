@@ -356,6 +356,20 @@ export const authApi = {
       body: JSON.stringify({ mobile_number, language }),
     });
   },
+
+  /**
+   * Admin login. Note: this endpoint doesn't follow the standard
+   * {status, message, data} envelope — it returns {token, admin} directly
+   * on success and {error} directly on failure, so callers should read the
+   * resolved value's top-level fields (not `.data`) and read `ApiError.data?.error`
+   * on failure.
+   */
+  async adminLogin(email: string, password: string): Promise<{ token: string; admin: { id: string; email: string; name?: string } }> {
+    return fetchWithAuth("/admin/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }) as unknown as Promise<{ token: string; admin: { id: string; email: string; name?: string } }>;
+  },
 };
 
 // User API endpoints
@@ -1483,7 +1497,9 @@ export const appointmentsApi = {
         createdAt: a.created_at,
         professionalName: a.professional_name,
         professionalRole: a.professional_role,
+        professionalDepartment: a.professional_department,
         professionalImage: a.professional_image,
+        professionalPhone: a.professional_phone,
       }));
     } catch (error) {
       // Fallback to local storage

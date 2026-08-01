@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import SearchBar from "../../components/molecules/SearchBar";
-import { schemeCategories } from "../../data/content/schemeCategories";
+import { schemeCategories, categoryToSchemeCategory } from "../../data/content/schemeCategories";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
@@ -207,12 +207,9 @@ export default function Schemes() {
       data.forEach((s) => {
         if (s.category) {
           // Map API category name back to category ID
-          const catEntry = Object.entries({
-            "financial-support": "Financial Support",
-            "agricultural-development": "Agricultural Development",
-            "soil-management": "Soil Management",
-            "crop-insurance": "Crop Insurance",
-          }).find(([, v]) => v.toLowerCase() === s.category.toLowerCase());
+          const catEntry = Object.entries(categoryToSchemeCategory).find(
+            ([, v]) => v.toLowerCase() === s.category.toLowerCase()
+          );
           if (catEntry) {
             counts[catEntry[0]] = (counts[catEntry[0]] || 0) + 1;
           }

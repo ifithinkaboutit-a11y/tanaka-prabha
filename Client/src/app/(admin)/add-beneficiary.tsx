@@ -33,7 +33,14 @@ const STEP_SUBTITLES = [
     "Land holdings and crops",
     "Livestock owned by the farmer",
 ];
-const DEFAULT_PASSWORD = "12345678";
+// Generates a fresh random 8-digit default password per beneficiary instead
+// of reusing one fixed password across every admin-created account (which
+// would let anyone log in to any farmer's account with a single known value).
+function generateDefaultPassword(): string {
+    let digits = "";
+    for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10);
+    return digits;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────
 const FieldLabel = ({ text }: { text: string }) => (
@@ -89,13 +96,14 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 
 // ─── Step 1: Personal Details + Photo ────────────────────────
 function Step1({
-    form, setForm, errors, uploadingPhoto, onCapturePhoto,
+    form, setForm, errors, uploadingPhoto, onCapturePhoto, defaultPassword,
 }: {
     form: PersonalForm;
     setForm: (f: PersonalForm) => void;
     errors: Partial<PersonalForm>;
     uploadingPhoto: boolean;
     onCapturePhoto: () => void;
+    defaultPassword: string;
 }) {
     const lang = useLanguageStore((s) => s.currentLanguage);
     const genderOpts = getLocalizedOptions(genderOptions, lang);
@@ -187,7 +195,7 @@ function Step1({
             <View style={ph.passwordNote}>
                 <Ionicons name="lock-closed-outline" size={14} color="#6B7280" />
                 <AppText style={{ fontSize: 12, color: "#6B7280", flex: 1 }}>
-                    Default password <AppText style={{ fontWeight: "700", color: "#374151" }}>{DEFAULT_PASSWORD}</AppText> will be set. Farmer can change it after first login.
+                    Default password <AppText style={{ fontWeight: "700", color: "#374151" }}>{defaultPassword}</AppText> will be set. Farmer can change it after first login.
                 </AppText>
             </View>
         </>
@@ -755,6 +763,7 @@ export default function AddBeneficiary() {
 
     const [showForm, setShowForm] = useState(false);
     const [step, setStep] = useState(0);
+    const [defaultPassword, setDefaultPassword] = useState(() => generateDefaultPassword());
     const [submitting, setSubmitting] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [conflictFarmer, setConflictFarmer] = useState<ApiUserProfile | null>(null);
@@ -875,7 +884,7 @@ export default function AddBeneficiary() {
             const payload: Record<string, any> = {
                 name: personal.name.trim(),
                 mobile_number: personal.mobile,
-                password: DEFAULT_PASSWORD,
+                password: defaultPassword,
                 age: parseInt(personal.age),
                 gender: personal.gender,
                 fathers_name: personal.fathersName.trim(),
@@ -942,8 +951,11 @@ export default function AddBeneficiary() {
                 throw new Error(data.message || `Request failed (${response.status})`);
             }
 
-            Alert.alert("Farmer Registered", `${personal.name} has been successfully registered.`,
-                [{ text: "OK", onPress: () => router.back() }]);
+            Alert.alert(
+                "Farmer Registered",
+                `${personal.name} has been successfully registered.\n\nDefault password: ${defaultPassword}\nPlease share this with the farmer securely — it won't be shown again.`,
+                [{ text: "OK", onPress: () => router.back() }]
+            );
         } catch (err) {
             Alert.alert("Registration Failed", err instanceof Error ? err.message : "Something went wrong.");
         } finally {
@@ -989,7 +1001,7 @@ export default function AddBeneficiary() {
             {!showForm && (
                 <KeyboardAwareScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}
                     showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                    <SearchSection onRegisterNew={() => setShowForm(true)} />
+                    <SearchSection onRegisterNew={() => { setDefaultPassword(generateDefaultPassword()); setShowForm(true); }} />
                 </KeyboardAwareScrollView>
             )}
 
@@ -1005,7 +1017,8 @@ export default function AddBeneficiary() {
                         showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                         {step === 0 && (
                             <Step1 form={personal} setForm={setPersonal} errors={personalErrors}
-                                uploadingPhoto={uploadingPhoto} onCapturePhoto={handleCapturePhoto} />
+                                uploadingPhoto={uploadingPhoto} onCapturePhoto={handleCapturePhoto}
+                                defaultPassword={defaultPassword} />
                         )}
                         {step === 1 && (
                             <Step2 form={location} setForm={setLocation} errors={locationErrors}

@@ -132,10 +132,11 @@ function CalendarModal({
                         {cells.map((day, idx) => {
                             const isSelected = day === selected;
                             const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                            const isPast = !!day && new Date(year, month, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
                             return (
                                 <TouchableOpacity
                                     key={idx}
-                                    disabled={!day}
+                                    disabled={!day || isPast}
                                     onPress={() => day && setSelected(day)}
                                     style={[
                                         cal.cell,
@@ -144,7 +145,7 @@ function CalendarModal({
                                     ]}
                                 >
                                     {day ? (
-                                        <Text style={[cal.cellText, isSelected && cal.cellTextSel]}>
+                                        <Text style={[cal.cellText, isSelected && cal.cellTextSel, isPast && cal.cellTextPast]}>
                                             {day}
                                         </Text>
                                     ) : null}
@@ -180,6 +181,7 @@ const cal = StyleSheet.create({
     cellToday: { borderWidth: 1.5, borderColor: "#3B82F6" },
     cellText: { fontSize: 14, color: "#374151" },
     cellTextSel: { color: "#fff", fontWeight: "700" },
+    cellTextPast: { color: "#D1D5DB" },
 });
 
 // ─── Time Picker Modal ───────────────────────────────────────
@@ -386,6 +388,11 @@ export default function CreateEvent() {
             Alert.alert("Hindi Title Required", "Please enter the Hindi title (हिंदी शीर्षक आवश्यक है).");
             return;
         }
+        const todayStr = new Date().toISOString().split("T")[0];
+        if (date < todayStr) {
+            Alert.alert("Invalid Date", "Event date cannot be in the past.");
+            return;
+        }
 
         // Convert "HH:MM AM/PM" → "HH:MM:00" (24-hour) for the backend
         function to24h(t: string): string {
@@ -397,6 +404,11 @@ export default function CreateEvent() {
             if (mer === "AM" && h === 12) h = 0;
             if (mer === "PM" && h !== 12) h += 12;
             return `${String(h).padStart(2, "0")}:${m}:00`;
+        }
+
+        if (endTime && to24h(endTime) <= to24h(startTime)) {
+            Alert.alert("Invalid Time", "End time must be after start time.");
+            return;
         }
 
         const payload = {
@@ -740,7 +752,7 @@ export default function CreateEvent() {
                             style={s.pickerBtn}
                             onPress={() =>
                                 router.push({
-                                    pathname: "/(auth)/location-picker" as any,
+                                    pathname: "/(admin)/location-picker" as any,
                                     params: { purpose: "event-location" },
                                 })
                             }

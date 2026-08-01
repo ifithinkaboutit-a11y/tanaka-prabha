@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import AppText from "../components/atoms/AppText";
 import EventCard from "../components/atoms/EventCard";
 import { eventsApi, ApiEvent } from "@/services/apiService";
@@ -57,9 +57,13 @@ export default function AllEvents() {
     <View style={{ flex: 1, backgroundColor: theme.background.screen }}>
       {/* Header */}
       <View style={{ backgroundColor: theme.background.header, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: theme.background.screen, flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="arrow-back" size={20} color={theme.text.secondary} onPress={() => router.back()} />
-        </View>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: theme.background.screen, alignItems: "center", justifyContent: "center" }}
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.text.secondary} />
+        </Pressable>
         <View>
           <AppText style={{ fontSize: 20, fontWeight: "800", color: theme.text.primary }}>{t("schemesPage.pastEvents")}</AppText>
           {!loading && <AppText style={{ fontSize: 12, color: theme.text.muted }}>{events.length} {t("events.events")}</AppText>}
