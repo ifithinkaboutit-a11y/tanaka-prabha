@@ -2,7 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "https://tanak-prabha.onrender.com/api";
+  process.env.EXPO_PUBLIC_API_URL ?? "https://api.tanakprabha.in/api";
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "auth_token",

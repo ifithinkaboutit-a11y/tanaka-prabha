@@ -31,7 +31,7 @@ export default function RootLayout() {
     }
 
     // Warm up the API server in background (non-blocking)
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://tanak-prabha.onrender.com/api";
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://api.tanakprabha.in/api";
     fetch(apiUrl.replace(/\/api\/?$/, "/health"), { method: "HEAD" }).catch(() => {});
 
     if (Platform.OS === "android") {
