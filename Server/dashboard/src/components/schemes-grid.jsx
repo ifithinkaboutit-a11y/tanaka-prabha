@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import {
   IconPlus,
   IconDotsVertical,
@@ -53,6 +54,7 @@ import { toast } from "sonner"
 import { SchemeForm } from "@/components/cms/SchemeForm"
 
 export function SchemesGrid() {
+  const router = useRouter()
   const [schemes, setSchemes] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const [isAddOpen, setIsAddOpen] = React.useState(false)
@@ -122,13 +124,13 @@ export function SchemesGrid() {
       overview: scheme.overview || "",
       process: scheme.process || "",
       eligibility: scheme.eligibility || "",
-      key_objectives: scheme.key_objectives || "",
+      key_objectives: Array.isArray(scheme.key_objectives) ? scheme.key_objectives.join("\n") : (scheme.key_objectives || ""),
       title_hi: scheme.title_hi || "",
       description_hi: scheme.description_hi || "",
       overview_hi: scheme.overview_hi || "",
       process_hi: scheme.process_hi || "",
       eligibility_hi: scheme.eligibility_hi || "",
-      key_objectives_hi: scheme.key_objectives_hi || "",
+      key_objectives_hi: Array.isArray(scheme.key_objectives_hi) ? scheme.key_objectives_hi.join("\n") : (scheme.key_objectives_hi || ""),
       category: scheme.category || "",
       image_url: scheme.image_url || "",
       is_active: scheme.is_active ?? true,
@@ -350,7 +352,7 @@ export function SchemesGrid() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/content/scheme-${scheme.id}`)}>
                       <IconEye className="size-4 mr-2" />
                       View
                     </DropdownMenuItem>

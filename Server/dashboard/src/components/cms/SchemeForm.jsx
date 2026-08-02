@@ -30,7 +30,7 @@ const SCHEME_FIELDS = [
   { key: "description", label: "Description", type: "textarea", rows: 3, placeholder: "Describe the scheme benefits...", placeholderHi: "योजना के लाभों का वर्णन करें..." },
   { key: "overview", label: "Overview", type: "textarea", rows: 4, placeholder: "Detailed overview of the scheme...", placeholderHi: "योजना का विस्तृत अवलोकन..." },
   { key: "process", label: "Application Process", type: "textarea", rows: 3, placeholder: "Step-by-step application process...", placeholderHi: "चरण-दर-चरण आवेदन प्रक्रिया..." },
-  { key: "key_objectives", label: "Key Objectives", type: "textarea", rows: 2, placeholder: "Main objectives of the scheme...", placeholderHi: "योजना के मुख्य उद्देश्य..." },
+  { key: "key_objectives", label: "Key Objectives", type: "textarea", rows: 4, placeholder: "One objective per line...", placeholderHi: "प्रति पंक्ति एक उद्देश्य..." },
 ]
 
 // Eligibility category options
@@ -182,7 +182,16 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
 
     setSaving(true)
     try {
-      await onSubmit(formData)
+      const payload = {
+        ...formData,
+        key_objectives: typeof formData.key_objectives === "string"
+          ? formData.key_objectives.split("\n").map((s) => s.trim()).filter(Boolean)
+          : formData.key_objectives,
+        key_objectives_hi: typeof formData.key_objectives_hi === "string"
+          ? formData.key_objectives_hi.split("\n").map((s) => s.trim()).filter(Boolean)
+          : formData.key_objectives_hi,
+      }
+      await onSubmit(payload)
     } catch (error) {
       throw error
     } finally {

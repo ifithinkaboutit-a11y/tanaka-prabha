@@ -1,8 +1,25 @@
+"use client"
+
+import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { SchemesGrid } from "@/components/schemes-grid"
 import { BannersManager } from "@/components/banners-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ContentPage() {
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const [activeTab, setActiveTab] = useState("schemes")
+
+  // Sync tab with URL param changes (adjust state during render, avoiding an effect)
+  const [prevTabParam, setPrevTabParam] = useState(tabParam)
+  if (tabParam !== prevTabParam) {
+    setPrevTabParam(tabParam)
+    if (tabParam === "schemes" || tabParam === "banners") {
+      setActiveTab(tabParam)
+    }
+  }
+
   return (
     <div className="@container/main flex flex-1 flex-col">
       <div className="flex flex-col py-6 px-4 md:py-8 lg:px-6">
@@ -14,7 +31,7 @@ export default function ContentPage() {
             Manage schemes, programs, and banners. Add content in English and हिंदी.
           </p>
         </div>
-        <Tabs defaultValue="schemes" className="w-full mt-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-8">
           <TabsList className="grid w-full grid-cols-2 lg:w-auto">
             <TabsTrigger value="schemes">Schemes &amp; Programs</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>

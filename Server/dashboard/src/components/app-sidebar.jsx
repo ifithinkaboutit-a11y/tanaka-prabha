@@ -67,11 +67,11 @@ const dashboardRoutes = [
     subs: [
       {
         title: "Schemes & Programs",
-        link: "/content",
+        link: "/content?tab=schemes",
       },
       {
         title: "Banners",
-        link: "/content#banners",
+        link: "/content?tab=banners",
       },
     ],
   },

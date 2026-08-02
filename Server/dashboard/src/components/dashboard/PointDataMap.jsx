@@ -25,9 +25,10 @@ L.Icon.Default.mergeOptions({
 });
 
 // Color-coded marker icons by category
+// Colors chosen to keep >=3:1 contrast (WCAG 1.4.11) against the marker's white stroke/center dot
 const MARKER_COLORS = {
-    crop: "#16a34a",       // green
-    livestock: "#ca8a04",  // yellow
+    crop: "#15803d",       // green-700 (was green-600, 3.3:1 — too close to the 3:1 floor)
+    livestock: "#a16207",  // yellow-700 (was yellow-600, 2.94:1 — failed the 3:1 floor)
     professional: "#2563eb", // blue
     event: "#9333ea",      // purple
     default: "#6b7280",    // gray
@@ -249,7 +250,7 @@ export default function PointDataMap() {
                                 aria-pressed={cropSeasonFilter === opt.value}
                                 className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
                                     cropSeasonFilter === opt.value
-                                        ? "bg-emerald-600 text-white"
+                                        ? "bg-emerald-700 text-white"
                                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                                 }`}
                             >
@@ -292,7 +293,7 @@ export default function PointDataMap() {
                                 <p className="text-gray-600">{pin.subtitle}</p>
                                 {pin.district && <p className="text-gray-500">📍 {pin.district}</p>}
                                 {pin.detail && <p className="text-gray-500">{pin.detail}</p>}
-                                <Badge variant="outline" className="capitalize text-[10px] mt-1">{pin.type}</Badge>
+                                <Badge variant="outline" className="capitalize text-[10px] text-foreground mt-1">{pin.type}</Badge>
                             </div>
                         </Popup>
                     </Marker>

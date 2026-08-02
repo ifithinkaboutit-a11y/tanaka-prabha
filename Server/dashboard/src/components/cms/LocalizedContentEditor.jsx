@@ -37,7 +37,10 @@ export function LocalizedContentEditor({
   const getCompletion = (lang) => {
     const langKey = lang === "english" ? "" : "_hi"
     const langFields = fields.filter((f) => f.key)
-    const filled = langFields.filter((f) => ((value || {})[f.key + langKey] ?? "").trim().length > 0)
+    const filled = langFields.filter((f) => {
+      const v = (value || {})[f.key + langKey]
+      return typeof v === "string" ? v.trim().length > 0 : Boolean(v && (!Array.isArray(v) || v.length > 0))
+    })
     return langFields.length ? Math.round((filled.length / langFields.length) * 100) : 0
   }
 

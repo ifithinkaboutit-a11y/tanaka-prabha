@@ -27,7 +27,7 @@ const STAT_CONFIG = [
     key: "totalLandCoverage",
     label: "Land Coverage",
     sublabel: "Cultivable acres",
-    suffix: "ac",
+    suffix: "Bigha",
     icon: IconPlant,
     gradient: "from-zinc-500 to-zinc-600",
     softBg: "bg-zinc-50 dark:bg-zinc-950/40",
