@@ -76,7 +76,7 @@ function EligibilityCriteriaEditor({ value = [], onChange }) {
 
       {value.length === 0 && (
         <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg border-dashed">
-          No eligibility criteria added. Click "Add Criterion" to start.
+          No eligibility criteria added. Click &quot;Add Criterion&quot; to start.
         </div>
       )}
 

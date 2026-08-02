@@ -15,9 +15,10 @@ async function setup() {
         console.log('Creating admins table if not exists...');
         await Admin.createTable();
 
-        const email = 'admin@example.com';
+        const email = 'admin@tanakprabha.org';
         const password = 'password123';
 
+        
         const existingAdmin = await Admin.findByEmail(email);
         if (existingAdmin) {
             console.log('Admin user already exists!');

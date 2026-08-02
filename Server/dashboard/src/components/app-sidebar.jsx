@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   Sidebar,
   SidebarContent,
@@ -144,7 +145,7 @@ export function AppSidebar(props) {
             : "flex-row items-center justify-between"
         )}
       >
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 shadow-sm">
             <Sprout className="size-4 text-white" />
           </div>
@@ -153,7 +154,7 @@ export function AppSidebar(props) {
               Tanak Prabha
             </span>
           )}
-        </a>
+        </Link>
 
         <div
           className={cn(

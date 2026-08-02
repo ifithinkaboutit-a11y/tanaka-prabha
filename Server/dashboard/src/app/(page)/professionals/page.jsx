@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { ProfessionalsTable } from "@/components/professionals-table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -9,14 +9,16 @@ import { Stethoscope, Star } from "lucide-react"
 export default function ProfessionalsPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get("tab")
-  const [activeTab, setActiveTab] = useState(tabParam === "experts" ? "experts" : "experts")
+  const [activeTab, setActiveTab] = useState("experts")
 
-  // Sync tab with URL param changes
-  useEffect(() => {
+  // Sync tab with URL param changes (adjust state during render, avoiding an effect)
+  const [prevTabParam, setPrevTabParam] = useState(tabParam)
+  if (tabParam !== prevTabParam) {
+    setPrevTabParam(tabParam)
     if (tabParam === "experts" || tabParam === "all") {
       setActiveTab(tabParam)
     }
-  }, [tabParam])
+  }
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">

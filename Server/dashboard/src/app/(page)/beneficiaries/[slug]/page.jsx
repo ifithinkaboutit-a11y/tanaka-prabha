@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import dynamic from "next/dynamic"
+import "leaflet/dist/leaflet.css"
 import {
     ArrowLeft, Phone, MapPin, User, Calendar, Home, Building2, FileText,
     Wheat, Sprout, Ruler, MapPinned, Users, GraduationCap, IdCard,
@@ -90,21 +91,16 @@ function LoadingSkeleton() {
 }
 
 // ───── Embedded pinpoint map ─────
-const LocationMap = dynamic(() => Promise.resolve(({ lat, lng }: { lat: number; lng: number }) => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const mapContainerRef = useRef<HTMLDivElement>(null)
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+const LocationMap = dynamic(() => Promise.resolve(({ lat, lng }) => {
+  const mapContainerRef = useRef(null)
   const mapInitializedRef = useRef(false)
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     if (mapInitializedRef.current || !mapContainerRef.current) return
     mapInitializedRef.current = true
 
     import("leaflet").then((L) => {
-      import("leaflet/dist/leaflet.css")
-
-      const map = L.map(mapContainerRef.current!, {
+      const map = L.map(mapContainerRef.current, {
         center: [lat, lng],
         zoom: 15,
         scrollWheelZoom: false,
