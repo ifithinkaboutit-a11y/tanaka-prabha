@@ -19,9 +19,6 @@ docs/
 # VS Code
 .vscode/
 
-# Root-level lock file and package (Client has its own)
-package-lock.json
-
 # Expo cache
 .expo/
 
