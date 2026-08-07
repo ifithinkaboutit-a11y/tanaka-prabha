@@ -240,7 +240,8 @@
       "farmMechanization": "कृषि यंत्रीकरण",
       "fisheries": "मत्स्य पालन"
     },
-    "noSupport": "कोई सहायता संपर्क उपलब्ध नहीं है।"
+    "noSupport": "कोई सहायता संपर्क उपलब्ध नहीं है।",
+    "pastEvents": "पिछले कार्यक्रम"
   },
   "programs": {
     "title": "कार्यक्रम",
@@ -948,7 +949,9 @@
     "contactNumber": "संपर्क नंबर",
     "call": "कॉल करें",
     "getDirections": "दिशा-निर्देश प्राप्त करें",
-    "openOnMaps": "मानचित्र पर खोलें"
+    "openOnMaps": "मानचित्र पर खोलें",
+    "appliedParticipated": "आवेदन किया / भाग लिया",
+    "scanToAttend": "उपस्थिति के लिए स्कैन करें"
   },
   "interested": {
     "interested": "रुचि है ✓",

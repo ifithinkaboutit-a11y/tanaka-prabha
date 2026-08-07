@@ -979,6 +979,26 @@ export const eventsApi = {
     });
   },
 
+  /**
+   * Whether the signed-in user has already applied for this event.
+   * Resolves to false on error so a network blip shows the apply button rather
+   * than wrongly locking the user out of applying.
+   */
+  getMyRegistration: async (eventId: string): Promise<{ registered: boolean; status: string | null }> => {
+    try {
+      const response = await fetchWithAuth<{ registered: boolean; status: string | null }>(
+        `/events/${eventId}/my-registration`
+      );
+      return {
+        registered: !!response.data?.registered,
+        status: response.data?.status ?? null,
+      };
+    } catch (error) {
+      console.error("Error checking event registration:", error);
+      return { registered: false, status: null };
+    }
+  },
+
   getAttendees: async (eventId: string): Promise<any[]> => {
     try {
       const response = await fetchWithAuth<{ participants: any[] }>(`/events/${eventId}/participants`);

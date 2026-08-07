@@ -246,7 +246,8 @@
       "farmMechanization": "Farm Mechanization",
       "fisheries": "Fisheries"
     },
-    "noSupport": "No support contact available."
+    "noSupport": "No support contact available.",
+    "pastEvents": "Past Events"
   },
   "programs": {
     "title": "Programs",
@@ -949,7 +950,9 @@
     "contactNumber": "Contact Number",
     "call": "Call",
     "getDirections": "Get Directions",
-    "openOnMaps": "Open on Maps"
+    "openOnMaps": "Open on Maps",
+    "appliedParticipated": "Applied / Participated",
+    "scanToAttend": "Scan to Attend"
   },
   "interested": {
     "interested": "Interested ✓",

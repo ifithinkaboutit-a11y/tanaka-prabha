@@ -26,7 +26,8 @@ export default function ProfessionalsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Manage Professionals</h1>
           <p className="text-muted-foreground">
-            Manage doctors, veterinarians, and agricultural experts.
+            Manage the experts farmers reach from Connect — Training &amp; Guidance,
+            Livestock &amp; Veterinary, Market &amp; Buyers, and Government Schemes.
           </p>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

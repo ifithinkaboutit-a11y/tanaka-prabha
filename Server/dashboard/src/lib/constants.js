@@ -4,16 +4,32 @@ export const CONTENT_TYPES = {
     SCHEME: "scheme",
 };
 
-// Professional categories.
-// `value` MUST match the `category` values the mobile app filters on —
-// see Client/src/data/content/connectServices.ts. Changing these silently
-// hides professionals from the app's Connect screen.
+// Professional categories — these are the four Connect services in the app.
+//
+// `value` MUST match the `category` values the app filters on (see
+// Client/src/data/content/connectServices.ts) and `label` is the exact wording
+// the farmer sees on the Connect screen (Client/src/i18n/en.json →
+// connect.services). Keep both in sync with the app: a mismatched `value`
+// silently hides the professional, and mismatched wording makes the dashboard
+// describe a service by a name that appears nowhere in the app.
 export const PROFESSIONAL_CATEGORIES = [
-    { value: "training-guidance", label: "Agriculture & Training" },
+    { value: "training-guidance", label: "Training & Guidance" },
     { value: "livestock-veterinary", label: "Livestock & Veterinary" },
-    { value: "market-buyers", label: "Market & Financial" },
+    { value: "market-buyers", label: "Market & Buyers" },
     { value: "government-schemes", label: "Government Schemes" },
 ];
+
+// Categories written by older builds of this dashboard. They match no Connect
+// service, so professionals still carrying them never appear in the app.
+// Migration 010 remaps existing rows; this list drives the dashboard warning
+// for any that were missed.
+export const LEGACY_PROFESSIONAL_CATEGORIES = {
+    doctor: "livestock-veterinary",
+    veterinary: "livestock-veterinary",
+    agricultural: "training-guidance",
+    legal: "government-schemes",
+    financial: "market-buyers",
+};
 
 // Status labels and colors
 export const STATUS_CONFIG = {

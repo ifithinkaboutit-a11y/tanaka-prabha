@@ -292,6 +292,42 @@ export const getMyEvents = async (req, res) => {
     }
 };
 
+/**
+ * Whether the authenticated user has already applied for this event.
+ *
+ * The app used to track this in local state only, so navigating away from the
+ * event screen and back showed "Participate Now" again even though the
+ * registration had been saved.
+ *
+ * @route GET /api/events/:id/my-registration
+ */
+export const getMyRegistration = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.userId || null;
+
+        // Walk-in rows are keyed by mobile only, so match on both.
+        let mobile = null;
+        if (userId) {
+            const user = await User.findById(userId);
+            mobile = user?.mobile_number || null;
+        }
+
+        const participant = await EventParticipant.findMyRegistration(id, userId, mobile);
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                registered: !!participant,
+                status: participant?.status || null,
+            },
+        });
+    } catch (error) {
+        console.error('Error checking event registration:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to check registration' });
+    }
+};
+
 export const generateQrToken = async (req, res) => {
     try {
         const { id } = req.params;

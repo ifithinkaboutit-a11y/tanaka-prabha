@@ -11,6 +11,7 @@ import {
   IconSearch,
   IconPhone,
   IconMail,
+  IconAlertTriangle,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -68,6 +69,16 @@ import { PROFESSIONAL_CATEGORIES } from "@/lib/constants"
 import { toast } from "sonner"
 
 const CATEGORY_LABELS = Object.fromEntries(PROFESSIONAL_CATEGORIES.map((c) => [c.value, c.label]))
+const APP_CATEGORIES = new Set(PROFESSIONAL_CATEGORIES.map((c) => c.value))
+
+/**
+ * The app lists professionals with
+ * `WHERE category = <connect service id> AND is_available = true`, so a record
+ * is invisible to farmers if either condition fails.
+ */
+function isHiddenFromApp(p) {
+  return !APP_CATEGORIES.has(p.category) || p.is_available === false
+}
 
 function getInitials(name) {
   if (!name) return "?"
@@ -347,10 +358,13 @@ export function ProfessionalsTable({ filterType = "all" }) {
     }
   }
 
+  const hiddenFromApp = React.useMemo(() => data.filter(isHiddenFromApp), [data])
+
   const filteredData = React.useMemo(() => {
     if (typeFilter === "all") return data
+    if (typeFilter === "__hidden") return hiddenFromApp
     return data.filter(item => (item.category || item.type) === typeFilter)
-  }, [data, typeFilter])
+  }, [data, typeFilter, hiddenFromApp])
 
   const table = useReactTable({
     data: filteredData,
@@ -387,6 +401,27 @@ export function ProfessionalsTable({ filterType = "all" }) {
 
   return (
     <div className="space-y-4">
+      {/* A professional only reaches the app's Connect screen when its category
+          is one of the four services AND it is marked available. */}
+      {hiddenFromApp.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          <IconAlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-sm text-amber-900 dark:text-amber-200">
+            <span className="font-semibold">{hiddenFromApp.length}</span>{" "}
+            {hiddenFromApp.length === 1 ? "professional is" : "professionals are"} not visible in the
+            app — their category is not one of the four Connect services, or they are set unavailable.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto h-8"
+            onClick={() => setTypeFilter("__hidden")}
+          >
+            Show them
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -408,6 +443,11 @@ export function ProfessionalsTable({ filterType = "all" }) {
               {PROFESSIONAL_CATEGORIES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
               ))}
+              {hiddenFromApp.length > 0 && (
+                <SelectItem value="__hidden">
+                  Not visible in app ({hiddenFromApp.length})
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         )}

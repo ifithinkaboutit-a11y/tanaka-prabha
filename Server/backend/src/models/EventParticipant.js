@@ -77,6 +77,25 @@ class EventParticipant {
         return result.rows[0] || null;
     }
 
+    /**
+     * Find the current user's registration for one event, matching on either
+     * their user id or their mobile number (walk-ins are recorded by mobile
+     * only, and are linked to a user id later by markConverted).
+     */
+    static async findMyRegistration(event_id, user_id, mobile_number) {
+        const text = `
+            SELECT * FROM public.event_participants
+            WHERE event_id = $1
+              AND (
+                    ($2::uuid IS NOT NULL AND user_id = $2::uuid)
+                 OR ($3::text IS NOT NULL AND mobile_number = $3::text)
+              )
+            LIMIT 1
+        `;
+        const result = await query(text, [event_id, user_id || null, mobile_number || null]);
+        return result.rows[0] || null;
+    }
+
     static async findByUserId(user_id) {
         const text = `
             SELECT ep.*, e.title, e.date, e.start_time, e.location_name

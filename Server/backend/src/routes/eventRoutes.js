@@ -9,6 +9,7 @@ import {
     getEventParticipants,
     markAttendance,
     getMyEvents,
+    getMyRegistration,
     generateQrToken,
     resendInvite
 } from '../controllers/eventController.js';
@@ -21,6 +22,7 @@ router.get('/', authMiddleware, getEvents);
 router.get('/my-events', authMiddleware, getMyEvents);
 router.get('/:id', authMiddleware, getEventById);
 router.post('/:id/register', authMiddleware, registerParticipant);
+router.get('/:id/my-registration', authMiddleware, getMyRegistration);
 
 // QR token generation (admin/dashboard)
 router.post('/:id/qr-token', authMiddleware, generateQrToken);

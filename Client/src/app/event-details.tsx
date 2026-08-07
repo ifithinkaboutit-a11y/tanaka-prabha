@@ -63,6 +63,21 @@ const EventDetails = () => {
 
     useEffect(() => { fetchEvent(); }, [fetchEvent]);
 
+    // Read the registration back from the server on every visit. Keeping this
+    // in local state alone meant leaving the screen and returning showed
+    // "Participate Now" again for an event the user had already applied to.
+    useEffect(() => {
+        if (!eventId) return;
+        let cancelled = false;
+
+        (async () => {
+            const { registered } = await eventsApi.getMyRegistration(eventId);
+            if (!cancelled && registered) setAlreadyRegistered(true);
+        })();
+
+        return () => { cancelled = true; };
+    }, [eventId]);
+
     const handleApplyNow = () => {
         setConsentGiven(false);
         setShowModal(true);
