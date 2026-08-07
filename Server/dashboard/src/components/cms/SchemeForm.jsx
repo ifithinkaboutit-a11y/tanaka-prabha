@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { IconLoader2, IconPlus, IconX } from "@tabler/icons-react"
 import {
@@ -13,12 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
 import { LocalizedContentEditor } from "./LocalizedContentEditor"
 import { CloudinaryImageUpload } from "./CloudinaryImageUpload"
 import { uploadApi } from "@/lib/api"
@@ -30,7 +23,7 @@ const SCHEME_FIELDS = [
   { key: "description", label: "Description", type: "textarea", rows: 3, placeholder: "Describe the scheme benefits...", placeholderHi: "योजना के लाभों का वर्णन करें..." },
   { key: "overview", label: "Overview", type: "textarea", rows: 4, placeholder: "Detailed overview of the scheme...", placeholderHi: "योजना का विस्तृत अवलोकन..." },
   { key: "process", label: "Application Process", type: "textarea", rows: 3, placeholder: "Step-by-step application process...", placeholderHi: "चरण-दर-चरण आवेदन प्रक्रिया..." },
-  { key: "key_objectives", label: "Key Objectives", type: "textarea", rows: 4, placeholder: "One objective per line...", placeholderHi: "प्रति पंक्ति एक उद्देश्य..." },
+  { key: "key_objectives", label: "Objectives / Benefits", type: "textarea", rows: 4, placeholder: "One objective or benefit per line...", placeholderHi: "प्रति पंक्ति एक उद्देश्य या लाभ..." },
 ]
 
 // Eligibility category options
@@ -47,8 +40,22 @@ const ELIGIBILITY_CATEGORIES = [
 ]
 
 /**
- * EligibilityCriteriaEditor — structured multilingual eligibility input
- * Each criterion has: category (dropdown), text (English), text_hi (Hindi)
+ * Flatten structured criteria into the plain-text `eligibility` column.
+ * The mobile app reads `scheme.eligibility` / `scheme.eligibility_hi` and splits
+ * on newlines, so criteria must be persisted there to be visible in the app.
+ */
+function criteriaToText(criteria, lang) {
+  const key = lang === "hi" ? "text_hi" : "text"
+  return (criteria || [])
+    .map((c) => (c?.[key] || "").trim())
+    .filter(Boolean)
+    .join("\n")
+}
+
+/**
+ * EligibilityCriteriaEditor — structured multilingual eligibility input.
+ * Each criterion has: category (dropdown), text (English) and text_hi (Hindi)
+ * shown side by side rather than behind language tabs.
  */
 function EligibilityCriteriaEditor({ value = [], onChange }) {
   function addCriterion() {
@@ -115,31 +122,29 @@ function EligibilityCriteriaEditor({ value = [], onChange }) {
             </Select>
           </div>
 
-          {/* English & Hindi text in tabs */}
-          <Tabs defaultValue="english" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-8">
-              <TabsTrigger value="english" className="text-xs">English</TabsTrigger>
-              <TabsTrigger value="hindi" className="text-xs">हिंदी</TabsTrigger>
-            </TabsList>
-            <TabsContent value="english" className="mt-2">
+          {/* English & Hindi text side by side */}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">English</Label>
               <Textarea
                 placeholder="Describe this eligibility criterion in English..."
-                value={criterion.text}
+                value={criterion.text || ""}
                 onChange={(e) => updateCriterion(index, "text", e.target.value)}
                 rows={2}
                 className="text-sm"
               />
-            </TabsContent>
-            <TabsContent value="hindi" className="mt-2">
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">हिंदी</Label>
               <Textarea
                 placeholder="इस पात्रता मानदंड का हिंदी में वर्णन करें..."
-                value={criterion.text_hi}
+                value={criterion.text_hi || ""}
                 onChange={(e) => updateCriterion(index, "text_hi", e.target.value)}
                 rows={2}
                 className="text-sm font-[inherit]"
               />
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -158,9 +163,16 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
     if (typeof formData.eligibility_criteria === "string" && formData.eligibility_criteria.trim()) {
       return [{ category: "", text: formData.eligibility_criteria, text_hi: formData.eligibility_hi || "" }]
     }
-    // If there's a plain eligibility field, convert
+    // If there's a plain eligibility field, split it back into one criterion per line
     if (formData.eligibility || formData.eligibility_hi) {
-      return [{ category: "", text: formData.eligibility || "", text_hi: formData.eligibility_hi || "" }]
+      const en = (formData.eligibility || "").split("\n").map((s) => s.trim()).filter(Boolean)
+      const hi = (formData.eligibility_hi || "").split("\n").map((s) => s.trim()).filter(Boolean)
+      const rows = Math.max(en.length, hi.length)
+      return Array.from({ length: rows }, (_, i) => ({
+        category: "",
+        text: en[i] || "",
+        text_hi: hi[i] || "",
+      }))
     }
     return []
   }, [formData.eligibility_criteria, formData.eligibility, formData.eligibility_hi])
@@ -171,7 +183,13 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
   }
 
   function handleEligibilityChange(criteria) {
-    setFormData((prev) => ({ ...prev, eligibility_criteria: criteria }))
+    setFormData((prev) => ({
+      ...prev,
+      eligibility_criteria: criteria,
+      // Keep the plain-text columns in sync — this is what the app renders.
+      eligibility: criteriaToText(criteria, "en"),
+      eligibility_hi: criteriaToText(criteria, "hi"),
+    }))
   }
 
   async function handleSubmit() {
@@ -179,9 +197,14 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
       toast.error("Please enter a scheme title")
       return
     }
+    if (!formData.category) {
+      toast.error("Please select a category — schemes without one never appear in the app")
+      return
+    }
 
     setSaving(true)
     try {
+      const criteria = Array.isArray(formData.eligibility_criteria) ? formData.eligibility_criteria : []
       const payload = {
         ...formData,
         key_objectives: typeof formData.key_objectives === "string"
@@ -190,7 +213,11 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
         key_objectives_hi: typeof formData.key_objectives_hi === "string"
           ? formData.key_objectives_hi.split("\n").map((s) => s.trim()).filter(Boolean)
           : formData.key_objectives_hi,
+        eligibility: criteria.length ? criteriaToText(criteria, "en") : (formData.eligibility || ""),
+        eligibility_hi: criteria.length ? criteriaToText(criteria, "hi") : (formData.eligibility_hi || ""),
       }
+      // Not a column on `schemes` — the flattened text above is what gets stored.
+      delete payload.eligibility_criteria
       await onSubmit(payload)
     } catch (error) {
       throw error
@@ -202,7 +229,7 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
   return (
     <div className="space-y-6">
       {/* Category */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-sm">
         <Label>Category</Label>
         <Select
           value={formData.category}
@@ -213,15 +240,15 @@ export function SchemeForm({ formData, setFormData, onSubmit, submitLabel = "Sav
           </SelectTrigger>
           <SelectContent>
             {SCHEME_CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                <span className="capitalize">{cat}</span>
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Internationalized Content - English & Hindi */}
+      {/* Internationalized Content - English & Hindi side by side */}
       <LocalizedContentEditor
         entityLabel="scheme"
         value={formData}

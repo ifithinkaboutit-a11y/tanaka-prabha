@@ -16,13 +16,30 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { professionalsApi } from "@/lib/api"
-import { INDIA_STATES_UTS, DISTRICTS_BY_STATE, ASSAM_DISTRICTS } from "@/lib/constants"
+import {
+    INDIA_STATES_UTS,
+    DISTRICTS_BY_STATE,
+    ASSAM_DISTRICTS,
+    PROFESSIONAL_CATEGORIES,
+} from "@/lib/constants"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-export function ProfessionalDialog({ professional, mode = "add", onSuccess, customTrigger }) {
+export function ProfessionalDialog({
+    professional,
+    mode = "add",
+    onSuccess,
+    customTrigger,
+    // Optional controlled mode — lets a parent (e.g. a table row menu) open the
+    // dialog without rendering a trigger of its own.
+    open: controlledOpen,
+    onOpenChange: setControlledOpen,
+}) {
     const isEdit = mode === "edit"
-    const [open, setOpen] = useState(false)
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+    const isControlled = controlledOpen !== undefined
+    const open = isControlled ? controlledOpen : uncontrolledOpen
+    const setOpen = isControlled ? setControlledOpen : setUncontrolledOpen
     const [saving, setSaving] = useState(false)
     const [step, setStep] = useState(1)
     const totalSteps = 2
@@ -67,6 +84,9 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
 
     function validateStep1() {
         if (!form.name.trim()) return "Name is required"
+        // Role is shown on the professional's card in the app, and is NOT NULL
+        // on older databases — an empty one either renders blank or fails the insert.
+        if (!form.role.trim()) return "Role is required"
         if (!form.category) return "Category is required"
         if (form.phone_number && !/^\d{10}$/.test(form.phone_number.replace(/\s/g, "")))
             return "Phone number must be 10 digits"
@@ -122,19 +142,21 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
 
     return (
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setStep(1); }}>
-            <DialogTrigger asChild>
-                {customTrigger ? customTrigger : (
-                    isEdit ? (
-                        <Button variant="outline" size="sm" className="flex-1 gap-2">
-                            <Pencil className="size-3.5" /> Edit
-                        </Button>
-                    ) : (
-                        <Button size="sm" className="gap-2">
-                            <UserPlus className="size-4" /> Add Professional
-                        </Button>
-                    )
-                )}
-            </DialogTrigger>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    {customTrigger ? customTrigger : (
+                        isEdit ? (
+                            <Button variant="outline" size="sm" className="flex-1 gap-2">
+                                <Pencil className="size-3.5" /> Edit
+                            </Button>
+                        ) : (
+                            <Button size="sm" className="gap-2">
+                                <UserPlus className="size-4" /> Add Professional
+                            </Button>
+                        )
+                    )}
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
                 <div className="px-6 pt-6 pb-4 border-b bg-muted/30">
                     <DialogHeader>
@@ -158,7 +180,7 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                         <div className="space-y-4 animate-in slide-in-from-right-2 duration-300">
                             {[
                                 { key: "name", label: "Full Name *", placeholder: "e.g., Dr. Rajesh Kumar" },
-                                { key: "role", label: "Role", placeholder: "e.g., Senior Veterinarian" },
+                                { key: "role", label: "Role *", placeholder: "e.g., Senior Veterinarian" },
                                 { key: "phone_number", label: "Phone Number", placeholder: "10-digit number" },
                                 { key: "email", label: "Email", placeholder: "e.g., rajesh@example.com" },
                             ].map(({ key, label, placeholder }) => (
@@ -172,13 +194,14 @@ export function ProfessionalDialog({ professional, mode = "add", onSuccess, cust
                                 <Select value={form.category} onValueChange={v => set("category", v)}>
                                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="doctor">Doctor</SelectItem>
-                                        <SelectItem value="veterinary">Veterinary</SelectItem>
-                                        <SelectItem value="agricultural">Agricultural Expert</SelectItem>
-                                        <SelectItem value="legal">Legal Advisor</SelectItem>
-                                        <SelectItem value="financial">Financial Advisor</SelectItem>
+                                        {PROFESSIONAL_CATEGORIES.map((c) => (
+                                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    This decides which Connect service the professional appears under in the app.
+                                </p>
                             </div>
                             <div className="space-y-1.5">
                                 <Label htmlFor="description">Description</Label>

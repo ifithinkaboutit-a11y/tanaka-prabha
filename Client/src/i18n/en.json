@@ -245,7 +245,8 @@
       "marketingPostHarvest": "Marketing & Post-Harvest",
       "farmMechanization": "Farm Mechanization",
       "fisheries": "Fisheries"
-    }
+    },
+    "noSupport": "No support contact available."
   },
   "programs": {
     "title": "Programs",
@@ -259,7 +260,7 @@
     "noPrograms": "No programs available"
   },
   "programReader": {
-    "keyObjectives": "Key Objectives",
+    "keyObjectives": "Objectives / Benefits",
     "tabs": {
       "overview": "Overview",
       "process": "Process",

@@ -50,12 +50,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
 import { bannersApi, uploadApi } from "@/lib/api"
 import { toast } from "sonner"
 import { LocalizedContentEditor } from "@/components/cms/LocalizedContentEditor"
@@ -315,7 +309,7 @@ export function BannersManager() {
               Add Banner
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md overflow-y-auto max-h-[85vh]">
+          <DialogContent className="sm:max-w-3xl overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>Add New Banner</DialogTitle>
               <DialogDescription>
@@ -345,7 +339,7 @@ export function BannersManager() {
           resetForm()
         }
       }}>
-        <DialogContent className="sm:max-w-md overflow-y-auto max-h-[85vh]">
+        <DialogContent className="sm:max-w-3xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Banner</DialogTitle>
             <DialogDescription>

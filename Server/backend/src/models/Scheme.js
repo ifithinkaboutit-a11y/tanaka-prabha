@@ -204,15 +204,18 @@ class Scheme {
     }
 
     /**
-     * Delete scheme (soft delete by setting is_active to false)
+     * Delete scheme permanently.
+     *
+     * This used to be a soft delete (is_active = false), which was
+     * indistinguishable from "unpublished": the dashboard dropped the card from
+     * the grid while the row stayed in the table, so the scheme silently
+     * reappeared as unpublished on the next load and could never be cleared.
+     * Unpublish/republish is handled by `toggleSchemeStatus`; delete now removes
+     * the row. `notifications.scheme_id` is ON DELETE SET NULL, so referencing
+     * rows survive.
      */
     static async delete(id) {
-        const text = `
-            UPDATE public.schemes
-            SET is_active = false
-            WHERE id = $1
-            RETURNING id
-        `;
+        const text = 'DELETE FROM public.schemes WHERE id = $1 RETURNING id';
         const result = await query(text, [id]);
         return result.rows[0];
     }

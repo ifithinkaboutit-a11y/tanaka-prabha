@@ -159,7 +159,7 @@ export default function EventsPage() {
                     Create Event
                 </Button>
             </DialogTrigger>
-            <DialogContent className="overflow-y-auto sm:max-w-xl max-h-[85vh]">
+            <DialogContent className="overflow-y-auto sm:max-w-4xl max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>Create New Event</DialogTitle>
                     <DialogDescription>Provide details for the event.</DialogDescription>

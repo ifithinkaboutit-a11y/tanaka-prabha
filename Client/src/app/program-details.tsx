@@ -83,46 +83,69 @@ const ProgramDetails = () => {
     }
   };
 
+  const emptyStyle = { color: theme.text.placeholder, fontStyle: "italic" as const };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
         return (
           <View>
-            <AppText
-              variant="bodyLg"
-              style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}
-            >
-              {program.overview}
-            </AppText>
+            {program.overview ? (
+              <AppText
+                variant="bodyLg"
+                style={{ color: theme.text.dark, marginBottom: 24, lineHeight: 24 }}
+              >
+                {program.overview}
+              </AppText>
+            ) : (
+              <AppText variant="bodyMd" style={{ ...emptyStyle, marginBottom: 24 }}>
+                {t("schemesPage.noOverview") || "No overview information available."}
+              </AppText>
+            )}
 
-            {/* Key Objectives */}
+            {/* Objectives / Benefits — the heading used to render with nothing
+                under it whenever the program had no objectives saved. */}
             <AppText variant="h3" style={{ color: theme.text.dark, marginBottom: 16 }}>
               {t("programReader.keyObjectives")}
             </AppText>
             <View style={{ marginBottom: 24 }}>
-              {program.keyObjectives?.map((objective, index) => (
-                <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
-                    •
-                  </AppText>
-                  <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
-                    {objective}
-                  </AppText>
-                </View>
-              ))}
+              {program.keyObjectives?.length ? (
+                program.keyObjectives.map((objective, index) => (
+                  <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+                    <AppText variant="bodyMd" style={{ color: theme.text.dark, marginRight: 8 }}>
+                      •
+                    </AppText>
+                    <AppText variant="bodyMd" style={{ color: theme.text.dark, flex: 1 }}>
+                      {objective}
+                    </AppText>
+                  </View>
+                ))
+              ) : (
+                <AppText variant="bodyMd" style={emptyStyle}>
+                  {t("schemesPage.noKeyObjectives") || "No objectives listed."}
+                </AppText>
+              )}
             </View>
           </View>
         );
       case "process":
-        return (
+        return program.process ? (
           <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {program.process}
           </AppText>
+        ) : (
+          <AppText variant="bodyMd" style={emptyStyle}>
+            {t("schemesPage.noProcess") || "No process/procedure information available."}
+          </AppText>
         );
       case "support":
-        return (
+        return program.supportContact ? (
           <AppText variant="bodyLg" style={{ color: theme.text.dark, lineHeight: 24 }}>
             {program.supportContact}
+          </AppText>
+        ) : (
+          <AppText variant="bodyMd" style={emptyStyle}>
+            {t("schemesPage.noSupport") || "No support contact available."}
           </AppText>
         );
       default:

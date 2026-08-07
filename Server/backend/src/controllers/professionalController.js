@@ -89,6 +89,15 @@ export const createProfessional = async (req, res) => {
             });
         }
 
+        // `category` is NOT NULL in the schema, and it is also what the mobile
+        // app filters the Connect screen by — a missing one is a hard failure.
+        if (!professionalData.category) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Professional category is required'
+            });
+        }
+
         const professional = await Professional.create(professionalData);
 
         res.status(201).json({
@@ -100,7 +109,9 @@ export const createProfessional = async (req, res) => {
         console.error('Error creating professional:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Failed to create professional',
+            // Surface the database reason (missing column, NOT NULL violation) —
+            // "Failed to create professional" alone is undebuggable in the dashboard.
+            message: error.message || 'Failed to create professional',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
@@ -133,7 +144,7 @@ export const updateProfessional = async (req, res) => {
         console.error('Error updating professional:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Failed to update professional',
+            message: error.message || 'Failed to update professional',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

@@ -178,13 +178,16 @@ const Program = () => {
       Alert.alert(t("events.consentRequired"), t("events.consentRequiredMessage"));
       return;
     }
-    if (!participateEvent || !user?.mobileNumber) {
+    // The user object may carry mobile_number (snake_case) or mobileNumber
+    // (camelCase) depending on which path populated it — same as event-details.
+    const rawMobile = user?.mobileNumber || (user as any)?.mobile_number;
+    if (!participateEvent || !rawMobile) {
       Alert.alert(t("common.error"), t("events.mobileRequired"));
       return;
     }
     try {
       setRegistering(true);
-      await eventsApi.register(participateEvent.id, user.mobileNumber, user.name || "Unknown");
+      await eventsApi.register(participateEvent.id, rawMobile, user?.name || "Unknown");
       closeModal();
       Alert.alert(t("events.successTitle"), t("events.successMessage"));
     } catch (error: any) {
@@ -307,8 +310,13 @@ const Program = () => {
         statusBarTranslucent
       >
         <Pressable style={s.backdrop} onPress={closeModal}>
-          {/* Stop propagation so taps inside don't close */}
-          <Pressable onPress={(e) => e.stopPropagation()}>
+          {/* Stop propagation so taps inside don't close.
+              This wrapper MUST carry the height cap: it sits between the
+              flex:1 backdrop and the sheet, and while it was unstyled the
+              sheet's `maxHeight: "80%"` had no definite parent height to
+              resolve against, so the body overflowed and clipped the consent
+              checkbox — leaving Submit Application permanently disabled. */}
+          <Pressable style={s.sheetWrap} onPress={(e) => e.stopPropagation()}>
             <Animated.View
               style={[s.sheet, { transform: [{ translateY: modalTranslateY }] }]}
             >
@@ -557,11 +565,17 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
+  sheetWrap: {
+    width: "100%",
+    // Resolves against the flex:1 backdrop, so the cap actually applies.
+    maxHeight: "85%",
+  },
   sheet: {
     backgroundColor: theme.background.input,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    maxHeight: "80%",
+    // Shrink within sheetWrap's cap rather than growing past the screen edge.
+    flexShrink: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.12,
@@ -608,6 +622,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   modalBody: {
+    // Without flexShrink the ScrollView keeps its full content height and
+    // pushes the consent row past the sheet's edge instead of scrolling.
+    flexShrink: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
   },

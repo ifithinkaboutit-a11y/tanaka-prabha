@@ -8,11 +8,9 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconDotsVertical,
-  IconPlus,
   IconSearch,
   IconPhone,
   IconMail,
-  IconLoader2,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -38,7 +36,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -67,7 +64,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { professionalsApi } from "@/lib/api"
+import { PROFESSIONAL_CATEGORIES } from "@/lib/constants"
 import { toast } from "sonner"
+
+const CATEGORY_LABELS = Object.fromEntries(PROFESSIONAL_CATEGORIES.map((c) => [c.value, c.label]))
 
 function getInitials(name) {
   if (!name) return "?"
@@ -80,21 +80,10 @@ export function ProfessionalsTable({ filterType = "all" }) {
   const [loading, setLoading] = React.useState(true)
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [typeFilter, setTypeFilter] = React.useState("all")
-  const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [editProfessional, setEditProfessional] = React.useState(null)
-  const [saving, setSaving] = React.useState(false)
   const [deleteId, setDeleteId] = React.useState(null)
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
-  const [formData, setFormData] = React.useState({
-    name: "",
-    type: "",
-    specialization: "",
-    qualification: "",
-    phone: "",
-    email: "",
-    district: "",
-  })
 
   async function handleToggleAvailability(id, currentStatus) {
     try {
@@ -139,18 +128,28 @@ export function ProfessionalsTable({ filterType = "all" }) {
       ),
     },
     {
-      accessorKey: "type",
-      header: "Type",
+      accessorKey: "category",
+      header: "Category",
       cell: ({ row }) => {
-        const type = row.original.type || row.original.category || "doctor"
-        const colors = {
-          doctor: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
-          veterinary: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
-          agricultural: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400",
+        const category = row.original.category || row.original.type
+        if (!category) {
+          return (
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400">
+              Not set
+            </Badge>
+          )
         }
+        const label = CATEGORY_LABELS[category]
         return (
-          <Badge variant="outline" className={`capitalize ${colors[type] || ""}`}>
-            {type}
+          <Badge
+            variant="outline"
+            className={label
+              ? "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
+              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400"}
+            // An unrecognised category means the app's Connect screen can't show this person.
+            title={label ? undefined : "This category does not match any Connect service in the app"}
+          >
+            {label || category}
           </Badge>
         )
       },
@@ -212,6 +211,9 @@ export function ProfessionalsTable({ filterType = "all" }) {
     {
       id: "actions",
       cell: ({ row }) => (
+        // The row itself navigates to the profile — keep menu clicks from bubbling
+        // into that handler, which used to swallow Edit/Remove entirely.
+        <div onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8">
@@ -236,6 +238,7 @@ export function ProfessionalsTable({ filterType = "all" }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       ),
     },
   ], [])
@@ -274,6 +277,9 @@ export function ProfessionalsTable({ filterType = "all" }) {
     {
       id: "actions",
       cell: ({ row }) => (
+        // The row itself navigates to the profile — keep menu clicks from bubbling
+        // into that handler, which used to swallow Edit/Remove entirely.
+        <div onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8">
@@ -293,6 +299,7 @@ export function ProfessionalsTable({ filterType = "all" }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       ),
     },
   ], [])
@@ -325,29 +332,6 @@ export function ProfessionalsTable({ filterType = "all" }) {
     }
   }
 
-  async function handleAddProfessional() {
-    if (!formData.name) {
-      toast.error("Please enter a name")
-      return
-    }
-
-    setSaving(true)
-    try {
-      const response = await professionalsApi.create({ ...formData, is_available: true })
-      // Handle response structure: response.data can be { professional: {} } or professional directly
-      const newProfessional = response.data?.professional || response.data
-      setData(prev => [newProfessional, ...prev])
-      setIsAddOpen(false)
-      resetForm()
-      toast.success("Professional added successfully")
-    } catch (error) {
-      console.error("Error adding professional:", error)
-      toast.error(error.message || "Failed to add professional")
-    } finally {
-      setSaving(false)
-    }
-  }
-
   async function handleDeleteProfessional() {
     if (!deleteId) return
 
@@ -363,22 +347,9 @@ export function ProfessionalsTable({ filterType = "all" }) {
     }
   }
 
-  function resetForm() {
-    setFormData({
-      name: "",
-      type: "",
-      specialization: "",
-      qualification: "",
-      phone: "",
-      email: "",
-      district: "",
-    })
-  }
-
   const filteredData = React.useMemo(() => {
-    let result = data
-    if (typeFilter === "all") return result
-    return result.filter(item => (item.type || item.category) === typeFilter)
+    if (typeFilter === "all") return data
+    return data.filter(item => (item.category || item.type) === typeFilter)
   }, [data, typeFilter])
 
   const table = useReactTable({
@@ -429,14 +400,14 @@ export function ProfessionalsTable({ filterType = "all" }) {
 
         {filterType !== "expert" && (
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Type" />
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Filter by Category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="doctor">Doctors</SelectItem>
-              <SelectItem value="veterinary">Veterinary</SelectItem>
-              <SelectItem value="agricultural">Agricultural</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
+              {PROFESSIONAL_CATEGORIES.map((c) => (
+                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
@@ -445,6 +416,19 @@ export function ProfessionalsTable({ filterType = "all" }) {
           <ProfessionalDialog onSuccess={fetchProfessionals} mode="add" />
         </div>
       </div>
+
+      {/* Edit dialog — driven by the row action menu. Keyed by id so the form
+          re-initialises when a different professional is picked. */}
+      {editProfessional && (
+        <ProfessionalDialog
+          key={editProfessional.id}
+          professional={editProfessional}
+          mode="edit"
+          open={isEditOpen}
+          onOpenChange={(v) => { setIsEditOpen(v); if (!v) setEditProfessional(null) }}
+          onSuccess={() => { setIsEditOpen(false); setEditProfessional(null); fetchProfessionals() }}
+        />
+      )}
 
       {/* Expert view: Card layout showing only Name and Description */}
       {filterType === "expert" && filteredData.length > 0 ? (

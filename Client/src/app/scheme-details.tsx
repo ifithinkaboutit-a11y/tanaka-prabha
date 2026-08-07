@@ -105,10 +105,14 @@ const SchemeDetailsScreen = () => {
     { key: "process" as const, label: t("programReader.tabs.process"), hasData: hasProcessData },
   ];
 
-  // Auto-switch to first tab that has data if current tab has no data
-  const effectiveTab = tabs.find(t => t.key === activeTab && t.hasData)
-    || tabs.find(t => t.hasData)
-    || activeTab;
+  // Auto-switch to the first tab that has data if the current one is empty.
+  // `find` returns the tab OBJECT — take `.key`, otherwise every comparison
+  // against a tab key string below is false: no tab highlights and the content
+  // switch falls through to `default: null`, rendering an empty body.
+  const effectiveTab: "overview" | "eligibility" | "process" =
+    (tabs.find(tab => tab.key === activeTab && tab.hasData)
+      ?? tabs.find(tab => tab.hasData))?.key
+    ?? activeTab;
 
   const renderTabContent = () => {
     switch (effectiveTab) {

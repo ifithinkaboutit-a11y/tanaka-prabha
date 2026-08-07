@@ -1,30 +1,79 @@
 import { query } from '../config/db.js';
 
+// Columns a client is allowed to write. Anything else in the request body is
+// ignored instead of being interpolated into SQL — an unknown key used to make
+// UPDATE fail with "column ... does not exist" and abort the whole save.
+const WRITABLE_COLUMNS = [
+    'name', 'name_hi', 'role', 'role_hi', 'department', 'department_hi',
+    'category', 'image_url', 'phone_number', 'email', 'description', 'description_hi',
+    'state', 'district', 'block', 'service_area', 'specializations', 'specializations_hi',
+    'qualifications', 'is_available', 'available_days', 'available_hours',
+];
+
+const JSONB_COLUMNS = ['service_area', 'specializations', 'specializations_hi', 'qualifications'];
+
+/**
+ * The dashboard collects description/state and treats `role` as optional, but
+ * older databases predate those columns and declare role NOT NULL. Run the
+ * additive part of migration 009 once per process so writes never 500 on a
+ * database that has not had the migration applied yet.
+ */
+let schemaReady = null;
+function ensureSchema() {
+    if (!schemaReady) {
+        schemaReady = query(`
+            ALTER TABLE public.professionals
+                ADD COLUMN IF NOT EXISTS description TEXT,
+                ADD COLUMN IF NOT EXISTS description_hi TEXT,
+                ADD COLUMN IF NOT EXISTS state TEXT,
+                ADD COLUMN IF NOT EXISTS email TEXT;
+            ALTER TABLE public.professionals
+                ALTER COLUMN role DROP NOT NULL;
+        `).catch((err) => {
+            // Never block a write on this — surface the real error from the query itself.
+            console.warn('Professional schema check failed:', err.message);
+        });
+    }
+    return schemaReady;
+}
+
+/** Normalise a value for its column (JSONB columns need serialising). */
+function normalise(key, value) {
+    if (JSONB_COLUMNS.includes(key) && value != null && typeof value !== 'string') {
+        return JSON.stringify(value);
+    }
+    return value;
+}
+
 class Professional {
     /**
      * Create a new professional
      */
     static async create(professionalData) {
-        const {
-            name, role, department, category, image_url, phone_number,
-            district, service_area, specializations, is_available
-        } = professionalData;
+        await ensureSchema();
+
+        const columns = [];
+        const values = [];
+
+        WRITABLE_COLUMNS.forEach((key) => {
+            if (professionalData[key] === undefined) return;
+            columns.push(key);
+            values.push(normalise(key, professionalData[key]));
+        });
+
+        // Availability defaults to true when the caller says nothing.
+        if (!columns.includes('is_available')) {
+            columns.push('is_available');
+            values.push(professionalData.is_available !== false);
+        }
+
+        const placeholders = columns.map((_, i) => `$${i + 1}`);
 
         const text = `
-            INSERT INTO public.professionals (
-                name, role, department, category, image_url, phone_number,
-                district, service_area, specializations, is_available
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO public.professionals (${columns.join(', ')})
+            VALUES (${placeholders.join(', ')})
             RETURNING *
         `;
-
-        const values = [
-            name, role, department, category, image_url, phone_number,
-            district,
-            service_area ? (typeof service_area === 'string' ? service_area : JSON.stringify(service_area)) : null,
-            specializations ? (typeof specializations === 'string' ? specializations : JSON.stringify(specializations)) : null,
-            is_available !== false
-        ];
 
         const result = await query(text, values);
         return result.rows[0];
@@ -133,21 +182,22 @@ class Professional {
      * Update professional
      */
     static async update(id, professionalData) {
+        await ensureSchema();
+
         const fields = [];
         const values = [];
         let paramCount = 1;
 
-        const jsonbColumns = ['service_area', 'specializations'];
-
-        Object.keys(professionalData).forEach(key => {
+        WRITABLE_COLUMNS.forEach(key => {
+            if (professionalData[key] === undefined) return;
             fields.push(`${key} = $${paramCount}`);
-            let val = professionalData[key];
-            if (jsonbColumns.includes(key) && val != null && typeof val !== 'string') {
-                val = JSON.stringify(val);
-            }
-            values.push(val);
+            values.push(normalise(key, professionalData[key]));
             paramCount++;
         });
+
+        if (fields.length === 0) {
+            return Professional.findById(id);
+        }
 
         values.push(id);
 

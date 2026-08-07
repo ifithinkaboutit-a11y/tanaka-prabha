@@ -102,6 +102,19 @@ export default function ContentDetailPage() {
     const status = content.is_active ? "published" : "unpublished"
     const backHref = "/content"
 
+    // `key_objectives` is a TEXT[] column but older rows may hold a newline string.
+    const toList = (value) => {
+        if (Array.isArray(value)) return value.filter(Boolean)
+        if (typeof value === "string" && value.trim()) {
+            return value.split("\n").map((s) => s.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
+        }
+        return []
+    }
+    const keyObjectives = toList(content.key_objectives)
+    const keyObjectivesHi = toList(content.key_objectives_hi)
+    const eligibility = toList(content.eligibility)
+    const eligibilityHi = toList(content.eligibility_hi)
+
     return (
         <div className="@container/main flex flex-1 flex-col gap-6 py-6 px-4 lg:px-6 md:py-8">
             <BreadcrumbNav items={[
@@ -131,7 +144,14 @@ export default function ContentDetailPage() {
                 {/* Actions card */}
                 <Card>
                     <CardContent className="pt-6 space-y-3">
-                        <ContentToggleButton contentId={content.id} contentType={content._type} isActive={content.is_active} />
+                        <ContentToggleButton
+                            contentId={content.id}
+                            contentType={content._type}
+                            isActive={content.is_active}
+                            onToggled={(nextActive) =>
+                                setContent((prev) => (prev ? { ...prev, is_active: nextActive } : prev))
+                            }
+                        />
                         <DeleteContentButton contentId={content.id} contentType={content._type} contentTitle={content.title} />
                     </CardContent>
                 </Card>
@@ -155,33 +175,47 @@ export default function ContentDetailPage() {
                             </div>
                         )}
 
-                        {(content.description || content.subtitle) && (
+                        {/* Title — both languages */}
+                        <Bilingual
+                            label="Title"
+                            en={content.title}
+                            hi={content.title_hi}
+                        />
+
+                        <Bilingual
+                            label={isScheme ? "Description" : "Subtitle"}
+                            en={content.description || content.subtitle}
+                            hi={content.description_hi || content.subtitle_hi}
+                        />
+
+                        {isScheme && (
+                            <Bilingual label="Overview" en={content.overview} hi={content.overview_hi} />
+                        )}
+
+                        {isScheme && (keyObjectives.length > 0 || keyObjectivesHi.length > 0) && (
+                            <BilingualList
+                                label="Objectives / Benefits"
+                                en={keyObjectives}
+                                hi={keyObjectivesHi}
+                            />
+                        )}
+
+                        {isScheme && (eligibility.length > 0 || eligibilityHi.length > 0) && (
+                            <BilingualList label="Eligibility" en={eligibility} hi={eligibilityHi} />
+                        )}
+
+                        {isScheme && (
+                            <Bilingual label="Application Process" en={content.process} hi={content.process_hi} />
+                        )}
+
+                        {isScheme && content.documents_required && (
                             <div>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-                                    {isScheme ? "Description" : "Subtitle"}
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Documents Required</p>
+                                <p className="text-sm leading-relaxed whitespace-pre-line">
+                                    {Array.isArray(content.documents_required)
+                                        ? content.documents_required.join("\n")
+                                        : content.documents_required}
                                 </p>
-                                <p className="text-sm leading-relaxed">{content.description || content.subtitle}</p>
-                            </div>
-                        )}
-
-                        {isScheme && content.overview && (
-                            <div>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Overview</p>
-                                <p className="text-sm leading-relaxed">{content.overview}</p>
-                            </div>
-                        )}
-
-                        {isScheme && content.eligibility && (
-                            <div>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Eligibility</p>
-                                <p className="text-sm leading-relaxed">{content.eligibility}</p>
-                            </div>
-                        )}
-
-                        {isScheme && content.process && (
-                            <div>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Application Process</p>
-                                <p className="text-sm leading-relaxed whitespace-pre-line">{content.process}</p>
                             </div>
                         )}
 
@@ -229,9 +263,102 @@ export default function ContentDetailPage() {
                                 <p className="text-sm">{content.support_contact}</p>
                             </div>
                         )}
+
+                        {/* Record metadata */}
+                        <div className="grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-3">
+                            <Meta label="Category" value={content.category} />
+                            <Meta label="Status" value={content.is_active ? "Published" : "Unpublished"} />
+                            {isScheme && (
+                                <Meta label="Recommended" value={content.is_featured ? "Yes" : "No"} />
+                            )}
+                            {isScheme && content.interest_count != null && (
+                                <Meta label="Interested farmers" value={String(content.interest_count)} />
+                            )}
+                            {content.location && <Meta label="Location" value={content.location} />}
+                            {content.created_at && (
+                                <Meta
+                                    label="Created"
+                                    value={new Date(content.created_at).toLocaleString("en-IN")}
+                                />
+                            )}
+                            {content.updated_at && (
+                                <Meta
+                                    label="Last updated"
+                                    value={new Date(content.updated_at).toLocaleString("en-IN")}
+                                />
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
+        </div>
+    )
+}
+
+function SectionLabel({ children }) {
+    return (
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+            {children}
+        </p>
+    )
+}
+
+/** English + Hindi text shown side by side; renders nothing when both are empty. */
+function Bilingual({ label, en, hi }) {
+    if (!en && !hi) return null
+    return (
+        <div>
+            <SectionLabel>{label}</SectionLabel>
+            <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                    <p className="text-[11px] text-muted-foreground mb-0.5">English</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{en || "—"}</p>
+                </div>
+                <div>
+                    <p className="text-[11px] text-muted-foreground mb-0.5">हिंदी</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{hi || "—"}</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function BilingualList({ label, en = [], hi = [] }) {
+    if (en.length === 0 && hi.length === 0) return null
+    const renderList = (items) =>
+        items.length ? (
+            <ul className="list-disc pl-4 space-y-1">
+                {items.map((item, i) => (
+                    <li key={i} className="text-sm leading-relaxed">{item}</li>
+                ))}
+            </ul>
+        ) : (
+            <p className="text-sm text-muted-foreground">—</p>
+        )
+
+    return (
+        <div>
+            <SectionLabel>{label}</SectionLabel>
+            <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                    <p className="text-[11px] text-muted-foreground mb-1">English</p>
+                    {renderList(en)}
+                </div>
+                <div>
+                    <p className="text-[11px] text-muted-foreground mb-1">हिंदी</p>
+                    {renderList(hi)}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function Meta({ label, value }) {
+    if (!value) return null
+    return (
+        <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</p>
+            <p className="text-sm font-medium">{value}</p>
         </div>
     )
 }

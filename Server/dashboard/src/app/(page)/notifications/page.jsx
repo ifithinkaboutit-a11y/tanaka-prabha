@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Send, Users, Trash2, Filter, Search, CheckCheck, Megaphone, AlertTriangle, Info } from "lucide-react"
+import { Bell, Send, Users, Trash2, Filter, Search, Pencil, Megaphone, AlertTriangle, Info } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,7 +22,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import {
     Select,
@@ -32,13 +31,18 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs"
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { notificationsApi, usersApi } from "@/lib/api"
+import { notificationsApi } from "@/lib/api"
+import { INDIA_STATES_UTS, DISTRICTS_BY_STATE } from "@/lib/constants"
 import { toast } from "sonner"
 
 function getTypeIcon(type) {
@@ -51,15 +55,7 @@ function getTypeIcon(type) {
     }
 }
 
-function getTypeBadgeClass(type) {
-    switch (type) {
-        case "alert": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
-        case "announcement": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
-        case "info": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
-        case "reminder": return "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
-        default: return ""
-    }
-}
+const TYPE_BADGE_CLASS = "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900/20 dark:text-zinc-400"
 
 function formatDate(dateString) {
     const date = new Date(dateString)
@@ -76,6 +72,8 @@ function formatDate(dateString) {
     return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 }
 
+const EMPTY_FORM = { title: "", message: "", type: "announcement", state: "all", district: "all" }
+
 export default function NotificationsPage() {
     const [broadcasts, setBroadcasts] = React.useState([])
     const [loading, setLoading] = React.useState(true)
@@ -83,21 +81,46 @@ export default function NotificationsPage() {
     const [sending, setSending] = React.useState(false)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [typeFilter, setTypeFilter] = React.useState("all")
-    const [formData, setFormData] = React.useState({
-        title: "",
-        message: "",
-        type: "announcement",
-        district: "all",
-    })
+    const [formData, setFormData] = React.useState(EMPTY_FORM)
 
-    // Load existing announcements (stored locally since we don't have an admin announcements table)
+    // Edit an already-sent broadcast (updates every recipient's copy)
+    const [editTarget, setEditTarget] = React.useState(null)
+    const [editForm, setEditForm] = React.useState({ title: "", message: "", type: "announcement" })
+    const [savingEdit, setSavingEdit] = React.useState(false)
+    const [deleteTarget, setDeleteTarget] = React.useState(null)
+
     React.useEffect(() => {
         loadBroadcasts()
     }, [])
 
     async function loadBroadcasts() {
-        setBroadcasts([])
-        setLoading(false)
+        setLoading(true)
+        try {
+            const res = await notificationsApi.getBroadcasts({ limit: 100 })
+            const list = res.data?.broadcasts ?? []
+            setBroadcasts(Array.isArray(list) ? list : [])
+        } catch (error) {
+            console.error("Error loading broadcasts:", error)
+            toast.error(error.message || "Failed to load sent notifications")
+            setBroadcasts([])
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Districts available for the chosen state; "all" means every district.
+    const availableDistricts = React.useMemo(() => {
+        if (formData.state === "all") return []
+        return DISTRICTS_BY_STATE[formData.state] || []
+    }, [formData.state])
+
+    function updateForm(patch) {
+        setFormData(prev => {
+            const next = { ...prev, ...patch }
+            // Changing state invalidates any district picked under the old one
+            if (patch.state !== undefined) next.district = "all"
+            return next
+        })
     }
 
     async function handleSendBroadcast() {
@@ -108,32 +131,65 @@ export default function NotificationsPage() {
 
         setSending(true)
         try {
-            const response = await notificationsApi.broadcast({
+            await notificationsApi.broadcast({
                 title: formData.title,
                 message: formData.message,
                 type: formData.type,
                 district: formData.district === "all" ? null : formData.district,
             })
 
-            const sentCount = response.data?.db_count || response.data?.push_count || 0
-
-            const newBroadcast = {
-                id: Date.now(),
-                ...formData,
-                district: formData.district === "all" ? "all" : formData.district,
-                sent_at: new Date().toISOString(),
-                recipients_count: sentCount,
-            }
-            setBroadcasts(prev => [newBroadcast, ...prev])
-
             setIsComposeOpen(false)
-            setFormData({ title: "", message: "", type: "announcement", district: "all" })
-            toast.success(`Broadcast sent to ${sentCount} farmers`)
+            setFormData(EMPTY_FORM)
+            toast.success("Broadcast sent")
+            // Re-read from the server so recipient counts are the real ones.
+            await loadBroadcasts()
         } catch (error) {
             console.error("Error sending broadcast:", error)
             toast.error(error.message || "Failed to send broadcast")
         } finally {
             setSending(false)
+        }
+    }
+
+    function openEdit(broadcast) {
+        setEditTarget(broadcast)
+        setEditForm({
+            title: broadcast.title ?? "",
+            message: broadcast.message ?? "",
+            type: broadcast.type ?? "announcement",
+        })
+    }
+
+    async function handleSaveEdit() {
+        if (!editForm.title || !editForm.message) {
+            toast.error("Please enter both title and message")
+            return
+        }
+        setSavingEdit(true)
+        try {
+            await notificationsApi.updateBroadcast(editTarget.broadcast_id, editForm)
+            setBroadcasts(prev => prev.map(b =>
+                b.broadcast_id === editTarget.broadcast_id ? { ...b, ...editForm } : b
+            ))
+            setEditTarget(null)
+            toast.success("Broadcast updated for all recipients")
+        } catch (error) {
+            toast.error(error.message || "Failed to update broadcast")
+        } finally {
+            setSavingEdit(false)
+        }
+    }
+
+    async function handleDelete() {
+        if (!deleteTarget) return
+        try {
+            await notificationsApi.deleteBroadcast(deleteTarget.broadcast_id)
+            setBroadcasts(prev => prev.filter(b => b.broadcast_id !== deleteTarget.broadcast_id))
+            toast.success("Broadcast recalled")
+        } catch (error) {
+            toast.error(error.message || "Failed to recall broadcast")
+        } finally {
+            setDeleteTarget(null)
         }
     }
 
@@ -147,15 +203,14 @@ export default function NotificationsPage() {
         if (searchQuery) {
             const q = searchQuery.toLowerCase()
             result = result.filter(b =>
-                b.title.toLowerCase().includes(q) ||
-                b.message.toLowerCase().includes(q)
+                (b.title || "").toLowerCase().includes(q) ||
+                (b.message || "").toLowerCase().includes(q)
             )
         }
 
         return result
     }, [broadcasts, typeFilter, searchQuery])
 
-    // Stats
     const stats = React.useMemo(() => ({
         total: broadcasts.length,
         announcements: broadcasts.filter(b => b.type === "announcement").length,
@@ -259,95 +314,125 @@ export default function NotificationsPage() {
                     </Select>
 
                     <div className="ml-auto">
-                        <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <Send className="size-4 mr-2" />
-                                    New Broadcast
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="px-4 w-full sm:max-w-md overflow-y-auto max-h-[85vh]">
-                                <DialogHeader>
-                                    <DialogTitle>Compose Broadcast</DialogTitle>
-                                    <DialogDescription>
-                                        Send a notification to all registered farmers or a specific district.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="mt-6 space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="broadcast-title">Title</Label>
-                                        <Input
-                                            id="broadcast-title"
-                                            placeholder="e.g., Important Update"
-                                            value={formData.title}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="broadcast-message">Message</Label>
-                                        <Textarea
-                                            id="broadcast-message"
-                                            placeholder="Write your broadcast message..."
-                                            value={formData.message}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                                            rows={5}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="broadcast-type">Notification Type</Label>
+                        <Button onClick={() => { setFormData(EMPTY_FORM); setIsComposeOpen(true) }}>
+                            <Send className="size-4 mr-2" />
+                            New Broadcast
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Compose dialog */}
+                <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+                    <DialogContent className="w-full sm:max-w-2xl overflow-y-auto max-h-[90vh]">
+                        <DialogHeader>
+                            <DialogTitle>Compose Broadcast</DialogTitle>
+                            <DialogDescription>
+                                Send a notification to all registered farmers or to one district.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="mt-6 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="broadcast-title">Subject</Label>
+                                <Input
+                                    id="broadcast-title"
+                                    placeholder="e.g., Important Update"
+                                    value={formData.title}
+                                    onChange={(e) => updateForm({ title: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="broadcast-message">Description</Label>
+                                <Textarea
+                                    id="broadcast-message"
+                                    placeholder="Write your broadcast message..."
+                                    value={formData.message}
+                                    onChange={(e) => updateForm({ message: e.target.value })}
+                                    rows={5}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="broadcast-type">Notification Type</Label>
+                                <Select
+                                    value={formData.type}
+                                    onValueChange={(value) => updateForm({ type: value })}
+                                >
+                                    <SelectTrigger id="broadcast-type">
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="announcement">📢 Announcement</SelectItem>
+                                        <SelectItem value="alert">⚠️ Alert</SelectItem>
+                                        <SelectItem value="info">ℹ️ Information</SelectItem>
+                                        <SelectItem value="reminder">🔔 Reminder</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Target audience — state then district, covering every
+                                state/UT rather than a hardcoded handful. */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Target Audience</p>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="broadcast-state">State</Label>
                                         <Select
-                                            value={formData.type}
-                                            onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+                                            value={formData.state}
+                                            onValueChange={(value) => updateForm({ state: value })}
                                         >
-                                            <SelectTrigger id="broadcast-type">
-                                                <SelectValue placeholder="Select type" />
+                                            <SelectTrigger id="broadcast-state">
+                                                <SelectValue placeholder="Select state" />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="announcement">📢 Announcement</SelectItem>
-                                                <SelectItem value="alert">⚠️ Alert</SelectItem>
-                                                <SelectItem value="info">ℹ️ Information</SelectItem>
-                                                <SelectItem value="reminder">🔔 Reminder</SelectItem>
+                                            <SelectContent className="max-h-[260px]">
+                                                <SelectItem value="all">All States</SelectItem>
+                                                {INDIA_STATES_UTS.map(s => (
+                                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="broadcast-district">Target Audience</Label>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="broadcast-district">District</Label>
                                         <Select
                                             value={formData.district}
-                                            onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
+                                            onValueChange={(value) => updateForm({ district: value })}
+                                            disabled={formData.state === "all"}
                                         >
                                             <SelectTrigger id="broadcast-district">
-                                                <SelectValue placeholder="Select audience" />
+                                                <SelectValue
+                                                    placeholder={formData.state === "all" ? "All districts" : "Select district"}
+                                                />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="max-h-[260px]">
                                                 <SelectItem value="all">All Districts</SelectItem>
-                                                <SelectItem value="Kamrup">Kamrup</SelectItem>
-                                                <SelectItem value="Jorhat">Jorhat</SelectItem>
-                                                <SelectItem value="Dibrugarh">Dibrugarh</SelectItem>
-                                                <SelectItem value="Sivasagar">Sivasagar</SelectItem>
-                                                <SelectItem value="Nagaon">Nagaon</SelectItem>
-                                                <SelectItem value="Tinsukia">Tinsukia</SelectItem>
-                                                <SelectItem value="Sonitpur">Sonitpur</SelectItem>
+                                                {availableDistricts.map(d => (
+                                                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 </div>
-                                <DialogFooter className="mt-6">
-                                    <Button onClick={handleSendBroadcast} className="w-full" disabled={sending}>
-                                        {sending ? (
-                                            "Sending..."
-                                        ) : (
-                                            <>
-                                                <Send className="size-4 mr-2" />
-                                                Send Broadcast
-                                            </>
-                                        )}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {formData.district === "all"
+                                        ? "Every registered farmer will receive this."
+                                        : `Only farmers registered in ${formData.district} will receive this.`}
+                                </p>
+                            </div>
+                        </div>
+                        <DialogFooter className="mt-6">
+                            <Button onClick={handleSendBroadcast} className="w-full" disabled={sending}>
+                                {sending ? (
+                                    "Sending..."
+                                ) : (
+                                    <>
+                                        <Send className="size-4 mr-2" />
+                                        Send Broadcast
+                                    </>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Broadcasts List */}
                 <div className="px-4 lg:px-6 space-y-4">
@@ -362,7 +447,7 @@ export default function NotificationsPage() {
                                         : "Send your first broadcast to registered farmers"}
                                 </p>
                                 {!searchQuery && typeFilter === "all" && (
-                                    <Button onClick={() => setIsComposeOpen(true)}>
+                                    <Button onClick={() => { setFormData(EMPTY_FORM); setIsComposeOpen(true) }}>
                                         <Send className="size-4 mr-2" />
                                         New Broadcast
                                     </Button>
@@ -371,24 +456,48 @@ export default function NotificationsPage() {
                         </Card>
                     ) : (
                         filteredBroadcasts.map((broadcast) => (
-                            <Card key={broadcast.id}>
+                            <Card key={broadcast.broadcast_id}>
                                 <CardHeader className="pb-3">
-                                    <div className="flex items-start justify-between">
+                                    <div className="flex items-start justify-between gap-4">
                                         <div className="flex items-start gap-3">
                                             <div className="mt-0.5">
                                                 {getTypeIcon(broadcast.type)}
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <CardTitle className="text-base">{broadcast.title}</CardTitle>
-                                                    <Badge variant="outline" className={`capitalize text-xs ${getTypeBadgeClass(broadcast.type)}`}>
+                                                    {/* Subject */}
+                                                    <CardTitle className="text-base">
+                                                        {broadcast.title || "(no subject)"}
+                                                    </CardTitle>
+                                                    <Badge variant="outline" className={`capitalize text-xs ${TYPE_BADGE_CLASS}`}>
                                                         {broadcast.type}
                                                     </Badge>
                                                 </div>
-                                                <CardDescription className="text-sm leading-relaxed">
-                                                    {broadcast.message}
+                                                {/* Description */}
+                                                <CardDescription className="text-sm leading-relaxed whitespace-pre-line">
+                                                    {broadcast.message || "(no description)"}
                                                 </CardDescription>
                                             </div>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="size-8"
+                                                onClick={() => openEdit(broadcast)}
+                                                aria-label="Edit broadcast"
+                                            >
+                                                <Pencil className="size-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="size-8 text-destructive"
+                                                onClick={() => setDeleteTarget(broadcast)}
+                                                aria-label="Recall broadcast"
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </CardHeader>
@@ -399,8 +508,9 @@ export default function NotificationsPage() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Filter className="size-3.5" />
-                                        <span>{broadcast.district === "all" ? "All districts" : broadcast.district}</span>
+                                        <span>{broadcast.district || "All districts"}</span>
                                     </div>
+                                    <span>{broadcast.read_count ?? 0} read</span>
                                     <div className="ml-auto">
                                         {formatDate(broadcast.sent_at)}
                                     </div>
@@ -410,6 +520,85 @@ export default function NotificationsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Edit dialog */}
+            <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+                <DialogContent className="w-full sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Broadcast</DialogTitle>
+                        <DialogDescription>
+                            Changes apply to every recipient&apos;s copy. Push notifications
+                            already delivered to a device cannot be changed.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-title">Subject</Label>
+                            <Input
+                                id="edit-title"
+                                value={editForm.title}
+                                onChange={(e) => setEditForm(f => ({ ...f, title: e.target.value }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-message">Description</Label>
+                            <Textarea
+                                id="edit-message"
+                                rows={5}
+                                value={editForm.message}
+                                onChange={(e) => setEditForm(f => ({ ...f, message: e.target.value }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-type">Notification Type</Label>
+                            <Select
+                                value={editForm.type}
+                                onValueChange={(value) => setEditForm(f => ({ ...f, type: value }))}
+                            >
+                                <SelectTrigger id="edit-type">
+                                    <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="announcement">📢 Announcement</SelectItem>
+                                    <SelectItem value="alert">⚠️ Alert</SelectItem>
+                                    <SelectItem value="info">ℹ️ Information</SelectItem>
+                                    <SelectItem value="reminder">🔔 Reminder</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-6">
+                        <Button variant="outline" onClick={() => setEditTarget(null)} disabled={savingEdit}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveEdit} disabled={savingEdit}>
+                            {savingEdit ? "Saving..." : "Save changes"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Recall confirmation */}
+            <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Recall this broadcast?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This deletes the notification from all {deleteTarget?.recipients_count ?? 0} recipients&apos;
+                            inboxes. Push notifications already delivered to a device are unaffected.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Recall
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

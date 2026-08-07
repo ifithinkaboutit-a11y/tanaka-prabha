@@ -2,9 +2,13 @@ import { query } from '../config/db.js';
 
 class EventParticipant {
     static async register(event_id, user_id, mobile_number, name) {
+        // NOTE: `id` must NOT be listed here — it has a gen_random_uuid() default.
+        // Listing it with no matching value made every INSERT fail with
+        // "INSERT has more target columns than expressions", so *all* event
+        // registrations 500'd and the app showed "Could not submit your application".
         const text = `
             INSERT INTO public.event_participants (
-                event_id, user_id, mobile_number, name, status, id
+                event_id, user_id, mobile_number, name, status
             ) VALUES (
                 $1, $2, $3, $4, 'registered'
             )

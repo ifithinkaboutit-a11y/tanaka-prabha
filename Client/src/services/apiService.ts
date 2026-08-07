@@ -1114,11 +1114,13 @@ export const schemesApi = {
 export interface ApiProfessional {
   id: string;
   name: string;
-  role: string;
-  department?: string;
+  role?: string | null;
+  department?: string | null;
   category: string;
+  description?: string;
   image_url?: string;
   phone_number?: string;
+  state?: string;
   district?: string;
   service_area?: {
     district?: string;
@@ -1136,7 +1138,7 @@ export interface Professional {
   name: string;
   role: string;
   roleKey?: string;
-  department?: string;
+  department?: string | null;
   departmentKey?: string;
   category: string;
   imageUrl?: string;
@@ -1157,6 +1159,46 @@ export interface Professional {
 // ============================================================
 // Professionals API
 // ============================================================
+
+/** Build a `connect.*` translation key, tolerating missing/blank source text. */
+function translationKey(prefix: string, value?: string | null): string | undefined {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return undefined;
+  return `${prefix}.${trimmed.toLowerCase().replace(/\s+/g, "")}`;
+}
+
+/**
+ * Map an API professional to the app shape.
+ *
+ * `role`, `department` and `specializations` are all nullable in the database —
+ * calling `.toLowerCase()` on them directly threw, and because the throw
+ * happened inside the list mapping it wiped out the entire Connect listing, not
+ * just the one incomplete record.
+ */
+function mapProfessional(p: ApiProfessional): Professional {
+  return {
+    id: p.id,
+    name: p.name,
+    role: p.role ?? "",
+    roleKey: translationKey("connect.roles", p.role),
+    department: p.department,
+    departmentKey: translationKey("connect.departments", p.department),
+    category: p.category,
+    imageUrl: p.image_url,
+    phone: p.phone_number,
+    district: p.district,
+    serviceArea: p.service_area,
+    specializations: p.specializations,
+    specializationsKeys: Array.isArray(p.specializations)
+      ? (p.specializations
+          .map((s) => translationKey("connect.specializations", s))
+          .filter(Boolean) as string[])
+      : undefined,
+    isAvailable: p.is_available,
+    email: p.email,
+    createdAt: p.created_at,
+  };
+}
 
 export const professionalsApi = {
   /**
@@ -1186,28 +1228,7 @@ export const professionalsApi = {
 
     // Convert and add translation keys
     const professionals = response.data?.professionals || [];
-    return professionals.map((p) => ({
-      id: p.id,
-      name: p.name,
-      role: p.role,
-      roleKey: `connect.roles.${p.role.toLowerCase().replace(/\s+/g, "")}`,
-      department: p.department,
-      departmentKey: p.department
-        ? `connect.departments.${p.department.toLowerCase().replace(/\s+/g, "")}`
-        : undefined,
-      category: p.category,
-      imageUrl: p.image_url,
-      phone: p.phone_number,
-      district: p.district,
-      serviceArea: p.service_area,
-      specializations: p.specializations,
-      specializationsKeys: p.specializations?.map(
-        (s) => `connect.specializations.${s.toLowerCase().replace(/\s+/g, "")}`
-      ),
-      isAvailable: p.is_available,
-      email: p.email,
-      createdAt: p.created_at,
-    }));
+    return professionals.map(mapProfessional);
   },
 
   /**
@@ -1220,28 +1241,7 @@ export const professionalsApi = {
     const p = response.data?.professional;
     if (!p) return null;
 
-    return {
-      id: p.id,
-      name: p.name,
-      role: p.role,
-      roleKey: `connect.roles.${p.role.toLowerCase().replace(/\s+/g, "")}`,
-      department: p.department,
-      departmentKey: p.department
-        ? `connect.departments.${p.department.toLowerCase().replace(/\s+/g, "")}`
-        : undefined,
-      category: p.category,
-      imageUrl: p.image_url,
-      phone: p.phone_number,
-      district: p.district,
-      serviceArea: p.service_area,
-      specializations: p.specializations,
-      specializationsKeys: p.specializations?.map(
-        (s) => `connect.specializations.${s.toLowerCase().replace(/\s+/g, "")}`
-      ),
-      isAvailable: p.is_available,
-      email: p.email,
-      createdAt: p.created_at,
-    };
+    return mapProfessional(p);
   },
 
   /**
@@ -1330,9 +1330,13 @@ export const notificationsApi = {
         userId: n.user_id,
         type: n.type,
         title: n.title,
-        titleKey: `notifications.${n.type}`,
+        // Only fall back to a generic per-type string when the row carries no
+        // text of its own. Setting these unconditionally meant an admin
+        // announcement rendered as the translated word "Announcement" instead of
+        // the subject and body that were actually broadcast.
+        titleKey: n.title ? undefined : `notifications.${n.type}`,
         description: n.message,
-        descriptionKey: `notifications.${n.type}Desc`,
+        descriptionKey: n.message ? undefined : `notifications.${n.type}Desc`,
         time: createdDate.toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",

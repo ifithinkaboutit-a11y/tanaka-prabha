@@ -5,6 +5,9 @@ import {
     createNotification,
     sendBulkNotification,
     broadcastNotification,
+    listBroadcasts,
+    updateBroadcast,
+    deleteBroadcast,
     registerPushToken,
     markAsRead,
     markAllAsRead,
@@ -63,6 +66,29 @@ router.post('/bulk', authMiddleware, sendBulkNotification);
  * @access  Protected (Admin)
  */
 router.post('/broadcast', authMiddleware, broadcastNotification);
+
+/**
+ * @route   GET /api/notifications/broadcasts
+ * @desc    List broadcasts already sent (one entry per broadcast)
+ * @access  Protected (Admin)
+ * NOTE: must be registered before '/:id/...' routes so 'broadcasts' isn't
+ *       swallowed as an id.
+ */
+router.get('/broadcasts', authMiddleware, listBroadcasts);
+
+/**
+ * @route   PUT /api/notifications/broadcasts/:broadcast_id
+ * @desc    Edit an already-sent broadcast for every recipient
+ * @access  Protected (Admin)
+ */
+router.put('/broadcasts/:broadcast_id', authMiddleware, updateBroadcast);
+
+/**
+ * @route   DELETE /api/notifications/broadcasts/:broadcast_id
+ * @desc    Recall a broadcast from every recipient
+ * @access  Protected (Admin)
+ */
+router.delete('/broadcasts/:broadcast_id', authMiddleware, deleteBroadcast);
 
 /**
  * @route   PATCH /api/notifications/:id/read

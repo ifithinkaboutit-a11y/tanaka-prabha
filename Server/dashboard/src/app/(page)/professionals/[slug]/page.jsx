@@ -99,8 +99,11 @@ export default async function ProfessionalDetailPage({ params }) {
                     </CardHeader>
                     <CardContent>
                         <DetailRow label="Phone Number" value={professional.phone_number} icon={Phone} />
+                        <DetailRow label="Email" value={professional.email} icon={Building2} />
                         <DetailRow label="Department" value={professional.department} icon={Building2} />
                         <DetailRow label="Category" value={professional.category} icon={Briefcase} />
+                        <DetailRow label="Description" value={professional.description} icon={Briefcase} />
+                        <DetailRow label="State" value={professional.state} icon={MapPin} />
                         <DetailRow label="District" value={professional.district} icon={MapPin} />
                         <DetailRow label="Service Area" value={
                             professional.service_area

@@ -371,6 +371,7 @@ export const broadcastNotification = async (req, res) => {
             data: {
                 db_count: dbResult.count,
                 push_count: usersWithTokens.length,
+                broadcast_id: dbResult.broadcast_id,
             },
         });
     } catch (error) {
@@ -378,6 +379,92 @@ export const broadcastNotification = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Failed to broadcast notification',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * List broadcasts already sent, grouped by broadcast rather than by recipient.
+ * @route GET /api/notifications/broadcasts
+ */
+export const listBroadcasts = async (req, res) => {
+    try {
+        const { limit = 50, offset = 0 } = req.query;
+        const broadcasts = await Notification.listBroadcasts(parseInt(limit), parseInt(offset));
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Broadcasts retrieved successfully',
+            data: { broadcasts },
+        });
+    } catch (error) {
+        console.error('Error listing broadcasts:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to list broadcasts',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Edit an already-sent broadcast across every recipient's copy.
+ * @route PUT /api/notifications/broadcasts/:broadcast_id
+ */
+export const updateBroadcast = async (req, res) => {
+    try {
+        const { broadcast_id } = req.params;
+        const { title, message, type } = req.body;
+
+        if (title !== undefined && !title) {
+            return res.status(400).json({ status: 'error', message: 'title cannot be empty' });
+        }
+
+        const result = await Notification.updateBroadcast(broadcast_id, { title, message, type });
+
+        if (result.count === 0) {
+            return res.status(404).json({ status: 'error', message: 'Broadcast not found' });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: `Broadcast updated for ${result.count} recipients`,
+            data: { count: result.count },
+        });
+    } catch (error) {
+        console.error('Error updating broadcast:', error);
+        res.status(500).json({
+            status: 'error',
+            message: error.message || 'Failed to update broadcast',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Recall a broadcast — deletes every recipient's copy.
+ * @route DELETE /api/notifications/broadcasts/:broadcast_id
+ */
+export const deleteBroadcast = async (req, res) => {
+    try {
+        const { broadcast_id } = req.params;
+        const result = await Notification.deleteBroadcast(broadcast_id);
+
+        if (result.count === 0) {
+            return res.status(404).json({ status: 'error', message: 'Broadcast not found' });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: `Broadcast removed from ${result.count} recipients`,
+            data: { count: result.count },
+        });
+    } catch (error) {
+        console.error('Error deleting broadcast:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to delete broadcast',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

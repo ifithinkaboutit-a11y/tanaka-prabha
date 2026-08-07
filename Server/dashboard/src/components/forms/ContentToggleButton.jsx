@@ -7,7 +7,7 @@ import { schemesApi, bannersApi } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-export function ContentToggleButton({ contentId, contentType, isActive }) {
+export function ContentToggleButton({ contentId, contentType, isActive, onToggled }) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const isScheme = contentType === "scheme"
@@ -15,12 +15,17 @@ export function ContentToggleButton({ contentId, contentType, isActive }) {
     async function handleToggle() {
         setLoading(true)
         try {
-            if (isScheme) {
-                await schemesApi.toggleStatus(contentId)
-            } else {
-                await bannersApi.toggleStatus(contentId)
-            }
-            toast.success(`${isActive ? "Unpublished" : "Published"} successfully`)
+            const res = isScheme
+                ? await schemesApi.toggleStatus(contentId)
+                : await bannersApi.toggleStatus(contentId)
+
+            const updated = res?.data?.scheme ?? res?.data?.banner ?? res?.data ?? {}
+            const nextActive = typeof updated.is_active === "boolean" ? updated.is_active : !isActive
+
+            toast.success(nextActive ? "Published successfully" : "Unpublished successfully")
+            // This page fetches its content client-side, so router.refresh() alone
+            // leaves the button and status badge showing the old state.
+            onToggled?.(nextActive)
             router.refresh()
         } catch (err) {
             toast.error(err.message || "Failed to update status")

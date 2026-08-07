@@ -405,6 +405,23 @@ export const notificationsApi = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+    // Sent broadcasts, grouped one entry per broadcast (not per recipient)
+    getBroadcasts: (params = {}) => {
+        const queryString = new URLSearchParams(params).toString();
+        return apiRequest(`/notifications/broadcasts${queryString ? `?${queryString}` : ''}`);
+    },
+
+    updateBroadcast: (broadcastId, data) =>
+        apiRequest(`/notifications/broadcasts/${broadcastId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteBroadcast: (broadcastId) =>
+        apiRequest(`/notifications/broadcasts/${broadcastId}`, {
+            method: 'DELETE',
+        }),
 };
 
 // ============================================================

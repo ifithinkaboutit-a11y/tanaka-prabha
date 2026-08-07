@@ -48,15 +48,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { schemesApi } from "@/lib/api"
+import { SCHEME_CATEGORIES } from "@/lib/constants"
 import { toast } from "sonner"
 import { SchemeForm } from "@/components/cms/SchemeForm"
+
+const CATEGORY_LABELS = Object.fromEntries(SCHEME_CATEGORIES.map((c) => [c.value, c.label]))
 
 export function SchemesGrid() {
   const router = useRouter()
   const [schemes, setSchemes] = React.useState([])
   const [loading, setLoading] = React.useState(true)
+  const [search, setSearch] = React.useState("")
+  const [statusFilter, setStatusFilter] = React.useState("all")
+  const [categoryFilter, setCategoryFilter] = React.useState("all")
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [editingScheme, setEditingScheme] = React.useState(null)
@@ -87,7 +101,8 @@ export function SchemesGrid() {
 
   async function fetchSchemes() {
     try {
-      const response = await schemesApi.getAll()
+      // No `active_only` — unpublished schemes must stay visible so they can be republished.
+      const response = await schemesApi.getAll({ limit: 200 })
       const schemes = response.data?.schemes || response.data || []
 
       if (!Array.isArray(schemes)) {
@@ -113,7 +128,7 @@ export function SchemesGrid() {
     setSchemes(prev => [newScheme, ...prev])
     setIsAddOpen(false)
     resetForm()
-    toast.success("Scheme added successfully")
+    toast.success("Scheme published successfully")
   }
 
   function openEditSheet(scheme) {
@@ -165,16 +180,18 @@ export function SchemesGrid() {
     }
   }
 
-  async function toggleSchemeStatus(id) {
+  async function toggleSchemeStatus(scheme) {
+    // Fall back to flipping the local value if the response shape is unexpected,
+    // so publishing/republishing never leaves the card showing a stale state.
     try {
-      const response = await schemesApi.toggleStatus(id)
-      setSchemes(prev => prev.map(s =>
-        s.id === id ? { ...s, is_active: response.data?.scheme?.is_active ?? response.data.is_active } : s
-      ))
-      toast.success(`Scheme ${response.data?.scheme?.is_active ?? response.data.is_active ? "activated" : "deactivated"}`)
+      const response = await schemesApi.toggleStatus(scheme.id)
+      const updated = response?.data?.scheme ?? response?.data ?? {}
+      const nextActive = typeof updated.is_active === "boolean" ? updated.is_active : !scheme.is_active
+      setSchemes(prev => prev.map(s => (s.id === scheme.id ? { ...s, is_active: nextActive } : s)))
+      toast.success(nextActive ? "Scheme published" : "Scheme unpublished")
     } catch (error) {
       console.error("Error updating scheme:", error)
-      toast.error("Failed to update scheme")
+      toast.error(error.message || "Failed to update scheme")
     }
   }
 
@@ -208,6 +225,17 @@ export function SchemesGrid() {
       eligibility_criteria: [],
     })
   }
+
+  const visibleSchemes = React.useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return schemes.filter((s) => {
+      if (statusFilter === "published" && !s.is_active) return false
+      if (statusFilter === "unpublished" && s.is_active) return false
+      if (categoryFilter !== "all" && s.category !== categoryFilter) return false
+      if (q && !`${s.title ?? ""} ${s.title_hi ?? ""} ${s.description ?? ""}`.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [schemes, search, statusFilter, categoryFilter])
 
   if (loading) {
     return (
@@ -243,11 +271,11 @@ export function SchemesGrid() {
               Add Scheme
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Scheme / Program</DialogTitle>
               <DialogDescription>
-                Create a scheme or program. Add content in English and Hindi.
+                Create a scheme or program. English and Hindi are edited side by side.
               </DialogDescription>
             </DialogHeader>
             <div className="mt-6">
@@ -263,11 +291,11 @@ export function SchemesGrid() {
 
         {/* Edit Scheme Dialog */}
         <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingScheme(null); resetForm(); } }}>
-          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Scheme / Program</DialogTitle>
               <DialogDescription>
-                Update scheme or program details. Edit content in English and Hindi.
+                Update scheme or program details. English and Hindi are edited side by side.
               </DialogDescription>
             </DialogHeader>
             <div className="mt-6">
@@ -282,23 +310,63 @@ export function SchemesGrid() {
         </Dialog>
       </div>
 
-      {schemes.length === 0 ? (
+      {/* Filter bar — status filter makes unpublished schemes findable for republishing */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
+        <Input
+          placeholder="Search schemes..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 max-w-xs"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 w-[170px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
+            <SelectItem value="unpublished">Unpublished</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="h-9 w-[220px]">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {SCHEME_CATEGORIES.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="ml-auto text-sm text-muted-foreground">
+          {visibleSchemes.length} of {schemes.length}
+        </span>
+      </div>
+
+      {visibleSchemes.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <IconPhoto className="size-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No schemes yet</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first government scheme
+            <p className="text-lg font-medium">
+              {schemes.length === 0 ? "No schemes yet" : "No schemes match these filters"}
             </p>
-            <Button onClick={() => setIsAddOpen(true)}>
-              <IconPlus className="size-4 mr-2" />
-              Add Scheme
-            </Button>
+            <p className="text-sm text-muted-foreground mb-4">
+              {schemes.length === 0
+                ? "Create your first government scheme"
+                : "Try clearing the status, category or search filters"}
+            </p>
+            {schemes.length === 0 && (
+              <Button onClick={() => setIsAddOpen(true)}>
+                <IconPlus className="size-4 mr-2" />
+                Add Scheme
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {schemes.map((scheme) => (
+          {visibleSchemes.map((scheme) => (
             <Card key={scheme.id} className={!scheme.is_active ? "opacity-60" : ""}>
               <CardHeader className="p-0 relative">
                 {scheme.image_url ? (
@@ -317,8 +385,8 @@ export function SchemesGrid() {
                 )}
                 <div className="absolute top-2 right-2 flex gap-1">
                   {scheme.category && (
-                    <Badge variant="secondary" className="capitalize">
-                      {scheme.category}
+                    <Badge variant="secondary">
+                      {CATEGORY_LABELS[scheme.category] || scheme.category}
                     </Badge>
                   )}
                   {scheme.is_featured && (
@@ -333,7 +401,7 @@ export function SchemesGrid() {
                       : "bg-gray-500/90 text-white border-gray-600"
                     }
                   >
-                    {scheme.is_active ? "Active" : "Inactive"}
+                    {scheme.is_active ? "Published" : "Unpublished"}
                   </Badge>
                 </div>
               </CardHeader>
@@ -360,16 +428,16 @@ export function SchemesGrid() {
                       <IconEdit className="size-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggleSchemeStatus(scheme.id)}>
+                    <DropdownMenuItem onClick={() => toggleSchemeStatus(scheme)}>
                       {scheme.is_active ? (
                         <>
                           <IconEyeOff className="size-4 mr-2" />
-                          Deactivate
+                          Unpublish
                         </>
                       ) : (
                         <>
                           <IconEye className="size-4 mr-2" />
-                          Activate
+                          Publish
                         </>
                       )}
                     </DropdownMenuItem>

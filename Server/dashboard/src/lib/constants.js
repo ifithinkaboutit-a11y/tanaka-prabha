@@ -4,13 +4,15 @@ export const CONTENT_TYPES = {
     SCHEME: "scheme",
 };
 
-// Professional categories
+// Professional categories.
+// `value` MUST match the `category` values the mobile app filters on —
+// see Client/src/data/content/connectServices.ts. Changing these silently
+// hides professionals from the app's Connect screen.
 export const PROFESSIONAL_CATEGORIES = [
-    "doctor",
-    "veterinary",
-    "agricultural",
-    "legal",
-    "financial",
+    { value: "training-guidance", label: "Agriculture & Training" },
+    { value: "livestock-veterinary", label: "Livestock & Veterinary" },
+    { value: "market-buyers", label: "Market & Financial" },
+    { value: "government-schemes", label: "Government Schemes" },
 ];
 
 // Status labels and colors
@@ -295,20 +297,52 @@ export const DISTRICTS_BY_STATE = {
 // Assam-specific districts (primary target region) — backward compat
 export const ASSAM_DISTRICTS = DISTRICTS_BY_STATE["Assam"] || [];
 
-// Scheme categories for dropdown
+// Scheme categories for dropdown.
+// `value` MUST match the `category` values the mobile app filters on —
+// see `categoryToSchemeCategory` in Client/src/data/content/schemeCategories.ts.
+// A scheme saved with any other category never appears under a category in the app.
 export const SCHEME_CATEGORIES = [
-    "agriculture",
-    "livestock",
-    "financial",
-    "insurance",
-    "training",
-    "subsidy",
-    "workshop",
-    "technology",
-    "healthcare",
-    "education",
-    "infrastructure",
-    "other",
+    { value: "Financial Support", label: "Finance & Credit Support" },
+    { value: "Agricultural Development", label: "Agricultural Development" },
+    { value: "Soil Management", label: "Soil Management" },
+    { value: "Crop Insurance", label: "Crop Insurance" },
+    { value: "Animal Husbandry & Dairy", label: "Animal Husbandry & Dairy" },
+    { value: "Training", label: "Training & Skill Development" },
+    { value: "Irrigation & Water Management", label: "Irrigation & Water Management" },
+    { value: "Marketing & Post-Harvest", label: "Marketing & Post-Harvest" },
+    { value: "Farm Mechanization", label: "Farm Mechanization" },
+    { value: "Fisheries", label: "Fisheries" },
+];
+
+// Crops offered during farmer onboarding — mirrors `cropsBySeason` in
+// Client/src/data/content/onboardingOptions.ts. Values are what land_details stores.
+export const CROP_OPTIONS = [
+    { value: "bajra", label: "Bajra (Pearl Millet)" },
+    { value: "barley", label: "Barley" },
+    { value: "cotton", label: "Cotton" },
+    { value: "cucumber", label: "Cucumber" },
+    { value: "fruits", label: "Fruits" },
+    { value: "gram", label: "Gram" },
+    { value: "groundnut", label: "Groundnut" },
+    { value: "jowar", label: "Jowar (Sorghum)" },
+    { value: "linseed", label: "Linseed" },
+    { value: "maize", label: "Maize" },
+    { value: "moong_dal", label: "Moong Dal" },
+    { value: "mustard", label: "Mustard" },
+    { value: "muskmelon", label: "Muskmelon" },
+    { value: "onion", label: "Onion" },
+    { value: "peas", label: "Peas" },
+    { value: "potato", label: "Potato" },
+    { value: "pulses", label: "Pulses" },
+    { value: "rice", label: "Rice" },
+    { value: "soybean", label: "Soybean" },
+    { value: "sugarcane", label: "Sugarcane" },
+    { value: "tomato", label: "Tomato" },
+    { value: "tur_arhar", label: "Tur/Arhar (Pigeon Pea)" },
+    { value: "vegetables", label: "Vegetables" },
+    { value: "watermelon", label: "Watermelon" },
+    { value: "wheat", label: "Wheat" },
+    { value: "other", label: "Other" },
 ];
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;

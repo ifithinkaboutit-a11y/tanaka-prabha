@@ -63,7 +63,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usersApi } from "@/lib/api"
+import { CROP_OPTIONS } from "@/lib/constants"
 import { toast } from "sonner"
+
+const CROP_LABELS = Object.fromEntries(CROP_OPTIONS.map((c) => [c.value, c.label]))
 
 function getInitials(name) {
   if (!name) return "?"
@@ -81,7 +84,9 @@ export function BeneficiariesTable() {
   const [cropFilter, setCropFilter] = React.useState("all")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [districts, setDistricts] = React.useState([])
-  const [crops, setCrops] = React.useState([])
+  // Crop options come from the onboarding master list — the app only ever writes
+  // these values, so the dropdown is complete regardless of which page is loaded.
+  const [crops] = React.useState(() => CROP_OPTIONS.map((c) => c.value))
   // Server-side pagination state
   const [pageIndex, setPageIndex] = React.useState(0)
   const [pageSize] = React.useState(50)
@@ -269,6 +274,31 @@ export function BeneficiariesTable() {
     fetchFarmers(pageIndex)
   }, [pageIndex])
 
+  // Filter options must cover every farmer in the database, not just the 50 on
+  // the current page — otherwise the dropdowns change contents as you paginate
+  // and most districts are simply missing.
+  React.useEffect(() => {
+    let cancelled = false
+
+    async function loadFilterOptions() {
+      try {
+        const res = await usersApi.getCountByDistrict()
+        const rows = res.data?.districts ?? []
+        const names = rows
+          .map((row) => (typeof row === "string" ? row : row.district))
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b))
+        if (!cancelled) setDistricts(names)
+      } catch (error) {
+        // Non-fatal: fall back to whatever districts the loaded page contains.
+        console.error("Error loading district filter options:", error)
+      }
+    }
+
+    loadFilterOptions()
+    return () => { cancelled = true }
+  }, [])
+
   async function fetchFarmers(page = 0) {
     setLoading(true)
     try {
@@ -286,17 +316,12 @@ export function BeneficiariesTable() {
       const total = response.data?.pagination?.total || users.length
       setTotalCount(total)
 
-      const uniqueDistricts = [...new Set(users.map(u => u.district).filter(Boolean))]
-      const allCrops = new Set()
-      users.forEach(u => {
-        if (u.land_details?.rabi_crop) allCrops.add(u.land_details.rabi_crop)
-        if (u.land_details?.kharif_crop) allCrops.add(u.land_details.kharif_crop)
-        if (u.land_details?.zaid_crop) allCrops.add(u.land_details.zaid_crop)
-      })
-
       setData(users)
-      setDistricts(uniqueDistricts)
-      setCrops([...allCrops])
+
+      // Merge any district seen on this page into the server-wide list, so a
+      // value that predates the district master list still shows up.
+      const pageDistricts = users.map(u => u.district).filter(Boolean)
+      setDistricts(prev => [...new Set([...prev, ...pageDistricts])].sort((a, b) => a.localeCompare(b)))
     } catch (error) {
       console.error("Error fetching farmers:", error)
       toast.error(error.message || "Failed to load farmers. Please check your connection.")
@@ -516,10 +541,10 @@ export function BeneficiariesTable() {
             <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="All Crops" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[280px]">
             <SelectItem value="all">All Crops</SelectItem>
             {crops.map(crop => (
-              <SelectItem key={crop} value={crop}>{crop}</SelectItem>
+              <SelectItem key={crop} value={crop}>{CROP_LABELS[crop] || crop}</SelectItem>
             ))}
           </SelectContent>
         </Select>

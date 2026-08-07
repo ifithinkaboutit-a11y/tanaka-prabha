@@ -239,7 +239,8 @@
       "marketingPostHarvest": "विपणन एवं फसलोपरांत प्रबंधन",
       "farmMechanization": "कृषि यंत्रीकरण",
       "fisheries": "मत्स्य पालन"
-    }
+    },
+    "noSupport": "कोई सहायता संपर्क उपलब्ध नहीं है।"
   },
   "programs": {
     "title": "कार्यक्रम",
@@ -253,7 +254,7 @@
     "noPrograms": "कोई कार्यक्रम उपलब्ध नहीं"
   },
   "programReader": {
-    "keyObjectives": "मुख्य उद्देश्य",
+    "keyObjectives": "उद्देश्य / लाभ",
     "tabs": {
       "overview": "अवलोकन",
       "process": "प्रक्रिया",
