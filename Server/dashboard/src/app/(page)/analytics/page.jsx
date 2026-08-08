@@ -1,14 +1,11 @@
 "use client"
 
-import { HeatmapSection } from "@/components/dashboard/HeatmapSection"
-import { LivestockHeatmapSection } from "@/components/dashboard/LivestockHeatmapSection"
-import { LandholdingHeatmapSection } from "@/components/dashboard/LandholdingHeatmapSection"
-import { PointDataMapSection } from "@/components/dashboard/PointDataMapSection"
+import { UnifiedMapSection } from "@/components/dashboard/UnifiedMapSection"
 import { TopLivestockRegions } from "@/components/dashboard/TopLivestockRegions"
 import { SectionCards } from "@/components/section-cards"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { analyticsApi } from "@/lib/api"
-import { BarChart2, Map, Layers, MapPin } from "lucide-react"
+import { Map } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function AnalyticsPage() {
@@ -32,41 +29,8 @@ export default function AnalyticsPage() {
         {/* KPI Summary Cards */}
         <SectionCards />
 
-        {/* Landholding Density Heatmap */}
-        <div className="px-4 lg:px-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-                  <Layers className="size-4" />
-                </div>
-                Landholding Density — India
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-hidden rounded-b-xl">
-              <LandholdingHeatmapSection />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Point-Based Data Map */}
-        <div className="px-4 lg:px-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-                  <MapPin className="size-4" />
-                </div>
-                Data Points — Crops, Livestock & More
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-hidden rounded-b-xl">
-              <PointDataMapSection />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* User Distribution Heatmap */}
+        {/* One map for every layer — pick the dataset, then heatmap or pins.
+            Replaces the four stacked maps this page used to render. */}
         <div className="px-4 lg:px-6">
           <Card>
             <CardHeader className="pb-4">
@@ -74,28 +38,15 @@ export default function AnalyticsPage() {
                 <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
                   <Map className="size-4" />
                 </div>
-                User Distribution — India
+                Geographic Distribution — India
               </CardTitle>
+              <CardDescription>
+                Users, landholding, livestock and crops on a single map. Switch between
+                heatmap and pins, and filter within each dataset.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-0 overflow-hidden rounded-b-xl">
-              <HeatmapSection />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Livestock Heatmap */}
-        <div className="px-4 lg:px-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-                  <BarChart2 className="size-4" />
-                </div>
-                Livestock Distribution — India
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-hidden rounded-b-xl">
-              <LivestockHeatmapSection />
+            <CardContent className="overflow-hidden rounded-b-xl">
+              <UnifiedMapSection />
             </CardContent>
           </Card>
         </div>

@@ -14,6 +14,7 @@ import {
   IconSearch,
   IconPhone,
   IconLoader2,
+  IconX,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -35,13 +36,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { BeneficiaryDialog } from "@/components/forms/BeneficiaryDialog"
 import {
   Table,
@@ -62,11 +56,42 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import { MultiSelectFilter } from "@/components/ui/multi-select-filter"
 import { usersApi } from "@/lib/api"
-import { CROP_OPTIONS } from "@/lib/constants"
+import {
+  CROP_SEASONS,
+  collectCropOptions,
+  cropLabel,
+  farmerCropsBySeason,
+  matchesCropFilter,
+} from "@/lib/crops"
 import { toast } from "sonner"
 
-const CROP_LABELS = Object.fromEntries(CROP_OPTIONS.map((c) => [c.value, c.label]))
+const STATUS_OPTIONS = [
+  { value: "verified", label: "Verified" },
+  { value: "pending", label: "Pending" },
+]
+
+const SEASON_OPTIONS = CROP_SEASONS.map((s) => ({ value: s.key, label: s.label }))
+
+/** One chip per crop — the column stores several crops joined with ", ". */
+function CropChips({ crops, chipClass }) {
+  if (!crops || crops.length === 0) {
+    return <span className="text-muted-foreground">—</span>
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {crops.map((crop) => (
+        <span
+          key={crop}
+          className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${chipClass}`}
+        >
+          {cropLabel(crop)}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 function getInitials(name) {
   if (!name) return "?"
@@ -80,13 +105,13 @@ export function BeneficiariesTable() {
   const [sorting, setSorting] = React.useState([])
   const [columnFilters, setColumnFilters] = React.useState([])
   const [globalFilter, setGlobalFilter] = React.useState("")
-  const [districtFilter, setDistrictFilter] = React.useState("all")
-  const [cropFilter, setCropFilter] = React.useState("all")
-  const [statusFilter, setStatusFilter] = React.useState("all")
+  // Every filter is multi-select; an empty array means "no constraint".
+  // Within a filter the values are OR'd, and the filters are AND'd together.
+  const [districtFilter, setDistrictFilter] = React.useState([])
+  const [cropFilter, setCropFilter] = React.useState([])
+  const [seasonFilter, setSeasonFilter] = React.useState([])
+  const [statusFilter, setStatusFilter] = React.useState([])
   const [districts, setDistricts] = React.useState([])
-  // Crop options come from the onboarding master list — the app only ever writes
-  // these values, so the dropdown is complete regardless of which page is loaded.
-  const [crops] = React.useState(() => CROP_OPTIONS.map((c) => c.value))
   // Server-side pagination state
   const [pageIndex, setPageIndex] = React.useState(0)
   const [pageSize] = React.useState(50)
@@ -175,32 +200,20 @@ export function BeneficiariesTable() {
         )
       },
     },
-    {
-      id: "crops",
-      header: "Crops Grown",
-      cell: ({ row }) => {
-        const land = row.original.land_details
-        if (!land) return <span className="text-muted-foreground">—</span>
-
-        const crops = [
-          land.rabi_crop && { label: land.rabi_crop, season: "Rabi", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
-          land.kharif_crop && { label: land.kharif_crop, season: "Kharif", color: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300" },
-          land.zaid_crop && { label: land.zaid_crop, season: "Zaid", color: "bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300" },
-        ].filter(Boolean)
-
-        if (crops.length === 0) return <span className="text-muted-foreground">—</span>
-
-        return (
-          <div className="flex flex-wrap gap-1 max-w-[200px]">
-            {crops.map((crop, i) => (
-              <span key={i} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${crop.color}`}>
-                {crop.label}
-              </span>
-            ))}
-          </div>
-        )
-      },
-    },
+    // One column per season — a single "Crops Grown" column collapsed all three
+    // seasons together and rendered the comma-joined string as one chip.
+    ...CROP_SEASONS.map((season) => ({
+      id: `crops_${season.key}`,
+      header: season.label,
+      cell: ({ row }) => (
+        <div className="max-w-[160px]">
+          <CropChips
+            crops={farmerCropsBySeason(row.original)[season.key]}
+            chipClass={season.chipClass}
+          />
+        </div>
+      ),
+    })),
     {
       id: "livestock",
       header: () => <div className="text-right">Livestock</div>,
@@ -379,30 +392,49 @@ export function BeneficiariesTable() {
     })
   }
 
+  // Crop options are derived from what is actually loaded, unioned with the
+  // onboarding master list so filters exist before the relevant page loads.
+  const cropOptions = React.useMemo(() => collectCropOptions(data), [data])
+
+  const districtOptions = React.useMemo(
+    () => districts.map((d) => ({ value: d, label: d })),
+    [districts]
+  )
+
   const filteredData = React.useMemo(() => {
     let result = data
 
-    if (districtFilter !== "all") {
-      result = result.filter(item => item.district === districtFilter)
+    if (districtFilter.length > 0) {
+      const wanted = new Set(districtFilter)
+      result = result.filter(item => wanted.has(item.district))
     }
 
-    if (cropFilter !== "all") {
-      result = result.filter(item => {
-        const ld = item.land_details
-        return ld && (ld.rabi_crop === cropFilter || ld.kharif_crop === cropFilter || ld.zaid_crop === cropFilter)
-      })
+    // Crop and season are evaluated together: with both set, the crop must be
+    // grown in one of the selected seasons rather than in any season.
+    if (cropFilter.length > 0 || seasonFilter.length > 0) {
+      result = result.filter(item => matchesCropFilter(item, cropFilter, seasonFilter))
     }
 
-    if (statusFilter !== "all") {
-      result = result.filter(item => {
-        if (statusFilter === "verified") return item.is_verified
-        if (statusFilter === "pending") return !item.is_verified
-        return true
-      })
+    if (statusFilter.length > 0) {
+      const wantVerified = statusFilter.includes("verified")
+      const wantPending = statusFilter.includes("pending")
+      result = result.filter(item =>
+        (wantVerified && item.is_verified) || (wantPending && !item.is_verified)
+      )
     }
 
     return result
-  }, [data, districtFilter, cropFilter, statusFilter])
+  }, [data, districtFilter, cropFilter, seasonFilter, statusFilter])
+
+  const activeFilterCount =
+    districtFilter.length + cropFilter.length + seasonFilter.length + statusFilter.length
+
+  function clearAllFilters() {
+    setDistrictFilter([])
+    setCropFilter([])
+    setSeasonFilter([])
+    setStatusFilter([])
+  }
 
   const table = useReactTable({
     data: filteredData,
@@ -433,6 +465,7 @@ export function BeneficiariesTable() {
       ? (ls.cow || 0) + (ls.buffalo || 0) + (ls.goat || 0) +
         (ls.sheep || 0) + (ls.pig || 0) + (ls.poultry || 0) + (ls.others || 0)
       : 0
+    const bySeason = farmerCropsBySeason(farmer)
     const fields = [
       farmer.name ?? "",
       farmer.mobile_number ?? "",
@@ -440,6 +473,8 @@ export function BeneficiariesTable() {
       farmer.state ?? "",
       farmer.village ?? "",
       farmer.land_details?.total_land_area ?? "",
+      // One column per season, crops normalised to their display labels
+      ...CROP_SEASONS.map(s => bySeason[s.key].map(cropLabel).join("; ")),
       livestockCount,
       farmer.created_at ?? "",
       farmer.is_verified ? "true" : "false",
@@ -447,14 +482,19 @@ export function BeneficiariesTable() {
     return fields.map(f => `"${String(f).replace(/"/g, '""')}"`).join(",")
   }
 
+  const CSV_HEADER = [
+    "name", "mobile_number", "district", "state", "village", "land_area",
+    ...CROP_SEASONS.map(s => `${s.key}_crops`),
+    "livestock_count", "created_at", "is_verified",
+  ].join(",")
+
   async function handleExportCsv() {
     setExportingCsv(true)
     try {
       if (totalCount <= 1000) {
         // Client-side export from filteredData
-        const header = "name,mobile_number,district,state,village,land_area,livestock_count,created_at,is_verified"
         const rows = filteredData.map(buildCsvRow)
-        const csvString = [header, ...rows].join("\n")
+        const csvString = [CSV_HEADER, ...rows].join("\n")
         const blob = new Blob([csvString], { type: "text/csv" })
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
@@ -523,43 +563,55 @@ export function BeneficiariesTable() {
           />
         </div>
 
-        <Select value={districtFilter} onValueChange={setDistrictFilter}>
-          <SelectTrigger className="w-[160px] h-9 bg-muted/50 border-transparent">
-            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="All Districts" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Districts</SelectItem>
-            {districts.map(district => (
-              <SelectItem key={district} value={district}>{district}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Districts"
+          icon={IconFilter}
+          options={districtOptions}
+          value={districtFilter}
+          onChange={setDistrictFilter}
+          searchable
+          className="w-[168px]"
+        />
 
-        <Select value={cropFilter} onValueChange={setCropFilter}>
-          <SelectTrigger className="w-[152px] h-9 bg-muted/50 border-transparent">
-            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="All Crops" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[280px]">
-            <SelectItem value="all">All Crops</SelectItem>
-            {crops.map(crop => (
-              <SelectItem key={crop} value={crop}>{CROP_LABELS[crop] || crop}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Crops"
+          icon={IconFilter}
+          options={cropOptions}
+          value={cropFilter}
+          onChange={setCropFilter}
+          searchable
+          className="w-[160px]"
+        />
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[152px] h-9 bg-muted/50 border-transparent">
-            <IconFilter className="size-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="verified">Verified</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Seasons"
+          icon={IconFilter}
+          options={SEASON_OPTIONS}
+          value={seasonFilter}
+          onChange={setSeasonFilter}
+          className="w-[150px]"
+        />
+
+        <MultiSelectFilter
+          label="Status"
+          icon={IconFilter}
+          options={STATUS_OPTIONS}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          className="w-[144px]"
+        />
+
+        {activeFilterCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 gap-1.5 text-muted-foreground"
+            onClick={clearAllFilters}
+          >
+            <IconX className="size-3.5" />
+            Clear ({activeFilterCount})
+          </Button>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           <Button
