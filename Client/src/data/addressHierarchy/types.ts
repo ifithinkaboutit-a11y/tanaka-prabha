@@ -3,10 +3,16 @@ export interface Village {
   hi: string;
 }
 
+export interface PostOffice {
+  en: string;
+  hi: string;
+}
+
 export interface GramPanchayat {
   en: string;
   hi: string;
   villages: Village[];
+  postOffices: PostOffice[];
 }
 
 export interface NyayPanchayat {

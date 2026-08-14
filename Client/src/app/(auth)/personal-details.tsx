@@ -23,6 +23,12 @@ import {
   getLocalizedOptions,
 } from "../../data/content/onboardingOptions";
 import { getStateOptions, getDistrictOptions } from "../../data/indianLocations";
+import { getHierarchyForDistrict } from "../../data/addressHierarchy";
+import AddressDropdowns, {
+  resolveAddressValue,
+  getPinFromPostOffice,
+  type AddressValue,
+} from "../../components/molecules/AddressDropdowns";
 import {
   validateName,
 } from "../../utils/validation";
@@ -253,6 +259,27 @@ const AuthPersonalDetailsScreen = () => {
   const [pinCodeLoading, setPinCodeLoading] = useState(false);
   const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
   const [blockOptions, setBlockOptions] = useState<{ label: string; value: string }[]>([]);
+
+  // ── Hierarchy (Bhadohi / Mirzapur) dropdown address mode ───────────────────
+  const hierarchy = getHierarchyForDistrict(personalDetails.district || "");
+  const addressValue: AddressValue = resolveAddressValue(hierarchy, {
+    tehsil: personalDetails.tehsil,
+    nyayPanchayat: personalDetails.nyayPanchayat,
+    gramPanchayat: personalDetails.gramPanchayat,
+    village: personalDetails.village,
+    postOffice: personalDetails.postOffice,
+  });
+
+  const handleAddressChange = (v: AddressValue) => {
+    updatePersonalDetails({
+      tehsil: v.tehsil,
+      nyayPanchayat: v.nyayPanchayat,
+      gramPanchayat: v.gramPanchayat,
+      village: v.village,
+      postOffice: v.postOffice,
+      ...(v.postOffice ? { pinCode: getPinFromPostOffice(v.postOffice) || personalDetails.pinCode } : {}),
+    });
+  };
 
   const matchPinToSlug = (stateName: string): string => {
     const normalized = stateName.trim().toLowerCase().replace(/[\s-]+/g, "_");
@@ -632,85 +659,122 @@ const AuthPersonalDetailsScreen = () => {
                 onChange={(val) => {
                   setBlockOptions([]);
                   setPostOfficeOptions([]);
-                  updatePersonalDetails({ district: val, block: "" });
+                  const hasHierarchy = !!getHierarchyForDistrict(val);
+                  updatePersonalDetails({
+                    district: val,
+                    block: "",
+                    tehsil: hasHierarchy ? "" : personalDetails.tehsil,
+                    nyayPanchayat: hasHierarchy ? "" : personalDetails.nyayPanchayat,
+                    gramPanchayat: hasHierarchy ? "" : personalDetails.gramPanchayat,
+                    village: "",
+                    postOffice: "",
+                  });
                 }}
                 placeholder={t("onboarding.selectDistrict") || "Select District"}
                 disabled={!personalDetails.state}
               />
             </FieldWrapper>
 
-            {/* Step 3: Block / Tehsil (dropdown from PIN or free-text) */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.block") || "Tehsil / Block"} />
-              {blockOptions.length > 0 ? (
-                <Select
-                  options={blockOptions}
-                  value={personalDetails.block}
-                  onChange={(val) => updatePersonalDetails({ block: val })}
-                  placeholder={t("onboarding.selectBlock") || "Select Block"}
+            {/* Step 3+ : Cascading dropdowns for Bhadohi / Mirzapur, manual otherwise */}
+            {hierarchy ? (
+              <>
+                <AddressDropdowns
+                  district={personalDetails.district}
+                  value={addressValue}
+                  onChange={handleAddressChange}
+                  language={currentLanguage as "en" | "hi"}
                 />
-              ) : (
-                <TextInput
-                  style={inputStyle("block" as any)}
-                  value={personalDetails.block}
-                  onChangeText={(text) => handleFieldChange("block" as any, text)}
-                  placeholder={t("onboarding.enterBlock") || "Enter Tehsil/Block"}
-                  placeholderTextColor={theme.text.placeholder}
-                />
-              )}
-            </FieldWrapper>
 
-            {/* Step 4: Village (free-text — no comprehensive India-wide data) */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.village") || "Village / Gram Panchayat"} />
-              <TextInput
-                style={inputStyle("village" as any)}
-                value={personalDetails.village}
-                onChangeText={(text) => handleFieldChange("village" as any, text)}
-                placeholder={t("onboarding.enterVillage") || "Enter Village or Gram Panchayat"}
-                placeholderTextColor={theme.text.placeholder}
-              />
-            </FieldWrapper>
+                {/* PIN Code (auto-filled from the selected Post Office) */}
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
+                  <TextInput
+                    style={inputStyle("pinCode")}
+                    value={personalDetails.pinCode}
+                    onChangeText={(text) => updatePersonalDetails({ pinCode: text.replace(/\D/g, "").slice(0, 6) })}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    placeholder={t("onboarding.enterPinCode") || "Enter 6-digit PIN"}
+                    placeholderTextColor={theme.text.placeholder}
+                  />
+                </FieldWrapper>
+              </>
+            ) : (
+              <>
+                {/* Step 3: Block / Tehsil (dropdown from PIN or free-text) */}
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.block") || "Tehsil / Block"} />
+                  {blockOptions.length > 0 ? (
+                    <Select
+                      options={blockOptions}
+                      value={personalDetails.block}
+                      onChange={(val) => updatePersonalDetails({ block: val })}
+                      placeholder={t("onboarding.selectBlock") || "Select Block"}
+                    />
+                  ) : (
+                    <TextInput
+                      style={inputStyle("block" as any)}
+                      value={personalDetails.block}
+                      onChangeText={(text) => handleFieldChange("block" as any, text)}
+                      placeholder={t("onboarding.enterBlock") || "Enter Tehsil/Block"}
+                      placeholderTextColor={theme.text.placeholder}
+                    />
+                  )}
+                </FieldWrapper>
 
-            {/* PIN Code → auto-populates Post Office + Block options */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
-              <View style={{ position: "relative" }}>
-                <TextInput
-                  style={inputStyle("pinCode")}
-                  value={personalDetails.pinCode}
-                  onChangeText={handlePinCodeChange}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  placeholder={t("onboarding.enterPinCode") || "Enter 6-digit PIN"}
-                  placeholderTextColor={theme.text.placeholder}
-                />
-                {pinCodeLoading && (
-                  <ActivityIndicator style={{ position: "absolute", right: 16, top: 16 }} size="small" color={theme.primary.green} />
-                )}
-              </View>
-            </FieldWrapper>
+                {/* Step 4: Village (free-text — no comprehensive India-wide data) */}
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.village") || "Village / Gram Panchayat"} />
+                  <TextInput
+                    style={inputStyle("village" as any)}
+                    value={personalDetails.village}
+                    onChangeText={(text) => handleFieldChange("village" as any, text)}
+                    placeholder={t("onboarding.enterVillage") || "Enter Village or Gram Panchayat"}
+                    placeholderTextColor={theme.text.placeholder}
+                  />
+                </FieldWrapper>
 
-            {/* Post Office (dropdown from PIN or free-text) */}
-            <FieldWrapper>
-              <FieldLabel text={t("onboarding.postOffice") || "Post Office"} />
-              {postOfficeOptions.length > 0 ? (
-                <Select
-                  options={postOfficeOptions}
-                  value={personalDetails.postOffice}
-                  onChange={(val) => updatePersonalDetails({ postOffice: val })}
-                  placeholder={t("onboarding.selectPostOffice") || "Select Post Office"}
-                />
-              ) : (
-                <TextInput
-                  style={inputStyle("postOffice")}
-                  value={personalDetails.postOffice}
-                  onChangeText={(text) => handleFieldChange("postOffice" as any, text)}
-                  placeholder={t("onboarding.enterPostOffice") || "Enter Post Office"}
-                  placeholderTextColor={theme.text.placeholder}
-                />
-              )}
-            </FieldWrapper>
+                {/* PIN Code → auto-populates Post Office + Block options */}
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.pinCode") || "PIN Code"} />
+                  <View style={{ position: "relative" }}>
+                    <TextInput
+                      style={inputStyle("pinCode")}
+                      value={personalDetails.pinCode}
+                      onChangeText={handlePinCodeChange}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      placeholder={t("onboarding.enterPinCode") || "Enter 6-digit PIN"}
+                      placeholderTextColor={theme.text.placeholder}
+                    />
+                    {pinCodeLoading && (
+                      <ActivityIndicator style={{ position: "absolute", right: 16, top: 16 }} size="small" color={theme.primary.green} />
+                    )}
+                  </View>
+                </FieldWrapper>
+
+                {/* Post Office (dropdown from PIN or free-text) */}
+                <FieldWrapper>
+                  <FieldLabel text={t("onboarding.postOffice") || "Post Office"} />
+                  {postOfficeOptions.length > 0 ? (
+                    <Select
+                      options={postOfficeOptions}
+                      value={personalDetails.postOffice}
+                      onChange={(val) => updatePersonalDetails({ postOffice: val })}
+                      placeholder={t("onboarding.selectPostOffice") || "Select Post Office"}
+                    />
+                  ) : (
+                    <TextInput
+                      style={inputStyle("postOffice")}
+                      value={personalDetails.postOffice}
+                      onChangeText={(text) => handleFieldChange("postOffice" as any, text)}
+                      placeholder={t("onboarding.enterPostOffice") || "Enter Post Office"}
+                      placeholderTextColor={theme.text.placeholder}
+                    />
+                  )}
+                </FieldWrapper>
+              </>
+            )}
           </View>
         </View>
       </KeyboardAwareScrollView>

@@ -21,7 +21,12 @@ import { useLanguageStore } from "../../stores/languageStore";
 import Button from "../atoms/Button";
 import Select from "../atoms/Select";
 import TextArea from "../atoms/TextArea";
-import AddressDropdowns, { type AddressValue } from "./AddressDropdowns";
+import AddressDropdowns, {
+  resolveAddressValue,
+  getPinFromPostOffice,
+  type AddressValue,
+} from "./AddressDropdowns";
+import { getHierarchyForDistrict } from "../../data/addressHierarchy";
 import { theme } from "@/styles/colors";
 
 // ─── Options ─────────────────────────────────────────────────────────────────
@@ -347,6 +352,28 @@ export default function PersonalDetailsForm({
   const [postOfficeOptions, setPostOfficeOptions] = useState<{ label: string; value: string }[]>([]);
   const [blockOptions, setBlockOptions] = useState<{ label: string; value: string }[]>([]);
 
+  // ── Hierarchy (Bhadohi / Mirzapur) dropdown address mode ───────────────────
+  const hierarchy = getHierarchyForDistrict(formData.district || "");
+  const addressValue: AddressValue = resolveAddressValue(hierarchy, {
+    tehsil: formData.tehsil,
+    nyayPanchayat: formData.nyayPanchayat,
+    gramPanchayat: formData.gramPanchayat,
+    village: formData.village,
+    postOffice: formData.postOffice,
+  });
+
+  const handleAddressChange = (v: AddressValue) => {
+    setFormData((prev) => ({
+      ...prev,
+      tehsil: v.tehsil,
+      nyayPanchayat: v.nyayPanchayat,
+      gramPanchayat: v.gramPanchayat,
+      village: v.village,
+      postOffice: v.postOffice,
+      ...(v.postOffice ? { pinCode: getPinFromPostOffice(v.postOffice) || prev.pinCode } : {}),
+    }));
+  };
+
   const matchPinToStateSlug = (stateName: string): string => {
     const normalized = stateName.trim().toLowerCase().replace(/[\s-]+/g, "_");
     const all = getStateOptions("en");
@@ -613,98 +640,141 @@ export default function PersonalDetailsForm({
           </View>
           <Select
             value={formData.district}
-            onChange={(v) => { update("district", v); update("block", ""); }}
+            onChange={(v) => {
+              const hasHierarchy = !!getHierarchyForDistrict(v);
+              setFormData((prev) => ({
+                ...prev,
+                district: v,
+                block: "",
+                tehsil: hasHierarchy ? "" : prev.tehsil,
+                nyayPanchayat: hasHierarchy ? "" : prev.nyayPanchayat,
+                gramPanchayat: hasHierarchy ? "" : prev.gramPanchayat,
+                village: "",
+                postOffice: "",
+              }));
+            }}
             options={districtOptions}
             placeholder={String(T.translate(formData.state ? "onboarding.selectDistrict" : "onboarding.selectStateFirst"))}
             disabled={!formData.state}
           />
         </View>
 
-        {/* Step 3: Block / Tehsil (dropdown from PIN, or free-text) */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="layers-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block / Tehsil")}</Text>
-          </View>
-          {blockOptions.length > 0 ? (
-            <Select
-              value={formData.block}
-              onChange={(v) => update("block", v)}
-              options={blockOptions}
-              placeholder={String(T.translate("onboarding.selectBlock") || "Select Block")}
+        {/* Step 3+ : Cascading dropdowns for Bhadohi / Mirzapur, manual otherwise */}
+        {hierarchy ? (
+          <>
+            <AddressDropdowns
+              district={formData.district}
+              value={addressValue}
+              onChange={handleAddressChange}
+              language={lang as "en" | "hi"}
             />
-          ) : (
-            <TextInput
-              style={fi.input}
-              value={formData.block}
-              onChangeText={(v) => update("block", v)}
-              placeholder={String(T.translate("personalDetails.placeholders.blockExample"))}
-              placeholderTextColor="#C4C9D4"
-            />
-          )}
-        </View>
 
-        {/* Step 4: Village (free-text) */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
-          </View>
-          <TextInput
-            style={fi.input}
-            value={formData.village}
-            onChangeText={(v) => update("village", v)}
-            placeholder={String(T.translate("personalDetails.placeholders.villageExample"))}
-            placeholderTextColor="#C4C9D4"
-          />
-        </View>
+            {/* PIN Code (auto-filled from the selected Post Office) */}
+            <View style={fi.wrap}>
+              <View style={fi.labelRow}>
+                <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+                <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
+              </View>
+              <TextInput
+                style={fi.input}
+                value={formData.pinCode}
+                onChangeText={(v) => update("pinCode", v)}
+                keyboardType="numeric"
+                maxLength={6}
+                placeholder="000000"
+                placeholderTextColor="#C4C9D4"
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Step 3: Block / Tehsil (dropdown from PIN, or free-text) */}
+            <View style={fi.wrap}>
+              <View style={fi.labelRow}>
+                <Ionicons name="layers-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+                <Text style={fi.label}>{String(T.translate("personalDetails.block") || "Block / Tehsil")}</Text>
+              </View>
+              {blockOptions.length > 0 ? (
+                <Select
+                  value={formData.block}
+                  onChange={(v) => update("block", v)}
+                  options={blockOptions}
+                  placeholder={String(T.translate("onboarding.selectBlock") || "Select Block")}
+                />
+              ) : (
+                <TextInput
+                  style={fi.input}
+                  value={formData.block}
+                  onChangeText={(v) => update("block", v)}
+                  placeholder={String(T.translate("personalDetails.placeholders.blockExample"))}
+                  placeholderTextColor="#C4C9D4"
+                />
+              )}
+            </View>
 
-        {/* PIN Code → auto-populates Post Office + Block options */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
-          </View>
-          <View style={{ position: "relative" }}>
-            <TextInput
-              style={fi.input}
-              value={formData.pinCode}
-              onChangeText={handlePinCodeChange}
-              keyboardType="numeric"
-              maxLength={6}
-              placeholder="000000"
-              placeholderTextColor="#C4C9D4"
-              returnKeyType="next"
-            />
-            {pinCodeLoading && (
-              <ActivityIndicator style={{ position: "absolute", right: 12, top: 14 }} size="small" color={theme.primary.green} />
-            )}
-          </View>
-        </View>
+            {/* Step 4: Village (free-text) */}
+            <View style={fi.wrap}>
+              <View style={fi.labelRow}>
+                <Ionicons name="home-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+                <Text style={fi.label}>{String(T.translate("personalDetails.village") || "Village")}</Text>
+              </View>
+              <TextInput
+                style={fi.input}
+                value={formData.village}
+                onChangeText={(v) => update("village", v)}
+                placeholder={String(T.translate("personalDetails.placeholders.villageExample"))}
+                placeholderTextColor="#C4C9D4"
+              />
+            </View>
 
-        {/* Post Office (dropdown from PIN or free-text) */}
-        <View style={fi.wrap}>
-          <View style={fi.labelRow}>
-            <Ionicons name="mail-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
-            <Text style={fi.label}>{String(T.translate("personalDetails.postOffice"))}</Text>
-          </View>
-          {postOfficeOptions.length > 0 ? (
-            <Select
-              value={formData.postOffice}
-              onChange={(v) => update("postOffice", v)}
-              options={postOfficeOptions}
-              placeholder={String(T.translate("onboarding.selectPostOffice") || "Select Post Office")}
-            />
-          ) : (
-            <TextInput
-              style={fi.input}
-              value={formData.postOffice}
-              onChangeText={(v) => update("postOffice", v)}
-              placeholder={String(T.translate("personalDetails.placeholders.postOffice"))}
-              placeholderTextColor="#C4C9D4"
-            />
-          )}
-        </View>
+            {/* PIN Code → auto-populates Post Office + Block options */}
+            <View style={fi.wrap}>
+              <View style={fi.labelRow}>
+                <Ionicons name="keypad-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+                <Text style={fi.label}>{String(T.translate("personalDetails.pinCode"))}</Text>
+              </View>
+              <View style={{ position: "relative" }}>
+                <TextInput
+                  style={fi.input}
+                  value={formData.pinCode}
+                  onChangeText={handlePinCodeChange}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  placeholderTextColor="#C4C9D4"
+                  returnKeyType="next"
+                />
+                {pinCodeLoading && (
+                  <ActivityIndicator style={{ position: "absolute", right: 12, top: 14 }} size="small" color={theme.primary.green} />
+                )}
+              </View>
+            </View>
+
+            {/* Post Office (dropdown from PIN or free-text) */}
+            <View style={fi.wrap}>
+              <View style={fi.labelRow}>
+                <Ionicons name="mail-outline" size={13} color="#6B7280" style={{ marginRight: 5 }} />
+                <Text style={fi.label}>{String(T.translate("personalDetails.postOffice"))}</Text>
+              </View>
+              {postOfficeOptions.length > 0 ? (
+                <Select
+                  value={formData.postOffice}
+                  onChange={(v) => update("postOffice", v)}
+                  options={postOfficeOptions}
+                  placeholder={String(T.translate("onboarding.selectPostOffice") || "Select Post Office")}
+                />
+              ) : (
+                <TextInput
+                  style={fi.input}
+                  value={formData.postOffice}
+                  onChangeText={(v) => update("postOffice", v)}
+                  placeholder={String(T.translate("personalDetails.placeholders.postOffice"))}
+                  placeholderTextColor="#C4C9D4"
+                />
+              )}
+            </View>
+          </>
+        )}
 
         {/* Extra space so keyboard doesn't cover the last field */}
         <View style={{ height: 100 }} />

@@ -1,6 +1,6 @@
 export { bhadohiHierarchy } from "./bhadohi";
 export { mirzapurHierarchy } from "./mirzapur";
-export type { DistrictHierarchy, Tehsil, NyayPanchayat, GramPanchayat, Village } from "./types";
+export type { DistrictHierarchy, Tehsil, NyayPanchayat, GramPanchayat, Village, PostOffice } from "./types";
 
 import type { DistrictHierarchy } from "./types";
 import { bhadohiHierarchy } from "./bhadohi";

@@ -5,12 +5,15 @@ import Select from "../atoms/Select";
 import { getHierarchyForDistrict } from "../../data/addressHierarchy";
 import {
   getChildOptions,
+  getPostOfficeOptions,
   applyParentChange,
+  resolveAddressValue,
+  getPinFromPostOffice,
   type AddressValue,
 } from "./addressDropdownsHelpers";
 
 // Re-export pure helpers and types for external use / testing
-export { getChildOptions, applyParentChange };
+export { getChildOptions, getPostOfficeOptions, applyParentChange, resolveAddressValue, getPinFromPostOffice };
 export type { AddressValue };
 
 export interface AddressDropdownsProps {
@@ -25,6 +28,7 @@ const LABELS = {
   nyayPanchayat: { en: "Nyay Panchayat", hi: "न्याय पंचायत" },
   gramPanchayat: { en: "Gram Panchayat", hi: "ग्राम पंचायत" },
   village:       { en: "Village",        hi: "गाँव" },
+  postOffice:    { en: "Post Office",    hi: "पोस्ट ऑफिस" },
 };
 
 export default function AddressDropdowns({
@@ -54,6 +58,10 @@ export default function AddressDropdowns({
     ? getChildOptions(hierarchy, "gramPanchayat", value.gramPanchayat, language)
     : [];
 
+  const postOfficeOptions = value.gramPanchayat
+    ? getPostOfficeOptions(hierarchy, value.gramPanchayat, language)
+    : [];
+
   return (
     <View>
       <Select
@@ -81,6 +89,13 @@ export default function AddressDropdowns({
         options={villageOptions}
         value={value.village}
         onChange={(v) => onChange({ ...value, village: v })}
+        disabled={!value.gramPanchayat}
+      />
+      <Select
+        label={LABELS.postOffice[language]}
+        options={postOfficeOptions}
+        value={value.postOffice}
+        onChange={(v) => onChange({ ...value, postOffice: v })}
         disabled={!value.gramPanchayat}
       />
     </View>
