@@ -12,6 +12,7 @@
     "clear-db": "node src/utils/clearData.js",
     "seed-real": "node src/utils/seedRealData.js",
     "seed": "node src/utils/seedDatabase.js",
+    "seed:schemes": "node src/utils/seedSchemes.js",
     "seed:users": "node src/utils/seedUsers.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",

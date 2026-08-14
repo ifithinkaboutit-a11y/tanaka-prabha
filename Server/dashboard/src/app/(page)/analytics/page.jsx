@@ -2,6 +2,9 @@
 
 import { UnifiedMapSection } from "@/components/dashboard/UnifiedMapSection"
 import { TopLivestockRegions } from "@/components/dashboard/TopLivestockRegions"
+import { TopRegionsChart } from "@/components/dashboard/TopRegionsChart"
+import { FarmerTrendsChart } from "@/components/dashboard/FarmerTrendsChart"
+import { LivestockBreakdownChart } from "@/components/dashboard/LivestockBreakdownChart"
 import { SectionCards } from "@/components/section-cards"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { analyticsApi } from "@/lib/api"
@@ -49,6 +52,17 @@ export default function AnalyticsPage() {
               <UnifiedMapSection />
             </CardContent>
           </Card>
+        </div>
+
+        {/* Trend / composition charts */}
+        <div className="px-4 lg:px-6">
+          <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
+            <FarmerTrendsChart />
+            <LivestockBreakdownChart />
+            <div className="lg:col-span-2">
+              <TopRegionsChart />
+            </div>
+          </div>
         </div>
 
         {/* Top Livestock Regions */}
