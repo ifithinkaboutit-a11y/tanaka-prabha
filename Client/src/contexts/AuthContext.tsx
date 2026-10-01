@@ -110,8 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(userData);
               setIsAuthenticated(true);
               setNeedsOnboarding(userData.is_new_user === true);
-              // Register/refresh push token on each app open while authenticated
-              setupPushNotifications().catch(() => { });
             } else {
               // Backend explicitly rejected the token — clear and re-auth
               await tokenManager.clearAll();
@@ -152,6 +150,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkAuth();
   }, []);
+
+  // Register/refresh the push token whenever a farmer becomes authenticated —
+  // covers app open, OTP sign-in and password login (via refreshUser) alike
+  useEffect(() => {
+    if (isAuthenticated && !isAdmin) setupPushNotifications().catch(() => { });
+  }, [isAuthenticated, isAdmin]);
 
   // Navigation guard effect
   useEffect(() => {
@@ -228,11 +232,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
       const isNewUser = isLoginMode ? false : userData.is_new_user === true;
       setNeedsOnboarding(isNewUser);
-      // Register push token now that user is authenticated
-      setupPushNotifications().catch(() => { });
       return { user: userData, isNewUser };
     },
-    [setupPushNotifications]
+    []
   );
 
   // Complete onboarding - syncs collected data to backend, then navigates

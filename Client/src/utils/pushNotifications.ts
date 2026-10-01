@@ -6,7 +6,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { tokenManager } from "@/services/apiService";
+import { notificationsApi, tokenManager } from "@/services/apiService";
 
 // ── Detect if running inside Expo Go ─────────────────────────────────────────
 // expo-notifications removed remote push support from Expo Go in SDK 53.
@@ -106,28 +106,11 @@ export async function getExpoPushToken(): Promise<string | null> {
 // ── Register token with backend ───────────────────────────────────────────────
 export async function registerPushTokenWithBackend(pushToken: string): Promise<void> {
     try {
-        const authToken = await tokenManager.getToken();
-        if (!authToken) return;
-
-        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-        const res = await fetch(`${API_BASE}/notifications/register-token`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({
-                push_token: pushToken,
-                platform: Platform.OS,
-            }),
-        });
-
-        if (res.ok) {
-            console.log("📲 Push token registered with backend successfully.");
-        } else {
-            const data = await res.json();
-            console.warn("📲 Failed to register push token:", data.message);
-        }
+        if (!(await tokenManager.getToken())) return;
+        // Shared client — falls back to the prod API URL when EXPO_PUBLIC_API_URL
+        // isn't baked into the build (e.g. the EAS "development" profile)
+        await notificationsApi.registerToken(pushToken, Platform.OS);
+        console.log("📲 Push token registered with backend successfully.");
     } catch (error) {
         // Non-fatal — app still works without push token registration
         console.warn("📲 Could not register push token with backend:", error);

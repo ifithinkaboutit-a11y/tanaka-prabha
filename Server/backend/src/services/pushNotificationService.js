@@ -30,7 +30,23 @@ export async function sendExpoPushNotifications(messages) {
                 body: JSON.stringify(chunk),
             });
             const result = await response.json();
-            console.log(`📲 Expo push sent to ${chunk.length} devices:`, result?.data?.[0]?.status || 'ok');
+            // Whole-request rejection (e.g. tokens from two different Expo projects mixed in one batch)
+            if (result.errors) console.error(`📲 Expo push rejected (HTTP ${response.status}):`, JSON.stringify(result.errors));
+
+            // Per-device tickets — surface errors like InvalidCredentials (FCM key missing on EAS)
+            // or DeviceNotRegistered (app uninstalled), grouped so 1000 failures are one log line
+            const tickets = Array.isArray(result.data) ? result.data : [];
+            const failures = {};
+            for (const t of tickets.filter((t) => t.status === 'error')) {
+                const key = t.details?.error || 'Error';
+                failures[key] ??= { count: 0, example: t.message };
+                failures[key].count++;
+            }
+            const failed = Object.values(failures).reduce((n, f) => n + f.count, 0);
+            console.log(`📲 Expo push: ${tickets.length - failed}/${chunk.length} accepted`);
+            for (const [error, { count, example }] of Object.entries(failures)) {
+                console.error(`📲 Expo push failed for ${count} device(s) — ${error}: ${example}`);
+            }
         } catch (err) {
             console.error('📲 Expo push delivery error:', err.message);
         }
