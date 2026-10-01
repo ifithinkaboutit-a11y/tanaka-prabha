@@ -1,13 +1,34 @@
 #!/usr/bin/env bash
 # Deploy the backend on the VM: pull, install, fix .env, fix nginx, restart pm2.
-# Usage:  bash Server/backend/deploy.sh            (auto-detects the pm2 process)
-#         PM2_NAME=my-api bash Server/backend/deploy.sh
+# Usage (from any directory, as root or the pm2 user):
+#         bash /path/to/Server/backend/deploy.sh            (auto-detects the pm2 process)
+#         PM2_NAME=my-api bash /path/to/Server/backend/deploy.sh
 # Safe to re-run — it only asks for values that are missing.
 set -euo pipefail
 
 main() {
-  BACKEND=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  SCRIPT=$(readlink -f "${BASH_SOURCE[0]}")
+  BACKEND=$(dirname "$SCRIPT")
   cd "$BACKEND"
+
+  # pm2 and nvm-installed node are per-user — run as whoever owns the pm2 daemon
+  local owner
+  owner=$(ps -eo user:64,args | awk '/PM2 v[0-9.]+: God Daemon/ { print $1; exit }')
+  if [[ -n $owner && $owner != "$(id -un)" ]]; then
+    echo "==> pm2 runs as '$owner' — re-running as that user"
+    # A git pull done as root leaves root-owned files the pm2 user can't update
+    [[ $EUID -eq 0 ]] && chown -R "$owner": "$(cd "$BACKEND/../.." && pwd)"
+    exec sudo -u "$owner" -H PM2_NAME="${PM2_NAME:-}" bash "$SCRIPT" "$@"
+  fi
+
+  # nvm only loads in interactive shells — load it so npm/pm2 are on PATH
+  export NVM_DIR=${NVM_DIR:-$HOME/.nvm}
+  if ! command -v npm >/dev/null && [[ -s $NVM_DIR/nvm.sh ]]; then
+    set +eu; . "$NVM_DIR/nvm.sh"; set -eu   # nvm.sh isn't strict-mode safe
+  fi
+  if ! command -v npm >/dev/null || ! command -v pm2 >/dev/null; then
+    echo "✗ npm or pm2 not found for user '$(id -un)'. Is Node installed for the user that runs pm2?"; exit 1
+  fi
 
   echo "==> Pulling latest code"
   git pull --ff-only
