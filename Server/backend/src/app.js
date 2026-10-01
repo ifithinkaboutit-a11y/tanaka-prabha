@@ -21,6 +21,9 @@ dotenv.config();
 
 const app = express();
 
+// Behind nginx on the same VM — read the client IP from X-Forwarded-For
+app.set('trust proxy', 'loopback');
+
 // ==================================================================
 // MIDDLEWARE
 // ==================================================================
@@ -50,7 +53,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('dev', {
     skip: (req) => {
         const url = req.originalUrl;
-        return url === '/health' || url.startsWith('/api/logs');
+        return url === '/health' || url.startsWith('/log') || url.startsWith('/api/logs');
     },
     stream: {
         write: (message) => console.log(message.trim())
@@ -105,8 +108,14 @@ app.use('/api/audit-logs', auditLogRoutes);
 
 import liveLogger from './utils/liveLogger.js';
 
+// Log viewer prints OTPs — require ?key=<DASHBOARD_API_KEY> (EventSource can't send headers)
+const requireLogKey = (req, res, next) =>
+    process.env.DASHBOARD_API_KEY && req.query.key === process.env.DASHBOARD_API_KEY
+        ? next()
+        : res.status(404).json({ status: 'error', message: 'Not found' });
+
 // UI Route
-app.get('/log', (req, res) => {
+app.get('/log', requireLogKey, (req, res) => {
     const nonce = crypto.randomBytes(16).toString('base64');
     res.setHeader('Content-Security-Policy', `script-src 'self' 'nonce-${nonce}'`);
 
@@ -222,7 +231,7 @@ app.get('/log', (req, res) => {
             let eventSource;
 
             function connect() {
-                eventSource = new EventSource('/api/logs/stream');
+                eventSource = new EventSource('/api/logs/stream' + location.search);
 
                 eventSource.onopen = () => {
                     statusDiv.textContent = '● LIVE';
@@ -288,7 +297,7 @@ app.get('/log', (req, res) => {
 });
 
 // SSE Stream Route
-app.get('/api/logs/stream', (req, res) => {
+app.get('/api/logs/stream', requireLogKey, (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
