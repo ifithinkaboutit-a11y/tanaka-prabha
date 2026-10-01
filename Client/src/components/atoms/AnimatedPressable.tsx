@@ -1,14 +1,15 @@
 // src/components/atoms/AnimatedPressable.tsx
-// Drop-in Pressable replacement with Reanimated spring scale feedback.
+// Pressable with a plain opacity press-state, no scale/spring animation.
+// PRODUCT.md explicitly rules out micro-animations for this app (trustworthy,
+// grounded, government/NGO-service feel — not a startup/consumer app), so
+// press feedback here stays a subtle, instant opacity dip rather than a bounce.
+// `style` is applied to the outer View (same layering as the original
+// reanimated version) so flex/layout props (e.g. flex: 1 in a row of cards)
+// behave identically to before — putting them on the Pressable's functional
+// style prop instead broke width-filling layouts.
 // Use className for static Tailwind styles; style for dynamic/computed values.
 import React from "react";
-import { GestureResponderEvent, ViewStyle } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import { Pressable } from "react-native";
+import { GestureResponderEvent, Pressable, View, ViewStyle } from "react-native";
 
 interface AnimatedPressableProps {
   onPress?: (e: GestureResponderEvent) => void;
@@ -17,8 +18,6 @@ interface AnimatedPressableProps {
   style?: ViewStyle | ViewStyle[];
   children: React.ReactNode;
   disabled?: boolean;
-  /** Scale to shrink to on press. Default 0.95 */
-  scaleOnPress?: number;
   testID?: string;
   accessibilityLabel?: string;
   accessibilityRole?: React.ComponentProps<typeof Pressable>["accessibilityRole"];
@@ -33,35 +32,19 @@ export default function AnimatedPressable({
   style,
   children,
   disabled = false,
-  scaleOnPress = 0.95,
   testID,
   accessibilityLabel,
   accessibilityRole,
   accessibilityHint,
   accessibilityState,
 }: AnimatedPressableProps) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(scaleOnPress, { damping: 15, stiffness: 400 });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 12, stiffness: 300 });
-  };
-
   return (
-    <Animated.View style={[animatedStyle, style as ViewStyle]}>
+    <View style={style as ViewStyle}>
       <Pressable
         onPress={disabled ? undefined : onPress}
         onLongPress={disabled ? undefined : onLongPress}
-        onPressIn={disabled ? undefined : handlePressIn}
-        onPressOut={disabled ? undefined : handlePressOut}
         className={className}
+        style={(state) => (state.pressed && !disabled ? { opacity: 0.75 } : undefined)}
         testID={testID}
         disabled={disabled}
         accessibilityLabel={accessibilityLabel}
@@ -71,6 +54,6 @@ export default function AnimatedPressable({
       >
         {children}
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }

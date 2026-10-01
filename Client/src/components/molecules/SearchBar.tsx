@@ -21,13 +21,22 @@ export default function SearchBar({
   const router = useRouter();
   const resolvedPlaceholder = placeholder || t("common.searchPlaceholder");
 
+  // When a parent supplies onSearch, this is a live local filter — every
+  // keystroke should update it immediately, not just on submit. Without
+  // onSearch, this falls back to navigating to the dedicated search screen.
+  const handleChangeText = (text: string) => {
+    setSearchQuery(text);
+    if (onSearch) onSearch(text.trim());
+  };
+
+  const handleClear = () => {
+    setSearchQuery("");
+    onSearch?.("");
+  };
+
   const handleSubmit = () => {
-    if (searchQuery.trim()) {
-      if (onSearch) {
-        onSearch(searchQuery.trim());
-      } else {
-        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}` as any);
-      }
+    if (searchQuery.trim() && !onSearch) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}` as any);
     }
   };
 
@@ -58,7 +67,7 @@ export default function SearchBar({
 
       <TextInput
         value={searchQuery}
-        onChangeText={setSearchQuery}
+        onChangeText={handleChangeText}
         placeholder={resolvedPlaceholder}
         style={{
           flex: 1,
@@ -75,7 +84,7 @@ export default function SearchBar({
       />
 
       {searchQuery.length > 0 ? (
-        <Pressable onPress={() => setSearchQuery("")}>
+        <Pressable onPress={handleClear}>
           <Ionicons name="close-circle" size={30} color={theme.text.placeholder} />
         </Pressable>
       ) : (

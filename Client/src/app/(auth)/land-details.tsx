@@ -160,7 +160,7 @@ const AuthLandDetailsScreen = () => {
           {/* Has Land Toggle */}
           <View className="bg-gray-50 rounded-2xl p-5 mb-4 mt-6">
             <View className="flex-row justify-between items-center">
-              <AppText variant="bodyMd" className="font-semibold text-gray-700">
+              <AppText variant="bodyMd" style={{ fontWeight: "600", color: theme.text.subtle }}>
                 {t("onboarding.hasLand")}
               </AppText>
               <Toggle
@@ -219,7 +219,7 @@ const AuthLandDetailsScreen = () => {
                   </View>
                 </View>
                 {errors[landEntries[0].id]?.area && touched[landEntries[0].id]?.area && (
-                  <AppText variant="bodySm" className="text-red-500 mt-2">
+                  <AppText variant="bodySm" style={{ color: theme.semantic.errorLight, marginTop: 8 }}>
                     {errors[landEntries[0].id].area}
                   </AppText>
                 )}

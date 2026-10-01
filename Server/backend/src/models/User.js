@@ -294,6 +294,21 @@ class User {
         const result = await query(text, [district]);
         return result.rows;
     }
+
+    /**
+     * Get push tokens for a specific set of user ids (for bulk sends)
+     */
+    static async getPushTokensByIds(userIds) {
+        if (!userIds || userIds.length === 0) return [];
+        const text = `
+            SELECT id, expo_push_token, name
+            FROM public.users
+            WHERE expo_push_token IS NOT NULL AND expo_push_token != ''
+            AND id = ANY($1::uuid[])
+        `;
+        const result = await query(text, [userIds]);
+        return result.rows;
+    }
 }
 
 export default User;

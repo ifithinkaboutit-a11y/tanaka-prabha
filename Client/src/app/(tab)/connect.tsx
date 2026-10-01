@@ -155,16 +155,14 @@ export default function Connect() {
           <View className="w-full md:w-1/2">
             <AppText
               variant="h3"
-              className="font-bold text-lg mb-1.5"
-              style={{ color: theme.text.secondary }}
+              style={{ fontWeight: "700", fontSize: 18, marginBottom: 6, color: theme.text.secondary }}
             >
               {t("connect.emergencyTitle")}
             </AppText>
 
             <AppText
               variant="bodySm"
-              className="mb-4 text-[13px]"
-              style={{ color: theme.text.muted }}
+              style={{ marginBottom: 16, fontSize: 13, color: theme.text.muted }}
             >
               {t("connect.emergencySubtitle")}
             </AppText>
@@ -189,12 +187,11 @@ export default function Connect() {
               </View>
 
               <View className="flex-1">
-                <AppText className="font-bold text-xl" style={{ color: theme.text.onPrimary }}>
+                <AppText style={{ fontWeight: "700", fontSize: 20, color: theme.text.onPrimary }}>
                   {t("connect.emergencyTitle")}
                 </AppText>
                 <AppText
-                  className="text-white font-medium text-sm mt-0.5"
-                  style={{ color: theme.text.onPrimary }}
+                  style={{ color: theme.text.onPrimary, fontWeight: "500", fontSize: 14, marginTop: 2 }}
                 >
                   {t("connect.tapToCall")}
                 </AppText>
@@ -208,16 +205,14 @@ export default function Connect() {
           <View className="w-full md:w-1/2">
             <AppText
               variant="h3"
-              className="font-bold text-lg mb-1.5"
-              style={{ color: theme.text.secondary }}
+              style={{ fontWeight: "700", fontSize: 18, marginBottom: 6, color: theme.text.secondary }}
             >
               {t("connect.mySchedule")}
             </AppText>
 
             <AppText
               variant="bodySm"
-              className="mb-4 text-[13px]"
-              style={{ color: theme.text.muted }}
+              style={{ marginBottom: 16, fontSize: 13, color: theme.text.muted }}
             >
               {t("connect.myScheduleSubtitle") || "View your upcoming appointments"}
             </AppText>
@@ -242,12 +237,11 @@ export default function Connect() {
               </View>
 
               <View className="flex-1">
-                <AppText className="font-bold text-xl" style={{ color: theme.text.onPrimary }}>
+                <AppText style={{ fontWeight: "700", fontSize: 20, color: theme.text.onPrimary }}>
                   {t("connect.mySchedule")}
                 </AppText>
                 <AppText
-                  className="text-white font-medium text-sm mt-0.5"
-                  style={{ color: theme.text.onPrimary }}
+                  style={{ color: theme.text.onPrimary, fontWeight: "500", fontSize: 14, marginTop: 2 }}
                 >
                   {t("connect.myScheduleTap")}
                 </AppText>
@@ -291,15 +285,13 @@ export default function Connect() {
                 <View className="flex-1 ml-3">
                   <AppText
                     variant="h3"
-                    className="font-bold text-[17px]"
-                    style={{ color: theme.text.primary }}
+                    style={{ fontWeight: "700", fontSize: 17, color: theme.text.primary }}
                   >
                     {t("connect.sosAfterHoursTitle")}
                   </AppText>
                   <AppText
                     variant="bodySm"
-                    className="text-xs mt-0.5"
-                    style={{ color: theme.text.muted }}
+                    style={{ fontSize: 12, marginTop: 2, color: theme.text.muted }}
                   >
                     {t("connect.sosAfterHoursMessage")}
                   </AppText>
@@ -336,8 +328,7 @@ export default function Connect() {
               {/* Reason input */}
               <AppText
                 variant="bodySm"
-                className="text-sm font-semibold mb-2"
-                style={{ color: theme.text.primary }}
+                style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: theme.text.primary }}
               >
                 {t("connect.sosReasonTitle")}
               </AppText>
@@ -385,8 +376,7 @@ export default function Connect() {
                   />
                   <AppText
                     variant="bodySm"
-                    className="font-semibold text-sm"
-                    style={{ color: theme.text.secondary }}
+                    style={{ fontWeight: "600", fontSize: 14, color: theme.text.secondary }}
                   >
                     {t("connect.sosCallInstead")}
                   </AppText>
@@ -414,8 +404,7 @@ export default function Connect() {
                   />
                   <AppText
                     variant="bodySm"
-                    className="font-bold text-sm"
-                    style={{ color: theme.text.onPrimary }}
+                    style={{ fontWeight: "700", fontSize: 14, color: theme.text.onPrimary }}
                   >
                     {t("connect.sosSendEmail")}
                   </AppText>

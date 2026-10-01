@@ -50,7 +50,6 @@ export default function QuickActionGrid({ actions = defaultActions }: QuickActio
             <AnimatedPressable
               key={colIndex}
               onPress={action.onPress}
-              scaleOnPress={0.94}
               style={{
                 flex: 1,
                 // Tinted shadow using the icon's brand colour

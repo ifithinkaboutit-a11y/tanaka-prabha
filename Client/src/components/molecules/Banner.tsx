@@ -94,7 +94,7 @@ export default function BannerSlideshow({
 
   return (
     <View>
-      <AnimatedPressable onPress={handleBannerPress} scaleOnPress={0.97}>
+      <AnimatedPressable onPress={handleBannerPress}>
         <View className="h-[200px] rounded-[20px] overflow-hidden bg-[#386641]">          {/* Animated content layer — fades in on each slide change */}
           <Animated.View
             className="absolute inset-0"
@@ -197,7 +197,6 @@ export default function BannerSlideshow({
             <AnimatedPressable
               key={index}
               onPress={() => goToSlide(index)}
-              scaleOnPress={0.85}
             >
               <Animated.View
                 style={{

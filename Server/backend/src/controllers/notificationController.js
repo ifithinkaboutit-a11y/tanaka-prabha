@@ -1,42 +1,6 @@
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-
-// ─── Expo Push API helper ────────────────────────────────────────────────────
-// Sends push notifications via Expo's free push service (no account needed)
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
-
-/**
- * Send push notifications to a list of Expo push tokens.
- * Expo accepts up to 100 tokens per request — we chunk automatically.
- * @param {Array<{token:string, title:string, body:string, data?:object}>} messages
- */
-async function sendExpoPushNotifications(messages) {
-    if (!messages || messages.length === 0) return;
-
-    // Chunk into batches of 100 (Expo's limit)
-    const chunks = [];
-    for (let i = 0; i < messages.length; i += 100) {
-        chunks.push(messages.slice(i, i + 100));
-    }
-
-    for (const chunk of chunks) {
-        try {
-            const response = await fetch(EXPO_PUSH_URL, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Accept-encoding': 'gzip, deflate',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(chunk),
-            });
-            const result = await response.json();
-            console.log(`📲 Expo push sent to ${chunk.length} devices:`, result?.data?.[0]?.status || 'ok');
-        } catch (err) {
-            console.error('📲 Expo push delivery error:', err.message);
-        }
-    }
-}
+import { sendExpoPushNotifications, notifyUser, notifyUsers } from '../services/pushNotificationService.js';
 
 // ─── Register Expo Push Token ────────────────────────────────────────────────
 /**
@@ -103,20 +67,21 @@ export const getUserNotifications = async (req, res) => {
 };
 
 /**
- * Create a notification
+ * Create a notification for one user
+ * ── Also fires a real Expo push notification if the user has a registered device ──
  */
 export const createNotification = async (req, res) => {
     try {
-        const notificationData = req.body;
+        const { user_id, type, title, message, icon_name, bg_color, data } = req.body;
 
-        if (!notificationData.user_id || !notificationData.title || !notificationData.type) {
+        if (!user_id || !title || !type) {
             return res.status(400).json({
                 status: 'error',
                 message: 'user_id, title, and type are required'
             });
         }
 
-        const notification = await Notification.create(notificationData);
+        const notification = await notifyUser({ user_id, type, title, message, icon_name, bg_color, data });
 
         res.status(201).json({
             status: 'success',
@@ -135,10 +100,11 @@ export const createNotification = async (req, res) => {
 
 /**
  * Send notification to multiple users
+ * ── Also fires real Expo push notifications to whichever recipients have a registered device ──
  */
 export const sendBulkNotification = async (req, res) => {
     try {
-        const { user_ids, type, title, message, icon_name, bg_color } = req.body;
+        const { user_ids, type, title, message, icon_name, bg_color, data } = req.body;
 
         if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
             return res.status(400).json({
@@ -154,11 +120,7 @@ export const sendBulkNotification = async (req, res) => {
             });
         }
 
-        const notifications = await Promise.all(
-            user_ids.map(user_id =>
-                Notification.create({ user_id, type, title, message, icon_name, bg_color })
-            )
-        );
+        const notifications = await notifyUsers(user_ids, { type, title, message, icon_name, bg_color, data });
 
         res.status(201).json({
             status: 'success',

@@ -1,3 +1,4 @@
+import "../utils/suppressExpoGoWarnings";
 import "@/styles/global.css";
 import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
@@ -77,6 +78,7 @@ export default function RootLayout() {
             <Stack.Screen name="scan-attendance" options={{ headerShown: false }} />
             <Stack.Screen name="all-events" options={{ headerShown: false }} />
             <Stack.Screen name="my-schedule" options={{ headerShown: false }} />
+            <Stack.Screen name="about" options={{ headerShown: false }} />
           </Stack>
         </UserProfileProvider>
       </LanguageProvider>

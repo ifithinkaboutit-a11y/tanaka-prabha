@@ -66,30 +66,33 @@ const SectionCard = ({
   onEdit?: () => void;
   editLabel?: string;
   children: React.ReactNode;
-}) => (
-  <View style={s.card}>
-    <View style={s.cardHeader}>
-      <View style={s.cardHeaderLeft}>
-        <View style={[s.cardIconBg, { backgroundColor: accentColor + "18" }]}>
-          <Ionicons name={icon} size={18} color={accentColor} />
+}) => {
+  const { t } = useTranslation();
+  return (
+    <View style={s.card}>
+      <View style={s.cardHeader}>
+        <View style={s.cardHeaderLeft}>
+          <View style={[s.cardIconBg, { backgroundColor: accentColor + "18" }]}>
+            <Ionicons name={icon} size={18} color={accentColor} />
+          </View>
+          <Text style={[s.cardTitle, { color: accentColor }]}>{title}</Text>
         </View>
-        <Text style={[s.cardTitle, { color: accentColor }]}>{title}</Text>
+        {onEdit && (
+          <Button
+            size="sm"
+            variant="outline"
+            onPress={onEdit}
+            style={{ backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", borderRadius: 20, paddingHorizontal: 12 }}
+          >
+            <Ionicons name="pencil-outline" size={13} color="#386641" style={{ marginRight: 5 }} />
+            <Text style={{ color: "#386641", fontSize: 12, fontWeight: "600" }}>{editLabel || t("common.edit")}</Text>
+          </Button>
+        )}
       </View>
-      {onEdit && (
-        <Button
-          size="sm"
-          variant="outline"
-          onPress={onEdit}
-          style={{ backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", borderRadius: 20 }}
-        >
-          <Ionicons name="pencil-outline" size={13} color="#386641" style={{ marginRight: 6 }} />
-          <Text style={{ color: "#386641", fontSize: 12, fontWeight: "600" }}>{editLabel || "Edit"}</Text>
-        </Button>
-      )}
+      <View style={s.cardBody}>{children}</View>
     </View>
-    <View style={s.cardBody}>{children}</View>
-  </View>
-);
+  );
+};
 
 const StatBadge = ({ value, label, icon }: { value: string; label: string; icon: keyof typeof Ionicons.glyphMap }) => (
   <View style={s.statBadge}>
@@ -155,7 +158,7 @@ const Profile = () => {
       setLocalAvatarUri(null); // let profile reload handle it
     } catch (e: any) {
       clearInterval(progressInterval);
-      Alert.alert("Upload Failed", e.message || "Could not upload photo. Please try again.");
+      Alert.alert(t("profile.uploadFailed"), e.message || t("profile.uploadFailedMessage"));
       setLocalAvatarUri(null);
     } finally {
       setTimeout(() => {
@@ -169,7 +172,7 @@ const Profile = () => {
     setShowAvatarModal(false);
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Camera Required", "Please allow camera access.", [{ text: "Cancel", style: "cancel" }]);
+      Alert.alert(t("profile.permissionNeeded"), t("profile.cameraPermissionMessage"), [{ text: t("common.cancel"), style: "cancel" }]);
       return;
     }
     try {
@@ -179,7 +182,7 @@ const Profile = () => {
       if (result.canceled || !result.assets?.[0]) return;
       await processAvatarUri(result.assets[0].uri);
     } catch {
-      Alert.alert("Camera Error", "Could not use camera.");
+      Alert.alert(t("profile.cameraError"), t("profile.cameraErrorMessage"));
     }
   };
 
@@ -187,7 +190,7 @@ const Profile = () => {
     setShowAvatarModal(false);
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Gallery Required", "Please allow gallery access.", [{ text: "Cancel", style: "cancel" }]);
+      Alert.alert(t("profile.permissionNeeded"), t("profile.galleryPermissionMessage"), [{ text: t("common.cancel"), style: "cancel" }]);
       return;
     }
     try {
@@ -197,7 +200,7 @@ const Profile = () => {
       if (result.canceled || !result.assets?.[0]) return;
       await processAvatarUri(result.assets[0].uri);
     } catch {
-      Alert.alert("Gallery Error", "Could not open gallery.");
+      Alert.alert(t("profile.galleryError"), t("profile.galleryErrorMessage"));
     }
   };
 
@@ -364,7 +367,6 @@ const Profile = () => {
         icon="person-outline"
         accentColor="#2563EB"
         onEdit={() => router.push("/personal-details" as any)}
-        editLabel={t("profile.editPersonalDetails")}
       >
         <InfoRow icon="call-outline" label={t("profile.mobileNumber")} value={profile.mobileNumber} />
         {profile.aadhaarNumber && (
@@ -413,7 +415,6 @@ const Profile = () => {
         icon="leaf-outline"
         accentColor="#16A34A"
         onEdit={() => router.push("/land-details" as any)}
-        editLabel={t("profile.editLandDetails")}
       >
         {profile.landDetails ? (
           <>
@@ -456,7 +457,6 @@ const Profile = () => {
         icon="paw-outline"
         accentColor="#EA580C"
         onEdit={() => router.push("/livestock-details" as any)}
-        editLabel={t("profile.editLivestockDetails")}
       >
         {totalAnimals > 0 ? (
           <View className="relative">
@@ -543,6 +543,21 @@ const Profile = () => {
           </View>
         </Pressable>
 
+        {/* About & Disclaimer */}
+        <Pressable
+          onPress={() => router.push("/about" as any)}
+          style={({ pressed }) => [s.settingRow, pressed && { opacity: 0.7 }]}
+          className="flex flex-row justify-between items-center pb-8"
+        >
+          <View style={s.settingLeft}>
+            <View style={[s.settingIconBg, { backgroundColor: "#FEF3C7", marginRight: 12 }]}>
+              <Ionicons name="information-circle-outline" size={18} color="#B45309" />
+            </View>
+            <Text style={s.settingLabel}>{t("profile.aboutDisclaimer")}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+        </Pressable>
+
         {/* Logout */}
         <Pressable
           onPress={handleLogout}
@@ -565,21 +580,21 @@ const Profile = () => {
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 }}>
           <View style={{ width: "100%", backgroundColor: theme.background.input, borderRadius: 16, padding: 24, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
             <Text style={{ color: theme.text.primary, fontSize: 18, fontWeight: "700", marginBottom: 16, textAlign: "center" }}>
-              Update Profile Photo
+              {t("profile.updatePhotoTitle")}
             </Text>
 
             <Pressable onPress={launchCamera} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
               <Ionicons name="camera-outline" size={22} color={theme.primary.green} />
-              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>Take a Photo</Text>
+              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>{t("profile.takePhoto")}</Text>
             </Pressable>
 
             <Pressable onPress={launchGallery} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
               <Ionicons name="images-outline" size={22} color={theme.primary.green} />
-              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>Choose from Gallery</Text>
+              <Text style={{ marginLeft: 12, color: theme.text.secondary, fontWeight: "600", fontSize: 15 }}>{t("profile.chooseFromGallery")}</Text>
             </Pressable>
 
             <Pressable onPress={() => setShowAvatarModal(false)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: theme.background.neutralSubtle, borderRadius: 12, alignItems: "center" }}>
-              <Text style={{ color: theme.text.muted, fontWeight: "700", fontSize: 13 }}>Cancel</Text>
+              <Text style={{ color: theme.text.muted, fontWeight: "700", fontSize: 13 }}>{t("common.cancel")}</Text>
             </Pressable>
           </View>
         </View>

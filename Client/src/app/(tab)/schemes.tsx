@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import AppText from "../../components/atoms/AppText";
 import SearchBar from "../../components/molecules/SearchBar";
-import { schemeCategories, categoryToSchemeCategory } from "../../data/content/schemeCategories";
+import { getCategoryPresentation } from "../../data/content/schemeCategories";
 import { schemesApi, Scheme } from "@/services/apiService";
 import { fetchWithCache, CACHE_KEYS } from "@/utils/offlineCache";
 import { SchemeCardSkeleton } from "@/components/atoms/Skeleton";
@@ -40,6 +40,7 @@ const SchemeCard = ({
   };
 }) => {
   const { currentLanguage } = useLanguageStore();
+  const { t } = useTranslation();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const displayTitle = currentLanguage === 'hi' && scheme.titleHi ? scheme.titleHi : scheme.title;
@@ -106,7 +107,7 @@ const SchemeCard = ({
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <AppText variant="bodySm" style={{ color: theme.primary.green, fontWeight: "700" }}>
-              Explore Details
+              {t("schemesPage.exploreDetails")}
             </AppText>
             <Ionicons name="arrow-forward" size={14} color={theme.primary.green} style={{ marginLeft: 6 }} />
           </View>
@@ -117,18 +118,19 @@ const SchemeCard = ({
 };
 
 const CategoryItem = ({
-  category,
+  categoryName,
+  count,
   onPress,
   isLast,
-  realCount,
 }: {
-  category: typeof schemeCategories[0];
+  categoryName: string;
+  count: number;
   onPress: () => void;
   isLast: boolean;
-  realCount: number;
 }) => {
   const { t } = useTranslation();
   const [isPressed, setIsPressed] = useState(false);
+  const { icon, color, label } = getCategoryPresentation(categoryName, t);
 
   return (
     <Pressable
@@ -148,23 +150,23 @@ const CategoryItem = ({
         style={{
           width: 56, height: 56, borderRadius: 16,
           alignItems: "center", justifyContent: "center",
-          marginRight: 16, backgroundColor: category.color,
+          marginRight: 16, backgroundColor: color,
         }}
       >
-        <AppText variant="h2" style={{ fontSize: 26 }}>{category.icon}</AppText>
+        <AppText variant="h2" style={{ fontSize: 26 }}>{icon}</AppText>
       </View>
       <View style={{ flex: 1 }}>
         <AppText
           variant="bodyMd"
           style={{ fontWeight: "700", color: theme.text.primary, fontSize: 16, marginBottom: 4, letterSpacing: -0.2 }}
         >
-          {t(category.titleKey)}
+          {label}
         </AppText>
-        {realCount > 0 && (
+        {count > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={{ backgroundColor: "#E0E7FF", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
               <AppText variant="bodySm" style={{ color: "#4F46E5", fontWeight: "700", fontSize: 12 }}>
-                {realCount}
+                {count}
               </AppText>
             </View>
             <AppText variant="bodySm" style={{ color: "#6B7280", marginLeft: 6, fontSize: 13 }}>
@@ -187,8 +189,8 @@ export default function Schemes() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // Real counts per category from backend
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  // Categories are whatever the backend actually has schemes for — never hardcoded
+  const [categories, setCategories] = useState<{ category: string; count: number }[]>([]);
 
   // Transform userProfile for eligibility check
   const eligibilityProfile = userProfile ? {
@@ -202,22 +204,17 @@ export default function Schemes() {
     try {
       const data = await fetchWithCache(CACHE_KEYS.SCHEMES, () => schemesApi.getAll({ limit: 50 }));
       setSchemes(data);
-      // Compute real counts per category from returned data
-      const counts: Record<string, number> = {};
-      data.forEach((s) => {
-        if (s.category) {
-          // Map API category name back to category ID
-          const catEntry = Object.entries(categoryToSchemeCategory).find(
-            ([, v]) => v.toLowerCase() === s.category.toLowerCase()
-          );
-          if (catEntry) {
-            counts[catEntry[0]] = (counts[catEntry[0]] || 0) + 1;
-          }
-        }
-      });
-      setCategoryCounts(counts);
     } catch (error) {
       console.error("Error fetching schemes:", error);
+    }
+
+    // Independent of the schemes fetch above — a categories hiccup should
+    // never blank out the schemes list, and vice versa.
+    try {
+      const liveCategories = await schemesApi.getCategories();
+      setCategories(liveCategories);
+    } catch (error) {
+      console.error("Error fetching scheme categories:", error);
     }
   };
 
@@ -475,7 +472,7 @@ export default function Schemes() {
       </View>
 
       {/* Categories */}
-      {!isSearchActive && (
+      {!isSearchActive && categories.length > 0 && (
         <View
           style={{
             marginHorizontal: 16,
@@ -514,13 +511,13 @@ export default function Schemes() {
             </AppText>
           </View>
 
-          {schemeCategories.map((category, index) => (
+          {categories.map((c, index) => (
             <CategoryItem
-              key={category.id}
-              category={category}
-              onPress={() => handleCategoryPress(category.id)}
-              isLast={index === schemeCategories.length - 1}
-              realCount={categoryCounts[category.id] || 0}
+              key={c.category}
+              categoryName={c.category}
+              count={c.count}
+              onPress={() => handleCategoryPress(c.category)}
+              isLast={index === categories.length - 1}
             />
           ))}
         </View>
@@ -551,6 +548,26 @@ export default function Schemes() {
             </Pressable>
           </View>
           {filteredSchemes.slice(0, 5).map((scheme) => (
+            <SchemeCard
+              key={scheme.id}
+              scheme={scheme}
+              onPress={() => handleSchemePress(scheme.id)}
+              userProfile={eligibilityProfile}
+            />
+          ))}
+        </View>
+      )}
+
+      {/* Search results — every match, not just a capped preview */}
+      {isSearchActive && filteredSchemes.length > 0 && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+          <AppText
+            variant="h3"
+            style={{ fontWeight: "700", color: theme.text.primary, fontSize: 18, marginBottom: 16 }}
+          >
+            {t("schemesPage.searchResultsCount", { count: filteredSchemes.length })}
+          </AppText>
+          {filteredSchemes.map((scheme) => (
             <SchemeCard
               key={scheme.id}
               scheme={scheme}

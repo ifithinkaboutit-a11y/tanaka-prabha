@@ -1,6 +1,14 @@
 import Appointment from '../models/Appointment.js';
 import Professional from '../models/Professional.js';
 import Connection from '../models/Connection.js';
+import { notifyUser } from '../services/pushNotificationService.js';
+
+const STATUS_NOTIFICATION_COPY = {
+    confirmed: { title: 'Appointment Confirmed', message: (p) => `Your appointment with ${p} has been confirmed.` },
+    completed: { title: 'Appointment Completed', message: (p) => `Your appointment with ${p} is marked as completed.` },
+    cancelled: { title: 'Appointment Cancelled', message: (p) => `Your appointment with ${p} was cancelled.` },
+    rejected: { title: 'Appointment Rejected', message: (p) => `Your appointment with ${p} was declined.` },
+};
 
 /**
  * Get appointments for current user
@@ -284,6 +292,17 @@ export const updateStatus = async (req, res) => {
         }
 
         const updatedAppointment = await Appointment.update(id, { status });
+
+        const copy = STATUS_NOTIFICATION_COPY[status];
+        if (copy) {
+            notifyUser({
+                user_id: appointment.user_id,
+                type: 'reminder',
+                title: copy.title,
+                message: copy.message(appointment.professional_name || 'your professional'),
+                data: { screen: 'my-schedule', id },
+            }).catch((err) => console.error('📲 Appointment status notification failed:', err));
+        }
 
         res.status(200).json({
             status: 'success',

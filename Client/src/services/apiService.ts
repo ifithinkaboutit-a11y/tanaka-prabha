@@ -1083,13 +1083,17 @@ export const schemesApi = {
   },
 
   /**
-   * Get scheme categories
+   * Get distinct scheme categories actually present in the data, with counts.
+   * This is the source of truth for category filters — never hardcode the list.
    */
-  async getCategories(): Promise<string[]> {
-    const response = await fetchWithAuth<{ categories: string[] }>(
+  async getCategories(): Promise<{ category: string; count: number }[]> {
+    const response = await fetchWithAuth<{ categories: { category: string; count: string }[] }>(
       "/schemes/categories"
     );
-    return response.data?.categories || [];
+    return (response.data?.categories || []).map((c) => ({
+      category: c.category,
+      count: Number(c.count) || 0,
+    }));
   },
 
   /**

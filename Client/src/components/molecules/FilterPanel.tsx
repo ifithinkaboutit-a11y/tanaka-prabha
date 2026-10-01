@@ -25,17 +25,11 @@ export interface FilterPanelProps {
   onClear: () => void;
   onClose: () => void;
   initialFilters?: FilterState;
+  /** Category names to offer as checkboxes — sourced from live scheme data, never hardcoded. */
+  categories?: string[];
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  "Financial Support",
-  "Agricultural Development",
-  "Soil Management",
-  "Crop Insurance",
-  "Training",
-] as const;
 
 const TYPE_OPTIONS: { label: string; value: TypeFilter }[] = [
   { label: "Scheme", value: "scheme" },
@@ -59,6 +53,7 @@ export default function FilterPanel({
   onClear,
   onClose,
   initialFilters,
+  categories = [],
 }: FilterPanelProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialFilters?.categories ?? []
@@ -164,6 +159,7 @@ export default function FilterPanel({
             contentContainerStyle={{ paddingBottom: 16 }}
           >
             {/* Category Section */}
+            {categories.length > 0 && (
             <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
               <AppText
                 variant="bodySm"
@@ -179,7 +175,7 @@ export default function FilterPanel({
                 Category
               </AppText>
 
-              {CATEGORIES.map((category) => {
+              {categories.map((category) => {
                 const isSelected = selectedCategories.includes(category);
                 return (
                   <TouchableOpacity
@@ -231,6 +227,7 @@ export default function FilterPanel({
                 );
               })}
             </View>
+            )}
 
             {/* Type Section */}
             <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>

@@ -405,7 +405,7 @@ const AuthLivestockDetailsScreen = () => {
           {/* Has Livestock Toggle */}
           <View className="bg-gray-50 rounded-2xl p-5 mb-4">
             <View className="flex-row justify-between items-center">
-              <AppText variant="bodyMd" className="font-semibold text-gray-700">
+              <AppText variant="bodyMd" style={{ fontWeight: "600", color: theme.text.subtle }}>
                 {t("onboarding.hasLivestock")}
               </AppText>
               <Toggle
@@ -439,7 +439,7 @@ const AuthLivestockDetailsScreen = () => {
                           {index + 1}
                         </AppText>
                       </View>
-                      <AppText variant="bodyMd" className="font-bold text-gray-800">
+                      <AppText variant="bodyMd" style={{ fontWeight: "700", color: theme.text.dark }}>
                         {t("onboarding.livestockEntry")} {index + 1}
                       </AppText>
                     </View>
@@ -455,7 +455,7 @@ const AuthLivestockDetailsScreen = () => {
 
                   {/* Animal Type */}
                   <View className="mb-4">
-                    <AppText variant="bodySm" className="text-gray-500 mb-2">
+                    <AppText variant="bodySm" style={{ color: theme.text.muted, marginBottom: 8 }}>
                       {t("onboarding.animalType")}
                     </AppText>
                     <View
@@ -473,7 +473,7 @@ const AuthLivestockDetailsScreen = () => {
                       />
                     </View>
                     {errors[entry.id]?.type && touched[entry.id]?.type && (
-                      <AppText variant="bodySm" className="text-red-500 mt-1">
+                      <AppText variant="bodySm" style={{ color: theme.semantic.errorLight, marginTop: 4 }}>
                         {errors[entry.id].type}
                       </AppText>
                     )}
@@ -481,7 +481,7 @@ const AuthLivestockDetailsScreen = () => {
 
                   {/* Count Input */}
                   <View>
-                    <AppText variant="bodySm" className="text-gray-500 mb-2">
+                    <AppText variant="bodySm" style={{ color: theme.text.muted, marginBottom: 8 }}>
                       {t("onboarding.animalCount")}
                     </AppText>
                     <TextInput
@@ -502,7 +502,7 @@ const AuthLivestockDetailsScreen = () => {
                       placeholderTextColor={theme.text.placeholder}
                     />
                     {errors[entry.id]?.count && touched[entry.id]?.count && (
-                      <AppText variant="bodySm" className="text-red-500 mt-1">
+                      <AppText variant="bodySm" style={{ color: theme.semantic.errorLight, marginTop: 4 }}>
                         {errors[entry.id].count}
                       </AppText>
                     )}
@@ -517,7 +517,7 @@ const AuthLivestockDetailsScreen = () => {
                 className="flex-row items-center justify-center rounded-xl p-4 mb-4 border-2 border-yellow-300 border-dashed active:bg-yellow-100 bg-yellow-50"
               >
                 <Ionicons name="add-circle-outline" size={20} color={theme.semantic.ongoingAction} />
-                <AppText variant="bodySm" className="text-amber-600 font-semibold ml-2">
+                <AppText variant="bodySm" style={{ color: theme.semantic.ongoingAction, fontWeight: "600", marginLeft: 8 }}>
                   {t("onboarding.addAnotherLivestock")}
                 </AppText>
               </Pressable>

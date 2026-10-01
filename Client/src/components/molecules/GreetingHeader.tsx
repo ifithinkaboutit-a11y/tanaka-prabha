@@ -41,7 +41,6 @@ export default function GreetingHeader({
         <View className="flex-row items-center gap-3 flex-1">
           <AnimatedPressable
             onPress={onAvatarPress}
-            scaleOnPress={0.92}
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -56,8 +55,7 @@ export default function GreetingHeader({
           <View className="flex-shrink">
             <AppText
               variant="bodySm"
-              className="text-gray-500 font-medium mb-0.5"
-              style={{ fontSize: 13 }}
+              style={{ color: theme.text.muted, fontWeight: "500", marginBottom: 2, fontSize: 13 }}
             >
               {greeting}
             </AppText>
@@ -79,7 +77,6 @@ export default function GreetingHeader({
         {/* Right: Notification bell with wiggle */}
         <AnimatedPressable
           onPress={onNotificationPress}
-          scaleOnPress={0.88}
           className="relative items-center justify-center rounded-full bg-gray-100 py-2 w-12 h-12"
           accessibilityLabel={hasNotifications ? "Notifications, unread" : "Notifications"}
           accessibilityRole="button"

@@ -114,6 +114,11 @@ const SetPasswordScreen = () => {
             <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
             {/* Static Header */}
             <View style={s.header}>
+                {mode !== "reset" && mode !== "setup" && (
+                    <View style={s.progressTrack}>
+                        <View style={[s.progressFill, { width: "100%" }]} />
+                    </View>
+                )}
                 <AppText variant="h2" style={s.headerTitle}>
                     {mode === "reset" ? t("auth.setPassword.resetTitle") : t("auth.setPassword.title")}
                 </AppText>
@@ -225,6 +230,18 @@ const s = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 32,
         paddingHorizontal: 24,
+    },
+    progressTrack: {
+        height: 4,
+        backgroundColor: "rgba(255,255,255,0.3)",
+        borderRadius: 2,
+        marginBottom: 16,
+        overflow: "hidden",
+    },
+    progressFill: {
+        height: 4,
+        backgroundColor: theme.text.onPrimary,
+        borderRadius: 2,
     },
     headerTitle: {
         color: theme.text.onPrimary,

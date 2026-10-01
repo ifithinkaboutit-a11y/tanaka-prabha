@@ -9,6 +9,14 @@ import { theme } from "@/styles/colors";
 
 const UP_FALLBACK: [number, number] = [26.8467, 80.9462];
 
+// District names come from the backend lowercased (e.g. "lucknow") — title-case for display.
+function toTitleCase(value: string): string {
+  return value
+    .split(" ")
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}
+
 interface WeatherInfo {
   labelEn: string;
   labelHi: string;
@@ -211,7 +219,7 @@ export default function WeatherWidget({ district, language }: WeatherWidgetProps
           {district ? (
             <View style={{ backgroundColor: weatherTheme.iconBg, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
               <AppText style={{ fontSize: 11, color: weatherTheme.iconColor, fontWeight: "700" }} numberOfLines={1}>
-                {district}
+                {toTitleCase(district)}
               </AppText>
             </View>
           ) : null}

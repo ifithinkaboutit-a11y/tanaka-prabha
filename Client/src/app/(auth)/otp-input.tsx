@@ -209,6 +209,11 @@ const OTPInput = () => {
       <StatusBar barStyle="light-content" backgroundColor={theme.primary.green} />
       {/* Static Header */}
       <View style={s.header}>
+        {mode === "signup" && (
+          <View style={s.progressTrack}>
+            <View style={[s.progressFill, { width: "66%" }]} />
+          </View>
+        )}
         <AppText variant="h2" style={s.headerTitle}>
           {t("auth.enterOTP") || "Verify Number"}
         </AppText>
@@ -364,6 +369,18 @@ const s = StyleSheet.create({
     paddingBottom: 32,
     paddingHorizontal: 24,
   },
+  progressTrack: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 2,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: theme.text.onPrimary,
+    borderRadius: 2,
+  },
   headerTitle: {
     color: "#fff",
     fontSize: 26,
@@ -451,20 +468,6 @@ const s = StyleSheet.create({
   otpBoxError: {
     backgroundColor: "rgba(239,68,68,0.05)",
     color: theme.semantic.errorLight,
-  },
-
-  // ── Progress bar ──
-  progressTrack: {
-    width: "100%",
-    height: 3,
-    backgroundColor: theme.background.screen,
-    borderRadius: 2,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
   },
 
   // ── Helper — identical to phone-input ──

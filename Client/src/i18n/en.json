@@ -97,45 +97,6 @@
     }
   },
   "onboarding": {
-    "personal": {
-      "title": "Personal Information",
-      "subtitle": "Tell us a few details to personalize schemes for you",
-      "fullName": "Full Name",
-      "fullNamePlaceholder": "Enter Name",
-      "state": "State",
-      "selectState": "Select State",
-      "district": "District",
-      "selectDistrict": "Select District",
-      "village": "Village",
-      "selectVillage": "Select Village",
-      "locationDetails": "Location Details",
-      "block": "Block",
-      "enterBlock": "Enter Block",
-      "selectBlock": "Select Block",
-      "gramPanchayat": "Gram Panchayat",
-      "selectGramPanchayat": "Select Gram Panchayat"
-    },
-    "land": {
-      "title": "Land & Crop Details",
-      "subtitle": "Helps us show farming schemes for your crops",
-      "doYouHaveLand": "Do you have land?",
-      "totalArea": "Total Area",
-      "unit": "Unit",
-      "mainCrop": "Main Crop",
-      "selectCrop": "Select Crop",
-      "addLand": "Add land",
-      "landAdded": "land added"
-    },
-    "livestock": {
-      "title": "Livestock Details",
-      "subtitle": "This helps us show schemes for animal husbandry",
-      "doYouHaveLivestock": "Do you have Livestock?",
-      "animal": "Animal",
-      "selectAnimal": "Select Animal",
-      "numberOfAnimals": "Number",
-      "addAnimal": "Add animal",
-      "animalsAdded": "animals added"
-    },
     "next": "Next",
     "finish": "Finish",
     "skip": "Skip for now",
@@ -213,6 +174,7 @@
     "viewAll": "View all",
     "applyNow": "Apply Now",
     "readMore": "Read more",
+    "exploreDetails": "Explore Details",
     "schemeDetails": "Scheme Details",
     "schemeNotFound": "Scheme not found",
     "eligibility": "Eligibility",
@@ -221,6 +183,7 @@
     "sortByDate": "Date",
     "filters": "Filters",
     "noSchemesFound": "No schemes found matching your search",
+    "searchResultsCount": "{{count}} results found",
     "noResultsFound": "No results found",
     "clearFilters": "Clear Filters",
     "sortNameLabel": "Name (A–Z)",
@@ -235,16 +198,13 @@
     "noKeyObjectives": "No key objectives listed.",
     "scrollForMore": "Scroll for more ↓",
     "categoriesList": {
-      "financialSupport": "Financial & Credit Support",
       "agriculturalDevelopment": "Agricultural Development",
-      "soilManagement": "Soil Management",
-      "cropInsurance": "Crop Insurance",
-      "animalHusbandry": "Animal Husbandry & Dairy",
-      "training": "Training & Skill Development",
-      "irrigationWaterManagement": "Irrigation & Water Management",
-      "marketingPostHarvest": "Marketing & Post-Harvest",
-      "farmMechanization": "Farm Mechanization",
-      "fisheries": "Fisheries"
+      "educationSkillDevelopment": "Education & Skill Development",
+      "environmentalSustainability": "Environmental Sustainability",
+      "financialInclusion": "Financial Inclusion",
+      "healthSanitation": "Health & Sanitation",
+      "infrastructureDevelopment": "Infrastructure Development",
+      "socialWelfareEmpowerment": "Social Welfare & Empowerment"
     },
     "noSupport": "No support contact available.",
     "pastEvents": "Past Events"
@@ -379,9 +339,6 @@
     "aadhaar": "Aadhaar",
     "location": "Location",
     "editDetails": "Edit Details",
-    "editPersonalDetails": "Edit Personal Details",
-    "editLandDetails": "Edit Land Details",
-    "editLivestockDetails": "Edit Livestock Details",
     "personalDetails": "Personal Details",
     "mobileNumber": "Mobile Number",
     "address": "Address",
@@ -399,6 +356,7 @@
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?",
     "appLanguage": "App Language",
+    "aboutDisclaimer": "About & Disclaimer",
     "uploadFailed": "Upload Failed",
     "uploadFailedMessage": "Could not upload photo. Please try again.",
     "permissionNeeded": "Permission Needed",
@@ -422,6 +380,7 @@
   },
   "common": {
     "cancel": "Cancel",
+    "edit": "Edit",
     "save": "Save",
     "yes": "Yes",
     "no": "No",
@@ -1038,5 +997,15 @@
     "invalidQr": "Invalid QR code. Missing event ID or token.",
     "genericError": "Something went wrong. Please try again.",
     "defaultEventName": "Event"
+  },
+  "about": {
+    "title": "About & Disclaimer",
+    "disclaimerBanner": "Tanak Prabha is an independent, non-government application. It is NOT a government entity, government application, or official government service, and is not affiliated with, endorsed by, sponsored by, or operated on behalf of the Government of India, any state government, ministry, department, agency, or other government organization.",
+    "whatIsTitle": "What is Tanak Prabha?",
+    "whatIsBody": "Tanak Prabha helps farmers and rural families find and understand agricultural schemes, connect with local professionals, and manage everyday farm records — land, livestock, and crop details — all in one place.",
+    "sourcesTitle": "Scheme information & official sources",
+    "sourcesBody": "Scheme details, eligibility rules, benefits, and amounts shown in this app are collected from publicly available government sources for informational purposes only. They may change and are not an official confirmation of your eligibility or entitlement. Every scheme includes an \"Apply\" link to its official government website — always verify current details there, or at your nearest government office, before applying.",
+    "contactTitle": "Questions or feedback",
+    "contactBody": "For questions, feedback, or concerns about this app, reach out to us through the contact details listed in your profile."
   }
 }

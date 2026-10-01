@@ -13,10 +13,7 @@ import {
 import AppText from "../components/atoms/AppText";
 import SchemePreviewCard from "../components/atoms/SchemePreviewCard";
 import { schemesApi, Scheme } from "@/services/apiService";
-import {
-  categoryToSchemeCategory,
-  schemeCategories,
-} from "../data/content/schemeCategories";
+import { getCategoryPresentation } from "../data/content/schemeCategories";
 import { useTranslation } from "../i18n";
 import FilterPanel, { FilterState, TypeFilter } from "../components/molecules/FilterPanel";
 import { theme } from "../styles/colors";
@@ -43,17 +40,18 @@ const CategoryListing = () => {
   });
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
-  // Get category info
-  const categoryInfo = useMemo(() => {
-    return schemeCategories.find((c) => c.id === category);
-  }, [category]);
-
-  // Get the mapped category name for filtering
+  // Category IDs in the URL are now the real category name from the backend
+  // (see schemes.tsx), so no id -> name lookup table is needed any more.
   const mappedCategory = useMemo(() => {
     if (category === "all") return undefined;
-    return categoryToSchemeCategory[category] || category;
+    return category;
   }, [category]);
+
+  const categoryInfo = useMemo(() => {
+    return mappedCategory ? getCategoryPresentation(mappedCategory, t) : undefined;
+  }, [mappedCategory, t]);
 
   // Fetch schemes from API
   useEffect(() => {
@@ -74,6 +72,15 @@ const CategoryListing = () => {
 
     fetchSchemes();
   }, [mappedCategory]);
+
+  // Full category list for the filter panel's checkboxes — independent of
+  // whichever single category this screen was opened for.
+  useEffect(() => {
+    schemesApi
+      .getCategories()
+      .then((cats) => setAvailableCategories(cats.map((c) => c.category)))
+      .catch((error) => console.error("Error fetching categories:", error));
+  }, []);
 
   // Filter and sort schemes based on search and sort options
   const filteredSchemes = useMemo(() => {
@@ -152,7 +159,7 @@ const CategoryListing = () => {
 
   // Get display title
   const displayTitle = categoryInfo
-    ? t(categoryInfo.titleKey)
+    ? categoryInfo.label
     : category === "all"
       ? t("schemesPage.allSchemes")
       : category;
@@ -377,6 +384,7 @@ const CategoryListing = () => {
       <FilterPanel
         visible={showFilterPanel}
         initialFilters={activeFilters}
+        categories={availableCategories}
         onApply={(f) => { setActiveFilters(f); setShowFilterPanel(false); }}
         onClear={() => { clearFilters(); setShowFilterPanel(false); }}
         onClose={() => setShowFilterPanel(false)}

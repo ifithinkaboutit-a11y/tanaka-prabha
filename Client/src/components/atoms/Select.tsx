@@ -266,7 +266,7 @@ export default function Select({
                   <Ionicons name="search-outline" size={32} color={theme.border.card} />
                   <AppText
                     variant="bodySm"
-                    className="text-gray-400 mt-2"
+                    style={{ color: theme.text.placeholder, marginTop: 8 }}
                   >
                     {t("common.noResultsFor", { query: searchQuery })}
                   </AppText>

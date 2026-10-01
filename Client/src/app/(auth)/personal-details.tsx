@@ -785,7 +785,7 @@ const AuthPersonalDetailsScreen = () => {
             onPress={handleSkip}
             className="flex-1 py-4 rounded-full bg-white border border-gray-300 items-center active:bg-gray-100"
           >
-            <AppText variant="bodyMd" className="text-gray-500 font-semibold">
+            <AppText variant="bodyMd" style={{ color: theme.text.muted, fontWeight: "600" }}>
               {t("onboarding.skip")}
             </AppText>
           </Pressable> */}
@@ -796,7 +796,7 @@ const AuthPersonalDetailsScreen = () => {
           className="flex-[2] py-4 rounded-full items-center"
           style={{ backgroundColor: isValid() ? theme.primary.green : theme.border.card }}
         >
-          <AppText variant="bodyMd" className="text-white font-bold">
+          <AppText variant="bodyMd" style={{ color: theme.text.onPrimary, fontWeight: "700" }}>
             {t("onboarding.next")}
           </AppText>
         </Pressable>

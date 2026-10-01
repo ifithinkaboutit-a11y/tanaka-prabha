@@ -101,8 +101,6 @@ export default function ProgramSection({
           <AppText
             variant="bodySm"
             style={{ color: "#16A34A", fontWeight: "600", fontSize: 14 }}
-            className="flex flex-row items-center justify-center"
-
           >
             {t("programs.viewAll")}
           </AppText>
